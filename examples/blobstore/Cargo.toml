@@ -2,6 +2,7 @@
 name = "blobstore"
 authors.workspace = true
 edition.workspace = true
+license.workspace = true
 
 [lib]
 crate-type = ["cdylib"]

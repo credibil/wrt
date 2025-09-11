@@ -1,11 +1,15 @@
 
 [package]
-name = "wasmgrid"
+name = "tempo"
 description = "WASI Component runtime"
 authors.workspace = true
 edition.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+license.workspace = true
+repository.workspace = true
 rust-version.workspace = true
-version = "0.1.0"
+version.workspace = true
 
 default-run = "wg-all"
 
@@ -29,7 +33,6 @@ compile = ["runtime/compile"] # adds cranelift (+ ~4Mb)
 [dependencies]
 anyhow.workspace = true
 azkeyvault = { path = "crates/azkeyvault" }
-dotenv = "0.15.0"
 mongodb = { path = "crates/mongodb" }
 nats = { path = "crates/nats" }
 runtime.workspace = true
@@ -53,13 +56,17 @@ resolver = "3"
 [workspace.package]
 authors = ["Credibil"]
 edition = "2024"
+homepage = "https://credibil.io"
+keywords = ["decentralized", "identity"]
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/credibil/core"
 rust-version = "1.89"
+version = "0.2.0"
 
 [workspace.lints.rust]
 trivial_numeric_casts = "warn"
 unused_extern_crates = "warn"
-# unstable_features = "warn"
-unused_import_braces = "warn"
 
 [workspace.lints.clippy]
 all = "warn"
@@ -76,12 +83,12 @@ azure_security_keyvault_secrets = { version = "0.6.0", default-features = false 
 base64ct = { version = "1.8.0", features = ["std"] }
 bytes = "1.10.1"
 cfg-if = "1.0.3"
-chrono = "0.4.41"
+chrono = "0.4.42"
 credibil-encoding = { git = "https://github.com/credibil/core.git", tag = "v0.1.0" }
 credibil-otel = { git = "https://github.com/credibil/core.git", tag = "v0.1.0" }
 futures = "0.3.31"
 http = "1.3.1"
-mongodb = { version = "3.2.5" }
+mongodb = { version = "3.3.0" }
 opentelemetry = "0.30.0"
 opentelemetry_sdk = { version = "0.30.0", features = ["experimental_metrics_custom_reader"] }
 runtime = { path = "crates/runtime" }
@@ -96,12 +103,12 @@ tower-http = { version = "0.6.6", features = ["cors", "trace"] }
 tracing = "0.1.41"
 tracing-opentelemetry = "0.31.0"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter", "fmt"] }
-wasi = "0.14.3"
+wasi = "0.14.5"
 wasmtime = { version = "36.0.2", default-features = false, features = ["async", "component-model"] }
 wasmtime-wasi = "36.0.2"
 wasmtime-wasi-http = "36.0.2"
 wasmtime-wasi-io = "36.0.2"
-wit-bindgen = "0.45.0"
+wit-bindgen = "0.46.0"
 wit-bindings = { path = "crates/wit-bindings" }
 
 # [patch."https://github.com/credibil/core.git"]

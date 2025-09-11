@@ -1,8 +1,14 @@
 [package]
 name = "azkeyvault"
+description = "Azure Key Vault resource provider"
 authors.workspace = true
 edition.workspace = true
-version = "0.1.0"
+homepage.workspace = true
+keywords.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
 
 [lints]
 workspace = true
