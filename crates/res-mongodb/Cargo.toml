@@ -1,6 +1,6 @@
 [package]
-name = "wasi-http"
-description = "Wasm http WIT implementation using wasmtime-wasi-http"
+name = "res-mongodb"
+description = "MongoDB resource provider"
 authors.workspace = true
 edition.workspace = true
 homepage.workspace = true
@@ -13,15 +13,8 @@ version.workspace = true
 [lints]
 workspace = true
 
-[features]
-
 [dependencies]
 anyhow.workspace = true
-futures.workspace = true
-http.workspace = true
-hyper = "1.7.0"
+mongodb.workspace = true
 runtime.workspace = true
-tokio.workspace = true
 tracing.workspace = true
-wasmtime.workspace = true
-wasmtime-wasi-http.workspace = true

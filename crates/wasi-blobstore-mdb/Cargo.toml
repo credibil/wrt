@@ -1,9 +1,14 @@
 [package]
 name = "wasi-blobstore-mdb"
-description = "WASI blobstore service using MongoDB"
+description = "WASI blobstore WIT implementation using mongodb"
 authors.workspace = true
 edition.workspace = true
-version = "0.1.0"
+homepage.workspace = true
+keywords.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
 
 [lints]
 workspace = true

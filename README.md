@@ -1,4 +1,4 @@
-# Wasm Grid Runtime
+# Tempo Wasm Runtime
 
 An interim runtime for running WASI WebAssembly components.
 

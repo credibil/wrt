@@ -1,10 +1,9 @@
 use std::path::PathBuf;
 
 use anyhow::{Result, anyhow};
-use azkeyvault::AzKeyVault;
-use dotenv::dotenv;
-use mongodb::MongoDb;
-use nats::Nats;
+use res_azkeyvault::AzKeyVault;
+use res_mongodb::MongoDb;
+use res_nats::Nats;
 use runtime::{AddResource, Cli, Command, Parser, ResourceBuilder, Runtime};
 use wasi_blobstore_mdb::Blobstore;
 use wasi_http::Http;
@@ -15,9 +14,6 @@ use wasi_vault_az::Vault;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    if cfg!(debug_assertions) {
-        dotenv().ok();
-    }
     match Cli::parse().command {
         Command::Run { wasm } => init_runtime(wasm).await,
         #[cfg(feature = "compile")]
