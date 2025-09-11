@@ -10,23 +10,6 @@ use syn::{Expr, ItemFn, LitStr, parse_macro_input};
 ///
 /// This macro can be used to automatically create spans for functions, making
 /// it easier to add observability to your code.
-///
-/// ```
-/// use opentelemetry::{KeyValue, global};
-///
-/// #[sdk_otel_attr::instrument(name = "my_span")]
-/// fn my_function() {
-///     let meter = global::meter("my_meter");
-///     let counter = meter.u64_counter("my_counter").build();
-///     counter.add(1, &[KeyValue::new("key1", "value 1")]);
-///
-///     tracing::info_span!("info span").in_scope(|| {
-///         tracing::info!("info event");
-///     });
-///
-///     // function body
-/// }
-/// ```
 #[proc_macro_attribute]
 pub fn instrument(args: TokenStream, item: TokenStream) -> TokenStream {
     // macro's attributes

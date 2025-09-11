@@ -12,8 +12,8 @@ use wasmtime::{Config, Engine};
 ///
 /// For example, to compile the `http` component, run:
 ///
-/// ```
-/// cargo build --package http@0.1.0 --target wasm32-wasip2 --release
+/// ```bash
+/// cargo build --package otel --target wasm32-wasip2 --release
 /// ```
 ///
 /// # Errors
