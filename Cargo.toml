@@ -1,56 +1,5 @@
-
-[package]
-name = "tempo"
-description = "WASI Component runtime"
-authors.workspace = true
-edition.workspace = true
-homepage.workspace = true
-keywords.workspace = true
-license.workspace = true
-repository.workspace = true
-rust-version.workspace = true
-version.workspace = true
-
-default-run = "wg-all"
-
-[[bin]]
-name = "wg-all"
-path = "src/wg_all.rs"
-doc = false
-
-[[bin]]
-name = "wg-http"
-path = "src/wg_http.rs"
-doc = false
-
-[lints]
-workspace = true
-
-[features]
-default = ["compile"]
-compile = ["runtime/compile"] # adds cranelift (+ ~4Mb)
-
-[dependencies]
-anyhow.workspace = true
-res-azkeyvault = { path = "crates/res-azkeyvault" }
-res-mongodb = { path = "crates/res-mongodb" }
-res-nats = { path = "crates/res-nats" }
-runtime.workspace = true
-tokio.workspace = true
-wasi-blobstore-mdb = { path = "crates/wasi-blobstore-mdb" }
-wasi-http = { path = "crates/wasi-http" }
-wasi-keyvalue-nats = { path = "crates/wasi-keyvalue-nats" }
-wasi-messaging-nats = { path = "crates/wasi-messaging-nats" }
-wasi-otel = { path = "crates/wasi-otel" }
-wasi-vault-az = { path = "crates/wasi-vault-az" }
-
-[profile.release]
-lto = true
-opt-level = "s"
-strip = true
-
 [workspace]
-members = ["crates/*", "examples/*"]
+members = ["crates/*", "examples/guests/*", "examples/runtimes/*"]
 resolver = "3"
 
 [workspace.package]
@@ -110,6 +59,16 @@ wasmtime-wasi-http = "36.0.2"
 wasmtime-wasi-io = "36.0.2"
 wit-bindgen = "0.46.0"
 wit-bindings = { path = "crates/wit-bindings" }
+
+res-azkeyvault = { path = "crates/res-azkeyvault" }
+res-mongodb = { path = "crates/res-mongodb" }
+res-nats = { path = "crates/res-nats" }
+wasi-blobstore-mdb = { path = "crates/wasi-blobstore-mdb" }
+wasi-http = { path = "crates/wasi-http" }
+wasi-keyvalue-nats = { path = "crates/wasi-keyvalue-nats" }
+wasi-messaging-nats = { path = "crates/wasi-messaging-nats" }
+wasi-otel = { path = "crates/wasi-otel" }
+wasi-vault-az = { path = "crates/wasi-vault-az" }
 
 # [patch."https://github.com/credibil/core.git"]
 # credibil-otel = { path = "../../credibil/core/crates/otel" }
