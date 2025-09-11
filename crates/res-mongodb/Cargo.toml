@@ -1,6 +1,6 @@
 [package]
-name = "nats"
-description = "NATS resource provider"
+name = "res-mongodb"
+description = "MongoDB resource provider"
 authors.workspace = true
 edition.workspace = true
 homepage.workspace = true
@@ -15,7 +15,6 @@ workspace = true
 
 [dependencies]
 anyhow.workspace = true
-async-nats.workspace = true
-nkeys = { version = "0.4.5" }
+mongodb.workspace = true
 runtime.workspace = true
 tracing.workspace = true

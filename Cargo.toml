@@ -32,9 +32,9 @@ compile = ["runtime/compile"] # adds cranelift (+ ~4Mb)
 
 [dependencies]
 anyhow.workspace = true
-azkeyvault = { path = "crates/azkeyvault" }
-mongodb = { path = "crates/mongodb" }
-nats = { path = "crates/nats" }
+res-azkeyvault = { path = "crates/res-azkeyvault" }
+res-mongodb = { path = "crates/res-mongodb" }
+res-nats = { path = "crates/res-nats" }
 runtime.workspace = true
 tokio.workspace = true
 wasi-blobstore-mdb = { path = "crates/wasi-blobstore-mdb" }

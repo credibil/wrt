@@ -1,9 +1,9 @@
 use std::path::PathBuf;
 
 use anyhow::{Result, anyhow};
-use azkeyvault::AzKeyVault;
-use mongodb::MongoDb;
-use nats::Nats;
+use res_azkeyvault::AzKeyVault;
+use res_mongodb::MongoDb;
+use res_nats::Nats;
 use runtime::{AddResource, Cli, Command, Parser, ResourceBuilder, Runtime};
 use wasi_blobstore_mdb::Blobstore;
 use wasi_http::Http;

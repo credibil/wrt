@@ -1,6 +1,6 @@
 [package]
-name = "mongodb"
-description = "MongoDB resource provider"
+name = "res-azkeyvault"
+description = "Azure Key Vault resource provider"
 authors.workspace = true
 edition.workspace = true
 homepage.workspace = true
@@ -10,11 +10,15 @@ repository.workspace = true
 rust-version.workspace = true
 version.workspace = true
 
+[lib]
+
 [lints]
 workspace = true
 
 [dependencies]
 anyhow.workspace = true
-mongodb.workspace = true
+azure_core.workspace = true
+azure_identity.workspace = true
+azure_security_keyvault_secrets.workspace = true
 runtime.workspace = true
 tracing.workspace = true

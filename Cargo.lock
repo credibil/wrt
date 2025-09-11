@@ -262,18 +262,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "azkeyvault"
-version = "0.2.0"
-dependencies = [
- "anyhow",
- "azure_core",
- "azure_identity",
- "azure_security_keyvault_secrets",
- "runtime",
- "tracing",
-]
-
-[[package]]
 name = "azure_core"
 version = "0.27.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2259,16 +2247,6 @@ checksum = "dda42df21d035f88030aad8e877492fac814680e1d7336a57b2a091b989ae388"
 
 [[package]]
 name = "mongodb"
-version = "0.2.0"
-dependencies = [
- "anyhow",
- "mongodb 3.3.0",
- "runtime",
- "tracing",
-]
-
-[[package]]
-name = "mongodb"
 version = "3.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "622f272c59e54a3c85f5902c6b8e7b1653a6b6681f45e4c42d6581301119a4b8"
@@ -2344,17 +2322,6 @@ dependencies = [
  "security-framework 2.11.1",
  "security-framework-sys",
  "tempfile",
-]
-
-[[package]]
-name = "nats"
-version = "0.2.0"
-dependencies = [
- "anyhow",
- "async-nats",
- "nkeys",
- "runtime",
- "tracing",
 ]
 
 [[package]]
@@ -3020,6 +2987,39 @@ dependencies = [
  "wasm-bindgen-futures",
  "wasm-streams",
  "web-sys",
+]
+
+[[package]]
+name = "res-azkeyvault"
+version = "0.2.0"
+dependencies = [
+ "anyhow",
+ "azure_core",
+ "azure_identity",
+ "azure_security_keyvault_secrets",
+ "runtime",
+ "tracing",
+]
+
+[[package]]
+name = "res-mongodb"
+version = "0.2.0"
+dependencies = [
+ "anyhow",
+ "mongodb",
+ "runtime",
+ "tracing",
+]
+
+[[package]]
+name = "res-nats"
+version = "0.2.0"
+dependencies = [
+ "anyhow",
+ "async-nats",
+ "nkeys",
+ "runtime",
+ "tracing",
 ]
 
 [[package]]
@@ -3751,9 +3751,9 @@ name = "tempo"
 version = "0.2.0"
 dependencies = [
  "anyhow",
- "azkeyvault",
- "mongodb 0.2.0",
- "nats",
+ "res-azkeyvault",
+ "res-mongodb",
+ "res-nats",
  "runtime",
  "tokio",
  "wasi-blobstore-mdb",
@@ -4382,7 +4382,7 @@ dependencies = [
  "bytes",
  "chrono",
  "futures",
- "mongodb 3.3.0",
+ "mongodb",
  "runtime",
  "serde",
  "serde_json",

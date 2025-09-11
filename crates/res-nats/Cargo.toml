@@ -1,6 +1,6 @@
 [package]
-name = "azkeyvault"
-description = "Azure Key Vault resource provider"
+name = "res-nats"
+description = "NATS resource provider"
 authors.workspace = true
 edition.workspace = true
 homepage.workspace = true
@@ -15,8 +15,7 @@ workspace = true
 
 [dependencies]
 anyhow.workspace = true
-azure_core.workspace = true
-azure_identity.workspace = true
-azure_security_keyvault_secrets.workspace = true
+async-nats.workspace = true
+nkeys = { version = "0.4.5" }
 runtime.workspace = true
 tracing.workspace = true
