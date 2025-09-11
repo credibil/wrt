@@ -1,0 +1,12 @@
+[package]
+name = "wit-bindings"
+description = "Guest bindings for wasmgrid service"
+authors.workspace = true
+edition.workspace = true
+version = "0.1.0"
+
+[lints]
+workspace = true
+
+[dependencies]
+wit-bindgen.workspace = true

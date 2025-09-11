@@ -1,0 +1,14 @@
+[package]
+name = "mongodb"
+authors.workspace = true
+edition.workspace = true
+version = "0.1.0"
+
+[lints]
+workspace = true
+
+[dependencies]
+anyhow.workspace = true
+mongodb.workspace = true
+runtime.workspace = true
+tracing.workspace = true

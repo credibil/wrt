@@ -1,0 +1,41 @@
+[package]
+name = "sdk-otel"
+description = "Wasm opentelemetry service"
+authors.workspace = true
+edition.workspace = true
+version = "0.1.0"
+
+[lints]
+workspace = true
+
+[features]
+default = ["metrics", "tracing"]
+# Export signals directly from the wasm guest rather than the host.
+guest-export = ["dep:async-trait", "dep:bytes", "dep:http", "dep:opentelemetry-http", "dep:opentelemetry-otlp"]
+metrics = ["opentelemetry_sdk/experimental_metrics_custom_reader"]
+tracing = ["dep:tracing-opentelemetry", "dep:tracing-subscriber"]
+
+[dependencies]
+anyhow.workspace = true
+cfg-if.workspace = true
+futures.workspace = true
+opentelemetry.workspace = true
+opentelemetry_sdk.workspace = true
+sdk-http.workspace = true
+sdk-otel-attr = { path = "../sdk-otel-attr" }
+wit-bindgen.workspace = true
+
+# tracing
+tracing.workspace = true
+tracing-opentelemetry = { workspace = true, features = ["metrics_gauge_unstable"], optional = true }
+tracing-subscriber = { workspace = true, features = ["env-filter"], optional = true }
+
+# host-export dependencies
+num-traits = "0.2"
+
+# guest-export dependencies
+async-trait = { version = "0.1.89", optional = true }
+bytes = { workspace = true, optional = true }
+http = { workspace = true, optional = true }
+opentelemetry-http = { version = "0.30.0", default-features = false, optional = true }
+opentelemetry-otlp = { version = "0.30.0", default-features = false, features = ["http-proto"], optional = true }

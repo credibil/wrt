@@ -1,0 +1,68 @@
+# Install: `cargo install cargo-make`
+# Help: https://sagiegurari.github.io/cargo-make/
+
+[env]
+CARGO_MAKE_EXTEND_WORKSPACE_MAKEFILE = true
+
+[config]
+default_to_workspace = true
+skip_core_tasks = true
+skip_crate_env_info = true
+skip_git_env_info = true
+skip_rust_env_info = true
+
+# -------------------------------------
+# Build and test
+# -------------------------------------
+
+[tasks.clean]
+command = "cargo"
+args = ["clean"]
+
+[tasks.build]
+command = "cargo"
+args = ["build"]
+dependencies = ["clean"]
+
+[tasks.test]
+command = "cargo"
+args = ["nextest", "run"]
+dependencies = ["clean"]
+env = { RUSTFLAGS = "-Dwarnings" }
+
+# -------------------------------------
+# Basic hygiene
+# -------------------------------------
+
+[tasks.fmt]
+dependencies = ["fmt-toml"]
+command = "cargo"
+args = ["fmt", "--all"]
+install_crate = "rustfmt"
+
+[tasks.fmt-toml]
+command = "taplo"
+args = ["format"]
+install_crate = "taplo-cli"
+
+[tasks.lint]
+command = "cargo"
+args = ["clippy", "--all-features"]
+install_crate = { rustup_component_name = "clippy" }
+
+[tasks.audit]
+command = "cargo"
+args = ["audit"]
+
+[tasks.unused]
+command = "cargo"
+args = ["machete", "--skip-target-dir"]
+install_crate = "cargo-machete"
+
+[tasks.outdated]
+command = "cargo"
+args = ["outdated", "--workspace", "--exit-code", "1"]
+install_crate = "cargo-outdated"
+
+[tasks.check]
+dependencies = ["audit", "fmt", "lint", "outdated", "unused"]

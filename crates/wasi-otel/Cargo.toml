@@ -1,0 +1,28 @@
+[package]
+name = "wasi-otel"
+description = "Wasm opentelemetry service"
+authors.workspace = true
+edition.workspace = true
+version = "0.1.0"
+
+[lints]
+workspace = true
+
+[features]
+
+[dependencies]
+anyhow.workspace = true
+credibil-otel.workspace = true
+futures.workspace = true
+hex = "0.4.3"
+http.workspace = true
+opentelemetry.workspace = true
+opentelemetry-proto = "0.30.0"
+opentelemetry_sdk.workspace = true
+prost = "0.13.5"
+reqwest = "0.12.23"
+runtime.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+tracing-opentelemetry.workspace = true
+wasmtime.workspace = true
