@@ -60,9 +60,9 @@ homepage = "https://credibil.io"
 keywords = ["decentralized", "identity"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
-repository = "https://github.com/credibil/core"
+repository = "https://github.com/credibil/tempo"
 rust-version = "1.89"
-version = "0.2.0"
+version = "0.1.0"
 
 [workspace.lints.rust]
 trivial_numeric_casts = "warn"
