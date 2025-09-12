@@ -13,6 +13,8 @@ jobs:
       version: ${{ steps.version.outputs.version }}
 
     steps:
+      - run: echo "ghcr.io/${{ github.event.repository.name }}"
+        
       - name: Version
         id: version
         run: echo "version=0.1.0" >> $GITHUB_OUTPUT
@@ -40,7 +42,9 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           push: true
-          context: image/
+          file: ./examples/runtimes/Dockerfile
+          build-args: |
+            PACKAGE=tempo-all
           tags: |
             ghcr.io/${{ github.event.repository.name }}:${{ needs.publish.outputs.version }}
             ghcr.io/${{ github.event.repository.name }}:latest
