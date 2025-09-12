@@ -2,14 +2,6 @@
 services:
   otel:
     image: ghcr.io/credibil/tempo
-    # build:
-    #   context: ../..
-    #   dockerfile: examples/runtimes/Dockerfile
-    #   tags:
-    #     - ghcr.io/credibil/tempo
-    #   args:
-    #     PACKAGE: tempo-all
-    platform: linux/arm64
     env_file: .env
     ports:
       - 8080:8080

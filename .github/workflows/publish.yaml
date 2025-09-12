@@ -13,8 +13,6 @@ jobs:
       version: ${{ steps.version.outputs.version }}
 
     steps:
-      - run: echo "ghcr.io/${{ github.event.repository.name }}"
-        
       - name: Version
         id: version
         run: echo "version=0.1.0" >> $GITHUB_OUTPUT
@@ -28,7 +26,7 @@ jobs:
     needs: publish
     
     steps:
-      - uses: actions/checkout@v5
+      # - uses: actions/checkout@v5
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
 

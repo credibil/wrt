@@ -19,8 +19,10 @@ RUN \
     # --mount=type=cache,target=$CARGO_HOME/registry \
     cargo build --package $PACKAGE --release
 
-# FROM alpine:latest
-FROM scratch
+#  N.B. 'alpine' image is ~10Mb larger than 'scratch' but appears to perform 
+# marginally better
+FROM alpine:latest
+# FROM scratch
 ARG PACKAGE
 
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
