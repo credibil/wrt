@@ -29,8 +29,12 @@ See [examples/http/README.md](examples/http/README.md).
 ### Build and Run
 
 ```bash
-docker build --platform=linux/arm64 -t acrcredibil.azurecr.io/demo/wasmgrid .
-docker compose up
+docker build \
+  --file ./examples/runtimes/Dockerfile \
+  --build-arg PACKAGE=tempo-all \
+  --tag ghcr.io/credibil/tempo .
+
+docker compose --file ./examples/runtimes/compose.yaml up
 ```
 
 ### Compiling a wasm component
@@ -61,12 +65,6 @@ cargo build --package wasmgrid --target aarch64-unknown-linux-musl --release
 
 See <https://docs.wasmtime.dev/examples-minimal.html/> for more information on 
 optimising embedded `wasmtime`builds.
-
-### Debugging bindgen! macro
-
-```bash
-cargo expand --manifest-path crates/services/Cargo.toml keyvalue::generated > expanded.rs
-```
 
 ## Nex
 

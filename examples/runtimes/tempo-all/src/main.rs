@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use res_azkeyvault::AzKeyVault;
 use res_mongodb::MongoDb;
 use res_nats::Nats;
@@ -23,18 +23,15 @@ async fn main() -> Result<()> {
 
 async fn init_runtime(wasm: PathBuf) -> Result<()> {
     // create resources (in parallel)
-    let (Ok(mongodb), Ok(az_secret), Ok(nats)) =
-        tokio::join!(MongoDb::new(), AzKeyVault::new(), Nats::new())
-    else {
-        return Err(anyhow!("failed to create resources"));
-    };
+    let (mongodb, az_secret, nats) = tokio::join!(MongoDb::new(), AzKeyVault::new(), Nats::new());
+    let nats = nats?;
 
     Runtime::new(wasm)
         .register(Otel)
         .register(Http)
-        .register(Blobstore.resource(mongodb)?)
+        .register(Blobstore.resource(mongodb?)?)
         .register(KeyValue.resource(nats.clone())?)
-        .register(Vault.resource(az_secret)?)
+        .register(Vault.resource(az_secret?)?)
         .register(Messaging.resource(nats)?)
         .await
 }
