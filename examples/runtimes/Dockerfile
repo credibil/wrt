@@ -19,8 +19,8 @@ RUN \
     # --mount=type=cache,target=$CARGO_HOME/registry \
     cargo build --package $PACKAGE --release
 
-#  N.B. 'alpine' image is ~10Mb larger than 'scratch' but appears to perform 
-# marginally better
+# N.B. 'alpine' image is ~10Mb larger but appears to perform 
+# marginally better than 'scratch'
 FROM alpine:latest
 # FROM scratch
 ARG PACKAGE
