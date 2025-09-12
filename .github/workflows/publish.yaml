@@ -23,6 +23,7 @@ jobs:
     name: Package
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       packages: write
     needs: publish
     
