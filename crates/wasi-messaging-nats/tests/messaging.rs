@@ -2,6 +2,7 @@ use tokio::time;
 
 // Send messages to each of the subjects a, b, and c.
 #[tokio::test]
+#[cfg_attr(miri, ignore)]
 async fn publish() {
     const COUNT: usize = 2;
 

@@ -1,7 +1,6 @@
-
 [package]
-name = "tempo"
-description = "WASI Component runtime"
+name = "runtime"
+description = "Wasm runtime"
 authors.workspace = true
 edition.workspace = true
 homepage.workspace = true
@@ -11,46 +10,26 @@ repository.workspace = true
 rust-version.workspace = true
 version.workspace = true
 
-default-run = "wg-all"
-
-[[bin]]
-name = "wg-all"
-path = "src/wg_all.rs"
-doc = false
-
-[[bin]]
-name = "wg-http"
-path = "src/wg_http.rs"
-doc = false
-
 [lints]
 workspace = true
 
 [features]
-default = ["compile"]
-compile = ["runtime/compile"] # adds cranelift (+ ~4Mb)
+compile = ["wasmtime/cranelift"]
 
 [dependencies]
 anyhow.workspace = true
-res-azkeyvault = { path = "crates/res-azkeyvault" }
-res-mongodb = { path = "crates/res-mongodb" }
-res-nats = { path = "crates/res-nats" }
-runtime.workspace = true
-tokio.workspace = true
-wasi-blobstore-mdb = { path = "crates/wasi-blobstore-mdb" }
-wasi-http = { path = "crates/wasi-http" }
-wasi-keyvalue-nats = { path = "crates/wasi-keyvalue-nats" }
-wasi-messaging-nats = { path = "crates/wasi-messaging-nats" }
-wasi-otel = { path = "crates/wasi-otel" }
-wasi-vault-az = { path = "crates/wasi-vault-az" }
-
-[profile.release]
-lto = true
-opt-level = "s"
-strip = true
+cfg-if.workspace = true
+clap = { version = "4.5.47", features = ["derive"] }
+credibil-otel.workspace = true
+futures.workspace = true
+tokio = { workspace = true, features = ["signal"] }
+tracing.workspace = true
+wasmtime = { workspace = true, features = ["runtime"] }
+wasmtime-wasi.workspace = true
+wasmtime-wasi-http.workspace = true
 
 [workspace]
-members = ["crates/*", "examples/*"]
+members = ["crates/*", "examples/guests/*", "examples/runtimes/*"]
 resolver = "3"
 
 [workspace.package]
@@ -91,7 +70,7 @@ http = "1.3.1"
 mongodb = { version = "3.3.0" }
 opentelemetry = "0.30.0"
 opentelemetry_sdk = { version = "0.30.0", features = ["experimental_metrics_custom_reader"] }
-runtime = { path = "crates/runtime" }
+runtime = { path = "." }
 sdk-http = { path = "crates/sdk-http" }
 sdk-otel = { path = "crates/sdk-otel", default-features = false }
 serde = { version = "1.0.219", features = ["derive"] }
@@ -110,6 +89,16 @@ wasmtime-wasi-http = "36.0.2"
 wasmtime-wasi-io = "36.0.2"
 wit-bindgen = "0.46.0"
 wit-bindings = { path = "crates/wit-bindings" }
+
+res-azkeyvault = { path = "crates/res-azkeyvault" }
+res-mongodb = { path = "crates/res-mongodb" }
+res-nats = { path = "crates/res-nats" }
+wasi-blobstore-mdb = { path = "crates/wasi-blobstore-mdb" }
+wasi-http = { path = "crates/wasi-http" }
+wasi-keyvalue-nats = { path = "crates/wasi-keyvalue-nats" }
+wasi-messaging-nats = { path = "crates/wasi-messaging-nats" }
+wasi-otel = { path = "crates/wasi-otel" }
+wasi-vault-az = { path = "crates/wasi-vault-az" }
 
 # [patch."https://github.com/credibil/core.git"]
 # credibil-otel = { path = "../../credibil/core/crates/otel" }

@@ -3747,7 +3747,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "tempo"
+name = "tempo-all"
 version = "0.1.0"
 dependencies = [
  "anyhow",
@@ -3762,6 +3762,19 @@ dependencies = [
  "wasi-messaging-nats",
  "wasi-otel",
  "wasi-vault-az",
+]
+
+[[package]]
+name = "tempo-minimal"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "res-nats",
+ "runtime",
+ "tokio",
+ "wasi-http",
+ "wasi-keyvalue-nats",
+ "wasi-otel",
 ]
 
 [[package]]

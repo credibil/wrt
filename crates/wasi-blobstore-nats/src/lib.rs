@@ -16,7 +16,6 @@ mod generated {
         },
         with: {
             "wasi:io": wasmtime_wasi::p2::bindings::io,
-
             "wasi:blobstore/types/incoming-value": IncomingValue,
             "wasi:blobstore/types/outgoing-value": OutgoingValue,
             "wasi:blobstore/container/container": Container,
@@ -54,18 +53,18 @@ pub type StreamObjectNames = Vec<String>;
 static NATS_CLIENT: OnceLock<async_nats::Client> = OnceLock::new();
 
 #[derive(Debug)]
-pub struct Service;
+pub struct Blobstore;
 
-impl runtime::Service for Service {
+impl runtime::Service for Blobstore {
     fn add_to_linker(&self, l: &mut Linker<RunState>) -> Result<()> {
-        blobstore::add_to_linker::<_, Data>(l, Blobstore::new)?;
-        container::add_to_linker::<_, Data>(l, Blobstore::new)?;
-        types::add_to_linker::<_, Data>(l, Blobstore::new)?;
+        blobstore::add_to_linker::<_, Data>(l, Host::new)?;
+        container::add_to_linker::<_, Data>(l, Host::new)?;
+        types::add_to_linker::<_, Data>(l, Host::new)?;
         Ok(())
     }
 }
 
-impl AddResource<async_nats::Client> for Service {
+impl AddResource<async_nats::Client> for Blobstore {
     fn resource(self, resource: async_nats::Client) -> Result<Self> {
         NATS_CLIENT.set(resource).map_err(|_| anyhow!("client already set"))?;
         Ok(self)
@@ -74,16 +73,16 @@ impl AddResource<async_nats::Client> for Service {
 
 struct Data;
 impl HasData for Data {
-    type Data<'a> = Blobstore<'a>;
+    type Data<'a> = Host<'a>;
 }
 
-pub struct Blobstore<'a> {
+pub struct Host<'a> {
     table: &'a mut ResourceTable,
 }
 
-impl Blobstore<'_> {
-    const fn new(c: &mut RunState) -> Blobstore<'_> {
-        Blobstore { table: &mut c.table }
+impl Host<'_> {
+    const fn new(c: &mut RunState) -> Host<'_> {
+        Host { table: &mut c.table }
     }
 }
 
@@ -91,8 +90,8 @@ fn nats() -> Result<&'static async_nats::Client> {
     NATS_CLIENT.get().ok_or_else(|| anyhow!("NATS client not initialized."))
 }
 
-// Implement the [`wasi_sql::ReadWriteView`]` trait for Blobstore<'_>.
-impl blobstore::Host for Blobstore<'_> {
+// Implement the [`wasi_sql::ReadWriteView`]` trait for Host<'_>.
+impl blobstore::Host for Host<'_> {
     async fn create_container(&mut self, name: String) -> Result<Resource<Container>> {
         let jetstream = jetstream::new(nats()?.clone());
         let store = jetstream
@@ -101,7 +100,6 @@ impl blobstore::Host for Blobstore<'_> {
                 ..Config::default()
             })
             .await?;
-
         Ok(self.table.push(store)?)
     }
 
@@ -121,14 +119,12 @@ impl blobstore::Host for Blobstore<'_> {
             .delete_object_store(&name)
             .await
             .map_err(|e| anyhow!("issue deleting object store: {e}"))?;
-
         Ok(())
     }
 
     async fn container_exists(&mut self, name: String) -> Result<bool> {
         let jetstream = jetstream::new(nats()?.clone());
         let exists = jetstream.get_object_store(&name).await.is_ok();
-
         Ok(exists)
     }
 
@@ -141,9 +137,9 @@ impl blobstore::Host for Blobstore<'_> {
     }
 }
 
-impl container::Host for Blobstore<'_> {}
+impl container::Host for Host<'_> {}
 
-impl container::HostContainer for Blobstore<'_> {
+impl container::HostContainer for Host<'_> {
     async fn name(&mut self, store_ref: Resource<Container>) -> Result<String> {
         let Ok(store) = self.table.get(&store_ref) else {
             return Err(anyhow!("Container not found"));
@@ -287,7 +283,7 @@ impl container::HostContainer for Blobstore<'_> {
     }
 }
 
-impl container::HostStreamObjectNames for Blobstore<'_> {
+impl container::HostStreamObjectNames for Host<'_> {
     async fn read_stream_object_names(
         &mut self, _names_ref: Resource<StreamObjectNames>, _len: u64,
     ) -> Result<(Vec<String>, bool)> {
@@ -305,14 +301,14 @@ impl container::HostStreamObjectNames for Blobstore<'_> {
     }
 }
 
-impl types::Host for Blobstore<'_> {
+impl types::Host for Host<'_> {
     fn convert_error(&mut self, err: anyhow::Error) -> Result<String> {
         tracing::error!("{err}");
         Ok(err.to_string())
     }
 }
 
-impl types::HostIncomingValue for Blobstore<'_> {
+impl types::HostIncomingValue for Host<'_> {
     async fn incoming_value_consume_sync(
         &mut self, value_ref: Resource<IncomingValue>,
     ) -> Result<IncomingValueSyncBody> {
@@ -340,7 +336,7 @@ impl types::HostIncomingValue for Blobstore<'_> {
     }
 }
 
-impl types::HostOutgoingValue for Blobstore<'_> {
+impl types::HostOutgoingValue for Host<'_> {
     async fn new_outgoing_value(&mut self) -> Result<Resource<OutgoingValue>> {
         Ok(self.table.push(OutgoingValue::new(1024))?)
     }

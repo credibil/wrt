@@ -45,7 +45,6 @@ pub async fn subscribe(channels: Vec<String>, pre: MessagingPre<RunState>) -> an
     let mut messages = stream::select_all(subscribers);
     while let Some(msg) = messages.next().await {
         let pre = pre.clone();
-
         tokio::spawn(
             async move {
                 if let Err(e) = call_guest(pre, msg).await {
