@@ -7,4 +7,4 @@ jobs:
   ci:
     uses: credibil/pipeline/.github/workflows/ci.yaml@main
     with:
-      outdated: embedded-io,mongodb,prost
+      outdated: prost
