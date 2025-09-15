@@ -15,8 +15,7 @@ workspace = true
 axum = { workspace = true, features = ["json"] }
 opentelemetry.workspace = true
 sdk-http.workspace = true
+sdk-otel = { workspace = true, features = ["guest-export"] }
 serde_json.workspace = true
 tracing.workspace = true
 wasi.workspace = true
-
-sdk-otel = { workspace = true, features = ["guest-export", "metrics", "tracing"] }

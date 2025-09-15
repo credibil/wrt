@@ -5,7 +5,7 @@ mod metrics;
 #[cfg(feature = "tracing")]
 mod tracing;
 
-use anyhow::Result;
+use anyhow::{Context, Result, anyhow};
 use cfg_if::cfg_if;
 use opentelemetry::{ContextGuard, KeyValue, Value};
 use opentelemetry_sdk::Resource;
@@ -36,9 +36,10 @@ pub fn init() -> Result<Shutdown> {
 
     // initialize providers
     #[cfg(feature = "tracing")]
-    let tracing_provider = tracing::init(resource.clone())?;
+    let tracing_provider =
+        tracing::init(resource.clone()).context("failed to initialize tracing")?;
     #[cfg(feature = "metrics")]
-    let meter_provider = metrics::init(resource)?;
+    let meter_provider = metrics::init(resource).context("failed to initialize metrics")?;
 
     // create subscriber layers
     let filter_layer = EnvFilter::from_default_env()
@@ -55,7 +56,8 @@ pub fn init() -> Result<Shutdown> {
         .with(fmt_layer)
         .with(tracing_layer)
         .with(metrics_layer)
-        .try_init()?;
+        .try_init()
+        .map_err(|e| anyhow!("issue initializing global subscriber: {e}"))?;
 
     Ok(Shutdown {
         #[cfg(feature = "tracing")]

@@ -14,8 +14,9 @@ version.workspace = true
 workspace = true
 
 [features]
-default = []
-compile = ["wasmtime/cranelift"]
+default = ["jit"]
+# Enables just-in-time wasm to machine code compilation.
+jit = ["wasmtime/cranelift"]
 
 [dependencies]
 anyhow.workspace = true
@@ -42,7 +43,7 @@ license = "MIT OR Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/credibil/tempo"
 rust-version = "1.89"
-version = "0.1.0"
+version = "0.2.0"
 
 [workspace.lints.rust]
 trivial_numeric_casts = "warn"
@@ -73,7 +74,7 @@ opentelemetry = "0.30.0"
 opentelemetry_sdk = { version = "0.30.0", features = ["experimental_metrics_custom_reader"] }
 runtime = { path = "." }
 sdk-http = { path = "crates/sdk-http" }
-sdk-otel = { path = "crates/sdk-otel", default-features = false }
+sdk-otel = { path = "crates/sdk-otel" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.143"
 time = "0.3.43"
