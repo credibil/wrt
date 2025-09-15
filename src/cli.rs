@@ -26,7 +26,7 @@ pub enum Command {
         wasm: PathBuf,
     },
     /// Compile the specified wasm32-wasip2 component.
-    #[cfg(feature = "compile")]
+    #[cfg(feature = "jit")]
     Compile {
         /// The path to the wasm file to compile.
         wasm: PathBuf,

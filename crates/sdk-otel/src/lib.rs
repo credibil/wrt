@@ -21,9 +21,11 @@ use crate::init::Shutdown;
 
 /// Initialize OpenTelemetry SDK and tracing subscriber.
 pub fn init() -> Shutdown {
-    let Ok(shutdown) = init::init() else {
-        ::tracing::error!("failed to initialize");
-        return Shutdown::default();
-    };
-    shutdown
+    match init::init() {
+        Ok(shutdown) => shutdown,
+        Err(e) => {
+            ::tracing::error!("failed to initialize: {e}");
+            Shutdown::default()
+        }
+    }
 }

@@ -4,18 +4,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  # publish:
-  #   uses: credibil/pipeline/.github/workflows/publish.yaml@main
   publish:
-    name: Publish
-    runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.version.outputs.version }}
-
-    steps:
-      - name: Version
-        id: version
-        run: echo "version=0.1.0" >> $GITHUB_OUTPUT
+    uses: credibil/pipeline/.github/workflows/publish.yaml@main
 
   package:
     name: Package

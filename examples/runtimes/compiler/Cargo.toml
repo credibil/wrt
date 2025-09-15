@@ -16,6 +16,5 @@ workspace = true
 
 [dependencies]
 anyhow.workspace = true
-runtime = { workspace = true, features = ["compile"] }
+runtime = { workspace = true, features = ["jit"] }
 tokio.workspace = true
-
