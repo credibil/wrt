@@ -1,4 +1,4 @@
-# https://embarkstudios.github.io/cargo-deny/checks/licenses/cfg.html
+# https://embarkstudios.github.io/cargo-deny
 
 [graph]
 targets = [
@@ -36,21 +36,24 @@ expression = "MIT AND ISC AND OpenSSL"
 license-files = [{ path = "LICENSE", hash = 0xbd0eed23 }]
 
 [bans]
-multiple-versions = "warn"
+multiple-versions = "allow"
 wildcards = "allow"
 deny = [
   { name = "tokio", deny-multiple-versions = true },
 ]
 skip = [
-  { crate = "wit-bindgen", reason = "duplicate versions" },
+  # { crate = "wit-bindgen", reason = "duplicate versions" },
 ]
 skip-tree = [
-  { crate = "async-nats", depth = 5, reason = "contains out of date versions" },
   { crate = "wasmtime-wasi", depth = 5, reason = "contains out of date versions" },
-  { name = "mongodb", reason = "false positive" },
 ]
 
 [bans.workspace-dependencies]
 duplicates = "deny"
 include-path-dependencies = true
 unused = "deny"
+
+[sources.allow-org]
+github = [
+  "credibil",
+]

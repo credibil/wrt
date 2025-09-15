@@ -1,6 +1,6 @@
-//! # WASI Blobstore Service using MongoDB
+//! # WASI Blobstore Service for NATS
 //!
-//! This module implements a runtime services for `wasi:blobstore`
+//! This module implements a runtime service for `wasi:blobstore`
 //! (<https://github.com/WebAssembly/wasi-blobstore>).
 
 mod generated {
@@ -10,7 +10,7 @@ mod generated {
 
     wasmtime::component::bindgen!({
         world: "blobstore",
-        path: "../../wit",
+        path: "../../../wit",
         imports: {
             default: async | tracing | trappable,
         },
@@ -27,17 +27,16 @@ mod generated {
     });
 }
 
-use std::cmp::min;
 use std::sync::OnceLock;
 
 use anyhow::{Result, anyhow};
-use bson::{Bson, Document, doc};
-use bytes::Bytes;
-use chrono::Utc;
+use async_nats::jetstream;
+use async_nats::jetstream::object_store::{Config, ObjectStore};
+use bytes::{Bytes, BytesMut};
 use futures::StreamExt;
-use mongodb::{Collection, bson};
 use runtime::{AddResource, RunState};
-use serde::{Deserialize, Serialize};
+use time::OffsetDateTime;
+use tokio::io::AsyncReadExt;
 use wasmtime::component::{HasData, Linker, Resource, ResourceTable};
 use wasmtime_wasi::p2::bindings::io::streams::{InputStream, OutputStream};
 use wasmtime_wasi::p2::pipe::{MemoryInputPipe, MemoryOutputPipe};
@@ -46,20 +45,12 @@ use self::generated::wasi::blobstore::blobstore::{self, ObjectId};
 use self::generated::wasi::blobstore::container::{self, ContainerMetadata, ObjectMetadata};
 use self::generated::wasi::blobstore::types::{self, IncomingValueSyncBody};
 
-pub type Container = Collection<Blob>;
+pub type Container = ObjectStore;
 pub type IncomingValue = Bytes;
 pub type OutgoingValue = MemoryOutputPipe;
 pub type StreamObjectNames = Vec<String>;
 
-static MONGODB_CLIENT: OnceLock<mongodb::Client> = OnceLock::new();
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Blob {
-    name: String,
-    data: Document,
-    size: u64,
-    created_at: u64,
-}
+static NATS_CLIENT: OnceLock<async_nats::Client> = OnceLock::new();
 
 #[derive(Debug)]
 pub struct Blobstore;
@@ -73,9 +64,9 @@ impl runtime::Service for Blobstore {
     }
 }
 
-impl AddResource<mongodb::Client> for Blobstore {
-    fn resource(self, resource: mongodb::Client) -> Result<Self> {
-        MONGODB_CLIENT.set(resource).map_err(|_| anyhow!("client already set"))?;
+impl AddResource<async_nats::Client> for Blobstore {
+    fn resource(self, resource: async_nats::Client) -> Result<Self> {
+        NATS_CLIENT.set(resource).map_err(|_| anyhow!("client already set"))?;
         Ok(self)
     }
 }
@@ -95,40 +86,46 @@ impl Host<'_> {
     }
 }
 
-fn mongodb() -> Result<&'static mongodb::Client> {
-    MONGODB_CLIENT.get().ok_or_else(|| anyhow!("MongoDB client not initialized."))
+fn nats() -> Result<&'static async_nats::Client> {
+    NATS_CLIENT.get().ok_or_else(|| anyhow!("NATS client not initialized."))
 }
 
 // Implement the [`wasi_sql::ReadWriteView`]` trait for Host<'_>.
 impl blobstore::Host for Host<'_> {
     async fn create_container(&mut self, name: String) -> Result<Resource<Container>> {
-        let Some(db) = mongodb()?.default_database() else {
-            return Err(anyhow!("No default database found"));
-        };
-        let collection = db.collection::<Blob>(&name);
-        Ok(self.table.push(collection)?)
+        let jetstream = jetstream::new(nats()?.clone());
+        let store = jetstream
+            .create_object_store(Config {
+                bucket: name,
+                ..Config::default()
+            })
+            .await?;
+        Ok(self.table.push(store)?)
     }
 
     async fn get_container(&mut self, name: String) -> Result<Resource<Container>> {
-        let Some(db) = mongodb()?.default_database() else {
-            return Err(anyhow!("No default database found"));
-        };
-        let collection = db.collection::<Blob>(&name);
-        Ok(self.table.push(collection)?)
+        let jetstream = jetstream::new(nats()?.clone());
+        let store = jetstream
+            .get_object_store(&name)
+            .await
+            .map_err(|e| anyhow!("issue getting object store: {e}"))?;
+
+        Ok(self.table.push(store)?)
     }
 
     async fn delete_container(&mut self, name: String) -> Result<()> {
-        let Some(db) = mongodb()?.default_database() else {
-            return Err(anyhow!("No default database found"));
-        };
-        db.collection::<Blob>(&name)
-            .drop()
+        let jetstream = jetstream::new(nats()?.clone());
+        jetstream
+            .delete_object_store(&name)
             .await
-            .map_err(|e| anyhow!("issue deleting container: {e}"))
+            .map_err(|e| anyhow!("issue deleting object store: {e}"))?;
+        Ok(())
     }
 
-    async fn container_exists(&mut self, _name: String) -> Result<bool> {
-        Ok(true)
+    async fn container_exists(&mut self, name: String) -> Result<bool> {
+        let jetstream = jetstream::new(nats()?.clone());
+        let exists = jetstream.get_object_store(&name).await.is_ok();
+        Ok(exists)
     }
 
     async fn copy_object(&mut self, _src: ObjectId, _dest: ObjectId) -> Result<()> {
@@ -143,90 +140,73 @@ impl blobstore::Host for Host<'_> {
 impl container::Host for Host<'_> {}
 
 impl container::HostContainer for Host<'_> {
-    async fn name(&mut self, coll_ref: Resource<Container>) -> Result<String> {
-        let Ok(collection) = self.table.get(&coll_ref) else {
+    async fn name(&mut self, store_ref: Resource<Container>) -> Result<String> {
+        let Ok(store) = self.table.get(&store_ref) else {
             return Err(anyhow!("Container not found"));
         };
-        Ok(collection.name().to_string())
+
+        // HACK: get the store name from the first object in the store
+        // TODO: wrap NATS ObjectStore with a custom type
+        let mut list = store.list().await.map_err(|e| anyhow!("issue listing objects: {e}"))?;
+        let Some(Ok(n)) = list.next().await else {
+            return Err(anyhow!("No objects found in the store"));
+        };
+
+        Ok(n.bucket)
     }
 
-    async fn info(&mut self, _coll_ref: Resource<Container>) -> Result<ContainerMetadata> {
+    async fn info(&mut self, _store_ref: Resource<Container>) -> Result<ContainerMetadata> {
         todo!()
     }
 
     async fn get_data(
-        &mut self, coll_ref: Resource<Container>, name: String, _start: u64, _end: u64,
+        &mut self, store_ref: Resource<Container>, name: String, _start: u64, _end: u64,
     ) -> Result<Resource<IncomingValue>> {
-        let Ok(collection) = self.table.get(&coll_ref) else {
+        let Ok(store) = self.table.get(&store_ref) else {
             return Err(anyhow!("Container not found"));
         };
-        let Some(blob) = collection.find_one(doc! { "name": name }).await? else {
-            return Err(anyhow!("Object not found"));
-        };
 
-        // HACK: blob data is a string not an object
-        let data = match blob.data.get("_string") {
-            Some(Bson::String(s)) => {
-                serde_json::to_vec(&s).map_err(|e| anyhow!("failed to serialize Document: {e}"))?
-            }
-            _ => serde_json::to_vec(&blob.data)
-                .map_err(|e| anyhow!("failed to serialize Document: {e}"))?,
-        };
+        // read the object data from the store
+        let mut data = store.get(&name).await.map_err(|e| anyhow!("issue getting object: {e}"))?;
+        let mut buf = BytesMut::new();
+        data.read_buf(&mut buf).await?;
 
-        Ok(self.table.push(Bytes::from(data))?)
+        Ok(self.table.push(buf.into())?)
     }
 
     async fn write_data(
-        &mut self, coll_ref: Resource<Container>, name: String, value_ref: Resource<OutgoingValue>,
+        &mut self, store_ref: Resource<Container>, name: String, value_ref: Resource<OutgoingValue>,
     ) -> Result<()> {
-        let Ok(collection) = self.table.get(&coll_ref) else {
-            return Err(anyhow!("Container not found"));
-        };
         let Ok(value) = self.table.get(&value_ref) else {
             return Err(anyhow!("OutgoingValue not found"));
         };
-
-        // `put` should update any previous value, so delete first
-        collection.delete_one(doc! { "name": &name }).await?;
-
         let bytes = value.contents();
 
-        let data = match bytes.first() {
-            Some(b) if *b == b'{' => serde_json::from_slice::<Document>(&bytes)
-                .map_err(|e| anyhow!("issue deserializing into Document: {e}"))?,
-            Some(_) => {
-                // HACK: blob data is a string not an object
-                let stringified = serde_json::from_slice::<String>(&bytes)
-                    .map_err(|e| anyhow!("issue deserializing into String: {e}"))?;
-                doc! {"_string": stringified}
-            }
-            None => return Err(anyhow!("OutgoingValue is empty")),
+        let Ok(store) = self.table.get_mut(&store_ref) else {
+            return Err(anyhow!("Container not found"));
         };
 
-        let blob = Blob {
-            name,
-            data,
-            size: bytes.len() as u64,
-            #[allow(clippy::cast_sign_loss)]
-            created_at: Utc::now().timestamp_millis() as u64,
-        };
-        collection.insert_one(blob).await?;
+        // write the data to the store
+        store
+            .put(name.as_str(), &mut bytes.to_vec().as_slice())
+            .await
+            .map_err(|e| anyhow!("issue writing object: {e}"))?;
 
         Ok(())
     }
 
     async fn list_objects(
-        &mut self, coll_ref: Resource<Container>,
+        &mut self, store_ref: Resource<Container>,
     ) -> Result<Resource<StreamObjectNames>> {
-        let Ok(collection) = self.table.get(&coll_ref) else {
+        let Ok(store) = self.table.get(&store_ref) else {
             return Err(anyhow!("Container not found"));
         };
-        let mut list = collection.find(doc! {}).await?;
+        let mut list = store.list().await.map_err(|e| anyhow!("issue listing objects: {e}"))?;
 
         let mut names = vec![];
         while let Some(n) = list.next().await {
             match n {
-                Ok(blob) => names.push(blob.name),
+                Ok(obj_info) => names.push(obj_info.name),
                 Err(e) => tracing::warn!("issue listing object: {e}"),
             }
         }
@@ -234,82 +214,86 @@ impl container::HostContainer for Host<'_> {
         Ok(self.table.push(names)?)
     }
 
-    async fn delete_object(&mut self, coll_ref: Resource<Container>, name: String) -> Result<()> {
-        let Ok(collection) = self.table.get_mut(&coll_ref) else {
+    async fn delete_object(&mut self, store_ref: Resource<Container>, name: String) -> Result<()> {
+        let Ok(store) = self.table.get_mut(&store_ref) else {
             return Err(anyhow!("Container not found"));
         };
-        collection.delete_one(doc! { "name": name }).await?;
+        store.delete(&name).await.map_err(|e| anyhow!("issue deleting: {e}"))?;
+
         Ok(())
     }
 
     async fn delete_objects(
-        &mut self, coll_ref: Resource<Container>, names: Vec<String>,
+        &mut self, store_ref: Resource<Container>, names: Vec<String>,
     ) -> Result<()> {
-        let Ok(collection) = self.table.get_mut(&coll_ref) else {
+        let Ok(store) = self.table.get_mut(&store_ref) else {
             return Err(anyhow!("Container not found"));
         };
-        collection.delete_many(doc! { "name": { "$in": names } }).await?;
+        for name in names {
+            store.delete(&name).await.map_err(|e| anyhow!("issue deleting '{name}': {e}"))?;
+        }
+
         Ok(())
     }
 
-    async fn has_object(&mut self, coll_ref: Resource<Container>, name: String) -> Result<bool> {
-        let Ok(collection) = self.table.get(&coll_ref) else {
+    async fn has_object(&mut self, store_ref: Resource<Container>, name: String) -> Result<bool> {
+        let Ok(store) = self.table.get(&store_ref) else {
             return Err(anyhow!("Container not found"));
         };
-        Ok(collection.find_one(doc! { "name": name }).await?.is_some())
+        Ok(store.info(&name).await.is_ok())
     }
 
     async fn object_info(
-        &mut self, coll_ref: Resource<Container>, name: String,
+        &mut self, store_ref: Resource<Container>, name: String,
     ) -> Result<ObjectMetadata> {
-        let Ok(collection) = self.table.get(&coll_ref) else {
+        let Ok(store) = self.table.get(&store_ref) else {
             return Err(anyhow!("Container not found"));
         };
-        let Some(blob) = collection.find_one(doc! { "name": name }).await? else {
-            return Err(anyhow!("Object not found"));
-        };
+        let info = store.info(&name).await?;
 
-        Ok(ObjectMetadata {
-            name: blob.name,
-            container: collection.name().to_string(),
-            size: blob.size,
-            created_at: blob.created_at,
-        })
+        #[allow(clippy::cast_sign_loss)]
+        let metadata = ObjectMetadata {
+            name: info.name,
+            container: name,
+            size: info.size as u64,
+            created_at: info.modified.unwrap_or(OffsetDateTime::UNIX_EPOCH).unix_timestamp() as u64,
+        };
+        Ok(metadata)
     }
 
-    async fn clear(&mut self, coll_ref: Resource<Container>) -> Result<()> {
-        let Ok(collection) = self.table.get(&coll_ref) else {
+    async fn clear(&mut self, store_ref: Resource<Container>) -> Result<()> {
+        let Ok(store) = self.table.get(&store_ref) else {
             return Err(anyhow!("Container not found"));
         };
-        Ok(collection.drop().await?)
+        let mut list = store.list().await.map_err(|e| anyhow!("issue listing objects: {e}"))?;
+
+        while let Some(n) = list.next().await {
+            match n {
+                Ok(obj_info) => store.delete(obj_info.name).await?,
+                Err(e) => tracing::warn!("issue listing object: {e}"),
+            }
+        }
+
+        Ok(())
     }
 
-    async fn drop(&mut self, coll_ref: Resource<Container>) -> Result<()> {
-        self.table.delete(coll_ref)?;
+    async fn drop(&mut self, store_ref: Resource<Container>) -> Result<()> {
+        self.table.delete(store_ref)?;
         Ok(())
     }
 }
 
 impl container::HostStreamObjectNames for Host<'_> {
     async fn read_stream_object_names(
-        &mut self, names_ref: Resource<StreamObjectNames>, len: u64,
+        &mut self, _names_ref: Resource<StreamObjectNames>, _len: u64,
     ) -> Result<(Vec<String>, bool)> {
-        let names = self.table.get_mut(&names_ref)?;
-        tracing::trace!("read_stream_object_names: {names:?}");
-
-        let len = if len == 0 { names.len() as u64 } else { len };
-        let page = names.drain(..min(usize::try_from(len)?, names.len())).collect();
-
-        tracing::trace!("read_stream_object_names: {page:?}");
-        Ok((page, names.is_empty()))
+        todo!()
     }
 
     async fn skip_stream_object_names(
-        &mut self, names_ref: Resource<StreamObjectNames>, num: u64,
+        &mut self, _names_ref: Resource<StreamObjectNames>, _num: u64,
     ) -> Result<(u64, bool)> {
-        let names = self.table.get_mut(&names_ref)?;
-        let skipped = names.split_off(min(usize::try_from(num)?, names.len()));
-        Ok((skipped.len() as u64, names.is_empty()))
+        todo!()
     }
 
     async fn drop(&mut self, names_ref: Resource<StreamObjectNames>) -> Result<()> {
@@ -354,8 +338,7 @@ impl types::HostIncomingValue for Host<'_> {
 
 impl types::HostOutgoingValue for Host<'_> {
     async fn new_outgoing_value(&mut self) -> Result<Resource<OutgoingValue>> {
-        // HACK: 1 MiB is the maximum capacity for in-mem outgoing values.
-        Ok(self.table.push(OutgoingValue::new(1_048_576))?)
+        Ok(self.table.push(OutgoingValue::new(1024))?)
     }
 
     async fn outgoing_value_write_body(

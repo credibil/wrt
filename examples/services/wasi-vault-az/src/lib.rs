@@ -13,7 +13,7 @@ mod generated {
 
     wasmtime::component::bindgen!({
         world: "vault",
-        path: "../../wit",
+        path: "../../../wit",
         imports: {
             default: async | tracing | trappable,
         },

@@ -1,0 +1,21 @@
+
+[package]
+name = "compiler"
+description = "Minimal runtime (2 services)"
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+anyhow.workspace = true
+runtime = { workspace = true, features = ["compile"] }
+tokio.workspace = true
+
