@@ -1,6 +1,5 @@
-use std::path::PathBuf;
 
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use res_azkeyvault::AzKeyVault;
 use res_mongodb::MongoDb;
 use res_nats::Nats;
@@ -14,15 +13,9 @@ use wasi_vault_az::Vault;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    match Cli::parse().command {
-        Command::Run { wasm } => init_runtime(wasm).await,
-        #[cfg(feature = "compile")]
-        Command::Compile { wasm, output } => runtime::compile(&wasm, output),
-    }
-}
-
-async fn init_runtime(wasm: PathBuf) -> Result<()> {
-    // create resources (in parallel)
+    let Command::Run { wasm } = Cli::parse().command else {
+        return Err(anyhow!("No command provided"));
+    };
     let (mongodb, az_secret, nats) = tokio::join!(MongoDb::new(), AzKeyVault::new(), Nats::new());
     let nats = nats?;
 

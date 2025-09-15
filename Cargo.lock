@@ -621,6 +621,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b05b61dc5112cbb17e4b6cd61790d9845d13888356391624cbe7e41efeac1e75"
 
 [[package]]
+name = "compiler"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "runtime",
+ "tokio",
+]
+
+[[package]]
 name = "compression-codecs"
 version = "0.4.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1205,6 +1214,24 @@ checksum = "8be9f3dfaaffdae2972880079a491a1a8bb7cbed0b8dd7a347f668b4150a3b93"
 dependencies = [
  "event-listener",
  "pin-project-lite",
+]
+
+[[package]]
+name = "everything"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "res-azkeyvault",
+ "res-mongodb",
+ "res-nats",
+ "runtime",
+ "tokio",
+ "wasi-blobstore-mdb",
+ "wasi-http",
+ "wasi-keyvalue-nats",
+ "wasi-messaging-nats",
+ "wasi-otel",
+ "wasi-vault-az",
 ]
 
 [[package]]
@@ -2206,6 +2233,17 @@ name = "mime"
 version = "0.3.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6877bb514081ee2a7ff5ef9de3281f14a4dd4bceac4c09388074a6b5df8a139a"
+
+[[package]]
+name = "minimal"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "runtime",
+ "tokio",
+ "wasi-http",
+ "wasi-otel",
+]
 
 [[package]]
 name = "miniz_oxide"
@@ -3744,37 +3782,6 @@ dependencies = [
  "once_cell",
  "rustix 1.1.2",
  "windows-sys 0.61.0",
-]
-
-[[package]]
-name = "tempo-all"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "res-azkeyvault",
- "res-mongodb",
- "res-nats",
- "runtime",
- "tokio",
- "wasi-blobstore-mdb",
- "wasi-http",
- "wasi-keyvalue-nats",
- "wasi-messaging-nats",
- "wasi-otel",
- "wasi-vault-az",
-]
-
-[[package]]
-name = "tempo-minimal"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "res-nats",
- "runtime",
- "tokio",
- "wasi-http",
- "wasi-keyvalue-nats",
- "wasi-otel",
 ]
 
 [[package]]

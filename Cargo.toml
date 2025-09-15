@@ -14,6 +14,7 @@ version.workspace = true
 workspace = true
 
 [features]
+default = []
 compile = ["wasmtime/cranelift"]
 
 [dependencies]
@@ -29,7 +30,7 @@ wasmtime-wasi.workspace = true
 wasmtime-wasi-http.workspace = true
 
 [workspace]
-members = ["crates/*", "examples/guests/*", "examples/runtimes/*"]
+members = ["crates/*", "examples/guests/*", "examples/runtimes/*", "examples/services/*"]
 resolver = "3"
 
 [workspace.package]
@@ -90,15 +91,15 @@ wasmtime-wasi-io = "36.0.2"
 wit-bindgen = "0.46.0"
 wit-bindings = { path = "crates/wit-bindings" }
 
-res-azkeyvault = { path = "crates/res-azkeyvault" }
-res-mongodb = { path = "crates/res-mongodb" }
-res-nats = { path = "crates/res-nats" }
-wasi-blobstore-mdb = { path = "crates/wasi-blobstore-mdb" }
+res-azkeyvault = { path = "examples/services/res-azkeyvault" }
+res-mongodb = { path = "examples/services/res-mongodb" }
+res-nats = { path = "examples/services/res-nats" }
+wasi-blobstore-mdb = { path = "examples/services/wasi-blobstore-mdb" }
 wasi-http = { path = "crates/wasi-http" }
-wasi-keyvalue-nats = { path = "crates/wasi-keyvalue-nats" }
-wasi-messaging-nats = { path = "crates/wasi-messaging-nats" }
+wasi-keyvalue-nats = { path = "examples/services/wasi-keyvalue-nats" }
+wasi-messaging-nats = { path = "examples/services/wasi-messaging-nats" }
 wasi-otel = { path = "crates/wasi-otel" }
-wasi-vault-az = { path = "crates/wasi-vault-az" }
+wasi-vault-az = { path = "examples/services/wasi-vault-az" }
 
 # [patch."https://github.com/credibil/core.git"]
 # credibil-otel = { path = "../../credibil/core/crates/otel" }

@@ -1,7 +1,7 @@
 
 [package]
-name = "tempo-minimal"
-description = "Minimal runtime (2 services)"
+name = "everything"
+description = "Runtime with all services"
 authors.workspace = true
 edition.workspace = true
 homepage.workspace = true
@@ -14,23 +14,17 @@ version.workspace = true
 [lints]
 workspace = true
 
-[features]
-default = ["compile"]
-compile = ["runtime/compile"] # adds cranelift (+ ~4Mb)
-
 [dependencies]
 anyhow.workspace = true
+res-azkeyvault.workspace = true
+res-mongodb.workspace = true
 res-nats.workspace = true
 runtime.workspace = true
 tokio.workspace = true
+wasi-blobstore-mdb.workspace = true
 wasi-http.workspace = true
 wasi-keyvalue-nats.workspace = true
+wasi-messaging-nats.workspace = true
 wasi-otel.workspace = true
+wasi-vault-az.workspace = true
 
-[profile.release]
-lto = true
-opt-level = "s"
-strip = true
-
-# [patch."https://github.com/credibil/core.git"]
-# credibil-otel = { path = "../../credibil/core/crates/otel" }
