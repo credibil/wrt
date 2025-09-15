@@ -4,17 +4,16 @@ on:
   workflow_dispatch:
 
 jobs:
-  # ci:
-  #   name: CI
-  #   uses: credibil/pipeline/.github/workflows/ci.yaml@main
-  #   with:
-  #     outdated: prost
+  ci:
+    name: CI
+    uses: credibil/pipeline/.github/workflows/ci.yaml@main
+    with:
+      outdated: prost
 
   publish:
     name: Publish
-    # needs: ci
+    needs: ci
     uses: credibil/pipeline/.github/workflows/publish.yaml@main
-    # secrets: inherit
 
   package:
     name: Package
