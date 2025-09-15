@@ -14,7 +14,7 @@ jobs:
     name: Publish
     # needs: ci
     uses: credibil/pipeline/.github/workflows/publish.yaml@main
-    secrets: inherit
+    # secrets: inherit
 
   package:
     name: Package
