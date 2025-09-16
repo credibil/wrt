@@ -17,11 +17,11 @@ jobs:
 
   package:
     name: Package
+    needs: publish
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
-    needs: publish
     
     steps:
       - uses: docker/setup-qemu-action@v3
