@@ -77,8 +77,9 @@ dependencies = ["vet-imports", "vet-exempt", "vet-unpub"]
 
 [tasks.miri]
 script = '''
-rustup +nightly component add miri
 rustup override set nightly
+rustup +nightly component add miri
+rustup +nightly target add aarch64-apple-darwin
 cargo miri setup
 cargo miri nextest run --no-tests=pass
 '''
