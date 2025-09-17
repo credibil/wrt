@@ -26,9 +26,13 @@ dependencies = ["clean"]
 
 [tasks.test]
 command = "cargo"
-args = ["nextest", "run"]
+args = ["nextest", "run", "--all", "--all-features", "--no-tests=pass"]
 dependencies = ["clean"]
 env = { RUSTFLAGS = "-Dwarnings" }
+
+[tasks.test-doc]
+command = "cargo"
+args = ["test", "--doc", "--all-features", "--workspace"]
 
 # -------------------------------------
 # Basic hygiene
@@ -50,6 +54,35 @@ command = "cargo"
 args = ["clippy", "--all-features"]
 install_crate = { rustup_component_name = "clippy" }
 
+[tasks.vet-imports]
+command = "cargo"
+args = ["vet", "regenerate", "imports"]
+install_crate = "cargo-vet"
+
+[tasks.vet-exempt]
+command = "cargo"
+args = ["vet", "regenerate", "exemptions"]
+install_crate = "cargo-vet"
+
+[tasks.vet-unpub]
+command = "cargo"
+args = ["vet", "regenerate", "unpublished"]
+install_crate = "cargo-vet"
+
+[tasks.vet]
+command = "cargo"
+args = ["vet", "--locked"]
+install_crate = "cargo-vet"
+dependencies = ["vet-imports", "vet-exempt", "vet-unpub"]
+
+[tasks.miri]
+script = '''
+rustup +nightly component add miri
+rustup override set nightly
+cargo miri setup
+cargo miri nextest run --no-tests=pass
+'''
+
 [tasks.audit]
 command = "cargo"
 args = ["audit"]
@@ -61,8 +94,17 @@ install_crate = "cargo-machete"
 
 [tasks.outdated]
 command = "cargo"
-args = ["outdated", "--workspace", "--exit-code", "1"]
+args = ["outdated", "--workspace", "--exit-code", "1", "--depth", "1", "--ignore", "prost"]
 install_crate = "cargo-outdated"
+
+[tasks.deny]
+command = "cargo"
+args = ["deny", "--workspace", "check"]
+install_crate = "cargo-deny"
 
 [tasks.check]
 dependencies = ["audit", "fmt", "lint", "outdated", "unused"]
+
+# Emulate CI
+[tasks.ci]
+dependencies = ["lint", "test", "test-doc", "vet", "miri", "outdated", "deny"]

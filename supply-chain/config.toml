@@ -574,18 +574,6 @@ criteria = "safe-to-deploy"
 version = "1.0.27"
 criteria = "safe-to-deploy"
 
-[[exemptions.serde]]
-version = "1.0.224"
-criteria = "safe-to-deploy"
-
-[[exemptions.serde_core]]
-version = "1.0.224"
-criteria = "safe-to-deploy"
-
-[[exemptions.serde_derive]]
-version = "1.0.224"
-criteria = "safe-to-deploy"
-
 [[exemptions.serde_nanos]]
 version = "0.1.4"
 criteria = "safe-to-deploy"
