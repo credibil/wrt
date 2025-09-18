@@ -1,9 +1,11 @@
-use axum::routing::post;
+use axum::routing::{options, post};
 use axum::{Json, Router};
+use http::Method;
 use opentelemetry::trace::{TraceContextExt, Tracer};
 use opentelemetry::{KeyValue, global};
 use sdk_http::Result;
 use serde_json::{Value, json};
+use tower_http::cors::{Any, CorsLayer};
 use tracing::Level;
 use wasi::exports::http::incoming_handler::Guest;
 use wasi::http::types::{IncomingRequest, ResponseOutparam};
@@ -41,7 +43,15 @@ impl Guest for HttpGuest {
 
         let out = tracing::info_span!("handler span").in_scope(|| {
             tracing::info!("received request");
-            let router = Router::new().route("/", post(handle));
+        let router = Router::new()
+            .layer(
+                CorsLayer::new()
+                    .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
+                    .allow_headers(Any)
+                    .allow_origin(Any),
+            )
+            .route("/", post(handle))
+            .route("/", options(handle_options));
             sdk_http::serve(router, request)
         });
 
@@ -57,6 +67,11 @@ async fn handle(Json(body): Json<Value>) -> Result<Json<Value>> {
         "message": "Hello, World!",
         "request": body
     })))
+}
+
+// Handle preflight OPTIONS requests for CORS.
+async fn handle_options() -> Result<()> {
+    Ok(())
 }
 
 wasi::http::proxy::export!(HttpGuest);
