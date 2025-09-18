@@ -5,49 +5,57 @@ use tracing::{Instrument, info_span};
 use wasmtime::Store;
 use wasmtime::component::InstancePre;
 
-use super::generated::MessagingPre;
 use super::generated::exports::wasi::messaging::incoming_handler::Error;
+use crate::generated::Messaging;
 
 pub type Result<T, E = Error> = anyhow::Result<T, E>;
 
-pub async fn run(pre: InstancePre<RunState>) -> anyhow::Result<()> {
-    // bail if server is not required
-    let component_type = pre.component().component_type();
-    let mut exports = component_type.exports(pre.engine());
-    if !exports.any(|e| e.0.starts_with("wasi:messaging")) {
+pub async fn run(instance_pre: InstancePre<RunState>) -> anyhow::Result<()> {
+    // short-circuit when not required
+    let component_type = instance_pre.component().component_type();
+    let engine = instance_pre.engine();
+    if !component_type.exports(engine).any(|e| e.0.starts_with("wasi:messaging")) {
         tracing::debug!("messaging server not required");
         return Ok(());
     }
 
-    // get guest configuration
-    let mut store = Store::new(pre.engine(), RunState::new());
-    let msg_pre = MessagingPre::new(pre.clone())?;
-    let msg = msg_pre.instantiate_async(&mut store).await?;
-    let config = msg.wasi_messaging_incoming_handler().call_configure(&mut store).await??;
+    // guest configuration
+    let mut store = Store::new(instance_pre.engine(), RunState::new());
+    let instance = instance_pre.instantiate_async(&mut store).await?;
+    let messaging = Messaging::new(&mut store, &instance)?;
+    let config = instance
+        .run_concurrent(&mut store, async |accessor| {
+            messaging.wasi_messaging_incoming_handler().call_configure(accessor).await?
+        })
+        .await??;
 
     // process requests
-    subscribe(config.topics, msg_pre).await
+    subscribe(config.topics, instance_pre).await
 }
 
-pub async fn subscribe(channels: Vec<String>, pre: MessagingPre<RunState>) -> anyhow::Result<()> {
+pub async fn subscribe(
+    channels: Vec<String>, instance_pre: InstancePre<RunState>,
+) -> anyhow::Result<()> {
     tracing::trace!("subscribing to messaging channels: {channels:?}");
 
+    // channels to subscribe to
     let mut subscribers = vec![];
     let client = crate::nats()?;
-
-    for ch in channels {
+    for ch in &channels {
         tracing::debug!("subscribing to {ch}");
         let subscriber = client.subscribe(ch.clone()).await?;
         subscribers.push(subscriber);
     }
 
+    tracing::info!("subscribed to {channels:?}");
+
     // process messages until terminated
     let mut messages = stream::select_all(subscribers);
     while let Some(msg) = messages.next().await {
-        let pre = pre.clone();
+        let instance_pre = instance_pre.clone();
         tokio::spawn(
             async move {
-                if let Err(e) = call_guest(pre, msg).await {
+                if let Err(e) = call_guest(msg, instance_pre).await {
                     tracing::error!("error processing message {e}");
                 }
             }
@@ -59,10 +67,17 @@ pub async fn subscribe(channels: Vec<String>, pre: MessagingPre<RunState>) -> an
 }
 
 // Forward message to the wasm component.
-async fn call_guest(pre: MessagingPre<RunState>, message: Message) -> Result<()> {
+async fn call_guest(message: Message, instance_pre: InstancePre<RunState>) -> Result<()> {
     let mut state = RunState::new();
     let res_msg = state.table.push(message)?;
-    let mut store = Store::new(pre.engine(), state);
-    let messaging = pre.instantiate_async(&mut store).await?;
-    messaging.wasi_messaging_incoming_handler().call_handle(&mut store, res_msg).await?
+
+    let mut store = Store::new(instance_pre.engine(), state);
+    let instance = instance_pre.instantiate_async(&mut store).await?;
+    let messaging = Messaging::new(&mut store, &instance)?;
+
+    instance
+        .run_concurrent(&mut store, async |store| {
+            messaging.wasi_messaging_incoming_handler().call_handle(store, res_msg).await?
+        })
+        .await?
 }

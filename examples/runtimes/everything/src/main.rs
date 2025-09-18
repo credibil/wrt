@@ -1,4 +1,3 @@
-
 use anyhow::{Result, anyhow};
 use res_azkeyvault::AzKeyVault;
 use res_mongodb::MongoDb;
@@ -16,15 +15,15 @@ async fn main() -> Result<()> {
     let Command::Run { wasm } = Cli::parse().command else {
         return Err(anyhow!("No command provided"));
     };
-    let (mongodb, az_secret, nats) = tokio::join!(MongoDb::new(), AzKeyVault::new(), Nats::new());
-    let nats = nats?;
+    // let (mongodb, az_secret, nats) = tokio::try_join!(MongoDb::new(), AzKeyVault::new(), Nats::new())?;
+    let nats = Nats::new().await?;
 
     Runtime::new(wasm)
-        .register(Otel)
+        // .register(Otel)
         .register(Http)
-        .register(Blobstore.resource(mongodb?)?)
-        .register(KeyValue.resource(nats.clone())?)
-        .register(Vault.resource(az_secret?)?)
+        // .register(Blobstore.resource(mongodb?)?)
+        // .register(KeyValue.resource(nats.clone())?)
+        // .register(Vault.resource(az_secret?)?)
         .register(Messaging.resource(nats)?)
         .await
 }

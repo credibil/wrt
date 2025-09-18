@@ -27,4 +27,3 @@ wasi-keyvalue-nats.workspace = true
 wasi-messaging-nats.workspace = true
 wasi-otel.workspace = true
 wasi-vault-az.workspace = true
-

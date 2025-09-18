@@ -20,4 +20,3 @@ runtime.workspace = true
 tokio.workspace = true
 wasi-http.workspace = true
 wasi-otel.workspace = true
-
