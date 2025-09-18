@@ -104,21 +104,21 @@ impl TryFrom<Request> for HttpRequest<Body> {
 
 struct Response(OutgoingResponse);
 
-impl TryInto<Response> for HttpResponse<Body> {
+impl TryFrom<HttpResponse<Body>> for Response {
     type Error = anyhow::Error;
 
-    fn try_into(self) -> std::result::Result<Response, Self::Error> {
+    fn try_from(value: HttpResponse<Body>) -> std::result::Result<Response, Self::Error> {
         let headers = Headers::new();
-        for (key, value) in self.headers() {
+        for (key, value) in value.headers() {
             headers.set(key.as_str(), &[value.as_bytes().to_vec()])?;
         }
         let response = OutgoingResponse::new(headers);
         response
-            .set_status_code(self.status().as_u16())
+            .set_status_code(value.status().as_u16())
             .map_err(|()| error!("issue setting status code"))?;
 
         // write `OutgoingBody`
-        let http_body = self.into_body();
+        let http_body = value.into_body();
         let mut http_stream = http_body.into_data_stream();
         let out_body = response.body().map_err(|()| error!("issue getting outgoing body"))?;
         let out_stream = out_body.write().map_err(|()| error!("issue getting body stream"))?;
