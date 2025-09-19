@@ -15,7 +15,7 @@ async fn main() -> Result<()> {
     let Command::Run { wasm } = Cli::parse().command else {
         return Err(anyhow!("No command provided"));
     };
-    
+
     let (mongodb, az_secret, nats) =
         tokio::try_join!(MongoDb::new(), AzKeyVault::new(), Nats::new())?;
 
