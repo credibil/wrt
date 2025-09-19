@@ -6,6 +6,8 @@ Unreleased
 
 ### Changed
 
+Fixed bug in `sdk-http` where authority was not correctly passed as a host header from incoming HTTP request to internal `wasi-http` request.
+
 ---
 
 Release notes for previous releases can be found on the respective release 
