@@ -55,6 +55,10 @@ impl Request {
         decoded.parse::<Uri>().unwrap_or_else(|_| Uri::default())
     }
 
+    fn authority(&self) -> Option<String> {
+        self.0.authority()
+    }
+
     fn body(&self) -> Result<Vec<u8>> {
         let body = self.0.consume().map_err(|()| anyhow!("issue consuming request body"))?;
         let stream = body.stream().map_err(|()| anyhow!("issue getting body stream"))?;
@@ -92,7 +96,7 @@ impl TryFrom<Request> for HttpRequest<Body> {
             http_req.headers_mut().insert(name, value);
         }
         if http_req.headers().get("host").is_none()
-            && let Some(authority) = uri.authority()
+            && let Some(authority) = request.authority()
             && let Ok(value) = HeaderValue::from_str(authority.as_str())
         {
             http_req.headers_mut().insert("host", value);
@@ -107,7 +111,7 @@ struct Response(OutgoingResponse);
 impl TryFrom<HttpResponse<Body>> for Response {
     type Error = anyhow::Error;
 
-    fn try_from(value: HttpResponse<Body>) -> std::result::Result<Response, Self::Error> {
+    fn try_from(value: HttpResponse<Body>) -> std::result::Result<Self, Self::Error> {
         let headers = Headers::new();
         for (key, value) in value.headers() {
             headers.set(key.as_str(), &[value.as_bytes().to_vec()])?;
@@ -147,7 +151,7 @@ impl TryFrom<HttpResponse<Body>> for Response {
             bail!("issue finishing body: {e}");
         }
 
-        Ok(Response(response))
+        Ok(Self(response))
     }
 }
 
