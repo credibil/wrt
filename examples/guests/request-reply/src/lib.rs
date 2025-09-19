@@ -44,7 +44,7 @@ pub struct RequestReply;
 
 impl messaging::incoming_handler::Guest for RequestReply {
     // Handle messages to subscribed topics.
-    fn handle(message: Message) -> Result<(), Error> {
+    async fn handle(message: Message) -> Result<(), Error> {
         let subscriber =
             FmtSubscriber::builder().with_env_filter(EnvFilter::from_default_env()).finish();
         tracing::subscriber::set_global_default(subscriber).expect("should set subscriber");
@@ -71,11 +71,11 @@ impl messaging::incoming_handler::Guest for RequestReply {
     }
 
     // Subscribe to topics.
-    fn configure() -> Result<Configuration, Error> {
+    async fn configure() -> Result<Configuration, Error> {
         Ok(Configuration {
             topics: vec!["a".to_string()],
         })
     }
 }
 
-wit_bindings::messaging::export!(RequestReply  with_types_in wit_bindings::messaging);
+wit_bindings::messaging::export!(RequestReply with_types_in wit_bindings::messaging);

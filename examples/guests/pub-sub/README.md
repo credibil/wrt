@@ -17,10 +17,10 @@ Run the example guest:
 
 ```bash
 # compile and run
-cargo run -- run ./target/wasm32-wasip2/release/pub_sub.wasm
+cargo run --package messaging -- run ./target/wasm32-wasip2/release/pub_sub.wasm
 
 # pre-compile
-cargo run -- compile  ./target/wasm32-wasip2/release/pub-sub.wasm --output ./pub_sub.bin
+cargo run --package compiler -- compile --output ./pub_sub.bin ./target/wasm32-wasip2/release/pub_sub.wasm 
 cargo run -- run ./http.bin
 ```
 

@@ -1,3 +1,6 @@
+use std::thread::sleep;
+use std::time::{Duration, Instant};
+
 use anyhow::Result;
 use axum::routing::post;
 use axum::{Json, Router};
@@ -26,10 +29,16 @@ impl http::incoming_handler::Guest for Http {
     }
 }
 
+#[axum::debug_handler]
 async fn handle(body: Bytes) -> Json<Value> {
     let client = Client::connect("nats").unwrap();
     let message = Message::new(&body);
-    producer::send(&client, "a", message).expect("should send");
+
+    // *** WASIP3 ***
+    // use `spawn` to avoid blocking for non-blocking execution
+    wit_bindgen::block_on(producer::send(client, "a".to_string(), message))
+        .expect("should send message");
+
     Json(json!({"message": "message published"}))
 }
 
@@ -39,7 +48,7 @@ pub struct Messaging;
 
 impl messaging::incoming_handler::Guest for Messaging {
     // Handle messages to subscribed topics.
-    fn handle(message: Message) -> Result<(), Error> {
+    async fn handle(message: Message) -> Result<(), Error> {
         let subscriber =
             FmtSubscriber::builder().with_env_filter(EnvFilter::from_default_env()).finish();
         tracing::subscriber::set_global_default(subscriber).expect("should set subscriber");
@@ -66,8 +75,29 @@ impl messaging::incoming_handler::Guest for Messaging {
                     message.set_content_type(&format);
                 }
 
-                let client = Client::connect("nats")?;
-                producer::send(&client, "b", message)?;
+                let timer = Instant::now();
+
+                // *** WASIP3 ***
+                // use `spawn` to avoid blocking for non-blocking execution
+                for i in 0..100 {
+                    wit_bindgen::spawn(async move {
+                        let client = Client::connect("nats").unwrap();
+                        let data = format!("topic a iteration {i}");
+                        let message = Message::new(data.as_bytes());
+
+                        if let Err(e) = producer::send(client, "b".to_string(), message).await {
+                            tracing::error!("error sending message to topic 'b': {e}");
+                        }
+
+                        // HACK: yield to host
+                        if i % 100 == 0 {
+                            sleep(Duration::from_nanos(1));
+                            // wit_bindgen::yield_async().await;
+                        }
+                    });
+                }
+
+                println!("sent 100 messages in {} milliseconds", timer.elapsed().as_millis());
             }
             Some("b") => {
                 tracing::debug!("message received on topic 'b': {data_str}");
@@ -80,7 +110,7 @@ impl messaging::incoming_handler::Guest for Messaging {
     }
 
     // Subscribe to topics.
-    fn configure() -> Result<Configuration, Error> {
+    async fn configure() -> Result<Configuration, Error> {
         Ok(Configuration {
             topics: vec!["a".to_string(), "b".to_string()],
         })

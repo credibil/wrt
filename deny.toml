@@ -41,12 +41,8 @@ wildcards = "allow"
 deny = [
   { name = "tokio", deny-multiple-versions = true },
 ]
-skip = [
-  # { crate = "wit-bindgen", reason = "duplicate versions" },
-]
-skip-tree = [
-  { crate = "wasmtime-wasi", depth = 5, reason = "contains out of date versions" },
-]
+skip = []
+skip-tree = []
 
 [bans.workspace-dependencies]
 duplicates = "deny"
@@ -56,4 +52,5 @@ unused = "deny"
 [sources.allow-org]
 github = [
   "credibil",
+  "bytecodealliance"
 ]

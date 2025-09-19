@@ -16,8 +16,9 @@ workspace = true
 
 [dependencies]
 anyhow.workspace = true
+res-nats.workspace = true
 runtime.workspace = true
 tokio.workspace = true
 wasi-http.workspace = true
+wasi-messaging-nats.workspace = true
 wasi-otel.workspace = true
-

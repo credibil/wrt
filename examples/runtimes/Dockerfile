@@ -1,6 +1,6 @@
 # Dockerfile for building runtime examples
 
-FROM rust:1.89.0-alpine AS build
+FROM rust:alpine AS build
 ARG PACKAGE
 
 RUN apk add --no-cache clang lld musl-dev git perl make ca-certificates

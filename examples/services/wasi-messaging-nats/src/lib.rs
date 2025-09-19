@@ -51,9 +51,9 @@ pub struct Messaging;
 
 impl runtime::Service for Messaging {
     fn add_to_linker(&self, l: &mut Linker<RunState>) -> anyhow::Result<()> {
-        producer::add_to_linker::<_, Data>(l, Host::new)?;
-        request_reply::add_to_linker::<_, Data>(l, Host::new)?;
-        types::add_to_linker::<_, Data>(l, Host::new)?;
+        producer::add_to_linker::<_, WasiMessaging>(l, Host::new)?;
+        request_reply::add_to_linker::<_, WasiMessaging>(l, Host::new)?;
+        types::add_to_linker::<_, WasiMessaging>(l, Host::new)?;
         Ok(())
     }
 
@@ -83,8 +83,8 @@ fn nats() -> anyhow::Result<&'static async_nats::Client> {
     NATS_CLIENT.get().ok_or_else(|| anyhow!("NATS client not initialized."))
 }
 
-struct Data;
-impl HasData for Data {
+struct WasiMessaging;
+impl HasData for WasiMessaging {
     type Data<'a> = Host<'a>;
 }
 

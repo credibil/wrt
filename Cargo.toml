@@ -30,6 +30,12 @@ wasmtime = { workspace = true, features = ["runtime"] }
 wasmtime-wasi.workspace = true
 wasmtime-wasi-http.workspace = true
 
+# required for azure_identity, etc.
+openssl = { version = "0.10", features = ["vendored"] }
+
+[package.metadata.cargo-machete]
+ignored = ["openssl"]
+
 [workspace]
 members = ["crates/*", "examples/guests/*", "examples/runtimes/*", "examples/services/*"]
 resolver = "3"
@@ -42,7 +48,7 @@ keywords = ["decentralized", "identity"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/credibil/tempo"
-rust-version = "1.89"
+rust-version = "1.90"
 version = "0.5.0"
 
 [workspace.lints.rust]
@@ -57,7 +63,7 @@ pedantic = "warn"
 [workspace.dependencies]
 anyhow = "1.0.99"
 async-nats = { version = "0.42.0" }
-axum = { version = "0.8.4", default-features = false }                                               # features = ["form", "json", "query", "tracing"]
+axum = { version = "0.8.4", default-features = false }                                        # features = ["form", "json", "query", "tracing"]
 azure_core = { version = "0.27.0", default-features = false, features = ["reqwest_rustls"] }
 azure_identity = { version = "0.27.0", default-features = false }
 azure_security_keyvault_secrets = { version = "0.6.0", default-features = false }
@@ -75,7 +81,7 @@ opentelemetry_sdk = { version = "0.30.0", features = ["experimental_metrics_cust
 runtime = { path = "." }
 sdk-http = { path = "crates/sdk-http" }
 sdk-otel = { path = "crates/sdk-otel" }
-serde = { version = "1.0.224", features = ["derive"] }
+serde = { version = "1.0.225", features = ["derive"] }
 serde_json = "1.0.145"
 time = "0.3.43"
 tokio = { version = "1.47.1", default-features = false }
@@ -85,10 +91,10 @@ tracing = "0.1.41"
 tracing-opentelemetry = "0.31.0"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter", "fmt"] }
 wasi = "0.14.7"
-wasmtime = { version = "36.0.2", default-features = false, features = ["async", "component-model"] }
-wasmtime-wasi = "36.0.2"
-wasmtime-wasi-http = "36.0.2"
-wasmtime-wasi-io = "36.0.2"
+# wasmtime = { version = "36.0.2", default-features = false, features = ["component-model-async"] }
+# wasmtime-wasi = "36.0.2"
+# wasmtime-wasi-http = "36.0.2"
+# wasmtime-wasi-io = "36.0.2"
 wit-bindgen = "0.46.0"
 wit-bindings = { path = "crates/wit-bindings" }
 
@@ -101,6 +107,12 @@ wasi-keyvalue-nats = { path = "examples/services/wasi-keyvalue-nats" }
 wasi-messaging-nats = { path = "examples/services/wasi-messaging-nats" }
 wasi-otel = { path = "crates/wasi-otel" }
 wasi-vault-az = { path = "examples/services/wasi-vault-az" }
+
+# [patch.crates-io]
+wasmtime = { git = "https://github.com/bytecodealliance/wasmtime", default-features = false, features = ["component-model-async", "component-model-async-bytes"] }
+wasmtime-wasi = { git = "https://github.com/bytecodealliance/wasmtime", features = ["p3"] }
+wasmtime-wasi-http = { git = "https://github.com/bytecodealliance/wasmtime", features = ["p3"] }
+wasmtime-wasi-io = { git = "https://github.com/bytecodealliance/wasmtime" }
 
 # [patch."https://github.com/credibil/core.git"]
 # credibil-otel = { path = "../../credibil/core/crates/otel" }

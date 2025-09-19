@@ -11,7 +11,6 @@ use tracing::instrument;
 use wasmtime::component::{Component, Linker};
 use wasmtime::{Config, Engine};
 
-use crate::state::RunState;
 use crate::traits::Service;
 
 /// Runtime for a wasm component.
@@ -63,6 +62,7 @@ impl Runtime {
     fn init_runtime(self) -> Result<()> {
         let mut config = Config::new();
         config.async_support(true);
+        config.wasm_component_model_async(true);
         let engine = Engine::new(&config)?;
 
         // TODO: cause executing WebAssembly to periodically yield
@@ -85,8 +85,10 @@ impl Runtime {
         }
 
         // register services with runtime's Linker
-        let mut linker: Linker<RunState> = Linker::new(&engine);
+        let mut linker = Linker::new(&engine);
         wasmtime_wasi::p2::add_to_linker_async(&mut linker)?;
+        wasmtime_wasi::p3::add_to_linker(&mut linker)?;
+
         for service in &self.services {
             service.add_to_linker(&mut linker)?;
         }

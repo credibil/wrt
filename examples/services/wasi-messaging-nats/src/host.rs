@@ -2,13 +2,13 @@ use std::time::Duration;
 
 use anyhow::anyhow;
 use async_nats::{Client, HeaderMap, Subject};
-use wasmtime::component::Resource;
+use wasmtime::component::{Accessor, Resource};
 use wasmtime_wasi::ResourceTableError;
 
 use super::generated::wasi::messaging::request_reply::RequestOptions;
 use super::generated::wasi::messaging::types::{Error, HostMessage, Message, Metadata, Topic};
 use super::generated::wasi::messaging::{producer, request_reply, types};
-use crate::Host;
+use crate::{Host, WasiMessaging};
 
 pub type Result<T, E = Error> = anyhow::Result<T, E>;
 
@@ -216,16 +216,25 @@ impl types::HostClient for Host<'_> {
     }
 }
 
-/// The producer interface is used to send messages to a channel/topic.
-impl producer::Host for Host<'_> {
-    /// Sends the message using the given client.
-    async fn send(
-        &mut self, res_client: Resource<Client>, topic: Topic, this: Resource<Message>,
-    ) -> Result<()> {
-        tracing::trace!("producer::Host::send: topic {:?}", topic);
+// *** WASIP3 ***
+// use `HostWithStore` to add async support`
 
-        let client = self.table.get(&res_client)?;
-        let msg = self.table.get(&this)?;
+/// The producer interface is used to send messages to a channel/topic.
+impl producer::HostWithStore for WasiMessaging {
+    /// Sends the message using the given client.
+    async fn send<T>(
+        accessor: &Accessor<T, Self>, res_client: Resource<Client>, topic: Topic,
+        this: Resource<Message>,
+    ) -> Result<()> {
+        tracing::trace!("producer::Host::send: topic {topic:?}");
+
+        let (client, msg) = accessor.with(move |mut access| {
+            let table = access.get().table;
+            let client = table.get(&res_client)?;
+            let msg = table.get(&this)?;
+            Ok::<_, anyhow::Error>((client.clone(), msg.clone()))
+        })?;
+
         let Some(headers) = msg.headers.clone() else {
             client
                 .publish(topic.clone(), msg.payload.clone())
@@ -237,9 +246,12 @@ impl producer::Host for Host<'_> {
             .publish_with_headers(topic.clone(), headers, msg.payload.clone())
             .await
             .map_err(|e| anyhow!("failed to publish: {e}"))?;
+
         Ok(())
     }
 }
+
+impl producer::Host for Host<'_> {}
 
 /// The request-reply interface is used to send a request and receive a reply.
 impl request_reply::Host for Host<'_> {
