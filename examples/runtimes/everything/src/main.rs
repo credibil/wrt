@@ -15,15 +15,16 @@ async fn main() -> Result<()> {
     let Command::Run { wasm } = Cli::parse().command else {
         return Err(anyhow!("No command provided"));
     };
-    // let (mongodb, az_secret, nats) = tokio::try_join!(MongoDb::new(), AzKeyVault::new(), Nats::new())?;
-    let nats = Nats::new().await?;
+    
+    let (mongodb, az_secret, nats) =
+        tokio::try_join!(MongoDb::new(), AzKeyVault::new(), Nats::new())?;
 
     Runtime::new(wasm)
-        // .register(Otel)
+        .register(Otel)
         .register(Http)
-        // .register(Blobstore.resource(mongodb?)?)
-        // .register(KeyValue.resource(nats.clone())?)
-        // .register(Vault.resource(az_secret?)?)
+        .register(Blobstore.resource(mongodb)?)
+        .register(KeyValue.resource(nats.clone())?)
+        .register(Vault.resource(az_secret)?)
         .register(Messaging.resource(nats)?)
         .await
 }

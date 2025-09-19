@@ -1,11 +1,8 @@
-use std::pin::Pin;
 use std::time::Duration;
 
 use anyhow::anyhow;
 use async_nats::{Client, HeaderMap, Subject};
-use runtime::RunState;
-use tokio::sync::oneshot;
-use wasmtime::component::{Accessor, AccessorTask, Resource};
+use wasmtime::component::{Accessor, Resource};
 use wasmtime_wasi::ResourceTableError;
 
 use super::generated::wasi::messaging::request_reply::RequestOptions;
@@ -219,19 +216,8 @@ impl types::HostClient for Host<'_> {
     }
 }
 
-struct SendMessageTask {
-    io: Pin<Box<dyn Future<Output = Result<()>> + Send>>,
-    result_tx: oneshot::Sender<Result<()>>,
-}
-
-impl<T> AccessorTask<T, WasiMessaging, Result<()>> for SendMessageTask {
-    async fn run(self, _: &Accessor<T, WasiMessaging>) -> Result<()> {
-        let res = self.io.await;
-        tracing::debug!(?res, "`send_request` I/O future finished");
-        _ = self.result_tx.send(res);
-        Ok(())
-    }
-}
+// *** WASIP3 ***
+// use `HostWithStore` to add async support`
 
 /// The producer interface is used to send messages to a channel/topic.
 impl producer::HostWithStore for WasiMessaging {

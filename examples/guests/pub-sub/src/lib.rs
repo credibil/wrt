@@ -30,8 +30,12 @@ impl http::incoming_handler::Guest for Http {
 async fn handle(body: Bytes) -> Json<Value> {
     let client = Client::connect("nats").unwrap();
     let message = Message::new(&body);
+
+    // *** WASIP3 ***
+    // use `spawn` to avoid blocking for non-blocking execution
     wit_bindgen::block_on(producer::send(client, "a".to_string(), message))
         .expect("should send message");
+
     Json(json!({"message": "message published"}))
 }
 
@@ -68,10 +72,16 @@ impl messaging::incoming_handler::Guest for Messaging {
                     message.set_content_type(&format);
                 }
 
-                let client = Client::connect("nats")?;
+                // *** WASIP3 ***
+                // use `spawn` to avoid blocking for non-blocking execution
                 wit_bindgen::spawn(async move {
-                    if let Err(e) = producer::send(client, "b".to_string(), message).await {
-                        tracing::error!("error sending message to topic 'b': {e}");
+                    for _ in 0..1000 {
+                        let client = Client::connect("nats").unwrap();
+                        let message = Message::new(&resp);
+
+                        if let Err(e) = producer::send(client, "b".to_string(), message).await {
+                            tracing::error!("error sending message to topic 'b': {e}");
+                        }
                     }
                 });
             }

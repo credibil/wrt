@@ -21,4 +21,3 @@ tracing-subscriber.workspace = true
 wasi.workspace = true
 wit-bindgen.workspace = true
 wit-bindings.workspace = true
-tokio = { workspace = true, features = ["rt", "macros"] }

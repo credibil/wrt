@@ -57,7 +57,7 @@ pedantic = "warn"
 [workspace.dependencies]
 anyhow = "1.0.99"
 async-nats = { version = "0.42.0" }
-axum = { version = "0.8.4", default-features = false }                                        # features = ["form", "json", "query", "tracing"]
+axum = { version = "0.8.4", default-features = false }                                            # features = ["form", "json", "query", "tracing"]
 azure_core = { version = "0.27.0", default-features = false, features = ["reqwest_rustls"] }
 azure_identity = { version = "0.27.0", default-features = false }
 azure_security_keyvault_secrets = { version = "0.6.0", default-features = false }

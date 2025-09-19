@@ -11,7 +11,7 @@ use crate::generated::Messaging;
 pub type Result<T, E = Error> = anyhow::Result<T, E>;
 
 pub async fn run(instance_pre: InstancePre<RunState>) -> anyhow::Result<()> {
-    // short-circuit when not required
+    // short-circuit when messaging not required
     let component_type = instance_pre.component().component_type();
     let engine = instance_pre.engine();
     if !component_type.exports(engine).any(|e| e.0.starts_with("wasi:messaging")) {
@@ -20,9 +20,12 @@ pub async fn run(instance_pre: InstancePre<RunState>) -> anyhow::Result<()> {
     }
 
     // guest configuration
-    let mut store = Store::new(instance_pre.engine(), RunState::new());
+    let mut store = Store::new(engine, RunState::new());
     let instance = instance_pre.instantiate_async(&mut store).await?;
     let messaging = Messaging::new(&mut store, &instance)?;
+
+    // *** WASIP3 ***
+    // use `run_concurrent` for non-blocking execution
     let config = instance
         .run_concurrent(&mut store, async |accessor| {
             messaging.wasi_messaging_incoming_handler().call_configure(accessor).await?
@@ -75,9 +78,11 @@ async fn call_guest(message: Message, instance_pre: InstancePre<RunState>) -> Re
     let instance = instance_pre.instantiate_async(&mut store).await?;
     let messaging = Messaging::new(&mut store, &instance)?;
 
+    // *** WASIP3 ***
+    // use `run_concurrent` for non-blocking execution
     instance
-        .run_concurrent(&mut store, async |store| {
-            messaging.wasi_messaging_incoming_handler().call_handle(store, res_msg).await?
+        .run_concurrent(&mut store, async |accessor| {
+            messaging.wasi_messaging_incoming_handler().call_handle(accessor, res_msg).await?
         })
         .await?
 }
