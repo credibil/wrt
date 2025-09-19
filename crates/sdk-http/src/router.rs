@@ -1,12 +1,11 @@
 use std::fmt::{self, Display, Formatter};
 use std::str::FromStr;
 
-use anyhow::{Result, anyhow};
+use anyhow::{Result, anyhow, bail};
 use axum::body::Body;
-use axum::http::Request as HttpRequest;
+use axum::http::{Request as HttpRequest, Response as HttpResponse};
 use futures::StreamExt;
 use futures::executor::block_on;
-use http::header::CONTENT_TYPE;
 use http::{HeaderName, HeaderValue, Uri};
 use percent_encoding::percent_decode_str;
 use tower::ServiceExt;
@@ -29,48 +28,10 @@ pub fn serve(
     let http_resp = block_on(async { router.oneshot(http_req).await })
         .map_err(|e| error!("issue processing request: {e}"))?;
 
-    // transform `http::Response` into `OutgoingResponse`
-    let headers = Headers::new();
-    headers
-        .set(CONTENT_TYPE.as_str(), &[b"application/json".to_vec()])
-        .map_err(|e| error!("issue setting header: {e}"))?;
-    let response = OutgoingResponse::new(headers);
-    response
-        .set_status_code(http_resp.status().as_u16())
-        .map_err(|()| error!("issue setting status code"))?;
-
-    // write `OutgoingBody`
-    let http_body = http_resp.into_body();
-    let mut http_stream = http_body.into_data_stream();
-    let out_body = response.body().map_err(|()| error!("issue getting outgoing body"))?;
-    let out_stream = out_body.write().map_err(|()| error!("issue getting body stream"))?;
-
-    let pollable = out_stream.subscribe();
-    while let Some(Ok(chunk)) = block_on(async { http_stream.next().await }) {
-        pollable.block();
-        out_stream.check_write().map_err(|e| error!("issue checking write: {e}"))?;
-
-        if let Err(e) = out_stream.write(&chunk) {
-            return Err(error!("issue writing to stream: {e}"));
-        }
-    }
-    if let Err(e) = out_stream.flush() {
-        return Err(error!("issue flushing stream: {e}"));
-    }
-    pollable.block();
-
-    // check for errors
-    if let Err(e) = out_stream.check_write() {
-        return Err(error!("issue writing to stream: {e}"));
-    }
-    drop(pollable);
-    drop(out_stream);
-
-    if let Err(e) = OutgoingBody::finish(out_body, None) {
-        return Err(error!("issue finishing body: {e}"));
-    }
-
-    Ok(response)
+    // convert axum `Response` to `OutgoingResponse`
+    let response: Response = http_resp.try_into()
+        .map_err(|e| error!("issue converting response: {e}"))?;
+    Ok(response.0)
 }
 
 struct Request(IncomingRequest);
@@ -92,6 +53,10 @@ impl Request {
         let p_and_q = self.0.path_with_query().unwrap_or_default();
         let decoded = percent_decode_str(p_and_q.as_str()).decode_utf8_lossy();
         decoded.parse::<Uri>().unwrap_or_else(|_| Uri::default())
+    }
+
+    fn authority(&self) -> Option<String> {
+        self.0.authority()
     }
 
     fn body(&self) -> Result<Vec<u8>> {
@@ -124,14 +89,69 @@ impl TryFrom<Request> for HttpRequest<Body> {
         let bytes = request.body()?;
         let body = if bytes.is_empty() { Body::empty() } else { Body::from(bytes) };
 
-        let mut http_req = HttpRequest::builder().method(method.as_str()).uri(uri).body(body)?;
+        let mut http_req = HttpRequest::builder().method(method.as_str()).uri(&uri).body(body)?;
         for (key, value) in headers.entries() {
             let Ok(name) = HeaderName::from_str(&key) else { continue };
             let Ok(value) = HeaderValue::from_bytes(&value) else { continue };
             http_req.headers_mut().insert(name, value);
         }
+        if http_req.headers().get("host").is_none()
+            && let Some(authority) = request.authority()
+            && let Ok(value) = HeaderValue::from_str(authority.as_str())
+        {
+            http_req.headers_mut().insert("host", value);
+        }
 
         Ok(http_req)
+    }
+}
+
+struct Response(OutgoingResponse);
+
+impl TryFrom<HttpResponse<Body>> for Response {
+    type Error = anyhow::Error;
+
+    fn try_from(value: HttpResponse<Body>) -> std::result::Result<Self, Self::Error> {
+        let headers = Headers::new();
+        for (key, value) in value.headers() {
+            headers.set(key.as_str(), &[value.as_bytes().to_vec()])?;
+        }
+        let response = OutgoingResponse::new(headers);
+        response
+            .set_status_code(value.status().as_u16())
+            .map_err(|()| error!("issue setting status code"))?;
+
+        // write `OutgoingBody`
+        let http_body = value.into_body();
+        let mut http_stream = http_body.into_data_stream();
+        let out_body = response.body().map_err(|()| error!("issue getting outgoing body"))?;
+        let out_stream = out_body.write().map_err(|()| error!("issue getting body stream"))?;
+        let pollable = out_stream.subscribe();
+        while let Some(Ok(chunk)) = block_on(async { http_stream.next().await }) {
+            pollable.block();
+            out_stream.check_write().map_err(|e| error!("issue checking write: {e}"))?;
+
+            if let Err(e) = out_stream.write(&chunk) {
+                bail!("issue writing to stream: {e}");
+            }
+        }
+        if let Err(e) = out_stream.flush() {
+            bail!("issue flushing stream: {e}");
+        }
+        pollable.block();
+
+        // check for errors
+        if let Err(e) = out_stream.check_write() {
+            bail!("issue writing to stream: {e}");
+        }
+        drop(pollable);
+        drop(out_stream);
+
+        if let Err(e) = OutgoingBody::finish(out_body, None) {
+            bail!("issue finishing body: {e}");
+        }
+
+        Ok(Self(response))
     }
 }
 
