@@ -30,6 +30,12 @@ wasmtime = { workspace = true, features = ["runtime"] }
 wasmtime-wasi.workspace = true
 wasmtime-wasi-http.workspace = true
 
+# required for azure_identity, etc.
+openssl = { version = "0.10", features = ["vendored"] }
+
+[package.metadata.cargo-machete]
+ignored = ["openssl"]
+
 [workspace]
 members = ["crates/*", "examples/guests/*", "examples/runtimes/*", "examples/services/*"]
 resolver = "3"

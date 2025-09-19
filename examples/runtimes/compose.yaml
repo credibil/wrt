@@ -1,15 +1,19 @@
 
 services:
-  otel:
+  pub-sub:
     image: ghcr.io/credibil/tempo
     env_file: .env
     ports:
       - 8080:8080
-    command: ["/otel.wasm"]
+    # command: ["/otel.wasm"]
+    # volumes:
+    #    - ./../../target/wasm32-wasip2/release/otel.wasm:/otel.wasm
+    command: ["/pub_sub.wasm"]
     volumes:
-       - ./../../target/wasm32-wasip2/release/otel.wasm:/otel.wasm
+       - ./../../target/wasm32-wasip2/release/pub_sub.wasm:/pub_sub.wasm
     depends_on:
       - otelcol
+      - nats
 
   otelcol:
     image: otel/opentelemetry-collector-contrib:latest

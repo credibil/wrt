@@ -1,3 +1,6 @@
+use std::thread::sleep;
+use std::time::{Duration, Instant};
+
 use anyhow::Result;
 use axum::routing::post;
 use axum::{Json, Router};
@@ -72,18 +75,29 @@ impl messaging::incoming_handler::Guest for Messaging {
                     message.set_content_type(&format);
                 }
 
+                let timer = Instant::now();
+
                 // *** WASIP3 ***
                 // use `spawn` to avoid blocking for non-blocking execution
-                wit_bindgen::spawn(async move {
-                    for _ in 0..1000 {
+                for i in 0..100 {
+                    wit_bindgen::spawn(async move {
                         let client = Client::connect("nats").unwrap();
-                        let message = Message::new(&resp);
+                        let data = format!("topic a iteration {i}");
+                        let message = Message::new(data.as_bytes());
 
                         if let Err(e) = producer::send(client, "b".to_string(), message).await {
                             tracing::error!("error sending message to topic 'b': {e}");
                         }
-                    }
-                });
+
+                        // HACK: yield to host
+                        if i % 100 == 0 {
+                            sleep(Duration::from_nanos(1));
+                            // wit_bindgen::yield_async().await;
+                        }
+                    });
+                }
+
+                println!("sent 100 messages in {} milliseconds", timer.elapsed().as_millis());
             }
             Some("b") => {
                 tracing::debug!("message received on topic 'b': {data_str}");

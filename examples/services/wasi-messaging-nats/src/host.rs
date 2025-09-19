@@ -226,7 +226,7 @@ impl producer::HostWithStore for WasiMessaging {
         accessor: &Accessor<T, Self>, res_client: Resource<Client>, topic: Topic,
         this: Resource<Message>,
     ) -> Result<()> {
-        tracing::trace!("producer::Host::send: topic {:?}", topic);
+        tracing::trace!("producer::Host::send: topic {topic:?}");
 
         let (client, msg) = accessor.with(move |mut access| {
             let table = access.get().table;
