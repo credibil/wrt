@@ -4488,7 +4488,6 @@ dependencies = [
  "futures",
  "k256",
  "runtime",
- "serde_json",
  "time",
  "tokio",
  "tracing",
