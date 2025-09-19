@@ -168,84 +168,6 @@ user-id = 5946
 user-login = "jrmuizel"
 user-name = "Jeff Muizelaar"
 
-[[publisher.cranelift-assembler-x64]]
-version = "0.123.2"
-when = "2025-08-26"
-user-id = 73222
-user-login = "wasmtime-publish"
-
-[[publisher.cranelift-assembler-x64-meta]]
-version = "0.123.2"
-when = "2025-08-26"
-user-id = 73222
-user-login = "wasmtime-publish"
-
-[[publisher.cranelift-bforest]]
-version = "0.123.2"
-when = "2025-08-26"
-user-id = 73222
-user-login = "wasmtime-publish"
-
-[[publisher.cranelift-bitset]]
-version = "0.123.2"
-when = "2025-08-26"
-user-id = 73222
-user-login = "wasmtime-publish"
-
-[[publisher.cranelift-codegen]]
-version = "0.123.2"
-when = "2025-08-26"
-user-id = 73222
-user-login = "wasmtime-publish"
-
-[[publisher.cranelift-codegen-meta]]
-version = "0.123.2"
-when = "2025-08-26"
-user-id = 73222
-user-login = "wasmtime-publish"
-
-[[publisher.cranelift-codegen-shared]]
-version = "0.123.2"
-when = "2025-08-26"
-user-id = 73222
-user-login = "wasmtime-publish"
-
-[[publisher.cranelift-control]]
-version = "0.123.2"
-when = "2025-08-26"
-user-id = 73222
-user-login = "wasmtime-publish"
-
-[[publisher.cranelift-entity]]
-version = "0.123.2"
-when = "2025-08-26"
-user-id = 73222
-user-login = "wasmtime-publish"
-
-[[publisher.cranelift-frontend]]
-version = "0.123.2"
-when = "2025-08-26"
-user-id = 73222
-user-login = "wasmtime-publish"
-
-[[publisher.cranelift-isle]]
-version = "0.123.2"
-when = "2025-08-26"
-user-id = 73222
-user-login = "wasmtime-publish"
-
-[[publisher.cranelift-native]]
-version = "0.123.2"
-when = "2025-08-26"
-user-id = 73222
-user-login = "wasmtime-publish"
-
-[[publisher.cranelift-srcgen]]
-version = "0.123.2"
-when = "2025-08-26"
-user-id = 73222
-user-login = "wasmtime-publish"
-
 [[publisher.derive_more]]
 version = "0.99.20"
 when = "2025-04-23"
@@ -321,6 +243,12 @@ when = "2025-08-07"
 user-id = 55123
 user-login = "rust-lang-owner"
 
+[[publisher.hashbrown]]
+version = "0.16.0"
+when = "2025-08-29"
+user-id = 55123
+user-login = "rust-lang-owner"
+
 [[publisher.http]]
 version = "1.3.1"
 when = "2025-03-11"
@@ -371,8 +299,8 @@ user-login = "cuviper"
 user-name = "Josh Stone"
 
 [[publisher.indexmap]]
-version = "2.11.3"
-when = "2025-09-15"
+version = "2.11.4"
+when = "2025-09-18"
 user-id = 539
 user-login = "cuviper"
 user-name = "Josh Stone"
@@ -515,18 +443,6 @@ user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
 
-[[publisher.pulley-interpreter]]
-version = "36.0.2"
-when = "2025-08-26"
-user-id = 73222
-user-login = "wasmtime-publish"
-
-[[publisher.pulley-macros]]
-version = "36.0.2"
-when = "2025-08-26"
-user-id = 73222
-user-login = "wasmtime-publish"
-
 [[publisher.ref-cast]]
 version = "1.0.24"
 when = "2025-03-03"
@@ -542,8 +458,8 @@ user-login = "dtolnay"
 user-name = "David Tolnay"
 
 [[publisher.regalloc2]]
-version = "0.12.2"
-when = "2025-05-07"
+version = "0.13.2"
+when = "2025-09-18"
 user-id = 3726
 user-login = "cfallin"
 user-name = "Chris Fallin"
@@ -845,129 +761,9 @@ when = "2025-07-28"
 user-id = 73222
 user-login = "wasmtime-publish"
 
-[[publisher.wasmtime]]
-version = "36.0.2"
-when = "2025-08-26"
-user-id = 73222
-user-login = "wasmtime-publish"
-
-[[publisher.wasmtime-environ]]
-version = "36.0.2"
-when = "2025-08-26"
-user-id = 73222
-user-login = "wasmtime-publish"
-
-[[publisher.wasmtime-internal-asm-macros]]
-version = "36.0.2"
-when = "2025-08-26"
-user-id = 73222
-user-login = "wasmtime-publish"
-
-[[publisher.wasmtime-internal-component-macro]]
-version = "36.0.2"
-when = "2025-08-26"
-user-id = 73222
-user-login = "wasmtime-publish"
-
-[[publisher.wasmtime-internal-component-util]]
-version = "36.0.2"
-when = "2025-08-26"
-user-id = 73222
-user-login = "wasmtime-publish"
-
-[[publisher.wasmtime-internal-cranelift]]
-version = "36.0.2"
-when = "2025-08-26"
-user-id = 73222
-user-login = "wasmtime-publish"
-
-[[publisher.wasmtime-internal-fiber]]
-version = "36.0.2"
-when = "2025-08-26"
-user-id = 73222
-user-login = "wasmtime-publish"
-
-[[publisher.wasmtime-internal-jit-debug]]
-version = "36.0.2"
-when = "2025-08-26"
-user-id = 73222
-user-login = "wasmtime-publish"
-
-[[publisher.wasmtime-internal-jit-icache-coherence]]
-version = "36.0.2"
-when = "2025-08-26"
-user-id = 73222
-user-login = "wasmtime-publish"
-
-[[publisher.wasmtime-internal-math]]
-version = "36.0.2"
-when = "2025-08-26"
-user-id = 73222
-user-login = "wasmtime-publish"
-
-[[publisher.wasmtime-internal-slab]]
-version = "36.0.2"
-when = "2025-08-26"
-user-id = 73222
-user-login = "wasmtime-publish"
-
-[[publisher.wasmtime-internal-unwinder]]
-version = "36.0.2"
-when = "2025-08-26"
-user-id = 73222
-user-login = "wasmtime-publish"
-
-[[publisher.wasmtime-internal-versioned-export-macros]]
-version = "36.0.2"
-when = "2025-08-26"
-user-id = 73222
-user-login = "wasmtime-publish"
-
-[[publisher.wasmtime-internal-winch]]
-version = "36.0.2"
-when = "2025-08-26"
-user-id = 73222
-user-login = "wasmtime-publish"
-
-[[publisher.wasmtime-internal-wit-bindgen]]
-version = "36.0.2"
-when = "2025-08-26"
-user-id = 73222
-user-login = "wasmtime-publish"
-
-[[publisher.wasmtime-wasi]]
-version = "36.0.2"
-when = "2025-08-26"
-user-id = 73222
-user-login = "wasmtime-publish"
-
-[[publisher.wasmtime-wasi-http]]
-version = "36.0.2"
-when = "2025-08-26"
-user-id = 73222
-user-login = "wasmtime-publish"
-
-[[publisher.wasmtime-wasi-io]]
-version = "36.0.2"
-when = "2025-08-26"
-user-id = 73222
-user-login = "wasmtime-publish"
-
-[[publisher.wiggle]]
-version = "36.0.2"
-when = "2025-08-26"
-user-id = 73222
-user-login = "wasmtime-publish"
-
-[[publisher.wiggle-generate]]
-version = "36.0.2"
-when = "2025-08-26"
-user-id = 73222
-user-login = "wasmtime-publish"
-
-[[publisher.wiggle-macro]]
-version = "36.0.2"
-when = "2025-08-26"
+[[publisher.wasmprinter]]
+version = "0.236.0"
+when = "2025-07-28"
 user-id = 73222
 user-login = "wasmtime-publish"
 
@@ -977,12 +773,6 @@ when = "2025-09-07"
 user-id = 189
 user-login = "BurntSushi"
 user-name = "Andrew Gallant"
-
-[[publisher.winch-codegen]]
-version = "36.0.2"
-when = "2025-08-26"
-user-id = 73222
-user-login = "wasmtime-publish"
 
 [[publisher.windows-core]]
 version = "0.62.0"
@@ -1336,125 +1126,6 @@ user-id = 696 # Nick Fitzgerald (fitzgen)
 start = "2019-03-16"
 end = "2026-08-21"
 
-[[audits.bytecode-alliance.wildcard-audits.cranelift-assembler-x64]]
-who = "Saúl Cabrera <saulecabrera@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 73222 # wasmtime-publish
-start = "2025-02-20"
-end = "2026-02-20"
-notes = "The Bytecode Alliance is the author of this crate"
-
-[[audits.bytecode-alliance.wildcard-audits.cranelift-assembler-x64-meta]]
-who = "Saúl Cabrera <saulecabrera@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 73222 # wasmtime-publish
-start = "2025-02-20"
-end = "2026-02-20"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.wildcard-audits.cranelift-bforest]]
-who = "Bobby Holley <bobbyholley@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 73222 # wasmtime-publish
-start = "2021-10-29"
-end = "2026-08-21"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.wildcard-audits.cranelift-bitset]]
-who = "Alex Crichton <alex@alexcrichton.com>"
-criteria = "safe-to-deploy"
-user-id = 73222 # wasmtime-publish
-start = "2025-04-21"
-end = "2026-04-21"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.wildcard-audits.cranelift-codegen]]
-who = "Bobby Holley <bobbyholley@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 73222 # wasmtime-publish
-start = "2021-10-29"
-end = "2026-08-21"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.wildcard-audits.cranelift-codegen-meta]]
-who = "Bobby Holley <bobbyholley@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 73222 # wasmtime-publish
-start = "2021-10-29"
-end = "2026-08-21"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.wildcard-audits.cranelift-codegen-shared]]
-who = "Bobby Holley <bobbyholley@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 73222 # wasmtime-publish
-start = "2021-10-29"
-end = "2026-08-21"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.wildcard-audits.cranelift-control]]
-who = "Bobby Holley <bobbyholley@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 73222 # wasmtime-publish
-start = "2023-05-22"
-end = "2026-08-21"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.wildcard-audits.cranelift-entity]]
-who = "Bobby Holley <bobbyholley@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 73222 # wasmtime-publish
-start = "2021-10-29"
-end = "2026-08-21"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.wildcard-audits.cranelift-frontend]]
-who = "Bobby Holley <bobbyholley@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 73222 # wasmtime-publish
-start = "2021-10-29"
-end = "2026-08-21"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.wildcard-audits.cranelift-isle]]
-who = "Bobby Holley <bobbyholley@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 73222 # wasmtime-publish
-start = "2021-12-13"
-end = "2026-08-21"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.wildcard-audits.cranelift-native]]
-who = "Bobby Holley <bobbyholley@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 73222 # wasmtime-publish
-start = "2021-10-29"
-end = "2026-08-21"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.wildcard-audits.cranelift-srcgen]]
-who = "Alex Crichton <alex@alexcrichton.com>"
-criteria = "safe-to-deploy"
-user-id = 73222 # wasmtime-publish
-start = "2025-04-21"
-end = "2026-04-21"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.wildcard-audits.pulley-interpreter]]
-who = "Alex Crichton <alex@alexcrichton.com>"
-criteria = "safe-to-deploy"
-user-id = 73222 # wasmtime-publish
-start = "2024-09-20"
-end = "2026-08-21"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.wildcard-audits.pulley-macros]]
-who = "Alex Crichton <alex@alexcrichton.com>"
-criteria = "safe-to-deploy"
-user-id = 73222 # wasmtime-publish
-start = "2025-06-20"
-end = "2026-08-21"
-
 [[audits.bytecode-alliance.wildcard-audits.regalloc2]]
 who = "Chris Fallin <chris@cfallin.org>"
 criteria = "safe-to-deploy"
@@ -1519,181 +1190,17 @@ publication of this crate from CI. This repository requires all PRs are reviewed
 by a Bytecode Alliance maintainer and it owned by the Bytecode Alliance itself.
 """
 
-[[audits.bytecode-alliance.wildcard-audits.wasmtime]]
-who = "Bobby Holley <bobbyholley@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 73222 # wasmtime-publish
-start = "2021-10-29"
-end = "2026-08-21"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.wildcard-audits.wasmtime-environ]]
-who = "Bobby Holley <bobbyholley@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 73222 # wasmtime-publish
-start = "2021-10-29"
-end = "2026-08-21"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.wildcard-audits.wasmtime-internal-asm-macros]]
+[[audits.bytecode-alliance.wildcard-audits.wasmprinter]]
 who = "Alex Crichton <alex@alexcrichton.com>"
 criteria = "safe-to-deploy"
 user-id = 73222 # wasmtime-publish
-start = "2025-07-20"
-end = "2026-07-20"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.wildcard-audits.wasmtime-internal-component-macro]]
-who = "Alex Crichton <alex@alexcrichton.com>"
-criteria = "safe-to-deploy"
-user-id = 73222 # wasmtime-publish
-start = "2025-07-20"
-end = "2026-07-20"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.wildcard-audits.wasmtime-internal-component-util]]
-who = "Alex Crichton <alex@alexcrichton.com>"
-criteria = "safe-to-deploy"
-user-id = 73222 # wasmtime-publish
-start = "2025-07-20"
-end = "2026-07-20"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.wildcard-audits.wasmtime-internal-cranelift]]
-who = "Alex Crichton <alex@alexcrichton.com>"
-criteria = "safe-to-deploy"
-user-id = 73222 # wasmtime-publish
-start = "2025-07-20"
-end = "2026-07-20"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.wildcard-audits.wasmtime-internal-fiber]]
-who = "Alex Crichton <alex@alexcrichton.com>"
-criteria = "safe-to-deploy"
-user-id = 73222 # wasmtime-publish
-start = "2025-07-20"
-end = "2026-07-20"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.wildcard-audits.wasmtime-internal-jit-debug]]
-who = "Alex Crichton <alex@alexcrichton.com>"
-criteria = "safe-to-deploy"
-user-id = 73222 # wasmtime-publish
-start = "2025-07-20"
-end = "2026-07-20"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.wildcard-audits.wasmtime-internal-jit-icache-coherence]]
-who = "Alex Crichton <alex@alexcrichton.com>"
-criteria = "safe-to-deploy"
-user-id = 73222 # wasmtime-publish
-start = "2025-07-20"
-end = "2026-07-20"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.wildcard-audits.wasmtime-internal-math]]
-who = "Alex Crichton <alex@alexcrichton.com>"
-criteria = "safe-to-deploy"
-user-id = 73222 # wasmtime-publish
-start = "2025-07-20"
-end = "2026-07-20"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.wildcard-audits.wasmtime-internal-slab]]
-who = "Alex Crichton <alex@alexcrichton.com>"
-criteria = "safe-to-deploy"
-user-id = 73222 # wasmtime-publish
-start = "2025-07-20"
-end = "2026-07-20"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.wildcard-audits.wasmtime-internal-unwinder]]
-who = "Alex Crichton <alex@alexcrichton.com>"
-criteria = "safe-to-deploy"
-user-id = 73222 # wasmtime-publish
-start = "2025-07-20"
-end = "2026-07-20"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.wildcard-audits.wasmtime-internal-versioned-export-macros]]
-who = "Alex Crichton <alex@alexcrichton.com>"
-criteria = "safe-to-deploy"
-user-id = 73222 # wasmtime-publish
-start = "2025-07-20"
-end = "2026-07-20"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.wildcard-audits.wasmtime-internal-winch]]
-who = "Alex Crichton <alex@alexcrichton.com>"
-criteria = "safe-to-deploy"
-user-id = 73222 # wasmtime-publish
-start = "2025-07-20"
-end = "2026-07-20"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.wildcard-audits.wasmtime-internal-wit-bindgen]]
-who = "Alex Crichton <alex@alexcrichton.com>"
-criteria = "safe-to-deploy"
-user-id = 73222 # wasmtime-publish
-start = "2025-07-20"
-end = "2026-07-20"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.wildcard-audits.wasmtime-wasi]]
-who = "Bobby Holley <bobbyholley@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 73222 # wasmtime-publish
-start = "2021-10-29"
-end = "2026-08-21"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.wildcard-audits.wasmtime-wasi-http]]
-who = "Bobby Holley <bobbyholley@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 73222 # wasmtime-publish
-start = "2023-05-22"
-end = "2026-08-21"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.wildcard-audits.wasmtime-wasi-io]]
-who = "Saúl Cabrera <saulecabrera@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 73222 # wasmtime-publish
-start = "2025-02-20"
-end = "2026-02-20"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.wildcard-audits.wiggle]]
-who = "Bobby Holley <bobbyholley@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 73222 # wasmtime-publish
-start = "2021-10-29"
-end = "2026-08-21"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.wildcard-audits.wiggle-generate]]
-who = "Bobby Holley <bobbyholley@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 73222 # wasmtime-publish
-start = "2021-10-29"
-end = "2026-08-21"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.wildcard-audits.wiggle-macro]]
-who = "Bobby Holley <bobbyholley@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 73222 # wasmtime-publish
-start = "2021-10-29"
-end = "2026-08-21"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.wildcard-audits.winch-codegen]]
-who = "Bobby Holley <bobbyholley@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 73222 # wasmtime-publish
-start = "2022-11-21"
-end = "2026-08-21"
-notes = "The Bytecode Alliance is the author of this crate."
+start = "2023-01-01"
+end = "2026-06-03"
+notes = """
+The Bytecode Alliance uses the `wasmtime-publish` crates.io account to automate
+publication of this crate from CI. This repository requires all PRs are reviewed
+by a Bytecode Alliance maintainer and it owned by the Bytecode Alliance itself.
+"""
 
 [[audits.bytecode-alliance.wildcard-audits.wit-bindgen]]
 who = "Alex Crichton <alex@alexcrichton.com>"
@@ -2134,6 +1641,24 @@ delta = "0.237.0 -> 0.238.1"
 notes = "The Bytecode Alliance is the author of this crate"
 
 [[audits.bytecode-alliance.audits.wasmparser]]
+who = "Alex Crichton <alex@alexcrichton.com>"
+criteria = "safe-to-deploy"
+delta = "0.238.1 -> 0.239.0"
+notes = "The Bytecode Alliance is the author of this crate"
+
+[[audits.bytecode-alliance.audits.wasmprinter]]
+who = "Alex Crichton <alex@alexcrichton.com>"
+criteria = "safe-to-deploy"
+delta = "0.236.0 -> 0.237.0"
+notes = "The Bytecode Alliance is the author of this crate"
+
+[[audits.bytecode-alliance.audits.wasmprinter]]
+who = "Alex Crichton <alex@alexcrichton.com>"
+criteria = "safe-to-deploy"
+delta = "0.237.0 -> 0.238.1"
+notes = "The Bytecode Alliance is the author of this crate"
+
+[[audits.bytecode-alliance.audits.wasmprinter]]
 who = "Alex Crichton <alex@alexcrichton.com>"
 criteria = "safe-to-deploy"
 delta = "0.238.1 -> 0.239.0"
@@ -2678,6 +2203,241 @@ For more detailed unsafe review notes please see https://crrev.com/c/6362797
 """
 aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
 
+[[audits.google.audits.serde]]
+who = "Lukasz Anforowicz <lukasza@chromium.org>"
+criteria = "safe-to-deploy"
+version = "1.0.197"
+notes = """
+Grepped for `-i cipher`, `-i crypto`, `'\bfs\b'`, `'\bnet\b'`, `'\bunsafe\b'`.
+
+There were some hits for `net`, but they were related to serialization and
+not actually opening any connections or anything like that.
+
+There were 2 hits of `unsafe` when grepping:
+* In `fn as_str` in `impl Buf`
+* In `fn serialize` in `impl Serialize for net::Ipv4Addr`
+
+Unsafe review comments can be found in https://crrev.com/c/5350573/2 (this
+review also covered `serde_json_lenient`).
+
+Version 1.0.130 of the crate has been added to Chromium in
+https://crrev.com/c/3265545.  The CL description contains a link to a
+(Google-internal, sorry) document with a mini security review.
+"""
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.serde]]
+who = "Dustin J. Mitchell <djmitche@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.197 -> 1.0.198"
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.serde]]
+who = "danakj <danakj@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.198 -> 1.0.201"
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.serde]]
+who = "Dustin J. Mitchell <djmitche@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.201 -> 1.0.202"
+notes = "Trivial changes"
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.serde]]
+who = "Lukasz Anforowicz <lukasza@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.202 -> 1.0.203"
+notes = "s/doc_cfg/docsrs/ + tuple_impls/tuple_impl_body-related changes"
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.serde]]
+who = "Adrian Taylor <adetaylor@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.203 -> 1.0.204"
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.serde]]
+who = "Lukasz Anforowicz <lukasza@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.204 -> 1.0.207"
+notes = "The small change in `src/private/ser.rs` should have no impact on `ub-risk-2`."
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.serde]]
+who = "Lukasz Anforowicz <lukasza@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.207 -> 1.0.209"
+notes = """
+The delta carries fairly small changes in `src/private/de.rs` and
+`src/private/ser.rs` (see https://crrev.com/c/5812194/2..5).  AFAICT the
+delta has no impact on the `unsafe`, `from_utf8_unchecked`-related parts
+of the crate (in `src/de/format.rs` and `src/ser/impls.rs`).
+"""
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.serde]]
+who = "Adrian Taylor <adetaylor@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.209 -> 1.0.210"
+notes = "Almost no new code - just feature rearrangement"
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.serde]]
+who = "Liza Burakova <liza@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.210 -> 1.0.213"
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.serde]]
+who = "Dustin J. Mitchell <djmitche@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.213 -> 1.0.214"
+notes = "No unsafe, no crypto"
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.serde]]
+who = "Adrian Taylor <adetaylor@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.214 -> 1.0.215"
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.serde]]
+who = "Lukasz Anforowicz <lukasza@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.215 -> 1.0.216"
+notes = "The delta makes minor changes in `build.rs` - switching to the `?` syntax sugar."
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.serde]]
+who = "Dustin J. Mitchell <djmitche@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.216 -> 1.0.217"
+notes = "Minimal changes, nothing unsafe"
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.serde]]
+who = "Daniel Cheng <dcheng@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.217 -> 1.0.218"
+notes = "No changes outside comments and documentation."
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.serde]]
+who = "Lukasz Anforowicz <lukasza@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.218 -> 1.0.219"
+notes = "Just allowing `clippy::elidable_lifetime_names`."
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.serde_derive]]
+who = "Lukasz Anforowicz <lukasza@chromium.org>"
+criteria = "safe-to-deploy"
+version = "1.0.197"
+notes = "Grepped for \"unsafe\", \"crypt\", \"cipher\", \"fs\", \"net\" - there were no hits"
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.serde_derive]]
+who = "danakj <danakj@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.197 -> 1.0.201"
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.serde_derive]]
+who = "Dustin J. Mitchell <djmitche@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.201 -> 1.0.202"
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.serde_derive]]
+who = "Lukasz Anforowicz <lukasza@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.202 -> 1.0.203"
+notes = "Grepped for \"unsafe\", \"crypt\", \"cipher\", \"fs\", \"net\" - there were no hits"
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.serde_derive]]
+who = "Adrian Taylor <adetaylor@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.203 -> 1.0.204"
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.serde_derive]]
+who = "Lukasz Anforowicz <lukasza@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.204 -> 1.0.207"
+notes = 'Grepped for \"unsafe\", \"crypt\", \"cipher\", \"fs\", \"net\" - there were no hits'
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.serde_derive]]
+who = "Lukasz Anforowicz <lukasza@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.207 -> 1.0.209"
+notes = '''
+There are no code changes in this delta - see https://crrev.com/c/5812194/2..5
+
+I've neverthless also grepped for `-i cipher`, `-i crypto`, `\bfs\b`,
+`\bnet\b`, and `\bunsafe\b`.  There were no hits.
+'''
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.serde_derive]]
+who = "Adrian Taylor <adetaylor@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.209 -> 1.0.210"
+notes = "Almost no new code - just feature rearrangement"
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.serde_derive]]
+who = "Liza Burakova <liza@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.210 -> 1.0.213"
+notes = "Grepped for 'unsafe', 'crypt', 'cipher', 'fs', 'net' - there were no hits"
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.serde_derive]]
+who = "Dustin J. Mitchell <djmitche@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.213 -> 1.0.214"
+notes = "No changes to unsafe, no crypto"
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.serde_derive]]
+who = "Adrian Taylor <adetaylor@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.214 -> 1.0.215"
+notes = "Minor changes should not impact UB risk"
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.serde_derive]]
+who = "Lukasz Anforowicz <lukasza@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.215 -> 1.0.216"
+notes = "The delta adds `#[automatically_derived]` in a few places.  Still no `unsafe`."
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.serde_derive]]
+who = "Dustin J. Mitchell <djmitche@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.216 -> 1.0.217"
+notes = "No changes"
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.serde_derive]]
+who = "Daniel Cheng <dcheng@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.217 -> 1.0.218"
+notes = "No changes outside comments and documentation."
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
+[[audits.google.audits.serde_derive]]
+who = "Lukasz Anforowicz <lukasza@chromium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.218 -> 1.0.219"
+notes = "Minor changes (clippy tweaks, using `mem::take` instead of `mem::replace`)."
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
 [[audits.google.audits.sha1]]
 who = "David Koloski <dkoloski@google.com>"
 criteria = "safe-to-deploy"
@@ -2959,6 +2719,36 @@ delta = "0.3.1 -> 0.9.0"
 who = "David Cook <dcook@divviup.org>"
 criteria = "safe-to-deploy"
 delta = "0.6.4 -> 0.9.3"
+
+[[audits.isrg.audits.serde]]
+who = "J.C. Jones <jc@divviup.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.219 -> 1.0.224"
+
+[[audits.isrg.audits.serde]]
+who = "J.C. Jones <jc@divviup.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.224 -> 1.0.225"
+
+[[audits.isrg.audits.serde_core]]
+who = "J.C. Jones <jc@divviup.org>"
+criteria = "safe-to-deploy"
+version = "1.0.224"
+
+[[audits.isrg.audits.serde_core]]
+who = "J.C. Jones <jc@divviup.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.224 -> 1.0.225"
+
+[[audits.isrg.audits.serde_derive]]
+who = "J.C. Jones <jc@divviup.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.219 -> 1.0.224"
+
+[[audits.isrg.audits.serde_derive]]
+who = "J.C. Jones <jc@divviup.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.224 -> 1.0.225"
 
 [[audits.isrg.audits.sha2]]
 who = "David Cook <dcook@divviup.org>"
