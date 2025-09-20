@@ -18,5 +18,5 @@ This will start a wasm runtime running a simple HTTP server instrumented with lo
 docker build \
   --file ./examples/runtimes/Dockerfile \
   --build-arg PACKAGE=everything \
-  --tag ghcr.io/credibil/tempo .
+  --tag ghcr.io/credibil/wrt .
 ```
