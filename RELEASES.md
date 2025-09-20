@@ -4,16 +4,14 @@ Unreleased
 
 ### Added
 
+* The `wasmtime` version has been updated to 37.0.0 (https://github.com/credibil/wrt/pull/19)
+* The new version of wasmtime allows WASI-p3 support to be enabled (https://github.com/credibil/wrt/pull/15)
+* The repo has been renamed to `wrt` to better align with Credibil's short repo names (https://github.com/credibil/wrt/pull/20)
+
 ### Changed
 
-## What's Changed
-* Bump to 0.5.0 by @github-actions[bot] in https://github.com/credibil/wrt/pull/13
-* fix bug extracting authority from request by @andrew-goldie in https://github.com/credibil/wrt/pull/14
-* WASI-p3 support by @andrewweston in https://github.com/credibil/wrt/pull/15
-* update example guest READMEs by @andrewweston in https://github.com/credibil/wrt/pull/18
-* update to wasmtime 37 by @andrewweston in https://github.com/credibil/wrt/pull/19
-* rename tempo -> wrt by @andrewweston in https://github.com/credibil/wrt/pull/20
-
+* Fixed bug extracting authority from request (https://github.com/credibil/wrt/pull/14)
+* Updated example guest READMEs (https://github.com/credibil/wrt/pull/18)
 
 **Full Changelog**: https://github.com/credibil/wrt/compare/v0.4.0...v0.5.0
 
