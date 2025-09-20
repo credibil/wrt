@@ -52,5 +52,4 @@ unused = "deny"
 [sources.allow-org]
 github = [
   "credibil",
-  "bytecodealliance"
 ]
