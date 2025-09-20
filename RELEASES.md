@@ -1,4 +1,4 @@
-## 0.5.0
+## 0.6.0
 
 Unreleased
 
@@ -7,11 +7,13 @@ Unreleased
 ### Changed
 
 ---
+---
 
 Release notes for previous releases can be found on the respective release 
 branches of the repository.
 
 <!-- ARCHIVE_START -->
+* [0.5.x](https://github.com/credibil/tempo/blob/release-0.5.0/RELEASES.md)
 * [0.4.x](https://github.com/credibil/tempo/blob/release-0.4.0/RELEASES.md)
 * [0.3.x](https://github.com/credibil/tempo/blob/release-0.3.0/RELEASES.md)
 * [0.2.x](https://github.com/credibil/tempo/blob/release-0.2.0/RELEASES.md)
