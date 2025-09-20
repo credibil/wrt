@@ -1,14 +1,18 @@
-# Tempo Wasm Runtime
+# Credibil Wasm Runtime
 
-Tempo wraps [`wasmtime`](https://github.com/bytecodealliance/wasmtime) to provide Credibil with a simple, ergonomic runtime for WASI components.
+The Credibil Wasm runtime provides a thin wrapper around [`wasmtime`](https://github.com/bytecodealliance/wasmtime) 
+for ergonomic integration of host-based services for WASI components.
 
-We consider this a stop-gap solution until production-grade runtimes support dynamic inclusion of host-based services.
+We consider this a stop-gap solution until production-grade runtimes support dynamic inclusion of host-based 
+services.
 
 ## Example Runtimes
 
-There are a number of examples provided in the `examples` directory and a Docker compose file that can be used to run them.
+There are a number of examples provided in the `examples` directory and a Docker compose file that can be used 
+to run them.
 
-To get started, add a `.env` file to the [examples/runtimes](./examples/runtimes) directory (see `.env.example`) and run:
+To get started, add a `.env` file to the [examples/runtimes](./examples/runtimes) directory (see `.env.example`)
+and run:
 
 ```bash
 docker compose --file ./examples/runtimes/compose.yaml up

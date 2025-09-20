@@ -1,7 +1,7 @@
 
 services:
   pub-sub:
-    image: ghcr.io/credibil/tempo
+    image: ghcr.io/credibil/wrt
     env_file: .env
     ports:
       - 8080:8080
