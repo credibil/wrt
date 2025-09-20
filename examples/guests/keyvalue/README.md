@@ -10,7 +10,7 @@ Run the example guest:
 
 ```bash
 # compile and run
-cargo run -- run ./target/wasm32-wasip2/release/keyvalue.wasm
+cargo run --package everything -- run ./target/wasm32-wasip2/release/keyvalue.wasm
 
 # pre-compile
 cargo run -- compile  ./target/wasm32-wasip2/release/keyvalue.wasm --output ./keyvalue.bin

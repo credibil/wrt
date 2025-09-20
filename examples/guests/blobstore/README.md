@@ -10,7 +10,7 @@ Run the example guest:
 
 ```bash
 # compile and run
-cargo run -- run ./target/wasm32-wasip2/release/blobstore.wasm
+cargo run --package everything -- run ./target/wasm32-wasip2/release/blobstore.wasm
 
 # pre-compile
 cargo run -- compile  ./target/wasm32-wasip2/release/blobstore.wasm --output ./blobstore.bin
