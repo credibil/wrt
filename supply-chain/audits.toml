@@ -441,6 +441,12 @@ user-id = 2915 # Amanieu d'Antras (Amanieu)
 start = "2020-02-16"
 end = "2026-09-11"
 
+[[trusted.semver]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2021-05-25"
+end = "2026-09-20"
+
 [[trusted.serde_bytes]]
 criteria = "safe-to-deploy"
 user-id = 3618 # David Tolnay (dtolnay)

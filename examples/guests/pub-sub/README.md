@@ -13,11 +13,11 @@ Build the example guest:
 cargo build --package pub-sub --target wasm32-wasip2 --release
 ```
 
-Run the example guest:
+Run the example: 
 
 ```bash
 # compile and run
-cargo run --package messaging -- run ./target/wasm32-wasip2/release/pub_sub.wasm
+cargo run --package minimal -- run ./target/wasm32-wasip2/release/pub_sub.wasm
 
 # pre-compile
 cargo run --package compiler -- compile --output ./pub_sub.bin ./target/wasm32-wasip2/release/pub_sub.wasm 

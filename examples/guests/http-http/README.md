@@ -14,7 +14,7 @@ Run a guest using the runtime:
 
 ```bash
 # compile and run
-cargo run -- run ./target/wasm32-wasip2/release/http_http.wasm
+cargo run --package minimal -- run ./target/wasm32-wasip2/release/http_http.wasm
 
 # pre-compile
 cargo run -- compile  ./target/wasm32-wasip2/release/http_http.wasm --output ./http_http.bin

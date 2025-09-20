@@ -10,7 +10,7 @@ Run the example guest:
 
 ```bash
 # compile and run
-cargo run -- run ./target/wasm32-wasip2/release/otel.wasm
+cargo run --package minimal -- run ./target/wasm32-wasip2/release/otel.wasm
 
 # pre-compile
 cargo run -- compile  ./target/wasm32-wasip2/release/otel.wasm --output ./otel.bin

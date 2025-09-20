@@ -99,7 +99,7 @@ version = "2.15.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.cc]]
-version = "1.2.37"
+version = "1.2.38"
 criteria = "safe-to-deploy"
 
 [[exemptions.chrono]]
@@ -163,15 +163,15 @@ version = "0.1.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.darling]]
-version = "0.20.11"
+version = "0.21.3"
 criteria = "safe-to-deploy"
 
 [[exemptions.darling_core]]
-version = "0.20.11"
+version = "0.21.3"
 criteria = "safe-to-deploy"
 
 [[exemptions.darling_macro]]
-version = "0.20.11"
+version = "0.21.3"
 criteria = "safe-to-deploy"
 
 [[exemptions.data-encoding]]
@@ -235,7 +235,7 @@ version = "0.3.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.find-msvc-tools]]
-version = "0.1.1"
+version = "0.1.2"
 criteria = "safe-to-deploy"
 
 [[exemptions.form_urlencoded]]
@@ -519,7 +519,7 @@ version = "0.22.4"
 criteria = "safe-to-deploy"
 
 [[exemptions.rustls]]
-version = "0.23.31"
+version = "0.23.32"
 criteria = "safe-to-deploy"
 
 [[exemptions.rustls-native-certs]]
@@ -574,10 +574,6 @@ criteria = "safe-to-deploy"
 version = "2.15.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.semver]]
-version = "1.0.27"
-criteria = "safe-to-deploy"
-
 [[exemptions.serde_nanos]]
 version = "0.1.4"
 criteria = "safe-to-deploy"
@@ -587,11 +583,11 @@ version = "0.7.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.serde_with]]
-version = "3.14.0"
+version = "3.14.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.serde_with_macros]]
-version = "3.14.0"
+version = "3.14.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.signal-hook-registry]]
@@ -627,7 +623,7 @@ version = "3.22.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.time]]
-version = "0.3.43"
+version = "0.3.44"
 criteria = "safe-to-deploy"
 
 [[exemptions.time-core]]
