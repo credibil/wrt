@@ -21,7 +21,7 @@ jit = ["wasmtime/cranelift"]
 [dependencies]
 anyhow.workspace = true
 cfg-if.workspace = true
-clap = { version = "4.5.47", features = ["derive"] }
+clap = { version = "4.5.48", features = ["derive"] }
 credibil-otel.workspace = true
 futures.workspace = true
 tokio = { workspace = true, features = ["signal"] }
@@ -61,9 +61,9 @@ nursery = "warn"
 pedantic = "warn"
 
 [workspace.dependencies]
-anyhow = "1.0.99"
+anyhow = "1.0.100"
 async-nats = { version = "0.42.0" }
-axum = { version = "0.8.4", default-features = false }                                        # features = ["form", "json", "query", "tracing"]
+axum = { version = "0.8.4", default-features = false }                                            # features = ["form", "json", "query", "tracing"]
 azure_core = { version = "0.27.0", default-features = false, features = ["reqwest_rustls"] }
 azure_identity = { version = "0.27.0", default-features = false }
 azure_security_keyvault_secrets = { version = "0.6.0", default-features = false }
@@ -83,7 +83,7 @@ sdk-http = { path = "crates/sdk-http" }
 sdk-otel = { path = "crates/sdk-otel" }
 serde = { version = "1.0.225", features = ["derive"] }
 serde_json = "1.0.145"
-time = "0.3.43"
+time = "0.3.44"
 tokio = { version = "1.47.1", default-features = false }
 tower = "0.5.2"
 tower-http = { version = "0.6.6", features = ["cors", "trace"] }
@@ -91,10 +91,10 @@ tracing = "0.1.41"
 tracing-opentelemetry = "0.31.0"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter", "fmt"] }
 wasi = "0.14.7"
-# wasmtime = { version = "36.0.2", default-features = false, features = ["component-model-async"] }
-# wasmtime-wasi = "36.0.2"
-# wasmtime-wasi-http = "36.0.2"
-# wasmtime-wasi-io = "36.0.2"
+wasmtime = { version = "37.0.0", default-features = false, features = ["component-model-async"] }
+wasmtime-wasi = { version = "37.0.0", features = ["p3"] }
+wasmtime-wasi-http = { version = "37.0.0", features = ["p3"] }
+wasmtime-wasi-io = "37.0.0"
 wit-bindgen = "0.46.0"
 wit-bindings = { path = "crates/wit-bindings" }
 
@@ -107,12 +107,6 @@ wasi-keyvalue-nats = { path = "examples/services/wasi-keyvalue-nats" }
 wasi-messaging-nats = { path = "examples/services/wasi-messaging-nats" }
 wasi-otel = { path = "crates/wasi-otel" }
 wasi-vault-az = { path = "examples/services/wasi-vault-az" }
-
-# [patch.crates-io]
-wasmtime = { git = "https://github.com/bytecodealliance/wasmtime", default-features = false, features = ["component-model-async", "component-model-async-bytes"] }
-wasmtime-wasi = { git = "https://github.com/bytecodealliance/wasmtime", features = ["p3"] }
-wasmtime-wasi-http = { git = "https://github.com/bytecodealliance/wasmtime", features = ["p3"] }
-wasmtime-wasi-io = { git = "https://github.com/bytecodealliance/wasmtime" }
 
 # [patch."https://github.com/credibil/core.git"]
 # credibil-otel = { path = "../../credibil/core/crates/otel" }
