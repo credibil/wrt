@@ -1,10 +1,11 @@
 //! # OpenTelemetry Attribute Macros
 
 use proc_macro::TokenStream;
-use quote::quote;
+use quote::{quote, quote_spanned};
 use syn::meta::{self, ParseNestedMeta};
 use syn::parse::Result;
-use syn::{Expr, ItemFn, LitStr, parse_macro_input};
+use syn::spanned::Spanned;
+use syn::{Expr, ItemFn, LitStr, ReturnType, parse_macro_input, parse_quote};
 
 /// Instruments a function using the `[sdk_otel::instrument]` function.
 ///
@@ -17,42 +18,71 @@ pub fn instrument(args: TokenStream, item: TokenStream) -> TokenStream {
     let arg_parser = meta::parser(|meta| attrs.parse(&meta));
     parse_macro_input!(args with arg_parser);
 
-    // function the macro is decorating
-    let item = parse_macro_input!(item as ItemFn);
-    let async_fn = if item.sig.asyncness.is_some() {
-        quote! { async }
-    } else {
-        quote! {}
-    };
+    let item_fn = parse_macro_input!(item as ItemFn);
+    let signature = signature(&item_fn);
+    let body = body(attrs, &item_fn);
 
-    // function signature
-    let name = item.sig.ident.clone();
-    let inputs = item.sig.inputs.clone();
-    let output = item.sig.output.clone();
-    let block = item.block;
-
-    // macro attributes
-    let span_name = attrs.name.unwrap_or_else(|| LitStr::new(&name.to_string(), name.span()));
-    let level =
-        attrs.level.map_or_else(|| quote! { ::tracing::Level::INFO }, |level| quote! {#level});
-
-    // recreate function with the instrument macro wrapping it's block
+    // recreate function with the instrument macro wrapping the body
     let new_fn = quote! {
-        #[allow(non_snake_case)]
-        #async_fn fn #name(#inputs) #output {
+        #signature {
             let _guard = if tracing::Span::current().is_none() {
                 let shutdown = ::sdk_otel::init();
                 Some(shutdown)
             } else {
                 None
             };
-            tracing::span!(#level, #span_name).in_scope(|| {
-                #block
-            })
+            #body
         }
     };
 
     TokenStream::from(new_fn)
+}
+
+// Function signature
+fn signature(item_fn: &ItemFn) -> proc_macro2::TokenStream {
+    let ident = item_fn.sig.ident.clone();
+    let inputs = item_fn.sig.inputs.clone();
+    let output = item_fn.sig.output.clone();
+
+    // rewrite signature to return a Future when async
+    if item_fn.sig.asyncness.is_some() {
+        let (return_type, return_span) = if let ReturnType::Type(_, return_type) = &output {
+            (return_type.to_owned(), return_type.span())
+        } else {
+            (parse_quote! { () }, ident.span())
+        };
+        quote_spanned! {return_span=> fn #ident(#inputs) -> impl Future<Output = #return_type> + Send}
+    } else {
+        quote! {fn #ident(#inputs) #output}
+    }
+}
+
+// Function body
+fn body(attrs: Attributes, item_fn: &ItemFn) -> proc_macro2::TokenStream {
+    let name = item_fn.sig.ident.clone();
+    let block = item_fn.block.clone();
+
+    let span_name = attrs.name.unwrap_or_else(|| LitStr::new(&name.to_string(), name.span()));
+    let level =
+        attrs.level.map_or_else(|| quote! { ::tracing::Level::INFO }, |level| quote! {#level});
+
+    // wrap function body in a span if async
+    if item_fn.sig.asyncness.is_some() {
+        quote! {
+            ::tracing::Instrument::instrument(
+                async move {
+                    #block
+                },
+                tracing::span!(#level, #span_name)
+            )
+        }
+    } else {
+        quote! {
+            tracing::span!(#level, #span_name).in_scope(|| {
+                #block
+            })
+        }
+    }
 }
 
 #[derive(Default)]

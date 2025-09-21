@@ -29,8 +29,8 @@ pub fn serve(
         .map_err(|e| error!("issue processing request: {e}"))?;
 
     // convert axum `Response` to `OutgoingResponse`
-    let response: Response = http_resp.try_into()
-        .map_err(|e| error!("issue converting response: {e}"))?;
+    let response: Response =
+        http_resp.try_into().map_err(|e| error!("issue converting response: {e}"))?;
     Ok(response.0)
 }
 

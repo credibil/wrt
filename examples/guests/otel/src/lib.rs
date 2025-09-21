@@ -43,15 +43,15 @@ impl Guest for HttpGuest {
 
         let out = tracing::info_span!("handler span").in_scope(|| {
             tracing::info!("received request");
-        let router = Router::new()
-            .layer(
-                CorsLayer::new()
-                    .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
-                    .allow_headers(Any)
-                    .allow_origin(Any),
-            )
-            .route("/", post(handle))
-            .route("/", options(handle_options));
+            let router = Router::new()
+                .layer(
+                    CorsLayer::new()
+                        .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
+                        .allow_headers(Any)
+                        .allow_origin(Any),
+                )
+                .route("/", post(handle))
+                .route("/", options(handle_options));
             sdk_http::serve(router, request)
         });
 
@@ -60,6 +60,7 @@ impl Guest for HttpGuest {
 }
 
 // A simple "Hello, World!" endpoint that returns the client's request.
+#[axum::debug_handler]
 #[sdk_otel::instrument(name = "handle_fn")]
 async fn handle(Json(body): Json<Value>) -> Result<Json<Value>> {
     tracing::info!("handling request: {:?}", body);
