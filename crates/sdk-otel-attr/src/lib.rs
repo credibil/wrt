@@ -44,7 +44,7 @@ fn signature(item_fn: &ItemFn) -> proc_macro2::TokenStream {
     let inputs = item_fn.sig.inputs.clone();
     let output = item_fn.sig.output.clone();
 
-    // rewrite async functions return `Future + Send`
+    // rewrite async functions to return `Future + Send`
     if item_fn.sig.asyncness.is_some() {
         let (return_type, return_span) = if let ReturnType::Type(_, return_type) = &output {
             (return_type.to_owned(), return_type.span())
@@ -69,7 +69,7 @@ fn body(attrs: Attributes, item_fn: &ItemFn) -> proc_macro2::TokenStream {
     let level =
         attrs.level.map_or_else(|| quote! { ::tracing::Level::INFO }, |level| quote! {#level});
 
-    // wrap function body in a span if async
+    // `instrument` async functions
     if item_fn.sig.asyncness.is_some() {
         quote! {
             ::tracing::Instrument::instrument(
