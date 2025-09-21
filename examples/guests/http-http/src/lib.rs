@@ -16,7 +16,7 @@ use wasi::http::types::{IncomingRequest, ResponseOutparam};
 struct HttpGuest;
 
 impl Guest for HttpGuest {
-    fn handle(request: IncomingRequest, response: ResponseOutparam) {
+    fn handle(request: IncomingRequest, response_out: ResponseOutparam) {
         let subscriber =
             FmtSubscriber::builder().with_env_filter(EnvFilter::from_default_env()).finish();
         tracing::subscriber::set_global_default(subscriber).expect("should set subscriber");
@@ -32,7 +32,7 @@ impl Guest for HttpGuest {
             .route("/", post(post_handler));
 
         let out = sdk_http::serve(router, request);
-        ResponseOutparam::set(response, out);
+        ResponseOutparam::set(response_out, out);
     }
 }
 

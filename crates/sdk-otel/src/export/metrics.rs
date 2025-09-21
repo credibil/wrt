@@ -40,7 +40,7 @@ impl Exporter {
         Ok(Self { inner })
     }
 
-    #[allow(clippy::unnecessary_wraps)]
+    #[expect(clippy::unnecessary_wraps)]
     #[cfg(not(feature = "guest-export"))]
     pub const fn new() -> Result<Self> {
         Ok(Self {})
@@ -49,13 +49,13 @@ impl Exporter {
 
 impl PushMetricExporter for Exporter {
     #[cfg(feature = "guest-export")]
-    async fn export(&self, rm: &ResourceMetrics) -> Result<(), OTelSdkError> {
-        self.inner.export(rm).await
+    async fn export(&self, metrics: &ResourceMetrics) -> Result<(), OTelSdkError> {
+        self.inner.export(metrics).await
     }
 
     #[cfg(not(feature = "guest-export"))]
-    async fn export(&self, rm: &ResourceMetrics) -> Result<(), OTelSdkError> {
-        wasi::export(&rm.into())
+    async fn export(&self, metrics: &ResourceMetrics) -> Result<(), OTelSdkError> {
+        wasi::export(&metrics.into())
             .map_err(|e| OTelSdkError::InternalFailure(format!("failed to export metrics: {e}")))?;
         Ok(())
     }
@@ -81,8 +81,8 @@ impl PushMetricExporter for Exporter {
     }
 
     #[cfg(feature = "guest-export")]
-    fn shutdown_with_timeout(&self, duration: Duration) -> OTelSdkResult {
-        self.inner.shutdown_with_timeout(duration)
+    fn shutdown_with_timeout(&self, timeout: Duration) -> OTelSdkResult {
+        self.inner.shutdown_with_timeout(timeout)
     }
 
     #[cfg(not(feature = "guest-export"))]

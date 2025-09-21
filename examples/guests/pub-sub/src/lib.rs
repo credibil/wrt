@@ -17,7 +17,7 @@ use wit_bindings::messaging::types::{Client, Error, Message};
 pub struct Http;
 
 impl http::incoming_handler::Guest for Http {
-    fn handle(request: IncomingRequest, response: ResponseOutparam) {
+    fn handle(request: IncomingRequest, response_out: ResponseOutparam) {
         let subscriber =
             FmtSubscriber::builder().with_env_filter(EnvFilter::from_default_env()).finish();
         tracing::subscriber::set_global_default(subscriber).expect("should set subscriber");
@@ -25,7 +25,7 @@ impl http::incoming_handler::Guest for Http {
         let router = Router::new().route("/", post(handle));
 
         let out = sdk_http::serve(router, request);
-        ResponseOutparam::set(response, out);
+        ResponseOutparam::set(response_out, out);
     }
 }
 
@@ -55,7 +55,7 @@ impl messaging::incoming_handler::Guest for Messaging {
 
         let data = message.data();
         let data_str =
-            String::from_utf8(data.clone()).map_err(|_| Error::Other("not utf8".to_string()))?;
+            String::from_utf8(data.clone()).map_err(|e| Error::Other(format!("not utf8: {e}")))?;
 
         match message.topic().as_deref() {
             Some("a") => {

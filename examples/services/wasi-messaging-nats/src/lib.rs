@@ -50,10 +50,10 @@ static NATS_CLIENT: OnceLock<async_nats::Client> = OnceLock::new();
 pub struct Messaging;
 
 impl runtime::Service for Messaging {
-    fn add_to_linker(&self, l: &mut Linker<RunState>) -> anyhow::Result<()> {
-        producer::add_to_linker::<_, WasiMessaging>(l, Host::new)?;
-        request_reply::add_to_linker::<_, WasiMessaging>(l, Host::new)?;
-        types::add_to_linker::<_, WasiMessaging>(l, Host::new)?;
+    fn add_to_linker(&self, linker: &mut Linker<RunState>) -> anyhow::Result<()> {
+        producer::add_to_linker::<_, WasiMessaging>(linker, Host::new)?;
+        request_reply::add_to_linker::<_, WasiMessaging>(linker, Host::new)?;
+        types::add_to_linker::<_, WasiMessaging>(linker, Host::new)?;
         Ok(())
     }
 
@@ -64,7 +64,7 @@ impl runtime::Service for Messaging {
 
 impl AddResource<async_nats::Client> for Messaging {
     fn resource(self, resource: async_nats::Client) -> anyhow::Result<Self> {
-        NATS_CLIENT.set(resource).map_err(|_| anyhow!("client already set"))?;
+        NATS_CLIENT.set(resource).map_err(|c| anyhow!("client already set: {c:?}"))?;
         Ok(self)
     }
 }

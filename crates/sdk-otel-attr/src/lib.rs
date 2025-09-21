@@ -52,7 +52,7 @@ fn signature(item_fn: &ItemFn) -> proc_macro2::TokenStream {
             (parse_quote! { () }, ident.span())
         };
         quote_spanned! {return_span=>
-            #[allow(refining_impl_trait)]
+            #[allow(refining_impl_trait, reason="`Future` return type needs to be marked as `Send`")]
             fn #ident(#inputs) -> impl Future<Output = #return_type> + Send
         }
     } else {

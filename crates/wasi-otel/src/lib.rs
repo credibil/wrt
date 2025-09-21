@@ -47,11 +47,11 @@ static HTTP_CLIENT: OnceLock<reqwest::Client> = OnceLock::new();
 pub struct Otel;
 
 impl runtime::Service for Otel {
-    fn add_to_linker(&self, l: &mut Linker<RunState>) -> Result<()> {
-        wasi_otel::tracing::add_to_linker::<_, Data>(l, Host::new)?;
-        wasi_otel::metrics::add_to_linker::<_, Data>(l, Host::new)?;
-        wasi_otel::types::add_to_linker::<_, Data>(l, Host::new)?;
-        wasi_otel::resource::add_to_linker::<_, Data>(l, Host::new)?;
+    fn add_to_linker(&self, linker: &mut Linker<RunState>) -> Result<()> {
+        wasi_otel::tracing::add_to_linker::<_, Data>(linker, Host::new)?;
+        wasi_otel::metrics::add_to_linker::<_, Data>(linker, Host::new)?;
+        wasi_otel::types::add_to_linker::<_, Data>(linker, Host::new)?;
+        wasi_otel::resource::add_to_linker::<_, Data>(linker, Host::new)?;
         Ok(())
     }
 
@@ -190,7 +190,7 @@ impl PartialEq for types::Value {
 }
 
 impl Hash for types::Value {
-    #[allow(clippy::cast_possible_truncation)]
+    #[expect(clippy::cast_possible_truncation)]
     fn hash<H: Hasher>(&self, state: &mut H) {
         match self {
             Self::Bool(v) => v.hash(state),

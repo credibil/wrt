@@ -1,9 +1,8 @@
 [package]
 name = "http"
-version = "0.1.0"
-authors.workspace = true
-edition.workspace = true
-license.workspace = true
+description = "Example guest component using wasi-http"
+# version = "0.1.0"
+publish = false
 
 [lib]
 crate-type = ["cdylib"]

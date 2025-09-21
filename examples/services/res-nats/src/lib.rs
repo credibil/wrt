@@ -62,7 +62,7 @@ async fn connect(
             .map_err(|e| anyhow!("failed to create KeyPair: {e}"))?;
         let key_pair = Arc::new(key_pair);
         opts = opts.jwt(jwt, move |nonce| {
-            let key_pair = key_pair.clone();
+            let key_pair = Arc::clone(&key_pair);
             async move { key_pair.sign(&nonce).map_err(AuthError::new) }
         });
     }

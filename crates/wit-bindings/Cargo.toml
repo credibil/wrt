@@ -2,6 +2,7 @@
 name = "wit-bindings"
 description = "Guest bindings for wasmgrid service"
 authors.workspace = true
+categories.workspace = true
 edition.workspace = true
 homepage.workspace = true
 keywords.workspace = true

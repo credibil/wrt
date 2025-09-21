@@ -1,7 +1,9 @@
 [package]
 name = "sdk-otel"
 description = "Wasm opentelemetry service"
+readme = "README.md"
 authors.workspace = true
+categories.workspace = true
 edition.workspace = true
 homepage.workspace = true
 keywords.workspace = true

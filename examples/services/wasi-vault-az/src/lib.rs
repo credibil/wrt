@@ -60,7 +60,7 @@ impl runtime::Service for Vault {
 
 impl AddResource<SecretClient> for Vault {
     fn resource(self, resource: SecretClient) -> anyhow::Result<Self> {
-        AZ_CLIENT.set(resource).map_err(|_| anyhow!("client already set"))?;
+        AZ_CLIENT.set(resource).map_err(|c| anyhow!("client already set: {}", c.endpoint()))?;
         Ok(self)
     }
 }
@@ -87,8 +87,10 @@ fn azkeyvault() -> anyhow::Result<&'static SecretClient> {
 // Implement the [`wasi_vault::Host`]` trait for  Host<'_>.
 impl vault::Host for Host<'_> {
     // Open locker specified by identifier, save to state and return as a resource.
-    async fn open(&mut self, identifier: String) -> Result<Resource<Locker>> {
-        let locker = Locker { identifier };
+    async fn open(&mut self, locker_id: String) -> Result<Resource<Locker>> {
+        let locker = Locker {
+            identifier: locker_id,
+        };
         Ok(self.table.push(locker)?)
     }
 
@@ -99,10 +101,8 @@ impl vault::Host for Host<'_> {
 }
 
 impl vault::HostLocker for Host<'_> {
-    async fn get(
-        &mut self, locker_ref: Resource<Locker>, secret_id: String,
-    ) -> Result<Option<Vec<u8>>> {
-        let Ok(locker) = self.table.get(&locker_ref) else {
+    async fn get(&mut self, self_: Resource<Locker>, secret_id: String) -> Result<Option<Vec<u8>>> {
+        let Ok(locker) = self.table.get(&self_) else {
             return Err(Error::NoSuchStore);
         };
         let secret_name = format!("{}-{secret_id}", locker.identifier);
@@ -133,9 +133,9 @@ impl vault::HostLocker for Host<'_> {
     }
 
     async fn set(
-        &mut self, locker_ref: Resource<Locker>, secret_id: String, value: Vec<u8>,
+        &mut self, self_: Resource<Locker>, secret_id: String, value: Vec<u8>,
     ) -> Result<(), Error> {
-        let Ok(locker) = self.table.get(&locker_ref) else {
+        let Ok(locker) = self.table.get(&self_) else {
             return Err(Error::NoSuchStore);
         };
         let secret_name = format!("{}-{secret_id}", locker.identifier);
@@ -154,8 +154,8 @@ impl vault::HostLocker for Host<'_> {
         Ok(())
     }
 
-    async fn delete(&mut self, locker_ref: Resource<Locker>, secret_id: String) -> Result<()> {
-        let Ok(locker) = self.table.get(&locker_ref) else {
+    async fn delete(&mut self, self_: Resource<Locker>, secret_id: String) -> Result<()> {
+        let Ok(locker) = self.table.get(&self_) else {
             return Err(Error::NoSuchStore);
         };
         let secret_name = format!("{}-{secret_id}", locker.identifier);
@@ -168,12 +168,12 @@ impl vault::HostLocker for Host<'_> {
         Ok(())
     }
 
-    async fn exists(&mut self, locker_ref: Resource<Locker>, secret_id: String) -> Result<bool> {
-        vault::HostLocker::get(self, locker_ref, secret_id).await.map(|opt| opt.is_some())
+    async fn exists(&mut self, self_: Resource<Locker>, secret_id: String) -> Result<bool> {
+        vault::HostLocker::get(self, self_, secret_id).await.map(|opt| opt.is_some())
     }
 
-    async fn list_ids(&mut self, locker_ref: Resource<Locker>) -> Result<Vec<String>> {
-        let Ok(locker) = self.table.get(&locker_ref) else {
+    async fn list_ids(&mut self, self_: Resource<Locker>) -> Result<Vec<String>> {
+        let Ok(locker) = self.table.get(&self_) else {
             return Err(Error::NoSuchStore);
         };
         let identifier = &locker.identifier;
@@ -198,9 +198,9 @@ impl vault::HostLocker for Host<'_> {
         Ok(secret_ids)
     }
 
-    async fn drop(&mut self, locker_ref: Resource<Locker>) -> anyhow::Result<()> {
+    async fn drop(&mut self, rep: Resource<Locker>) -> anyhow::Result<()> {
         tracing::trace!("vault::HostLocker::drop");
-        self.table.delete(locker_ref).map(|_| Ok(()))?
+        self.table.delete(rep).map(|_| Ok(()))?
     }
 }
 

@@ -56,17 +56,17 @@ static NATS_CLIENT: OnceLock<async_nats::Client> = OnceLock::new();
 pub struct Blobstore;
 
 impl runtime::Service for Blobstore {
-    fn add_to_linker(&self, l: &mut Linker<RunState>) -> Result<()> {
-        blobstore::add_to_linker::<_, Data>(l, Host::new)?;
-        container::add_to_linker::<_, Data>(l, Host::new)?;
-        types::add_to_linker::<_, Data>(l, Host::new)?;
+    fn add_to_linker(&self, linker: &mut Linker<RunState>) -> Result<()> {
+        blobstore::add_to_linker::<_, Data>(linker, Host::new)?;
+        container::add_to_linker::<_, Data>(linker, Host::new)?;
+        types::add_to_linker::<_, Data>(linker, Host::new)?;
         Ok(())
     }
 }
 
 impl AddResource<async_nats::Client> for Blobstore {
     fn resource(self, resource: async_nats::Client) -> Result<Self> {
-        NATS_CLIENT.set(resource).map_err(|_| anyhow!("client already set"))?;
+        NATS_CLIENT.set(resource).map_err(|c| anyhow!("client already set: {c:?}"))?;
         Ok(self)
     }
 }
@@ -140,8 +140,8 @@ impl blobstore::Host for Host<'_> {
 impl container::Host for Host<'_> {}
 
 impl container::HostContainer for Host<'_> {
-    async fn name(&mut self, store_ref: Resource<Container>) -> Result<String> {
-        let Ok(store) = self.table.get(&store_ref) else {
+    async fn name(&mut self, self_: Resource<Container>) -> Result<String> {
+        let Ok(store) = self.table.get(&self_) else {
             return Err(anyhow!("Container not found"));
         };
 
@@ -155,14 +155,14 @@ impl container::HostContainer for Host<'_> {
         Ok(n.bucket)
     }
 
-    async fn info(&mut self, _store_ref: Resource<Container>) -> Result<ContainerMetadata> {
+    async fn info(&mut self, _self_: Resource<Container>) -> Result<ContainerMetadata> {
         todo!()
     }
 
     async fn get_data(
-        &mut self, store_ref: Resource<Container>, name: String, _start: u64, _end: u64,
+        &mut self, self_: Resource<Container>, name: String, _start: u64, _end: u64,
     ) -> Result<Resource<IncomingValue>> {
-        let Ok(store) = self.table.get(&store_ref) else {
+        let Ok(store) = self.table.get(&self_) else {
             return Err(anyhow!("Container not found"));
         };
 
@@ -175,14 +175,14 @@ impl container::HostContainer for Host<'_> {
     }
 
     async fn write_data(
-        &mut self, store_ref: Resource<Container>, name: String, value_ref: Resource<OutgoingValue>,
+        &mut self, self_: Resource<Container>, name: String, data: Resource<OutgoingValue>,
     ) -> Result<()> {
-        let Ok(value) = self.table.get(&value_ref) else {
+        let Ok(value) = self.table.get(&data) else {
             return Err(anyhow!("OutgoingValue not found"));
         };
         let bytes = value.contents();
 
-        let Ok(store) = self.table.get_mut(&store_ref) else {
+        let Ok(store) = self.table.get_mut(&self_) else {
             return Err(anyhow!("Container not found"));
         };
 
@@ -196,9 +196,9 @@ impl container::HostContainer for Host<'_> {
     }
 
     async fn list_objects(
-        &mut self, store_ref: Resource<Container>,
+        &mut self, self_: Resource<Container>,
     ) -> Result<Resource<StreamObjectNames>> {
-        let Ok(store) = self.table.get(&store_ref) else {
+        let Ok(store) = self.table.get(&self_) else {
             return Err(anyhow!("Container not found"));
         };
         let mut list = store.list().await.map_err(|e| anyhow!("issue listing objects: {e}"))?;
@@ -214,8 +214,8 @@ impl container::HostContainer for Host<'_> {
         Ok(self.table.push(names)?)
     }
 
-    async fn delete_object(&mut self, store_ref: Resource<Container>, name: String) -> Result<()> {
-        let Ok(store) = self.table.get_mut(&store_ref) else {
+    async fn delete_object(&mut self, self_: Resource<Container>, name: String) -> Result<()> {
+        let Ok(store) = self.table.get_mut(&self_) else {
             return Err(anyhow!("Container not found"));
         };
         store.delete(&name).await.map_err(|e| anyhow!("issue deleting: {e}"))?;
@@ -224,9 +224,9 @@ impl container::HostContainer for Host<'_> {
     }
 
     async fn delete_objects(
-        &mut self, store_ref: Resource<Container>, names: Vec<String>,
+        &mut self, self_: Resource<Container>, names: Vec<String>,
     ) -> Result<()> {
-        let Ok(store) = self.table.get_mut(&store_ref) else {
+        let Ok(store) = self.table.get_mut(&self_) else {
             return Err(anyhow!("Container not found"));
         };
         for name in names {
@@ -236,22 +236,22 @@ impl container::HostContainer for Host<'_> {
         Ok(())
     }
 
-    async fn has_object(&mut self, store_ref: Resource<Container>, name: String) -> Result<bool> {
-        let Ok(store) = self.table.get(&store_ref) else {
+    async fn has_object(&mut self, self_: Resource<Container>, name: String) -> Result<bool> {
+        let Ok(store) = self.table.get(&self_) else {
             return Err(anyhow!("Container not found"));
         };
         Ok(store.info(&name).await.is_ok())
     }
 
     async fn object_info(
-        &mut self, store_ref: Resource<Container>, name: String,
+        &mut self, self_: Resource<Container>, name: String,
     ) -> Result<ObjectMetadata> {
-        let Ok(store) = self.table.get(&store_ref) else {
+        let Ok(store) = self.table.get(&self_) else {
             return Err(anyhow!("Container not found"));
         };
         let info = store.info(&name).await?;
 
-        #[allow(clippy::cast_sign_loss)]
+        #[expect(clippy::cast_sign_loss)]
         let metadata = ObjectMetadata {
             name: info.name,
             container: name,
@@ -261,8 +261,8 @@ impl container::HostContainer for Host<'_> {
         Ok(metadata)
     }
 
-    async fn clear(&mut self, store_ref: Resource<Container>) -> Result<()> {
-        let Ok(store) = self.table.get(&store_ref) else {
+    async fn clear(&mut self, self_: Resource<Container>) -> Result<()> {
+        let Ok(store) = self.table.get(&self_) else {
             return Err(anyhow!("Container not found"));
         };
         let mut list = store.list().await.map_err(|e| anyhow!("issue listing objects: {e}"))?;
@@ -277,27 +277,27 @@ impl container::HostContainer for Host<'_> {
         Ok(())
     }
 
-    async fn drop(&mut self, store_ref: Resource<Container>) -> Result<()> {
-        self.table.delete(store_ref)?;
+    async fn drop(&mut self, rep: Resource<Container>) -> Result<()> {
+        self.table.delete(rep)?;
         Ok(())
     }
 }
 
 impl container::HostStreamObjectNames for Host<'_> {
     async fn read_stream_object_names(
-        &mut self, _names_ref: Resource<StreamObjectNames>, _len: u64,
+        &mut self, _: Resource<StreamObjectNames>, _len: u64,
     ) -> Result<(Vec<String>, bool)> {
         todo!()
     }
 
     async fn skip_stream_object_names(
-        &mut self, _names_ref: Resource<StreamObjectNames>, _num: u64,
+        &mut self, _: Resource<StreamObjectNames>, _num: u64,
     ) -> Result<(u64, bool)> {
         todo!()
     }
 
-    async fn drop(&mut self, names_ref: Resource<StreamObjectNames>) -> Result<()> {
-        Ok(self.table.delete(names_ref).map(|_| ())?)
+    async fn drop(&mut self, rep: Resource<StreamObjectNames>) -> Result<()> {
+        Ok(self.table.delete(rep).map(|_| ())?)
     }
 }
 
@@ -310,29 +310,29 @@ impl types::Host for Host<'_> {
 
 impl types::HostIncomingValue for Host<'_> {
     async fn incoming_value_consume_sync(
-        &mut self, value_ref: Resource<IncomingValue>,
+        &mut self, this: Resource<IncomingValue>,
     ) -> Result<IncomingValueSyncBody> {
-        let value = self.table.get(&value_ref)?;
+        let value = self.table.get(&this)?;
         Ok(value.to_vec())
     }
 
     async fn incoming_value_consume_async(
-        &mut self, value_ref: Resource<IncomingValue>,
+        &mut self, this: Resource<IncomingValue>,
     ) -> Result<Resource<InputStream>> {
-        let value = self.table.get(&value_ref)?;
+        let value = self.table.get(&this)?;
         let rs = MemoryInputPipe::new(value.clone());
         let stream: InputStream = Box::new(rs);
 
         Ok(self.table.push(stream)?)
     }
 
-    async fn size(&mut self, value_ref: Resource<IncomingValue>) -> Result<u64> {
-        let value = self.table.get(&value_ref)?;
+    async fn size(&mut self, self_: Resource<IncomingValue>) -> Result<u64> {
+        let value = self.table.get(&self_)?;
         Ok(value.len() as u64)
     }
 
-    async fn drop(&mut self, value_ref: Resource<IncomingValue>) -> Result<()> {
-        Ok(self.table.delete(value_ref).map(|_| ())?)
+    async fn drop(&mut self, rep: Resource<IncomingValue>) -> Result<()> {
+        Ok(self.table.delete(rep).map(|_| ())?)
     }
 }
 
@@ -342,9 +342,9 @@ impl types::HostOutgoingValue for Host<'_> {
     }
 
     async fn outgoing_value_write_body(
-        &mut self, value_ref: Resource<OutgoingValue>,
+        &mut self, self_: Resource<OutgoingValue>,
     ) -> Result<Resource<OutputStream>> {
-        let value = self.table.get(&value_ref)?;
+        let value = self.table.get(&self_)?;
         let stream: OutputStream = Box::new(value.clone());
         Ok(self.table.push(stream)?)
     }
@@ -354,7 +354,7 @@ impl types::HostOutgoingValue for Host<'_> {
         Ok(())
     }
 
-    async fn drop(&mut self, value_ref: Resource<OutgoingValue>) -> Result<()> {
-        Ok(self.table.delete(value_ref).map(|_| ())?)
+    async fn drop(&mut self, rep: Resource<OutgoingValue>) -> Result<()> {
+        Ok(self.table.delete(rep).map(|_| ())?)
     }
 }

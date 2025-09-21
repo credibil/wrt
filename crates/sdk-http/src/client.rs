@@ -274,7 +274,7 @@ impl<B, J, F> RequestBuilder<B, J, F> {
                     return Err(anyhow!("output stream is not writable"));
                 };
 
-                #[allow(clippy::cast_possible_truncation)]
+                #[expect(clippy::cast_possible_truncation)]
                 let len = buf.len().min(permit as usize);
 
                 let (chunk, rest) = buf.split_at(len);

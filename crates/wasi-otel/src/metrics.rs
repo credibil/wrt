@@ -321,7 +321,7 @@ impl From<wasi::Exemplar> for Exemplar {
     }
 }
 
-#[allow(clippy::cast_possible_wrap)]
+#[expect(clippy::cast_possible_wrap)]
 impl From<wasi::DataValue> for ExemplarValue {
     fn from(dv: wasi::DataValue) -> Self {
         match dv {
@@ -332,7 +332,7 @@ impl From<wasi::DataValue> for ExemplarValue {
     }
 }
 
-#[allow(clippy::cast_possible_wrap)]
+#[expect(clippy::cast_possible_wrap)]
 impl From<wasi::DataValue> for NumberValue {
     fn from(dv: wasi::DataValue) -> Self {
         match dv {
@@ -343,7 +343,7 @@ impl From<wasi::DataValue> for NumberValue {
     }
 }
 
-#[allow(clippy::cast_precision_loss)]
+#[expect(clippy::cast_precision_loss)]
 impl From<wasi::DataValue> for f64 {
     fn from(dv: wasi::DataValue) -> Self {
         match dv {

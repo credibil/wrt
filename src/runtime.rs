@@ -73,7 +73,8 @@ impl Runtime {
         // file can be a serialized component or a wasm file
         cfg_if! {
             if #[cfg(feature = "jit")] {
-                // attempt to load as a serialized component with fallback to wasm
+                // SAFETY:
+                // Attempt to load as a serialized component with fallback to wasm
                 let component = match unsafe { Component::deserialize_file(&engine, &self.wasm) } {
                     Ok(component) => component,
                     Err(_) => Component::from_file(&engine, &self.wasm)?,

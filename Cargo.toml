@@ -1,7 +1,11 @@
+# cargo-features = ["frontmatter"]
+
 [package]
 name = "runtime"
 description = "Wasm runtime"
+readme = "README.md"
 authors.workspace = true
+categories.workspace = true
 edition.workspace = true
 homepage.workspace = true
 keywords.workspace = true
@@ -42,11 +46,11 @@ resolver = "3"
 
 [workspace.package]
 authors = ["Credibil"]
+categories = ["wasm", "wasi", "runtime"]
 edition = "2024"
 homepage = "https://credibil.io"
 keywords = ["decentralized", "identity"]
 license = "MIT OR Apache-2.0"
-readme = "README.md"
 repository = "https://github.com/credibil/wrt"
 rust-version = "1.90"
 version = "0.6.0"
@@ -56,14 +60,41 @@ trivial_numeric_casts = "warn"
 unused_extern_crates = "warn"
 
 [workspace.lints.clippy]
+# https://doc.rust-lang.org/stable/clippy/index.html
 all = "warn"
 nursery = "warn"
 pedantic = "warn"
+cargo = "warn"
+
+# These lints are from the `restriction` lint group and prevent specific
+# constructs being used in source code in order to drive up consistency,
+# quality, and brevity
+# allow_attributes_without_reason = "warn"
+as_pointer_underscore = "warn"
+assertions_on_result_states = "warn"
+clone_on_ref_ptr = "warn"
+deref_by_slicing = "warn"
+disallowed_script_idents = "warn"
+empty_drop = "warn"
+empty_enum_variants_with_brackets = "warn"
+empty_structs_with_brackets = "warn"
+fn_to_numeric_cast_any = "warn"
+if_then_some_else_none = "warn"
+map_err_ignore = "warn"
+redundant_type_annotations = "warn"
+renamed_function_params = "warn"
+semicolon_outside_block = "warn"
+string_to_string = "warn"
+undocumented_unsafe_blocks = "warn"
+unnecessary_safety_comment = "warn"
+unnecessary_safety_doc = "warn"
+unneeded_field_pattern = "warn"
+unused_result_ok = "warn"
 
 [workspace.dependencies]
 anyhow = "1.0.100"
 async-nats = { version = "0.42.0" }
-axum = { version = "0.8.4", default-features = false }                                            # features = ["form", "json", "query", "tracing"]
+axum = { version = "0.8.4", default-features = false, features = ["json"] }                       # features = ["form", "json", "query", "tracing"]
 azure_core = { version = "0.27.0", default-features = false, features = ["reqwest_rustls"] }
 azure_identity = { version = "0.27.0", default-features = false }
 azure_security_keyvault_secrets = { version = "0.6.0", default-features = false }
