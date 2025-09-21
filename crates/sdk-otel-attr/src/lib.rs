@@ -25,7 +25,7 @@ pub fn instrument(args: TokenStream, item: TokenStream) -> TokenStream {
     // recreate function with the instrument macro wrapping the body
     let new_fn = quote! {
         #signature {
-            let _guard = if tracing::Span::current().is_none() {
+            let _guard = if ::tracing::Span::current().is_none() {
                 let shutdown = ::sdk_otel::init();
                 Some(shutdown)
             } else {
@@ -44,14 +44,17 @@ fn signature(item_fn: &ItemFn) -> proc_macro2::TokenStream {
     let inputs = item_fn.sig.inputs.clone();
     let output = item_fn.sig.output.clone();
 
-    // rewrite signature to return a Future when async
+    // rewrite async functions to return `Future + Send`
     if item_fn.sig.asyncness.is_some() {
         let (return_type, return_span) = if let ReturnType::Type(_, return_type) = &output {
             (return_type.to_owned(), return_type.span())
         } else {
             (parse_quote! { () }, ident.span())
         };
-        quote_spanned! {return_span=> fn #ident(#inputs) -> impl Future<Output = #return_type> + Send}
+        quote_spanned! {return_span=>
+            #[allow(refining_impl_trait)]
+            fn #ident(#inputs) -> impl Future<Output = #return_type> + Send
+        }
     } else {
         quote! {fn #ident(#inputs) #output}
     }
@@ -66,19 +69,19 @@ fn body(attrs: Attributes, item_fn: &ItemFn) -> proc_macro2::TokenStream {
     let level =
         attrs.level.map_or_else(|| quote! { ::tracing::Level::INFO }, |level| quote! {#level});
 
-    // wrap function body in a span if async
+    // `instrument` async functions
     if item_fn.sig.asyncness.is_some() {
         quote! {
             ::tracing::Instrument::instrument(
                 async move {
                     #block
                 },
-                tracing::span!(#level, #span_name)
+                ::tracing::span!(#level, #span_name)
             )
         }
     } else {
         quote! {
-            tracing::span!(#level, #span_name).in_scope(|| {
+            ::tracing::span!(#level, #span_name).in_scope(|| {
                 #block
             })
         }
