@@ -1,8 +1,8 @@
 [package]
-name = "keyvalue"
-authors.workspace = true
+name = "keyvalue-ex"
+description = "Example wasm guest using wasi:keyvalue"
 edition.workspace = true
-license.workspace = true
+publish = false
 
 [lib]
 crate-type = ["cdylib"]

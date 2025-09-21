@@ -1,8 +1,8 @@
 [package]
-name = "http-http"
-authors.workspace = true
+name = "http-out-ex"
+description = "Example wasm guest making outbound HTTP request"
 edition.workspace = true
-license.workspace = true
+publish = false
 
 [lib]
 crate-type = ["cdylib"]

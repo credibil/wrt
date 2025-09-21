@@ -1,7 +1,7 @@
 [package]
-name = "http"
-description = "Example guest component using wasi-http"
-# version = "0.1.0"
+name = "http-ex"
+description = "Example wasm guest using wasi:http"
+edition.workspace = true
 publish = false
 
 [lib]
@@ -11,7 +11,7 @@ crate-type = ["cdylib"]
 workspace = true
 
 [dependencies]
-axum = { workspace = true, features = ["json"] }
+axum.workspace = true
 sdk-http.workspace = true
 serde_json.workspace = true
 tracing.workspace = true

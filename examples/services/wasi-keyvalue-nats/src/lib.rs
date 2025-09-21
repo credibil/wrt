@@ -233,9 +233,7 @@ impl atomics::Host for Host<'_> {
     /// with the value set to the given delta.
     ///
     /// If any other error occurs, it returns an `Err(error)`.
-    async fn increment(
-        &mut self, bucket: Resource<Store>, key: String, delta: i64,
-    ) -> Result<i64> {
+    async fn increment(&mut self, bucket: Resource<Store>, key: String, delta: i64) -> Result<i64> {
         let Ok(bucket) = self.table.get_mut(&bucket) else {
             return Err(Error::NoSuchStore);
         };

@@ -223,8 +223,7 @@ impl types::HostClient for Host<'_> {
 impl producer::HostWithStore for WasiMessaging {
     /// Sends the message using the given client.
     async fn send<T>(
-        accessor: &Accessor<T, Self>, c: Resource<Client>, topic: Topic,
-        message: Resource<Message>,
+        accessor: &Accessor<T, Self>, c: Resource<Client>, topic: Topic, message: Resource<Message>,
     ) -> Result<()> {
         tracing::trace!("producer::Host::send: topic {topic:?}");
 

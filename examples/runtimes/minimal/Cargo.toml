@@ -1,8 +1,9 @@
-
 [package]
 name = "minimal"
-description = "Minimal runtime (2 services)"
+description = "Runtime with 2 services"
+readme = "README.md"
 authors.workspace = true
+categories.workspace = true
 edition.workspace = true
 homepage.workspace = true
 keywords.workspace = true
