@@ -49,7 +49,7 @@ license = "MIT OR Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/credibil/wrt"
 rust-version = "1.90"
-version = "0.5.1"
+version = "0.5.2"
 
 [workspace.lints.rust]
 trivial_numeric_casts = "warn"
