@@ -15,6 +15,19 @@ Released 2025-09-20
 
 **Full Changelog**: https://github.com/credibil/wrt/compare/v0.4.0...v0.5.0
 
+## What's Changed
+* Bump to 0.5.0 by @github-actions[bot] in https://github.com/credibil/wrt/pull/13
+* fix bug extracting authority from request by @andrew-goldie in https://github.com/credibil/wrt/pull/14
+* WASI-p3 support by @andrewweston in https://github.com/credibil/wrt/pull/15
+* update example guest READMEs by @andrewweston in https://github.com/credibil/wrt/pull/18
+* update to wasmtime 37 by @andrewweston in https://github.com/credibil/wrt/pull/19
+* rename tempo -> wrt by @andrewweston in https://github.com/credibil/wrt/pull/20
+* Bump to 0.6.0 by @github-actions[bot] in https://github.com/credibil/wrt/pull/21
+* sdk-otel macro support for async fns by @andrewweston in https://github.com/credibil/wrt/pull/22
+
+
+**Full Changelog**: https://github.com/credibil/wrt/compare/v0.4.0...v0.5.1
+
 ---
 
 Release notes for previous releases can be found on the respective release 
