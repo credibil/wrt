@@ -8,8 +8,8 @@ allowed-duplicate-crates = [
     "bitflags",
     "core-foundation",
     "embedded-io",
-    "hashbrown",
     "getrandom",
+    "hashbrown",
     "gimli",
     "indexmap",
     "linux-raw-sys",
@@ -27,6 +27,7 @@ allowed-duplicate-crates = [
     "thiserror",
     "thiserror-impl",
     "tokio-rustls",
+    "wasi",
     "webpki-roots",
     "windows_aarch64_gnullvm",
     "windows_aarch64_msvc",
@@ -41,5 +42,4 @@ allowed-duplicate-crates = [
     "windows-strings",
     "windows-sys",
     "windows-targets",
-    "wasi",
 ]
