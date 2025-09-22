@@ -51,6 +51,8 @@ jobs:
 
           cat > RELEASES.md <<EOF
           ## ${{ inputs.version }}
+          
+          Unreleased
 
           ## Fixed
 
