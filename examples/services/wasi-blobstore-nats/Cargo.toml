@@ -1,7 +1,9 @@
 [package]
 name = "wasi-blobstore-nats"
 description = "WASI blobstore WIT implementation service using NATS"
+readme = "README.md"
 authors.workspace = true
+categories.workspace = true
 edition.workspace = true
 homepage.workspace = true
 keywords.workspace = true

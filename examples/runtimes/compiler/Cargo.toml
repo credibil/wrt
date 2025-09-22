@@ -1,8 +1,9 @@
-
 [package]
 name = "compiler"
-description = "Minimal runtime (2 services)"
+description = "Wasm guest compiler example"
+readme = "README.md"
 authors.workspace = true
+categories.workspace = true
 edition.workspace = true
 homepage.workspace = true
 keywords.workspace = true

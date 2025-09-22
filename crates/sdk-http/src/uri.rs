@@ -40,7 +40,7 @@ impl UriLike {
     pub fn into_uri(&self) -> Result<Uri> {
         match self {
             Self::Uri(uri) => Ok(uri.clone()),
-            Self::Str(s) => s.parse::<Uri>().map_err(|_| anyhow!("invalid URI string")),
+            Self::Str(s) => s.parse::<Uri>().map_err(|e| anyhow!("invalid URI string: {e}")),
         }
     }
 }

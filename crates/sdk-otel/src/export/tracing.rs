@@ -36,7 +36,7 @@ impl Exporter {
         Ok(Self { inner })
     }
 
-    #[allow(clippy::unnecessary_wraps)]
+    #[expect(clippy::unnecessary_wraps)]
     #[cfg(not(feature = "guest-export"))]
     pub const fn new() -> Result<Self> {
         Ok(Self {})
@@ -45,13 +45,13 @@ impl Exporter {
 
 impl opentelemetry_sdk::trace::SpanExporter for Exporter {
     #[cfg(feature = "guest-export")]
-    async fn export(&self, span_data: Vec<SpanData>) -> Result<(), OTelSdkError> {
-        self.inner.export(span_data).await
+    async fn export(&self, batch: Vec<SpanData>) -> Result<(), OTelSdkError> {
+        self.inner.export(batch).await
     }
 
     #[cfg(not(feature = "guest-export"))]
-    async fn export(&self, span_data: Vec<SpanData>) -> Result<(), OTelSdkError> {
-        let spans = span_data.into_iter().map(Into::into).collect::<Vec<_>>();
+    async fn export(&self, batch: Vec<SpanData>) -> Result<(), OTelSdkError> {
+        let spans = batch.into_iter().map(Into::into).collect::<Vec<_>>();
         wasi::export(&spans).map_err(|e| OTelSdkError::InternalFailure(e.to_string()))
     }
 

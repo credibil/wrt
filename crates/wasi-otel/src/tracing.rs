@@ -26,13 +26,13 @@ impl wasi_otel::tracing::Host for Host<'_> {
         Ok(wasi::SpanContext::from(span.span_context()))
     }
 
-    async fn export(&mut self, span_data: Vec<wasi::SpanData>) -> Result<(), wasi::Error> {
+    async fn export(&mut self, span: Vec<wasi::SpanData>) -> Result<(), wasi::Error> {
         let http_client = self.http_client.clone();
 
         // export to collector in background to avoid blocking
         tokio::spawn(async move {
             // convert to opentelemetry export format
-            let resource_spans = resource_spans(span_data, init::resource());
+            let resource_spans = resource_spans(span, init::resource());
             let request = ExportTraceServiceRequest { resource_spans };
 
             let body = Message::encode_to_vec(&request);

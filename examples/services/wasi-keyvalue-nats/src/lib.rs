@@ -56,17 +56,17 @@ static NATS_CLIENT: OnceLock<async_nats::Client> = OnceLock::new();
 pub struct KeyValue;
 
 impl runtime::Service for KeyValue {
-    fn add_to_linker(&self, l: &mut Linker<RunState>) -> anyhow::Result<()> {
-        store::add_to_linker::<_, Data>(l, Host::new)?;
-        atomics::add_to_linker::<_, Data>(l, Host::new)?;
-        batch::add_to_linker::<_, Data>(l, Host::new)?;
+    fn add_to_linker(&self, linker: &mut Linker<RunState>) -> anyhow::Result<()> {
+        store::add_to_linker::<_, Data>(linker, Host::new)?;
+        atomics::add_to_linker::<_, Data>(linker, Host::new)?;
+        batch::add_to_linker::<_, Data>(linker, Host::new)?;
         Ok(())
     }
 }
 
 impl AddResource<async_nats::Client> for KeyValue {
     fn resource(self, resource: async_nats::Client) -> anyhow::Result<Self> {
-        NATS_CLIENT.set(resource).map_err(|_| anyhow!("client already set"))?;
+        NATS_CLIENT.set(resource).map_err(|c| anyhow!("client already set: {c:?}"))?;
         Ok(self)
     }
 }
@@ -123,8 +123,8 @@ impl store::Host for Host<'_> {
 }
 
 impl store::HostBucket for Host<'_> {
-    async fn get(&mut self, store_ref: Resource<Store>, key: String) -> Result<Option<Vec<u8>>> {
-        let Ok(bucket) = self.table.get(&store_ref) else {
+    async fn get(&mut self, self_: Resource<Store>, key: String) -> Result<Option<Vec<u8>>> {
+        let Ok(bucket) = self.table.get(&self_) else {
             return Err(Error::NoSuchStore);
         };
         let key_enc = Base64UrlUnpadded::encode_string(key.as_bytes());
@@ -133,25 +133,25 @@ impl store::HostBucket for Host<'_> {
     }
 
     async fn set(
-        &mut self, store_ref: Resource<Store>, key: String, value: Vec<u8>,
+        &mut self, self_: Resource<Store>, key: String, value: Vec<u8>,
     ) -> Result<(), Error> {
-        let Ok(bucket) = self.table.get_mut(&store_ref) else {
+        let Ok(bucket) = self.table.get_mut(&self_) else {
             return Err(Error::NoSuchStore);
         };
         let key_enc = Base64UrlUnpadded::encode_string(key.as_bytes());
         bucket.put(key_enc, value.into()).await.map_or_else(|e| Err(anyhow!(e).into()), |_| Ok(()))
     }
 
-    async fn delete(&mut self, store_ref: Resource<Store>, key: String) -> Result<()> {
-        let Ok(bucket) = self.table.get_mut(&store_ref) else {
+    async fn delete(&mut self, self_: Resource<Store>, key: String) -> Result<()> {
+        let Ok(bucket) = self.table.get_mut(&self_) else {
             return Err(Error::NoSuchStore);
         };
         let key_enc = Base64UrlUnpadded::encode_string(key.as_bytes());
         bucket.delete(key_enc).await.map_err(|e| anyhow!("issue deleting value: {e}").into())
     }
 
-    async fn exists(&mut self, store_ref: Resource<Store>, key: String) -> Result<bool> {
-        let Ok(bucket) = self.table.get(&store_ref) else {
+    async fn exists(&mut self, self_: Resource<Store>, key: String) -> Result<bool> {
+        let Ok(bucket) = self.table.get(&self_) else {
             return Err(Error::NoSuchStore);
         };
         let key_enc = Base64UrlUnpadded::encode_string(key.as_bytes());
@@ -161,11 +161,11 @@ impl store::HostBucket for Host<'_> {
     }
 
     async fn list_keys(
-        &mut self, store_ref: Resource<Store>, cursor: Option<String>,
+        &mut self, self_: Resource<Store>, cursor: Option<String>,
     ) -> Result<KeyResponse> {
         tracing::trace!("store::HostBucket::list_keys {cursor:?}");
 
-        let Ok(bucket) = self.table.get(&store_ref) else {
+        let Ok(bucket) = self.table.get(&self_) else {
             return Err(Error::NoSuchStore);
         };
         let Ok(key_stream) = bucket.keys().await else {
@@ -187,16 +187,16 @@ impl store::HostBucket for Host<'_> {
         Ok(KeyResponse { keys, cursor })
     }
 
-    async fn drop(&mut self, store_ref: Resource<Store>) -> anyhow::Result<()> {
-        self.table.delete(store_ref).map(|_| Ok(()))?
+    async fn drop(&mut self, rep: Resource<Store>) -> anyhow::Result<()> {
+        self.table.delete(rep).map(|_| Ok(()))?
     }
 }
 
 impl atomics::HostCas for Host<'_> {
     /// Construct a new CAS operation. Implementors can map the underlying functionality
     /// (transactions, versions, etc) as desired.
-    async fn new(&mut self, store_ref: Resource<Store>, key: String) -> Result<Resource<Cas>> {
-        let Ok(bucket) = self.table.get(&store_ref) else {
+    async fn new(&mut self, bucket: Resource<Store>, key: String) -> Result<Resource<Cas>> {
+        let Ok(bucket) = self.table.get(&bucket) else {
             return Err(Error::NoSuchStore);
         };
         let key_enc = Base64UrlUnpadded::encode_string(key.as_bytes());
@@ -210,8 +210,8 @@ impl atomics::HostCas for Host<'_> {
     }
 
     /// Get the current value of the CAS handle.
-    async fn current(&mut self, cas_ref: Resource<Cas>) -> Result<Option<Vec<u8>>> {
-        let Ok(cas) = self.table.get(&cas_ref) else {
+    async fn current(&mut self, self_: Resource<Cas>) -> Result<Option<Vec<u8>>> {
+        let Ok(cas) = self.table.get(&self_) else {
             return Err(Error::NoSuchStore);
         };
         let value = cas.current.clone();
@@ -219,9 +219,9 @@ impl atomics::HostCas for Host<'_> {
     }
 
     /// Drop the CAS handle.
-    async fn drop(&mut self, cas_ref: Resource<Cas>) -> anyhow::Result<()> {
+    async fn drop(&mut self, rep: Resource<Cas>) -> anyhow::Result<()> {
         tracing::trace!("atomics::HostCas::drop");
-        self.table.delete(cas_ref).map(|_| Ok(()))?
+        self.table.delete(rep).map(|_| Ok(()))?
     }
 }
 
@@ -233,10 +233,8 @@ impl atomics::Host for Host<'_> {
     /// with the value set to the given delta.
     ///
     /// If any other error occurs, it returns an `Err(error)`.
-    async fn increment(
-        &mut self, store_ref: Resource<Store>, key: String, delta: i64,
-    ) -> Result<i64> {
-        let Ok(bucket) = self.table.get_mut(&store_ref) else {
+    async fn increment(&mut self, bucket: Resource<Store>, key: String, delta: i64) -> Result<i64> {
+        let Ok(bucket) = self.table.get_mut(&bucket) else {
             return Err(Error::NoSuchStore);
         };
 
@@ -271,9 +269,9 @@ impl atomics::Host for Host<'_> {
 
 impl batch::Host for Host<'_> {
     async fn get_many(
-        &mut self, store_ref: Resource<Store>, keys: Vec<String>,
+        &mut self, bucket: Resource<Store>, keys: Vec<String>,
     ) -> Result<Vec<Option<(String, Vec<u8>)>>> {
-        let Ok(bucket) = self.table.get(&store_ref) else {
+        let Ok(bucket) = self.table.get(&bucket) else {
             return Err(Error::NoSuchStore);
         };
 
@@ -291,9 +289,9 @@ impl batch::Host for Host<'_> {
     }
 
     async fn set_many(
-        &mut self, store_ref: Resource<Store>, key_values: Vec<(String, Vec<u8>)>,
+        &mut self, bucket: Resource<Store>, key_values: Vec<(String, Vec<u8>)>,
     ) -> Result<()> {
-        let Ok(bucket) = self.table.get_mut(&store_ref) else {
+        let Ok(bucket) = self.table.get_mut(&bucket) else {
             return Err(Error::NoSuchStore);
         };
 
@@ -307,8 +305,8 @@ impl batch::Host for Host<'_> {
         Ok(())
     }
 
-    async fn delete_many(&mut self, store_ref: Resource<Store>, keys: Vec<String>) -> Result<()> {
-        let Ok(bucket) = self.table.get_mut(&store_ref) else {
+    async fn delete_many(&mut self, bucket: Resource<Store>, keys: Vec<String>) -> Result<()> {
+        let Ok(bucket) = self.table.get_mut(&bucket) else {
             return Err(Error::NoSuchStore);
         };
 

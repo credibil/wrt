@@ -7,18 +7,18 @@ This example demonstrates how to make an outgoing http request to a downstream s
 Build the example guest:
 
 ```bash
-cargo build --package http-http --target wasm32-wasip2 --release
+cargo build --package wasm-http-out --target wasm32-wasip2 --release
 ```
 
 Run a guest using the runtime:
 
 ```bash
 # compile and run
-cargo run --package minimal -- run ./target/wasm32-wasip2/release/http_http.wasm
+cargo run --package minimal -- run ./target/wasm32-wasip2/release/wasm_http_out.wasm
 
 # pre-compile
-cargo run -- compile  ./target/wasm32-wasip2/release/http_http.wasm --output ./http_http.bin
-cargo run -- run ./http_http.bin
+cargo run -- compile  ./target/wasm32-wasip2/release/wasm_http_out.wasm --output ./wasm_http_out.bin
+cargo run -- run ./wasm_http_out.bin
 ```
 
 

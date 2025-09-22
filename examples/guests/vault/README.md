@@ -3,18 +3,18 @@
 Build the example guest:
 
 ```bash
-cargo build --package vault --target wasm32-wasip2 --release
+cargo build --package wasm-vault --target wasm32-wasip2 --release
 ```
 
 Run the example guest:
 
 ```bash
 # compile and run
-cargo run --package everything -- run ./target/wasm32-wasip2/release/vault.wasm
+cargo run --package everything -- run ./target/wasm32-wasip2/release/wasm_vault.wasm
 
 # pre-compile
-cargo run -- compile  ./target/wasm32-wasip2/release/vault.wasm --output ./vault.bin
-cargo run -- run ./vault.bin
+cargo run -- compile  ./target/wasm32-wasip2/release/wasm_vault.wasm --output ./wasm_vault.bin
+cargo run -- run ./wasm_vault.bin
 ```
 
 In a separate console, send some messages to the guest:

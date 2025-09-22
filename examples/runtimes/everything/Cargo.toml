@@ -1,8 +1,9 @@
-
 [package]
 name = "everything"
 description = "Runtime with all services"
+readme = "README.md"
 authors.workspace = true
+categories.workspace = true
 edition.workspace = true
 homepage.workspace = true
 keywords.workspace = true

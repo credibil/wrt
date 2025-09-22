@@ -71,7 +71,7 @@ pub trait Service: Debug + Sync + Send {
     ///
     /// This is typically implemented by services that instantiate (or run)
     /// wasm components.
-    #[allow(unused_variables)]
+    #[expect(unused_variables)]
     fn start(&self, pre: InstancePre<RunState>) -> BoxFuture<'static, Result<()>> {
         async { Ok(()) }.boxed()
     }

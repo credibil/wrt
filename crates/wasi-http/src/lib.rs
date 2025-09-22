@@ -32,8 +32,8 @@ const DEF_HTTP_ADDR: &str = "0.0.0.0:8080";
 pub struct Http;
 
 impl runtime::Service for Http {
-    fn add_to_linker(&self, l: &mut Linker<RunState>) -> Result<()> {
-        wasmtime_wasi_http::add_only_http_to_linker_async(l)
+    fn add_to_linker(&self, linker: &mut Linker<RunState>) -> Result<()> {
+        wasmtime_wasi_http::add_only_http_to_linker_async(linker)
     }
 
     /// Provide http proxy service the specified wasm component.

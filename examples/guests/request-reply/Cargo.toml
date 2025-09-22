@@ -1,8 +1,8 @@
 [package]
-name = "request-reply"
-authors.workspace = true
+name = "request-reply-ex"
+description = "Example wasm guest using wasi:messaging"
 edition.workspace = true
-license.workspace = true
+publish = false
 
 [lib]
 crate-type = ["cdylib"]
