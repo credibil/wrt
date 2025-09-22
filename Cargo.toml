@@ -54,8 +54,9 @@ rust-version = "1.90"
 version = "0.6.0"
 
 [workspace.lints.rust]
+# https://dirname.github.io/rust-std-doc/rustc/lints/listing/allowed-by-default.html
 trivial_numeric_casts = "warn"
-unused_extern_crates = "warn"
+unsafe_op_in_unsafe_fn = "warn"
 
 [workspace.lints.clippy]
 # https://doc.rust-lang.org/stable/clippy/index.html
@@ -64,9 +65,10 @@ nursery = "warn"
 pedantic = "warn"
 cargo = "warn"
 
-# These lints are from the `restriction` lint group and prevent specific
-# constructs being used in source code in order to drive up consistency,
-# quality, and brevity
+# Cherry-picked lints are from the `restriction` lint group in order to drive up
+# consistency, quality, and brevity
+# See https://microsoft.github.io/rust-guidelines/guidelines/universal/index.html
+
 # allow_attributes_without_reason = "warn"
 as_pointer_underscore = "warn"
 assertions_on_result_states = "warn"
@@ -139,4 +141,3 @@ wasi-vault-az = { path = "examples/services/wasi-vault-az" }
 
 # [patch."https://github.com/credibil/core.git"]
 # credibil-otel = { path = "../../credibil/core/crates/otel" }
-
