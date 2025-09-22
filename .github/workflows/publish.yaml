@@ -2,112 +2,46 @@ name: Publish Release
 
 on:
   workflow_dispatch:
-    inputs:
-      version:
-        description: The version to use to create release notes.
-        required: true
-        type: string
-      type:
-        description: Whether the action is for a 'release', 'patch', or 'template'.
-        default: release
-        type: string
 
 jobs:
+  ci:
+    name: CI
+    uses: credibil/pipeline/.github/workflows/ci.yaml@main
+    with:
+      outdated: prost
+
   publish:
+    name: Publish
+    needs: ci
+    uses: credibil/pipeline/.github/workflows/publish.yaml@main
+
+  package:
+    name: Package
+    needs: publish
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
-
-    steps:
-
-      # -------------------------------------------
-      # Generate release notes for the current release
-      # -------------------------------------------
-      - name: Generate release notes
-        if: ${{ inputs.type == 'release' }} || ${{ inputs.type == 'patch' }}
-        id: notes
-        uses: actions/github-script@v8
-        with:
-          result-encoding: string
-          script: |
-            const response = await github.rest.repos.generateReleaseNotes({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tag_name: "v${{ inputs.version }}",
-            })
-            return response.data.body;
-
-      # -------------------------------------------
-      # Generate release notes for the current release
-      # -------------------------------------------
-      - name: Patch RELEASES.md
-        if: ${{ inputs.type == 'patch' }}
-        shell: bash
-        run: |
-          previous=$(cat RELEASES.md)
-
-          cat > RELEASES.md <<EOF
-          ## ${{ inputs.version }}
-          
-          Unreleased
-
-          ## Fixed
-
-          ${{ steps.notes.outputs.result }}
-
-          ---
-
-          $previous
-          EOF
-      
-      - run: cat RELEASES.md
-
-
-      # - name: Update branch with changes
-      #   shell: bash
-      #   run: |
-      #     git commit -am "Update release notes for ${{ inputs.version }}"
-      #     git push origin HEAD:${{ inputs.branch }}
-
-  # ci:
-  #   name: CI
-  #   uses: credibil/pipeline/.github/workflows/ci.yaml@main
-  #   with:
-  #     outdated: prost
-
-  # publish:
-  #   name: Publish
-  #   needs: ci
-  #   uses: credibil/pipeline/.github/workflows/publish.yaml@main
-
-  # package:
-  #   name: Package
-  #   needs: publish
-  #   runs-on: ubuntu-latest
-  #   permissions:
-  #     contents: read
-  #     packages: write
     
-  #   steps:
-  #     - uses: docker/setup-qemu-action@v3
-  #     - uses: docker/setup-buildx-action@v3
+    steps:
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
 
-  #     - name: Log in to GHCR
-  #       uses: docker/login-action@v3
-  #       with:
-  #         registry: https://ghcr.io
-  #         username: ${{ github.actor }}
-  #         password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: https://ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-  #     - name: Build and push image
-  #       uses: docker/build-push-action@v6
-  #       with:
-  #         push: true
-  #         file: ./examples/runtimes/Dockerfile
-  #         platforms: linux/amd64,linux/arm64
-  #         build-args: |
-  #           PACKAGE=everything
-  #         tags: |
-  #           ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ needs.publish.outputs.version }}
-  #           ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          file: ./examples/runtimes/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            PACKAGE=everything
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ needs.publish.outputs.version }}
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest
