@@ -5,11 +5,14 @@ on:
     
   workflow_call:
     inputs:
-      artifacts:
-        description: Release artifacts to attach to the release
+      version:
+        description: The version to use to create release notes.
+        required: true
         type: string
-        required: false
-
+      type:
+        description: Whether the action is for a 'release', 'patch', or 'template'.
+        default: release
+        type: string
 
 jobs:
   publish:
@@ -24,7 +27,7 @@ jobs:
       # Generate release notes for the current release
       # -------------------------------------------
       - name: Generate release notes
-        if: ${{ inputs.type == 'changelog' }}
+        if: ${{ inputs.type == 'release' }}. || ${{ inputs.type == 'patch' }}
         id: notes
         uses: actions/github-script@v8
         with:
@@ -37,59 +40,35 @@ jobs:
             })
             return response.data.body;
 
-      - name: Update RELEASES.md
-        if: ${{ inputs.type == 'changelog' }}
-        shell: bash
-        run: |
-          body=$(sed -n '/---/,$!p' RELEASES.md)
-          archive=$(sed -n '/---/,$p' RELEASES.md)
-
-          cat > RELEASES.md <<EOF
-          $body
-
-          ${{ steps.notes.outputs.result }}
-
-          $archive
-          EOF
-
       # -------------------------------------------
-      # Create template for the next version
+      # Generate release notes for the current release
       # -------------------------------------------
-      - name: Archive previous release notes
-        if: ${{ inputs.type == 'template' }}
+      - name: Patch RELEASES.md
+        if: ${{ inputs.type == 'patch' }}
         shell: bash
         run: |
-          set -ex
-          title=$(sed -n '1p' RELEASES.md)
-          version=$(echo $title | sed 's/## //')
-          version_x=$(echo $version | sed 's/.$/x/')
-
-          sed -i "/ARCHIVE_START/a * [$version_x](https://github.com/${{ github.repository }}/blob/release-$version/RELEASES.md)" RELEASES.md
-
-      - name: Create next release notes
-        if: ${{ inputs.type == 'template' }}
-        shell: bash
-        run: |
-          set -ex
-          archive=$(sed -n '/---/,$p' RELEASES.md)
+          previous=$(cat RELEASES.md)
 
           cat > RELEASES.md <<EOF
           ## ${{ inputs.version }}
 
-          Unreleased
+          ## Fixed
 
-          ### Added
+          ${{ steps.notes.outputs.result }}
 
-          ### Changed
+          ---
 
-          $archive
+          $previous
           EOF
+      
+      - run: cat RELEASES.md
 
-      - name: Update branch with changes
-        shell: bash
-        run: |
-          git commit -am "Update release notes for ${{ inputs.version }}"
-          git push origin HEAD:${{ inputs.branch }}
+
+      # - name: Update branch with changes
+      #   shell: bash
+      #   run: |
+      #     git commit -am "Update release notes for ${{ inputs.version }}"
+      #     git push origin HEAD:${{ inputs.branch }}
 
 
 
