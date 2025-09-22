@@ -1,9 +1,7 @@
 name: Publish Release
 
 on:
-  # workflow_dispatch:
-    
-  workflow_call:
+  workflow_dispatch:
     inputs:
       version:
         description: The version to use to create release notes.
