@@ -27,7 +27,7 @@ jobs:
       # Generate release notes for the current release
       # -------------------------------------------
       - name: Generate release notes
-        if: ${{ inputs.type == 'release' }}. || ${{ inputs.type == 'patch' }}
+        if: ${{ inputs.type == 'release' }} || ${{ inputs.type == 'patch' }}
         id: notes
         uses: actions/github-script@v8
         with:
@@ -71,8 +71,6 @@ jobs:
       #   run: |
       #     git commit -am "Update release notes for ${{ inputs.version }}"
       #     git push origin HEAD:${{ inputs.branch }}
-
-
 
   # ci:
   #   name: CI
