@@ -15,6 +15,11 @@ jobs:
     needs: ci
     uses: credibil/pipeline/.github/workflows/publish.yaml@main
 
+  crates:
+    needs: publish
+    uses: credibil/pipeline/.github/workflows/crates.yaml@main
+    secrets: inherit
+    
   package:
     name: Package
     needs: publish
