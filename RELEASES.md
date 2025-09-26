@@ -6,6 +6,11 @@ Unreleased
 
 ### Changed
 
+* WIT files have been moved into `wit` directory for each service to 
+  allow for services to be published as crates.
+
+**Full Changelog**: https://github.com/credibil/wrt/compare/v0.4.0...v0.8.0
+
 ---
 
 Release notes for previous releases can be found on the respective release 

@@ -1,6 +1,7 @@
 [package]
 name = "wit-bindings"
 description = "Guest bindings for wasmgrid service"
+readme = "README.md"
 authors.workspace = true
 categories.workspace = true
 edition.workspace = true
