@@ -1,4 +1,4 @@
-## 0.8.0
+## 0.9.0
 
 Unreleased
 
@@ -6,17 +6,13 @@ Unreleased
 
 ### Changed
 
-* WIT files have been moved into `wit` directory for each service to 
-  allow for services to be published as crates.
-
-**Full Changelog**: https://github.com/credibil/wrt/compare/v0.4.0...v0.8.0
-
 ---
 
 Release notes for previous releases can be found on the respective release 
 branches of the repository.
 
 <!-- ARCHIVE_START -->
+* [0.8.x](https://github.com/credibil/wrt/blob/release-0.8.0/RELEASES.md)
 * [0.7.x](https://github.com/credibil/wrt/blob/release-0.7.0/RELEASES.md)
 * [0.6.x](https://github.com/credibil/wrt/blob/release-0.6.0/RELEASES.md)
 * [0.5.x](https://github.com/credibil/wrt/blob/release-0.5.0/RELEASES.md)
