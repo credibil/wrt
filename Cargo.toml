@@ -32,16 +32,11 @@ jit = ["wasmtime/cranelift"]
 
 [dependencies]
 anyhow.workspace = true
-# cfg-if.workspace = true
-# clap = { version = "4.5.48", features = ["derive"] }
-# credibil-otel.workspace = true
-# futures.workspace = true
 res-azkeyvault.workspace = true
 res-mongodb.workspace = true
 res-nats.workspace = true
 runtime.workspace = true
 tokio = { workspace = true, features = ["signal"] }
-# tracing.workspace = true
 wasi-blobstore-mdb.workspace = true
 wasi-http.workspace = true
 wasi-keyvalue-nats.workspace = true
@@ -112,7 +107,7 @@ unused_result_ok = "warn"
 
 [workspace.dependencies]
 anyhow = "1.0.100"
-async-nats = { version = "0.42.0" }
+async-nats = { version = "0.43.1" }
 axum = { version = "0.8.4", default-features = false, features = ["json"] }
 azure_core = { version = "0.27.0", default-features = false, features = ["reqwest_rustls"] }
 azure_identity = { version = "0.27.0", default-features = false }

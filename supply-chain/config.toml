@@ -39,7 +39,7 @@ version = "3.4.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.async-nats]]
-version = "0.42.0"
+version = "0.43.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.atomic-waker]]
