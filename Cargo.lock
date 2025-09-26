@@ -624,15 +624,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b05b61dc5112cbb17e4b6cd61790d9845d13888356391624cbe7e41efeac1e75"
 
 [[package]]
-name = "compiler"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "runtime",
- "tokio",
-]
-
-[[package]]
 name = "compression-codecs"
 version = "0.4.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1217,24 +1208,6 @@ checksum = "8be9f3dfaaffdae2972880079a491a1a8bb7cbed0b8dd7a347f668b4150a3b93"
 dependencies = [
  "event-listener",
  "pin-project-lite",
-]
-
-[[package]]
-name = "everything"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "res-azkeyvault",
- "res-mongodb",
- "res-nats",
- "runtime",
- "tokio",
- "wasi-blobstore-mdb",
- "wasi-http",
- "wasi-keyvalue-nats",
- "wasi-messaging-nats",
- "wasi-otel",
- "wasi-vault-az",
 ]
 
 [[package]]
@@ -2239,19 +2212,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6877bb514081ee2a7ff5ef9de3281f14a4dd4bceac4c09388074a6b5df8a139a"
 
 [[package]]
-name = "minimal"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "res-nats",
- "runtime",
- "tokio",
- "wasi-http",
- "wasi-messaging-nats",
- "wasi-otel",
-]
-
-[[package]]
 name = "miniz_oxide"
 version = "0.8.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3029,7 +2989,7 @@ dependencies = [
 
 [[package]]
 name = "res-azkeyvault"
-version = "0.0.0"
+version = "0.7.0"
 dependencies = [
  "anyhow",
  "azure_core",
@@ -3041,7 +3001,7 @@ dependencies = [
 
 [[package]]
 name = "res-mongodb"
-version = "0.0.0"
+version = "0.7.0"
 dependencies = [
  "anyhow",
  "mongodb",
@@ -3051,7 +3011,7 @@ dependencies = [
 
 [[package]]
 name = "res-nats"
-version = "0.0.0"
+version = "0.7.0"
 dependencies = [
  "anyhow",
  "async-nats",
@@ -3099,12 +3059,31 @@ dependencies = [
  "clap",
  "credibil-otel",
  "futures",
- "openssl",
  "tokio",
  "tracing",
  "wasmtime",
  "wasmtime-wasi",
  "wasmtime-wasi-http",
+]
+
+[[package]]
+name = "runtime-cli"
+version = "0.7.0"
+dependencies = [
+ "anyhow",
+ "openssl",
+ "res-azkeyvault",
+ "res-mongodb",
+ "res-nats",
+ "runtime",
+ "tokio",
+ "wasi-blobstore-mdb",
+ "wasi-http",
+ "wasi-keyvalue-nats",
+ "wasi-messaging-nats",
+ "wasi-otel",
+ "wasi-vault-az",
+ "wasmtime",
 ]
 
 [[package]]
@@ -4412,7 +4391,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-blobstore-mdb"
-version = "0.0.0"
+version = "0.7.0"
 dependencies = [
  "anyhow",
  "bytes",
@@ -4429,7 +4408,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-blobstore-nats"
-version = "0.0.0"
+version = "0.7.0"
 dependencies = [
  "anyhow",
  "async-nats",
@@ -4460,7 +4439,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-keyvalue-nats"
-version = "0.0.0"
+version = "0.7.0"
 dependencies = [
  "anyhow",
  "async-nats",
@@ -4474,7 +4453,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-messaging-nats"
-version = "0.0.0"
+version = "0.7.0"
 dependencies = [
  "anyhow",
  "async-nats",
@@ -4512,7 +4491,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-vault-az"
-version = "0.0.0"
+version = "0.7.0"
 dependencies = [
  "anyhow",
  "azure_security_keyvault_secrets",
