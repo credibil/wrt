@@ -6,3 +6,4 @@ on:
 jobs:
   release:
     uses: credibil/pipeline/.github/workflows/release.yaml@main
+    secrets: inherit
