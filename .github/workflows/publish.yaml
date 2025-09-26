@@ -13,28 +13,28 @@ jobs:
           echo "This workflow only runs on the 'release-*' branches"
           exit 1
 
-  # ci:
-  #   name: CI
-  #   if: ${{ startsWith(github.ref_name, 'release-') }}
-  #   uses: credibil/pipeline/.github/workflows/ci.yaml@main
-  #   secrets: inherit
-  #   with:
-  #     outdated: prost
+  ci:
+    name: CI
+    if: ${{ startsWith(github.ref_name, 'release-') }}
+    uses: credibil/pipeline/.github/workflows/ci.yaml@main
+    secrets: inherit
+    with:
+      outdated: prost
 
-  # publish:
-  #   name: Publish
-  #   needs: ci
-  #   uses: credibil/pipeline/.github/workflows/publish.yaml@main
+  publish:
+    name: Publish
+    needs: ci
+    uses: credibil/pipeline/.github/workflows/publish.yaml@main
 
-  # crates:
-  #   name: Publish crates
-  #   needs: publish
-  #   uses: credibil/pipeline/.github/workflows/crates.yaml@main
-  #   secrets: inherit
+  crates:
+    name: Publish crates
+    needs: publish
+    uses: credibil/pipeline/.github/workflows/crates.yaml@main
+    secrets: inherit
 
   package:
     name: Package
-    # needs: publish
+    needs: publish
     runs-on: ubuntu-latest
     permissions:
       contents: read
