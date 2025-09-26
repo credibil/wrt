@@ -1,0 +1,33 @@
+[package]
+name = "runtime"
+description = "Credibil runtime"
+readme = "README.md"
+authors.workspace = true
+categories.workspace = true
+edition.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[lints]
+workspace = true
+
+[features]
+default = ["jit"]
+# Enables just-in-time wasm to machine code compilation.
+jit = ["wasmtime/cranelift"]
+
+[dependencies]
+anyhow.workspace = true
+cfg-if.workspace = true
+clap = { version = "4.5.48", features = ["derive"] }
+credibil-otel.workspace = true
+futures.workspace = true
+tokio = { workspace = true, features = ["signal"] }
+tracing.workspace = true
+wasmtime = { workspace = true, features = ["runtime"] }
+wasmtime-wasi.workspace = true
+wasmtime-wasi-http.workspace = true

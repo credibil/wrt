@@ -1,7 +1,8 @@
 [package]
-name = "runtime"
-description = "Wasm runtime"
+name = "runtime-cli"
+description = "Credibil runtime"
 readme = "README.md"
+default-run = "standard"
 authors.workspace = true
 categories.workspace = true
 edition.workspace = true
@@ -11,6 +12,14 @@ license.workspace = true
 repository.workspace = true
 rust-version.workspace = true
 version.workspace = true
+
+[[bin]]
+name = "standard"
+path = "src/standard.rs"
+
+[[bin]]
+name = "minimal"
+path = "src/minimal.rs"
 
 [lints]
 workspace = true
@@ -22,15 +31,23 @@ jit = ["wasmtime/cranelift"]
 
 [dependencies]
 anyhow.workspace = true
-cfg-if.workspace = true
-clap = { version = "4.5.48", features = ["derive"] }
-credibil-otel.workspace = true
-futures.workspace = true
+# cfg-if.workspace = true
+# clap = { version = "4.5.48", features = ["derive"] }
+# credibil-otel.workspace = true
+# futures.workspace = true
+res-azkeyvault.workspace = true
+res-mongodb.workspace = true
+res-nats.workspace = true
+runtime.workspace = true
 tokio = { workspace = true, features = ["signal"] }
-tracing.workspace = true
+# tracing.workspace = true
+wasi-blobstore-mdb.workspace = true
+wasi-http.workspace = true
+wasi-keyvalue-nats.workspace = true
+wasi-messaging-nats.workspace = true
+wasi-otel.workspace = true
+wasi-vault-az.workspace = true
 wasmtime = { workspace = true, features = ["runtime"] }
-wasmtime-wasi.workspace = true
-wasmtime-wasi-http.workspace = true
 
 # required for azure_identity, etc.
 openssl = { version = "0.10", features = ["vendored"] }
@@ -39,7 +56,7 @@ openssl = { version = "0.10", features = ["vendored"] }
 ignored = ["openssl"]
 
 [workspace]
-members = ["crates/*", "examples/guests/*", "examples/runtimes/*", "examples/services/*"]
+members = ["crates/*", "examples/*"]
 resolver = "3"
 
 [workspace.package]
@@ -125,24 +142,22 @@ wasmtime-wasi = { version = "37.0.0", features = ["p3"] }
 wasmtime-wasi-http = { version = "37.0.0", features = ["p3"] }
 wasmtime-wasi-io = "37.0.0"
 wit-bindgen = "0.46.0"
-wit-bindings = { path = "crates/wit-bindings" }
 
 # interally referenced crates
-runtime = { path = ".", version = "0.7.0", registry = "credibil" }
+res-azkeyvault = { path = "crates/res-azkeyvault", version = "0.7.0", registry = "credibil" }
+res-mongodb = { path = "crates/res-mongodb", version = "0.7.0", registry = "credibil" }
+res-nats = { path = "crates/res-nats", version = "0.7.0", registry = "credibil" }
+runtime = { path = "crates/runtime", version = "0.7.0", registry = "credibil" }
 sdk-http = { path = "crates/sdk-http", version = "0.7.0", registry = "credibil" }
 sdk-otel = { path = "crates/sdk-otel", version = "0.7.0", registry = "credibil" }
 sdk-otel-attr = { path = "crates/sdk-otel-attr", version = "0.7.0", registry = "credibil" }
+wasi-blobstore-mdb = { path = "crates/wasi-blobstore-mdb", version = "0.7.0", registry = "credibil" }
 wasi-http = { path = "crates/wasi-http", version = "0.7.0", registry = "credibil" }
+wasi-keyvalue-nats = { path = "crates/wasi-keyvalue-nats", version = "0.7.0", registry = "credibil" }
+wasi-messaging-nats = { path = "crates/wasi-messaging-nats", version = "0.7.0", registry = "credibil" }
 wasi-otel = { path = "crates/wasi-otel", version = "0.7.0", registry = "credibil" }
-
-# examples
-res-azkeyvault = { path = "examples/services/res-azkeyvault" }
-res-mongodb = { path = "examples/services/res-mongodb" }
-res-nats = { path = "examples/services/res-nats" }
-wasi-blobstore-mdb = { path = "examples/services/wasi-blobstore-mdb" }
-wasi-keyvalue-nats = { path = "examples/services/wasi-keyvalue-nats" }
-wasi-messaging-nats = { path = "examples/services/wasi-messaging-nats" }
-wasi-vault-az = { path = "examples/services/wasi-vault-az" }
+wasi-vault-az = { path = "crates/wasi-vault-az", version = "0.7.0", registry = "credibil" }
+wit-bindings = { path = "crates/wit-bindings", version = "0.7.0", registry = "credibil" }
 
 # [patch."https://github.com/credibil/core.git"]
 # credibil-otel = { path = "../../credibil/core/crates/otel" }

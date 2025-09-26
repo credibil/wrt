@@ -1,0 +1,33 @@
+[package]
+name = "wasi-messaging-nats"
+description = "Wasm messaging WIT implementation using NATS"
+readme = "README.md"
+authors.workspace = true
+categories.workspace = true
+edition.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[lints]
+workspace = true
+
+[features]
+
+[dependencies]
+anyhow.workspace = true
+async-nats.workspace = true
+futures.workspace = true
+runtime.workspace = true
+time.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+wasmtime.workspace = true
+wasmtime-wasi.workspace = true
+
+[dev-dependencies]
+ecdsa = "0.16.9"
+k256 = "0.13.4"
