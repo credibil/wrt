@@ -7,6 +7,7 @@ jobs:
   ci:
     name: CI
     uses: credibil/pipeline/.github/workflows/ci.yaml@main
+    secrets: inherit
     with:
       outdated: prost
 
@@ -19,7 +20,7 @@ jobs:
     needs: publish
     uses: credibil/pipeline/.github/workflows/crates.yaml@main
     secrets: inherit
-    
+
   package:
     name: Package
     needs: publish
@@ -27,7 +28,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-    
+
     steps:
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
