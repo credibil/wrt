@@ -1,0 +1,5 @@
+# 1. Install `wit-deps` from source (https://github.com/bytecodealliance/wit-deps)
+# 2. Update this file (deps.toml) with dependencies to import
+# 3. Run `wit-deps update` to import dependencies specified in deps.toml
+
+keyvalue = "https://github.com/WebAssembly/wasi-keyvalue/archive/main.tar.gz"

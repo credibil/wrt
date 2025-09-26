@@ -31,7 +31,7 @@ version = "0.8.12"
 criteria = "safe-to-deploy"
 
 [[exemptions.async-compression]]
-version = "0.4.31"
+version = "0.4.32"
 criteria = "safe-to-deploy"
 
 [[exemptions.async-lock]]
@@ -95,7 +95,7 @@ version = "2.15.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.cc]]
-version = "1.2.38"
+version = "1.2.39"
 criteria = "safe-to-deploy"
 
 [[exemptions.chrono]]
@@ -107,7 +107,7 @@ version = "0.3.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.compression-codecs]]
-version = "0.4.30"
+version = "0.4.31"
 criteria = "safe-to-deploy"
 
 [[exemptions.compression-core]]
@@ -639,7 +639,7 @@ version = "0.25.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.tokio-rustls]]
-version = "0.26.3"
+version = "0.26.4"
 criteria = "safe-to-deploy"
 
 [[exemptions.tokio-websockets]]

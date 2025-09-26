@@ -1,0 +1,5 @@
+package credibil:wasi-blobstore-nats;
+
+world blobstore {
+	include wasi:blobstore/imports@0.2.0-draft;
+}

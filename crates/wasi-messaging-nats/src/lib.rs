@@ -16,7 +16,7 @@ mod generated {
 
     wasmtime::component::bindgen!({
         world: "messaging",
-        path: "../../wit",
+        path: "wit",
         imports: {
             default: async | tracing | trappable,
         },

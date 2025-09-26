@@ -10,7 +10,7 @@ mod generated {
 
     wasmtime::component::bindgen!({
         world: "blobstore",
-        path: "../../wit",
+        path: "wit",
         imports: {
             default: async | tracing | trappable,
         },
