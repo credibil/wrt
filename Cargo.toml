@@ -51,7 +51,7 @@ keywords = ["decentralized", "identity"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/credibil/wrt"
 rust-version = "1.90"
-version = "0.6.0"
+version = "0.7.0"
 
 [workspace.lints.rust]
 # https://dirname.github.io/rust-std-doc/rustc/lints/listing/allowed-by-default.html
@@ -128,12 +128,12 @@ wit-bindgen = "0.46.0"
 wit-bindings = { path = "crates/wit-bindings" }
 
 # interally referenced crates
-runtime = { path = ".", version = "0.6.0", registry = "credibil" }
-sdk-http = { path = "crates/sdk-http", version = "0.6.0", registry = "credibil" }
-sdk-otel = { path = "crates/sdk-otel", version = "0.6.0", registry = "credibil" }
-sdk-otel-attr = { path = "crates/sdk-otel-attr", version = "0.6.0", registry = "credibil" }
-wasi-http = { path = "crates/wasi-http", version = "0.6.0", registry = "credibil" }
-wasi-otel = { path = "crates/wasi-otel", version = "0.6.0", registry = "credibil" }
+runtime = { path = ".", version = "0.7.0", registry = "credibil" }
+sdk-http = { path = "crates/sdk-http", version = "0.7.0", registry = "credibil" }
+sdk-otel = { path = "crates/sdk-otel", version = "0.7.0", registry = "credibil" }
+sdk-otel-attr = { path = "crates/sdk-otel-attr", version = "0.7.0", registry = "credibil" }
+wasi-http = { path = "crates/wasi-http", version = "0.7.0", registry = "credibil" }
+wasi-otel = { path = "crates/wasi-otel", version = "0.7.0", registry = "credibil" }
 
 # examples
 res-azkeyvault = { path = "examples/services/res-azkeyvault" }
