@@ -7,7 +7,7 @@ mod generated {
 
     wit_bindgen::generate!({
         world: "otel",
-        path: "../../wit",
+        path: "wit",
         generate_all,
     });
 }

@@ -29,7 +29,7 @@ futures.workspace = true
 opentelemetry.workspace = true
 opentelemetry_sdk.workspace = true
 sdk-http.workspace = true
-sdk-otel-attr = { path = "../sdk-otel-attr" }
+sdk-otel-attr.workspace = true
 wit-bindgen.workspace = true
 
 # tracing
