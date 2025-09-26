@@ -9,12 +9,14 @@ RUN adduser --disabled-password --gecos "" --home "/nonexistent" \
 
 WORKDIR /app
 RUN \
+    --mount=type=secret,id=credibil,env=CARGO_REGISTRIES_CREDIBIL_TOKEN \
+    --mount=type=bind,src=.cargo,dst=.cargo \
     --mount=type=bind,src=Cargo.toml,dst=Cargo.toml \
     --mount=type=bind,src=Cargo.lock,dst=Cargo.lock \
     --mount=type=bind,src=src,dst=src \
-    --mount=type=bind,source=wit,target=wit \
-    --mount=type=bind,source=crates,target=crates \
-    --mount=type=bind,source=examples,target=examples \
+    --mount=type=bind,src=wit,dst=wit \
+    --mount=type=bind,src=crates,dst=crates \
+    --mount=type=bind,src=examples,dst=examples \
     # --mount=type=cache,target=$CARGO_HOME/git/db \
     # --mount=type=cache,target=$CARGO_HOME/registry \
     cargo build --package $PACKAGE --release

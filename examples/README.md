@@ -15,8 +15,11 @@ This will start a wasm runtime running a simple HTTP server instrumented with lo
 ## Docker Build
 
 ```bash
+export CARGO_REGISTRIES_CREDIBIL_TOKEN="<registry token>"
+
 docker build \
   --file ./examples/runtimes/Dockerfile \
   --build-arg PACKAGE=everything \
+  --secret id=credibil,env=CARGO_REGISTRIES_CREDIBIL_TOKEN \
   --tag ghcr.io/credibil/wrt .
 ```
