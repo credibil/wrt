@@ -13,7 +13,7 @@ pub mod blobstore {
 
     wit_bindgen::generate!({
         world: "blobstore",
-        path: "../../wit",
+        path: "wit",
         generate_all,
         pub_export_macro: true
     });
@@ -26,7 +26,7 @@ pub mod keyvalue {
 
     wit_bindgen::generate!({
         world: "keyvalue",
-        path: "../../wit",
+        path: "wit",
         generate_all,
         pub_export_macro: true
     });
@@ -43,7 +43,7 @@ pub mod messaging {
 
     wit_bindgen::generate!({
         world: "messaging",
-        path: "../../wit",
+        path: "wit",
         additional_derives: [Clone],
         generate_all,
         pub_export_macro: true
@@ -58,7 +58,7 @@ pub mod otel {
 
     wit_bindgen::generate!({
         world: "otel",
-        path: "../../wit",
+        path: "wit",
         generate_all,
         pub_export_macro: true
     });
@@ -70,7 +70,7 @@ pub mod vault {
 
     wit_bindgen::generate!({
         world: "vault",
-        path: "../../wit",
+        path: "wit",
         generate_all,
         pub_export_macro: true
     });
