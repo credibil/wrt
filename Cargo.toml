@@ -1,6 +1,7 @@
 [package]
 name = "runtime-cli"
 description = "Credibil runtime"
+publish = false
 readme = "README.md"
 default-run = "standard"
 authors.workspace = true

@@ -1,6 +1,7 @@
 [package]
 name = "wasi-keyvalue-nats"
 description = "WASI Keyvalue WIT implementation using NATS"
+publish = false
 readme = "README.md"
 authors.workspace = true
 categories.workspace = true

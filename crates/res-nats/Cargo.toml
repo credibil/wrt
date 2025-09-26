@@ -1,6 +1,7 @@
 [package]
 name = "res-nats"
 description = "NATS resource provider"
+publish = false
 readme = "README.md"
 authors.workspace = true
 categories.workspace = true

@@ -1,6 +1,7 @@
 [package]
 name = "res-mongodb"
 description = "MongoDB resource provider"
+publish = false
 readme = "README.md"
 authors.workspace = true
 categories.workspace = true
