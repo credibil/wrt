@@ -4,10 +4,10 @@ Example runtimes can be used as a starting point for building and deploying WASI
 
 ## Quick Start
 
-To get started, add a `.env` file to the [runtimes](./runtimes) directory (see `.env.example`) and run:
+To get started, add a `.env` file to the root of the project (see `.env.example`) and run:
 
 ```bash
-docker compose --file ./examples/runtimes/compose.yaml up
+docker compose up
 ```
 
 This will start a wasm runtime running a simple HTTP server instrumented with logging and metrics.
@@ -18,8 +18,14 @@ This will start a wasm runtime running a simple HTTP server instrumented with lo
 export CARGO_REGISTRIES_CREDIBIL_TOKEN="<registry token>"
 
 docker build \
-  --file ./examples/runtimes/Dockerfile \
-  --build-arg PACKAGE=everything \
+  --build-arg BIN=standard \
+  --secret id=credibil,env=CARGO_REGISTRIES_CREDIBIL_TOKEN \
+  --tag ghcr.io/credibil/wrt .
+
+#  OR 
+
+docker build \
+  --build-arg BIN=minimal \
   --secret id=credibil,env=CARGO_REGISTRIES_CREDIBIL_TOKEN \
   --tag ghcr.io/credibil/wrt .
 ```
