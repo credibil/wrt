@@ -30,8 +30,10 @@ default = ["jit"]
 # Enables just-in-time wasm to machine code compilation.
 jit = ["wasmtime/cranelift"]
 
-[target.'cfg(unix)'.dependencies]
+[dependencies]
 anyhow.workspace = true
+
+[target.'cfg(unix)'.dependencies]
 res-azkeyvault.workspace = true
 res-mongodb.workspace = true
 res-nats.workspace = true
@@ -64,12 +66,12 @@ wit-bindings.workspace = true
 
 [[example]]
 name = "blobstore"
-path = "examples/blobstore/lib.rs"
+path = "examples/blobstore.rs"
 crate-type = ["cdylib"]
 
 [[example]]
 name = "http"
-path = "examples/http/lib.rs"
+path = "examples/http.rs"
 crate-type = ["cdylib"]
 
 [[example]]
@@ -79,27 +81,27 @@ crate-type = ["cdylib"]
 
 [[example]]
 name = "keyvalue"
-path = "examples/keyvalue/lib.rs"
+path = "examples/keyvalue.rs"
 crate-type = ["cdylib"]
 
 [[example]]
 name = "otel"
-path = "examples/otel/lib.rs"
+path = "examples/otel.rs"
 crate-type = ["cdylib"]
 
 [[example]]
 name = "pub-sub"
-path = "examples/pub-sub/lib.rs"
+path = "examples/pub_sub.rs"
 crate-type = ["cdylib"]
 
 [[example]]
 name = "request-reply"
-path = "examples/request-reply/lib.rs"
+path = "examples/request_reply.rs"
 crate-type = ["cdylib"]
 
 [[example]]
 name = "vault"
-path = "examples/vault/lib.rs"
+path = "examples/vault.rs"
 crate-type = ["cdylib"]
 
 [package.metadata.cargo-machete]

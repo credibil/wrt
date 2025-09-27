@@ -4,7 +4,26 @@ Example runtimes can be used as a starting point for building and deploying WASI
 
 ## Quick Start
 
-To get started, add a `.env` file to the root of the project (see `.env.example`) and run:
+To get started add a `.env` file to the root of the project (see `.env.example`).
+
+In a console, build and run the `http` example (or any other example):
+
+```bash
+# build the guest
+cargo build --example http --target wasm32-wasip2 --release
+
+# run the guest
+set -a && source .env && set +a
+cargo run -- run ./target/wasm32-wasip2/release/examples/http.wasm
+```
+
+In a separate console, call the guest:
+
+```bash
+curl -d '{"text":"hello"}' http://localhost:8080
+```
+
+## Using Docker Compose
 
 ```bash
 docker compose up
