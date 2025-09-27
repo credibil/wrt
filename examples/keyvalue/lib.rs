@@ -1,10 +1,12 @@
+#![cfg(target_arch = "wasm32")]
+
 use anyhow::Context;
 use axum::routing::post;
 use axum::{Json, Router};
 use bytes::Bytes;
 use sdk_http::Result;
 use serde_json::{Value, json};
-use tracing_subscriber::{EnvFilter, FmtSubscriber};
+use tracing::Level;
 use wasi::exports::http::incoming_handler::Guest;
 use wasi::http::types::{IncomingRequest, ResponseOutparam};
 use wit_bindings::keyvalue::store;
@@ -12,19 +14,16 @@ use wit_bindings::keyvalue::store;
 struct HttpGuest;
 
 impl Guest for HttpGuest {
+    #[sdk_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
     fn handle(request: IncomingRequest, response_out: ResponseOutparam) {
-        let subscriber =
-            FmtSubscriber::builder().with_env_filter(EnvFilter::from_default_env()).finish();
-        tracing::subscriber::set_global_default(subscriber).expect("should set subscriber");
-
-        let router = Router::new().route("/", post(handle));
-
+        let router = Router::new().route("/", post(handler));
         let out = sdk_http::serve(router, request);
         ResponseOutparam::set(response_out, out);
     }
 }
 
-async fn handle(body: Bytes) -> Result<Json<Value>> {
+#[sdk_otel::instrument]
+async fn handler(body: Bytes) -> Result<Json<Value>> {
     let bucket = store::open("credibil_bucket").context("opening bucket")?;
     bucket.set("my_key", &body).context("storing data")?;
 

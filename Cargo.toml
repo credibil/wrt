@@ -30,7 +30,7 @@ default = ["jit"]
 # Enables just-in-time wasm to machine code compilation.
 jit = ["wasmtime/cranelift"]
 
-[dependencies]
+[target.'cfg(unix)'.dependencies]
 anyhow.workspace = true
 res-azkeyvault.workspace = true
 res-mongodb.workspace = true
@@ -48,11 +48,65 @@ wasmtime = { workspace = true, features = ["runtime"] }
 # required for azure_identity, etc.
 openssl = { version = "0.10", features = ["vendored"] }
 
+[dev-dependencies]
+axum = { workspace = true, features = ["macros"] }
+bytes.workspace = true
+http.workspace = true
+opentelemetry.workspace = true
+sdk-http.workspace = true
+sdk-otel = { workspace = true, features = ["guest-export"] }
+serde_json.workspace = true
+tower-http.workspace = true
+tracing.workspace = true
+wasi.workspace = true
+wit-bindgen.workspace = true
+wit-bindings.workspace = true
+
+[[example]]
+name = "blobstore"
+path = "examples/blobstore/lib.rs"
+crate-type = ["cdylib"]
+
+[[example]]
+name = "http"
+path = "examples/http/lib.rs"
+crate-type = ["cdylib"]
+
+[[example]]
+name = "http-out"
+path = "examples/http-out/lib.rs"
+crate-type = ["cdylib"]
+
+[[example]]
+name = "keyvalue"
+path = "examples/keyvalue/lib.rs"
+crate-type = ["cdylib"]
+
+[[example]]
+name = "otel"
+path = "examples/otel/lib.rs"
+crate-type = ["cdylib"]
+
+[[example]]
+name = "pub-sub"
+path = "examples/pub-sub/lib.rs"
+crate-type = ["cdylib"]
+
+[[example]]
+name = "request-reply"
+path = "examples/request-reply/lib.rs"
+crate-type = ["cdylib"]
+
+[[example]]
+name = "vault"
+path = "examples/vault/lib.rs"
+crate-type = ["cdylib"]
+
 [package.metadata.cargo-machete]
 ignored = ["openssl"]
 
 [workspace]
-members = ["crates/*", "examples/*"]
+members = ["crates/*"]
 resolver = "3"
 
 [workspace.package]

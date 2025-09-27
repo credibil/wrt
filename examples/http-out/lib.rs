@@ -1,6 +1,4 @@
-// use axum::extract::{Path, State};
-// use axum::http::{HeaderMap, HeaderValue, StatusCode, header};
-// use axum::response::{Html, IntoResponse, Redirect, Response};
+#![cfg(target_arch = "wasm32")]
 
 use anyhow::Context;
 use axum::routing::{get, post};
@@ -9,18 +7,15 @@ use http::Method;
 use sdk_http::{Client, Decode, Result};
 use serde_json::{Value, json};
 use tower_http::cors::{Any, CorsLayer};
-use tracing_subscriber::{EnvFilter, FmtSubscriber};
+use tracing::Level;
 use wasi::exports::http::incoming_handler::Guest;
 use wasi::http::types::{IncomingRequest, ResponseOutparam};
 
 struct HttpGuest;
 
 impl Guest for HttpGuest {
+    #[sdk_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
     fn handle(request: IncomingRequest, response_out: ResponseOutparam) {
-        let subscriber =
-            FmtSubscriber::builder().with_env_filter(EnvFilter::from_default_env()).finish();
-        tracing::subscriber::set_global_default(subscriber).expect("should set subscriber");
-
         let router = Router::new()
             .route("/", get(get_handler))
             .layer(
@@ -37,6 +32,7 @@ impl Guest for HttpGuest {
 }
 
 // Forward request to external service and return the response
+#[sdk_otel::instrument]
 async fn get_handler() -> Result<Json<Value>> {
     let body = Client::new()
         .get("https://jsonplaceholder.cypress.io/posts/1")
@@ -50,6 +46,7 @@ async fn get_handler() -> Result<Json<Value>> {
 }
 
 // Forward request to external service and return the response
+#[sdk_otel::instrument]
 async fn post_handler(Json(body): Json<Value>) -> Result<Json<Value>> {
     let body = Client::new()
         .post("https://jsonplaceholder.cypress.io/posts")

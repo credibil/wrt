@@ -1,3 +1,5 @@
+#![cfg(target_arch = "wasm32")]
+
 use axum::routing::{options, post};
 use axum::{Json, Router};
 use http::Method;
@@ -50,7 +52,7 @@ impl Guest for HttpGuest {
                         .allow_headers(Any)
                         .allow_origin(Any),
                 )
-                .route("/", post(handle))
+                .route("/", post(handler))
                 .route("/", options(handle_options));
             sdk_http::serve(router, request)
         });
@@ -61,8 +63,8 @@ impl Guest for HttpGuest {
 
 // A simple "Hello, World!" endpoint that returns the client's request.
 #[axum::debug_handler]
-#[sdk_otel::instrument(name = "handle_fn")]
-async fn handle(Json(body): Json<Value>) -> Result<Json<Value>> {
+#[sdk_otel::instrument]
+async fn handler(Json(body): Json<Value>) -> Result<Json<Value>> {
     tracing::info!("handling request: {:?}", body);
     Ok(Json(json!({
         "message": "Hello, World!",

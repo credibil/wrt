@@ -396,21 +396,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "blobstore-ex"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "axum",
- "bytes",
- "sdk-http",
- "serde_json",
- "tracing",
- "tracing-subscriber",
- "wasi 0.14.7+wasi-0.2.4",
- "wit-bindings",
-]
-
-[[package]]
 name = "block-buffer"
 version = "0.10.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1599,33 +1584,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "http-ex"
-version = "0.0.0"
-dependencies = [
- "axum",
- "sdk-http",
- "serde_json",
- "tracing",
- "tracing-subscriber",
- "wasi 0.14.7+wasi-0.2.4",
-]
-
-[[package]]
-name = "http-out-ex"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "axum",
- "http",
- "sdk-http",
- "serde_json",
- "tower-http",
- "tracing",
- "tracing-subscriber",
- "wasi 0.14.7+wasi-0.2.4",
-]
-
-[[package]]
 name = "httparse"
 version = "1.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1995,21 +1953,6 @@ dependencies = [
  "once_cell",
  "sha2",
  "signature",
-]
-
-[[package]]
-name = "keyvalue-ex"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "axum",
- "bytes",
- "sdk-http",
- "serde_json",
- "tracing",
- "tracing-subscriber",
- "wasi 0.14.7+wasi-0.2.4",
- "wit-bindings",
 ]
 
 [[package]]
@@ -2523,21 +2466,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "otel-ex"
-version = "0.0.0"
-dependencies = [
- "axum",
- "http",
- "opentelemetry",
- "sdk-http",
- "sdk-otel",
- "serde_json",
- "tower-http",
- "tracing",
- "wasi 0.14.7+wasi-0.2.4",
-]
-
-[[package]]
 name = "parking"
 version = "2.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2723,22 +2651,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pub-sub-ex"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "axum",
- "bytes",
- "sdk-http",
- "serde_json",
- "tracing",
- "tracing-subscriber",
- "wasi 0.14.7+wasi-0.2.4",
- "wit-bindgen",
- "wit-bindings",
-]
-
-[[package]]
 name = "pulley-interpreter"
 version = "37.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2914,21 +2826,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "caf4aa5b0f434c91fe5c7f1ecb6a5ece2130b02ad2a590589dda5146df959001"
 
 [[package]]
-name = "request-reply-ex"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "axum",
- "bytes",
- "sdk-http",
- "serde_json",
- "tracing",
- "tracing-subscriber",
- "wasi 0.14.7+wasi-0.2.4",
- "wit-bindings",
-]
-
-[[package]]
 name = "reqwest"
 version = "0.12.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3057,12 +2954,22 @@ name = "runtime-cli"
 version = "0.9.0"
 dependencies = [
  "anyhow",
+ "axum",
+ "bytes",
+ "http",
  "openssl",
+ "opentelemetry",
  "res-azkeyvault",
  "res-mongodb",
  "res-nats",
  "runtime",
+ "sdk-http",
+ "sdk-otel",
+ "serde_json",
  "tokio",
+ "tower-http",
+ "tracing",
+ "wasi 0.14.7+wasi-0.2.4",
  "wasi-blobstore-mdb",
  "wasi-http",
  "wasi-keyvalue-nats",
@@ -3070,6 +2977,8 @@ dependencies = [
  "wasi-otel",
  "wasi-vault-az",
  "wasmtime",
+ "wit-bindgen",
+ "wit-bindings",
 ]
 
 [[package]]
@@ -4299,21 +4208,6 @@ name = "valuable"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ba73ea9cf16a25df0c8caa16c51acb937d5712a8429db78a3ee29d5dcacd3a65"
-
-[[package]]
-name = "vault-ex"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "axum",
- "bytes",
- "sdk-http",
- "serde_json",
- "tracing",
- "tracing-subscriber",
- "wasi 0.14.7+wasi-0.2.4",
- "wit-bindings",
-]
 
 [[package]]
 name = "vcpkg"
