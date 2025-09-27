@@ -13,6 +13,7 @@ cargo build --example http-out --target wasm32-wasip2 --release
 Run a guest using the runtime:
 
 ```bash
+set -a && source .env
 cargo run -- run ./target/wasm32-wasip2/release/examples/http_out.wasm
 ```
 
