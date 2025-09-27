@@ -59,19 +59,19 @@ version = "0.5.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.azure_core]]
-version = "0.27.0"
+version = "0.28.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.azure_core_macros]]
-version = "0.1.0"
+version = "0.2.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.azure_identity]]
-version = "0.27.0"
+version = "0.28.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.azure_security_keyvault_secrets]]
-version = "0.6.0"
+version = "0.7.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.base16ct]]
@@ -128,10 +128,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.const-random-macro]]
 version = "0.1.16"
-criteria = "safe-to-deploy"
-
-[[exemptions.core-foundation]]
-version = "0.10.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.cpufeatures]]
@@ -506,10 +502,6 @@ criteria = "safe-to-deploy"
 version = "0.7.3"
 criteria = "safe-to-deploy"
 
-[[exemptions.rustls-native-certs]]
-version = "0.8.1"
-criteria = "safe-to-deploy"
-
 [[exemptions.rustls-pemfile]]
 version = "2.2.0"
 criteria = "safe-to-deploy"
@@ -544,10 +536,6 @@ criteria = "safe-to-run"
 
 [[exemptions.security-framework]]
 version = "2.11.1"
-criteria = "safe-to-deploy"
-
-[[exemptions.security-framework]]
-version = "3.5.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.security-framework-sys]]
@@ -691,15 +679,15 @@ version = "1.18.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.typespec]]
-version = "0.7.0"
+version = "0.8.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.typespec_client_core]]
-version = "0.6.0"
+version = "0.7.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.typespec_macros]]
-version = "0.6.0"
+version = "0.7.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.untrusted]]

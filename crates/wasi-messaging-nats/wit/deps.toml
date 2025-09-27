@@ -4,4 +4,3 @@
 
 io = "https://github.com/WebAssembly/wasi-io/archive/main.tar.gz"
 messaging = "https://github.com/WebAssembly/wasi-messaging/archive/main.tar.gz"
-
