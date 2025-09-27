@@ -7,7 +7,8 @@ use std::sync::Arc;
 
 use anyhow::{Result, anyhow};
 use azure_core::credentials::{Secret, TokenCredential};
-use azure_identity::{ClientSecretCredential, DefaultAzureCredential};
+use azure_identity::ClientSecretCredential;
+use azure_identity::DeveloperToolsCredential;
 use azure_security_keyvault_secrets::SecretClient;
 use runtime::ResourceBuilder;
 use tracing::instrument;
@@ -35,7 +36,7 @@ impl ResourceBuilder<SecretClient> for AzKeyVault {
         let addr = env::var("KV_ADDR").unwrap_or_else(|_| DEF_KV_ADDR.into());
 
         let credential: Arc<dyn TokenCredential> = if cfg!(debug_assertions) {
-            DefaultAzureCredential::new()
+            DeveloperToolsCredential::new(None)
                 .map_err(|e| anyhow!("could not create credential: {e}"))?
         } else {
             let tenant_id = env::var("AZURE_TENANT_ID")?;

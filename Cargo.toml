@@ -109,9 +109,9 @@ unused_result_ok = "warn"
 anyhow = "1.0.100"
 async-nats = { version = "0.43.1" }
 axum = { version = "0.8.4", default-features = false, features = ["json"] }
-azure_core = { version = "0.27.0", default-features = false, features = ["reqwest_rustls"] }
-azure_identity = { version = "0.27.0", default-features = false }
-azure_security_keyvault_secrets = { version = "0.6.0", default-features = false }
+azure_core = "0.28.0"
+azure_identity = "0.28.0"
+azure_security_keyvault_secrets = "0.7.0"
 base64ct = { version = "1.8.0", features = ["std"] }
 bytes = "1.10.1"
 cfg-if = "1.0.3"
