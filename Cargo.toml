@@ -66,49 +66,41 @@ wit-bindings.workspace = true
 name = "blobstore"
 path = "examples/blobstore/lib.rs"
 crate-type = ["cdylib"]
-test = false
 
 [[example]]
 name = "http"
 path = "examples/http/lib.rs"
 crate-type = ["cdylib"]
-test = false
 
 [[example]]
 name = "http-out"
 path = "examples/http-out/lib.rs"
 crate-type = ["cdylib"]
-test = false
 
 [[example]]
 name = "keyvalue"
 path = "examples/keyvalue/lib.rs"
 crate-type = ["cdylib"]
-test = false
 
 [[example]]
 name = "otel"
 path = "examples/otel/lib.rs"
 crate-type = ["cdylib"]
-test = false
 
 [[example]]
 name = "pub-sub"
 path = "examples/pub-sub/lib.rs"
 crate-type = ["cdylib"]
-test = false
 
 [[example]]
 name = "request-reply"
 path = "examples/request-reply/lib.rs"
 crate-type = ["cdylib"]
-test = false
 
 [[example]]
 name = "vault"
 path = "examples/vault/lib.rs"
 crate-type = ["cdylib"]
-test = false
 
 [package.metadata.cargo-machete]
 ignored = ["openssl"]

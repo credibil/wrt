@@ -10,7 +10,7 @@ the messaging server.
 Build the example guest:
 
 ```bash
-cargo build --examples request-reply --target wasm32-wasip2 --release
+cargo build --example request-reply --target wasm32-wasip2 --release
 ```
 
 Run the example guest:

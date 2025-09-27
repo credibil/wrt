@@ -1,3 +1,5 @@
+#![cfg(target_arch = "wasm32")]
+
 use anyhow::Result;
 use axum::routing::post;
 use axum::{Json, Router};

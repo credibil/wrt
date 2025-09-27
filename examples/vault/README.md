@@ -3,7 +3,7 @@
 Build the example guest:
 
 ```bash
-cargo build --examples vault --target wasm32-wasip2 --release
+cargo build --example vault --target wasm32-wasip2 --release
 ```
 
 Run the example guest:

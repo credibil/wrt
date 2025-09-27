@@ -7,7 +7,7 @@ This example demonstrates how to make an outgoing http request to a downstream s
 Build the example guest:
 
 ```bash
-cargo build --examples http-out --target wasm32-wasip2 --release
+cargo build --example http-out --target wasm32-wasip2 --release
 ```
 
 Run a guest using the runtime:

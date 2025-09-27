@@ -3,7 +3,7 @@
 Build the example guest:
 
 ```bash
-cargo build --examples blobstore --target wasm32-wasip2 --release
+cargo build --example blobstore --target wasm32-wasip2 --release
 ```
 
 Run the example guest:

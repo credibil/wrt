@@ -1,3 +1,5 @@
+#![cfg(target_arch = "wasm32")]
+
 use std::thread::sleep;
 use std::time::{Duration, Instant};
 

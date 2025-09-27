@@ -10,7 +10,7 @@ subsequently publishes a message to topic `b`.
 Build the example guest:
 
 ```bash
-cargo build --examples pub-sub --target wasm32-wasip2 --release
+cargo build --example pub-sub --target wasm32-wasip2 --release
 ```
 
 Run the example: 
