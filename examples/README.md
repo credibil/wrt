@@ -13,7 +13,7 @@ In a console, build and run the `http` example (or any other example):
 cargo build --example http --target wasm32-wasip2 --release
 
 # run the guest
-set -a && source .env
+set -a && source .env && set +a
 cargo run -- run ./target/wasm32-wasip2/release/examples/http.wasm
 ```
 
