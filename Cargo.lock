@@ -164,7 +164,7 @@ dependencies = [
  "rand 0.8.5",
  "regex",
  "ring",
- "rustls-native-certs 0.7.3",
+ "rustls-native-certs",
  "rustls-pemfile",
  "rustls-webpki 0.102.8",
  "serde",
@@ -267,9 +267,9 @@ dependencies = [
 
 [[package]]
 name = "azure_core"
-version = "0.27.0"
+version = "0.28.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7cd9e026f749ac67e6d736ebcfa1ba36ab60ce3d6c446c67624a538f4e0667fa"
+checksum = "06d2b4c218c9edaddb625c5d287958eb4defb0addf54e6aad9c17bda320269ae"
 dependencies = [
  "async-lock",
  "async-trait",
@@ -287,9 +287,9 @@ dependencies = [
 
 [[package]]
 name = "azure_core_macros"
-version = "0.1.0"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "06bce1a683e1a27013e64a1ff760700c7241275fe38787e578c3526f4ac569e0"
+checksum = "4a2df13e12ead1bb9f3b45cebec7e2b36eb6c2e88305745adc34828c1e457f92"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -300,9 +300,9 @@ dependencies = [
 
 [[package]]
 name = "azure_identity"
-version = "0.27.0"
+version = "0.28.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f5b2a19746da00d510787e406f07494a5b6e9b86f69871e3b72ef90d34631c77"
+checksum = "09972343c59dfd6a717f448b400788b9747b4d6fdbbeb942c647ca5595ca7bc6"
 dependencies = [
  "async-lock",
  "async-trait",
@@ -312,15 +312,14 @@ dependencies = [
  "serde",
  "time",
  "tracing",
- "typespec_client_core",
  "url",
 ]
 
 [[package]]
 name = "azure_security_keyvault_secrets"
-version = "0.6.0"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7ad61be32356d8dadd7553620dd65b0e63db6b2d89f56e1ca766e34081c125f3"
+checksum = "1772ab193507f3a98467d4dcb86797461d901da785ae9c7310a70c4db6c5242c"
 dependencies = [
  "async-trait",
  "azure_core",
@@ -687,16 +686,6 @@ name = "core-foundation"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "91e195e091a93c46f7102ec7818a2aa394e1e1771c3ab4825963fa03e45afb8f"
-dependencies = [
- "core-foundation-sys",
- "libc",
-]
-
-[[package]]
-name = "core-foundation"
-version = "0.10.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b2a6cd9ae233e7f62ba4e9353e81a88df7fc8a5987b8d445b4d90c879bd156f6"
 dependencies = [
  "core-foundation-sys",
  "libc",
@@ -1681,7 +1670,6 @@ dependencies = [
  "hyper",
  "hyper-util",
  "rustls 0.23.32",
- "rustls-native-certs 0.8.1",
  "rustls-pki-types",
  "tokio",
  "tokio-rustls 0.26.4",
@@ -2324,7 +2312,7 @@ dependencies = [
  "openssl-probe",
  "openssl-sys",
  "schannel",
- "security-framework 2.11.1",
+ "security-framework",
  "security-framework-sys",
  "tempfile",
 ]
@@ -2967,8 +2955,6 @@ dependencies = [
  "native-tls",
  "percent-encoding",
  "pin-project-lite",
- "rustls 0.23.32",
- "rustls-native-certs 0.8.1",
  "rustls-pki-types",
  "serde",
  "serde_json",
@@ -2976,7 +2962,6 @@ dependencies = [
  "sync_wrapper",
  "tokio",
  "tokio-native-tls",
- "tokio-rustls 0.26.4",
  "tokio-util",
  "tower",
  "tower-http",
@@ -3193,19 +3178,7 @@ dependencies = [
  "rustls-pemfile",
  "rustls-pki-types",
  "schannel",
- "security-framework 2.11.1",
-]
-
-[[package]]
-name = "rustls-native-certs"
-version = "0.8.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7fcff2dd52b58a8d98a70243663a0d234c4e2b79235637849d15913394a247d3"
-dependencies = [
- "openssl-probe",
- "rustls-pki-types",
- "schannel",
- "security-framework 3.5.0",
+ "security-framework",
 ]
 
 [[package]]
@@ -3371,20 +3344,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "897b2245f0b511c87893af39b033e5ca9cce68824c4d7e7630b5a1d339658d02"
 dependencies = [
  "bitflags 2.9.4",
- "core-foundation 0.9.4",
- "core-foundation-sys",
- "libc",
- "security-framework-sys",
-]
-
-[[package]]
-name = "security-framework"
-version = "3.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cc198e42d9b7510827939c9a15f5062a0c913f3371d765977e586d2fe6c16f4a"
-dependencies = [
- "bitflags 2.9.4",
- "core-foundation 0.10.1",
+ "core-foundation",
  "core-foundation-sys",
  "libc",
  "security-framework-sys",
@@ -3719,7 +3679,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3c879d448e9d986b661742763247d3693ed13609438cf3d006f51f5368a5ba6b"
 dependencies = [
  "bitflags 2.9.4",
- "core-foundation 0.9.4",
+ "core-foundation",
  "system-configuration-sys",
 ]
 
@@ -4210,11 +4170,13 @@ checksum = "1dccffe3ce07af9386bfd29e80c0ab1a8205a2fc34e4bcd40364df902cfa8f3f"
 
 [[package]]
 name = "typespec"
-version = "0.7.0"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e2fffbed46125e0931e8f45618c3f6f0ffa2e0dc6d8b10a8de9f100b03138f33"
+checksum = "dd7ebbd28a587eb1c2208dc6f48304eb8b7dea2100d4a83aecb27951a878987a"
 dependencies = [
  "base64 0.22.1",
+ "bytes",
+ "futures",
  "serde",
  "serde_json",
  "url",
@@ -4222,13 +4184,12 @@ dependencies = [
 
 [[package]]
 name = "typespec_client_core"
-version = "0.6.0"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e96d81a432a1d2eb5cb3e9f813ff3811928e35f549bb5fa0a16abeffc66dec4c"
+checksum = "c722bbf92825952d4f7ab56393e5d200b5c702ef9fb92fd8b4c7a5447107ae6c"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
- "bytes",
  "dyn-clone",
  "futures",
  "getrandom 0.3.3",
@@ -4248,9 +4209,9 @@ dependencies = [
 
 [[package]]
 name = "typespec_macros"
-version = "0.6.0"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1b032d7c2352fd8c2af91f942b914c52e315d3ea2b1bcad21a16cb94f72816bd"
+checksum = "71ada600035ee156b8898d98dcd58d68f93e685b0d564c4be15a160ccfcb7480"
 dependencies = [
  "proc-macro2",
  "quote",

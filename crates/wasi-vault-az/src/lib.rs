@@ -110,7 +110,7 @@ impl vault::HostLocker for Host<'_> {
         let secret_id = Base64UrlUnpadded::encode_string(secret_name.as_bytes());
 
         let kv = azkeyvault().context("connecting to Azure KeyVault")?;
-        let result = kv.get_secret(&secret_id, "", None).await;
+        let result = kv.get_secret(&secret_id, None).await;
         let response = match result {
             Ok(resp) => resp,
             Err(e) => {
