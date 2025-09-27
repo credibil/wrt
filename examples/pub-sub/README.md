@@ -10,17 +10,17 @@ subsequently publishes a message to topic `b`.
 Build the example guest:
 
 ```bash
-cargo build --package wasm-pub-sub --target wasm32-wasip2 --release
+cargo build --examples pub-sub --target wasm32-wasip2 --release
 ```
 
 Run the example: 
 
 ```bash
 # compile and run
-cargo run --package minimal -- run ./target/wasm32-wasip2/release/wasm_pub_sub.wasm
+cargo run --package minimal -- run ./target/wasm32-wasip2/release/pub_sub.wasm
 
 # pre-compile
-cargo run --package compiler -- compile --output ./wasm_pub_sub.bin ./target/wasm32-wasip2/release/wasm_pub_sub.wasm
+cargo run --package compiler -- compile --output ./wasm_pub_sub.bin ./target/wasm32-wasip2/release/pub_sub.wasm
 cargo run -- run ./wasm_pub_sub.bin
 ```
 

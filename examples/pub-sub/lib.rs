@@ -6,7 +6,7 @@ use axum::routing::post;
 use axum::{Json, Router};
 use bytes::Bytes;
 use serde_json::{Value, json};
-use tracing_subscriber::{EnvFilter, FmtSubscriber};
+use tracing::Level;
 use wasi::exports::http;
 use wasi::http::types::{IncomingRequest, ResponseOutparam};
 use wit_bindings::messaging;
@@ -17,20 +17,17 @@ use wit_bindings::messaging::types::{Client, Error, Message};
 pub struct Http;
 
 impl http::incoming_handler::Guest for Http {
+    #[sdk_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
     fn handle(request: IncomingRequest, response_out: ResponseOutparam) {
-        let subscriber =
-            FmtSubscriber::builder().with_env_filter(EnvFilter::from_default_env()).finish();
-        tracing::subscriber::set_global_default(subscriber).expect("should set subscriber");
-
-        let router = Router::new().route("/", post(handle));
-
+        let router = Router::new().route("/", post(handler));
         let out = sdk_http::serve(router, request);
         ResponseOutparam::set(response_out, out);
     }
 }
 
 #[axum::debug_handler]
-async fn handle(body: Bytes) -> Json<Value> {
+#[sdk_otel::instrument]
+async fn handler(body: Bytes) -> Json<Value> {
     let client = Client::connect("nats").unwrap();
     let message = Message::new(&body);
 
@@ -47,12 +44,8 @@ wasi::http::proxy::export!(Http);
 pub struct Messaging;
 
 impl messaging::incoming_handler::Guest for Messaging {
-    // Handle messages to subscribed topics.
+    #[sdk_otel::instrument(name = "messaging_guest_handle",level = Level::DEBUG)]
     async fn handle(message: Message) -> Result<(), Error> {
-        let subscriber =
-            FmtSubscriber::builder().with_env_filter(EnvFilter::from_default_env()).finish();
-        tracing::subscriber::set_global_default(subscriber).expect("should set subscriber");
-
         let data = message.data();
         let data_str =
             String::from_utf8(data.clone()).map_err(|e| Error::Other(format!("not utf8: {e}")))?;
@@ -110,6 +103,7 @@ impl messaging::incoming_handler::Guest for Messaging {
     }
 
     // Subscribe to topics.
+    #[sdk_otel::instrument(name = "messaging_guest_configure",level = Level::DEBUG)]
     async fn configure() -> Result<Configuration, Error> {
         Ok(Configuration {
             topics: vec!["a".to_string(), "b".to_string()],

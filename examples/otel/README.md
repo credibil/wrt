@@ -3,7 +3,7 @@
 Build the example guest:
 
 ```bash
-cargo build --package wasm-otel --target wasm32-wasip2 --release
+cargo build --examples otel --target wasm32-wasip2 --release
 ```
 
 Run the example guest:

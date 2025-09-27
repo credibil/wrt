@@ -4,7 +4,7 @@ use axum::{Json, Router};
 use bytes::Bytes;
 use sdk_http::Result;
 use serde_json::Value;
-use tracing_subscriber::{EnvFilter, FmtSubscriber};
+use tracing::Level;
 use wasi::exports::http::incoming_handler::Guest;
 use wasi::http::types::{IncomingRequest, ResponseOutparam};
 use wit_bindings::vault::vault;
@@ -12,18 +12,16 @@ use wit_bindings::vault::vault;
 struct HttpGuest;
 
 impl Guest for HttpGuest {
+    #[sdk_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
     fn handle(request: IncomingRequest, response_out: ResponseOutparam) {
-        let subscriber =
-            FmtSubscriber::builder().with_env_filter(EnvFilter::from_default_env()).finish();
-        tracing::subscriber::set_global_default(subscriber).expect("should set subscriber");
-
-        let router = Router::new().route("/", post(handle));
+        let router = Router::new().route("/", post(handler));
         let out = sdk_http::serve(router, request);
         ResponseOutparam::set(response_out, out);
     }
 }
 
-async fn handle(body: Bytes) -> Result<Json<Value>> {
+#[sdk_otel::instrument]
+async fn handler(body: Bytes) -> Result<Json<Value>> {
     // write secret to vault
     let locker =
         vault::open("credibil-locker").map_err(|e| anyhow!("failed to open vault locker: {e}"))?;

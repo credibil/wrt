@@ -10,18 +10,18 @@ the messaging server.
 Build the example guest:
 
 ```bash
-cargo build --package minimal --package wasm-request-reply --target wasm32-wasip2 --release
+cargo build --examples request-reply --target wasm32-wasip2 --release
 ```
 
 Run the example guest:
 
 ```bash
 # compile and run
-cargo run -- run ./target/wasm32-wasip2/release/wasm_request_reply.wasm
+cargo run -- run ./target/wasm32-wasip2/release/request_reply.wasm
 
 # pre-compile
-cargo run -- compile  ./target/wasm32-wasip2/release/wasm_request_reply.wasm --output ./wasm_request_reply.bin
-cargo run -- run ./wasm_request_reply.bin
+cargo run -- compile  ./target/wasm32-wasip2/release/request_reply.wasm --output ./request_reply.bin
+cargo run -- run ./request_reply.bin
 ```
 
 In a separate console, call the guest:
