@@ -47,11 +47,11 @@ version = "1.1.2"
 criteria = "safe-to-deploy"
 
 [[exemptions.axum]]
-version = "0.8.4"
+version = "0.8.5"
 criteria = "safe-to-deploy"
 
 [[exemptions.axum-core]]
-version = "0.5.2"
+version = "0.5.4"
 criteria = "safe-to-deploy"
 
 [[exemptions.axum-macros]]
@@ -462,6 +462,10 @@ criteria = "safe-to-deploy"
 version = "0.13.5"
 criteria = "safe-to-deploy"
 
+[[exemptions.quote]]
+version = "1.0.41"
+criteria = "safe-to-deploy"
+
 [[exemptions.r-efi]]
 version = "5.3.0"
 criteria = "safe-to-deploy"
@@ -543,15 +547,15 @@ version = "2.15.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.serde]]
-version = "1.0.227"
+version = "1.0.228"
 criteria = "safe-to-deploy"
 
 [[exemptions.serde_core]]
-version = "1.0.227"
+version = "1.0.228"
 criteria = "safe-to-deploy"
 
 [[exemptions.serde_derive]]
-version = "1.0.227"
+version = "1.0.228"
 criteria = "safe-to-deploy"
 
 [[exemptions.serde_nanos]]
@@ -764,4 +768,8 @@ criteria = "safe-to-deploy"
 
 [[exemptions.zerocopy-derive]]
 version = "0.8.27"
+criteria = "safe-to-deploy"
+
+[[exemptions.zeroize]]
+version = "1.8.2"
 criteria = "safe-to-deploy"
