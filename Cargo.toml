@@ -86,7 +86,7 @@ crate-type = ["cdylib"]
 
 [[example]]
 name = "otel"
-path = "examples/otel.rs"
+path = "examples/otel/lib.rs"
 crate-type = ["cdylib"]
 
 [[example]]
