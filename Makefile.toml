@@ -40,9 +40,7 @@ args = ["test", "--doc", "--all-features", "--workspace"]
 
 [tasks.fmt]
 dependencies = ["fmt-toml"]
-command = "cargo"
-args = ["fmt", "--all"]
-install_crate = "rustfmt"
+script = "cargo +nightly fmt --all"
 
 [tasks.fmt-toml]
 command = "taplo"
