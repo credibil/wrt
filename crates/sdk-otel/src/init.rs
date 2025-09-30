@@ -30,7 +30,7 @@ cfg_if! {
     }
 }
 
-pub fn init() -> Result<Shutdown> {
+pub async fn init() -> Result<Shutdown> {
     // get WASI host telemetry resource
     let resource: Resource = resource::resource().into();
 
@@ -65,7 +65,7 @@ pub fn init() -> Result<Shutdown> {
         #[cfg(feature = "metrics")]
         metrics: meter_provider,
         #[cfg(feature = "tracing")]
-        _context: Some(tracing::context()),
+        _context: Some(tracing::context().await),
     })
 }
 

@@ -3,10 +3,10 @@ interface tracing {
     use types.{key, value, key-value, instrumentation-scope, error};
 
     /// Returns the current span context of the host.
-    context: func() -> span-context;
+    context: async func() -> span-context;
 
     /// Called by the guest to export spans.
-    %export: func(span: list<span-data>) -> result<_, error>;
+    %export: async func(span: list<span-data>) -> result<_, error>;
 
     /// The data associated with a span.
     record span-data {
