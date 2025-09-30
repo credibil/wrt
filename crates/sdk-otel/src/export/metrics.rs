@@ -17,10 +17,11 @@ use opentelemetry_sdk::metrics::exporter::PushMetricExporter;
 use crate::generated::wasi::otel::metrics as wasi;
 
 #[derive(Debug)]
-pub struct Exporter {
+// pub struct Exporter {
     // #[cfg(feature = "guest-export")]
     // inner: MetricExporter,
-}
+// }
+pub struct Exporter;
 
 impl Exporter {
     // #[cfg(feature = "guest-export")]
@@ -55,8 +56,12 @@ impl PushMetricExporter for Exporter {
 
     // #[cfg(not(feature = "guest-export"))]
     async fn export(&self, metrics: &ResourceMetrics) -> Result<(), OTelSdkError> {
-        wasi::export(&metrics.into())
-            .map_err(|e| OTelSdkError::InternalFailure(format!("failed to export metrics: {e}")))?;
+        let metrics: wasi::ResourceMetrics = metrics.into();
+        wit_bindgen::spawn(async move {
+            if let Err(e) = wasi::export(metrics).await {
+                tracing::error!("failed to export metrics: {e}");
+            }
+        });
         Ok(())
     }
 

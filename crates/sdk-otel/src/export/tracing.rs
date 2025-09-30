@@ -13,10 +13,11 @@ use opentelemetry_sdk::trace::SpanData;
 use crate::generated::wasi::otel::tracing as wasi;
 
 #[derive(Debug)]
-pub struct Exporter {
+// pub struct Exporter {
     // #[cfg(feature = "guest-export")]
     // inner: SpanExporter,
-}
+// }
+pub struct Exporter;
 
 impl Exporter {
     // #[cfg(feature = "guest-export")]
@@ -51,8 +52,13 @@ impl opentelemetry_sdk::trace::SpanExporter for Exporter {
 
     // #[cfg(not(feature = "guest-export"))]
     async fn export(&self, batch: Vec<SpanData>) -> Result<(), OTelSdkError> {
-        let spans = batch.into_iter().map(Into::into).collect::<Vec<_>>();
-        wasi::export(&spans).map_err(|e| OTelSdkError::InternalFailure(e.to_string()))
+        wit_bindgen::spawn(async move {
+            let spans = batch.into_iter().map(Into::into).collect::<Vec<_>>();
+            if let Err(e) = wasi::export(spans).await {
+                tracing::error!("failed to export spans: {e}");
+            }
+        });
+        Ok(())
     }
 
     // #[cfg(feature = "guest-export")]
