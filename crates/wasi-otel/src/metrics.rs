@@ -54,6 +54,8 @@ impl metrics::HostWithStore for Data {
     }
 }
 
+impl metrics::Host for Host<'_> {}
+
 // impl metrics::Host for Host<'_> {
 //     fn export(&mut self, rm: wasi::ResourceMetrics) -> Result<(), wasi::Error> {
 //         let http_client = self.http_client.clone();

@@ -18,7 +18,7 @@ use wasmtime::component::Accessor;
 
 use crate::generated::wasi::otel as wasi_otel;
 use crate::generated::wasi::otel::tracing::{self as wasi};
-use crate::{DEF_HTTP_ADDR, Data};
+use crate::{Data, Host, DEF_HTTP_ADDR};
 
 // *** WASIP3 ***
 // use `HostWithStore` to add async support`
@@ -60,6 +60,8 @@ impl wasi_otel::tracing::HostWithStore for Data {
         Ok(())
     }
 }
+
+impl wasi_otel::tracing::Host for Host<'_> {}
 
 // impl wasi_otel::tracing::Host for for Host<'_> {
 //     fn context(&mut self) -> Result<wasi::SpanContext> {

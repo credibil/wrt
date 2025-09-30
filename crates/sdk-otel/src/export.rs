@@ -7,39 +7,39 @@ pub mod metrics;
 #[cfg(feature = "tracing")]
 pub mod tracing;
 
-use cfg_if::cfg_if;
+// use cfg_if::cfg_if;
 
-cfg_if! {
-    if #[cfg(all(feature = "guest-export", any(feature = "metrics", feature = "tracing")))] {
-        use std::mem;
-        use anyhow::Result;
-        use async_trait::async_trait;
-        use bytes::Bytes;
-        use http::{Request, Response};
-        use opentelemetry_http::{HttpClient, HttpError};
-        use sdk_http::Client;
+// cfg_if! {
+//     if #[cfg(all(feature = "guest-export", any(feature = "metrics", feature = "tracing")))] {
+//         use std::mem;
+//         use anyhow::Result;
+//         use async_trait::async_trait;
+//         use bytes::Bytes;
+//         use http::{Request, Response};
+//         use opentelemetry_http::{HttpClient, HttpError};
+//         use sdk_http::Client;
 
-        #[derive(Debug)]
-        pub struct ExportClient;
+//         #[derive(Debug)]
+//         pub struct ExportClient;
 
-        #[async_trait]
-        impl HttpClient for ExportClient {
-            async fn send_bytes(&self, request: Request<Bytes>) -> Result<Response<Bytes>, HttpError> {
-                let mut response = Client::new()
-                    .post(request.uri())
-                    .headers(request.headers())
-                    .body(request.into_body().to_vec())
-                    .send()?;
+//         #[async_trait]
+//         impl HttpClient for ExportClient {
+//             async fn send_bytes(&self, request: Request<Bytes>) -> Result<Response<Bytes>, HttpError> {
+//                 let mut response = Client::new()
+//                     .post(request.uri())
+//                     .headers(request.headers())
+//                     .body(request.into_body().to_vec())
+//                     .send()?;
 
-                let headers = mem::take(response.headers_mut());
-                let mut http_response =
-                    Response::builder().status(response.status()).body(response.body().clone())?;
-                *http_response.headers_mut() = headers;
+//                 let headers = mem::take(response.headers_mut());
+//                 let mut http_response =
+//                     Response::builder().status(response.status()).body(response.body().clone())?;
+//                 *http_response.headers_mut() = headers;
 
-                Ok(http_response)
-            }
-        }
-    } else {
+//                 Ok(http_response)
+//             }
+//         }
+//     } else {
         use std::time::{SystemTime, UNIX_EPOCH};
         use opentelemetry::{Array, InstrumentationScope, Key, KeyValue, Value};
         use crate::generated::wasi::clocks::wall_clock::Datetime;
@@ -122,5 +122,5 @@ cfg_if! {
                 }
             }
         }
-    }
-}
+//     }
+// }

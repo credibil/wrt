@@ -3204,15 +3204,10 @@ name = "sdk-otel"
 version = "0.9.0"
 dependencies = [
  "anyhow",
- "async-trait",
- "bytes",
  "cfg-if",
  "futures",
- "http",
  "num-traits",
  "opentelemetry",
- "opentelemetry-http",
- "opentelemetry-otlp",
  "opentelemetry_sdk",
  "sdk-http",
  "sdk-otel-attr",

@@ -3,66 +3,66 @@
 //! Convert OpenTelemetry tracing types in `wasi-otel` types.
 
 use anyhow::Result;
-use cfg_if::cfg_if;
-#[cfg(feature = "guest-export")]
-use opentelemetry_otlp::{SpanExporter, WithHttpConfig};
+// use cfg_if::cfg_if;
+// #[cfg(feature = "guest-export")]
+// use opentelemetry_otlp::{SpanExporter, WithHttpConfig};
 use opentelemetry_sdk::error::OTelSdkError;
 use opentelemetry_sdk::trace::SpanData;
 
-#[cfg(not(feature = "guest-export"))]
+// #[cfg(not(feature = "guest-export"))]
 use crate::generated::wasi::otel::tracing as wasi;
 
 #[derive(Debug)]
 pub struct Exporter {
-    #[cfg(feature = "guest-export")]
-    inner: SpanExporter,
+    // #[cfg(feature = "guest-export")]
+    // inner: SpanExporter,
 }
 
 impl Exporter {
-    #[cfg(feature = "guest-export")]
-    pub fn new() -> Result<Self> {
-        use std::env;
+    // #[cfg(feature = "guest-export")]
+    // pub fn new() -> Result<Self> {
+    //     use std::env;
 
-        use opentelemetry_otlp::WithExportConfig;
+    //     use opentelemetry_otlp::WithExportConfig;
 
-        use crate::export::ExportClient;
+    //     use crate::export::ExportClient;
 
-        let mut builder = SpanExporter::builder().with_http().with_http_client(ExportClient);
-        if let Ok(endpoint) = env::var("OTEL_HTTP_ADDR") {
-            builder = builder.with_endpoint(format!("{endpoint}/v1/traces"));
-        }
-        let inner = builder.build()?;
+    //     let mut builder = SpanExporter::builder().with_http().with_http_client(ExportClient);
+    //     if let Ok(endpoint) = env::var("OTEL_HTTP_ADDR") {
+    //         builder = builder.with_endpoint(format!("{endpoint}/v1/traces"));
+    //     }
+    //     let inner = builder.build()?;
 
-        Ok(Self { inner })
-    }
+    //     Ok(Self { inner })
+    // }
 
     #[expect(clippy::unnecessary_wraps)]
-    #[cfg(not(feature = "guest-export"))]
+    // #[cfg(not(feature = "guest-export"))]
     pub const fn new() -> Result<Self> {
         Ok(Self {})
     }
 }
 
 impl opentelemetry_sdk::trace::SpanExporter for Exporter {
-    #[cfg(feature = "guest-export")]
-    async fn export(&self, batch: Vec<SpanData>) -> Result<(), OTelSdkError> {
-        self.inner.export(batch).await
-    }
+    // #[cfg(feature = "guest-export")]
+    // async fn export(&self, batch: Vec<SpanData>) -> Result<(), OTelSdkError> {
+    //     self.inner.export(batch).await
+    // }
 
-    #[cfg(not(feature = "guest-export"))]
+    // #[cfg(not(feature = "guest-export"))]
     async fn export(&self, batch: Vec<SpanData>) -> Result<(), OTelSdkError> {
         let spans = batch.into_iter().map(Into::into).collect::<Vec<_>>();
         wasi::export(&spans).map_err(|e| OTelSdkError::InternalFailure(e.to_string()))
     }
 
-    #[cfg(feature = "guest-export")]
-    fn set_resource(&mut self, resource: &opentelemetry_sdk::Resource) {
-        self.inner.set_resource(resource);
-    }
+    // #[cfg(feature = "guest-export")]
+    // fn set_resource(&mut self, resource: &opentelemetry_sdk::Resource) {
+    //     self.inner.set_resource(resource);
+    // }
 }
 
-cfg_if! {
-    if #[cfg(not(feature = "guest-export"))] {
+// cfg_if! {
+//     if #[cfg(not(feature = "guest-export"))] {
         use opentelemetry::trace as otel;
 
         // impl From<Vec<SpanData>> for Vec<wasi::SpanData> {
@@ -164,5 +164,5 @@ cfg_if! {
                 }
             }
         }
-    }
-}
+//     }
+// }
