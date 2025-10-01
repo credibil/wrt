@@ -21,8 +21,8 @@ pub use sdk_otel_attr::instrument;
 use crate::init::Shutdown;
 
 /// Initialize OpenTelemetry SDK and tracing subscriber.
-pub async fn init() -> Shutdown {
-    match init::init().await {
+pub fn init() -> Shutdown {
+    match init::init() {
         Ok(shutdown) => shutdown,
         Err(e) => {
             ::tracing::error!("failed to initialize: {e}");

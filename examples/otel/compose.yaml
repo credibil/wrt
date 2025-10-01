@@ -1,14 +1,36 @@
 name: wasi-otel
 
+secrets:
+  credibil:
+    environment: CARGO_REGISTRIES_CREDIBIL_TOKEN
+
 services:
-  http:
-    image: ghcr.io/credibil/wrt
+  # http:
+  #   image: ghcr.io/credibil/wrt
+  #   env_file: .env
+  #   ports:
+  #     - 8080:8080
+  #   command: ["/otel.wasm"]
+  #   volumes:
+  #      - ../../target/wasm32-wasip2/release/examples/otel.wasm:/otel.wasm
+  #   depends_on:
+  #     - nats
+  #     - otelcol
+
+  otel:
+    image: wrt-otel:latest
+    container_name: wrt-otel
     env_file: .env
+    build:
+      context: ../..
+      secrets:
+        - credibil
+      args:
+        BIN: standard
+    volumes:
+       - ../../target/wasm32-wasip2/release/examples/otel.wasm:/app.wasm
     ports:
       - 8080:8080
-    command: ["/otel.wasm"]
-    volumes:
-       - ../../target/wasm32-wasip2/release/examples/otel.wasm:/otel.wasm
     depends_on:
       - nats
       - otelcol

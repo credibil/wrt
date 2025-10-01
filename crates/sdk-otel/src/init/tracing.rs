@@ -25,8 +25,8 @@ pub fn init(resource: Resource) -> Result<SdkTracerProvider> {
 
 // propagate (inject) host context
 #[must_use]
-pub async fn context() -> ContextGuard {
-    let host_ctx = wasi::context().await;
+pub fn context() -> ContextGuard {
+    let host_ctx = wasi::context();
     let context: SpanContext = host_ctx.into();
     let current = Context::current();
 

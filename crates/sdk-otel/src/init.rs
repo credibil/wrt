@@ -30,7 +30,7 @@ cfg_if! {
     }
 }
 
-pub async fn init() -> Result<Shutdown> {
+pub fn init() -> Result<Shutdown> {
     // get WASI host telemetry resource
     let resource: Resource = resource::resource().into();
 
@@ -65,7 +65,7 @@ pub async fn init() -> Result<Shutdown> {
         #[cfg(feature = "metrics")]
         metrics: meter_provider,
         #[cfg(feature = "tracing")]
-        _context: Some(tracing::context().await),
+        _context: Some(tracing::context()),
     })
 }
 
@@ -82,6 +82,7 @@ pub struct Shutdown {
 
 impl Drop for Shutdown {
     fn drop(&mut self) {
+        println!(">>> telemetry shutdown");
         #[cfg(feature = "tracing")]
         if let Err(e) = self.tracing.shutdown() {
             ::tracing::error!("failed to export tracing: {e}");

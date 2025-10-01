@@ -24,12 +24,6 @@ use crate::{Data, Host, DEF_HTTP_ADDR};
 // use `HostWithStore` to add async support`
 
 impl wasi_otel::tracing::HostWithStore for Data {
-    async fn context<T>(_accessor: &Accessor<T, Self>) -> Result<wasi::SpanContext> {
-        let ctx = tracing::Span::current().context();
-        let span = ctx.span();
-        Ok(wasi::SpanContext::from(span.span_context()))
-    }
-
     async fn export<T>(
         accessor: &Accessor<T, Self>, span: Vec<wasi::SpanData>,
     ) -> Result<(), wasi::Error> {
@@ -61,7 +55,13 @@ impl wasi_otel::tracing::HostWithStore for Data {
     }
 }
 
-impl wasi_otel::tracing::Host for Host<'_> {}
+impl wasi_otel::tracing::Host for Host<'_> {
+    async fn context(&mut self,) -> wasmtime::Result<wasi::SpanContext> {
+        let ctx = tracing::Span::current().context();
+        let span = ctx.span();
+        Ok(wasi::SpanContext::from(span.span_context()))
+    }
+}
 
 // impl wasi_otel::tracing::Host for for Host<'_> {
 //     fn context(&mut self) -> Result<wasi::SpanContext> {
