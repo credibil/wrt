@@ -6,6 +6,8 @@ Unreleased
 
 ### Changed
 
+In preparation for `wasi3p` some discovery changes were made to make OpenTelemetry exports asynchronous by defining them as such in the WIT files and making corresponding host changes in `wasi-otel`. For now the guest makes blocking calls to the host export as we need to do more work or wait for better support for ensuring a flush of OTel exports just before guest drop. The `guest-export` feature has been removed mostly for idealogical reasons (interaction with the outside world should be via the host).
+
 ## What's Changed
 * Bump to 0.5.0 by @github-actions[bot] in https://github.com/credibil/wrt/pull/13
 * fix bug extracting authority from request by @andrew-goldie in https://github.com/credibil/wrt/pull/14
