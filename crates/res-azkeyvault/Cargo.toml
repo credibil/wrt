@@ -1,7 +1,6 @@
 [package]
 name = "res-azkeyvault"
 description = "Azure Key Vault resource provider"
-publish = false
 readme = "README.md"
 authors.workspace = true
 categories.workspace = true
