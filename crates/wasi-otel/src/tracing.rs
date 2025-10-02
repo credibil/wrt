@@ -27,6 +27,7 @@ impl wasi_otel::tracing::HostWithStore for Data {
     async fn export<T>(
         accessor: &Accessor<T, Self>, span: Vec<wasi::SpanData>,
     ) -> Result<(), wasi::Error> {
+        println!("### host export spans");
         let http_client = accessor.with(move |mut access| {
             let c = access.get().http_client;
             c.clone()
@@ -62,42 +63,6 @@ impl wasi_otel::tracing::Host for Host<'_> {
         Ok(wasi::SpanContext::from(span.span_context()))
     }
 }
-
-// impl wasi_otel::tracing::Host for for Host<'_> {
-//     fn context(&mut self) -> Result<wasi::SpanContext> {
-//         let ctx = tracing::Span::current().context();
-//         let span = ctx.span();
-//         Ok(wasi::SpanContext::from(span.span_context()))
-//     }
-
-//     fn export(&mut self, span: Vec<wasi::SpanData>) -> Result<(), wasi::Error> {
-//         let http_client = self.http_client.clone();
-
-//         // export to collector in background to avoid blocking
-//         tokio::spawn(async move {
-//             // convert to opentelemetry export format
-//             let resource_spans = resource_spans(span, init::resource());
-//             let request = ExportTraceServiceRequest { resource_spans };
-
-//             let body = Message::encode_to_vec(&request);
-//             let addr = env::var("OTEL_HTTP_ADDR").unwrap_or_else(|_| DEF_HTTP_ADDR.to_string());
-
-//             // export to collector
-//             if let Err(e) = http_client
-//                 .post(format!("{addr}/v1/traces"))
-//                 .header(CONTENT_TYPE, "application/x-protobuf")
-//                 .body(body)
-//                 .send()
-//                 .await
-//                 .context("sending traces")
-//             {
-//                 tracing::error!("failed to send traces: {e}");
-//             }
-//         });
-
-//         Ok(())
-//     }
-// }
 
 pub fn resource_spans(
     spans: Vec<wasi::SpanData>, resource: &opentelemetry_sdk::Resource,

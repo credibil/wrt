@@ -30,6 +30,7 @@ use crate::{Host, Data, DEF_HTTP_ADDR};
 
 impl metrics::HostWithStore for Data {
     async fn export<T>(accessor: &Accessor<T, Self>, rm: wasi::ResourceMetrics,) -> Result<(), wasi::Error> {
+        println!("### host export metrics");
         let http_client = accessor.with(move |mut access| {
             let c = access.get().http_client;
             c.clone()
@@ -55,33 +56,6 @@ impl metrics::HostWithStore for Data {
 }
 
 impl metrics::Host for Host<'_> {}
-
-// impl metrics::Host for Host<'_> {
-//     fn export(&mut self, rm: wasi::ResourceMetrics) -> Result<(), wasi::Error> {
-//         let http_client = self.http_client.clone();
-
-//         // export to collector in background to avoid blocking
-//         tokio::spawn(async move {
-//             // convert to opentelemetry export format
-//             let request = ExportMetricsServiceRequest::from(rm);
-//             let body = Message::encode_to_vec(&request);
-//             let addr = env::var("OTEL_HTTP_ADDR").unwrap_or_else(|_| DEF_HTTP_ADDR.to_string());
-
-//             // export to collector
-//             if let Err(e) = http_client
-//                 .post(format!("{addr}/v1/metrics"))
-//                 .header(CONTENT_TYPE, "application/x-protobuf")
-//                 .body(body)
-//                 .send()
-//                 .await
-//             {
-//                 tracing::error!("failed to send metrics: {e}");
-//             }
-//         });
-
-//         Ok(())
-//     }
-// }
 
 impl types::Host for Host<'_> {
     fn convert_error(&mut self, err: wasi::Error) -> anyhow::Result<wasi::Error> {

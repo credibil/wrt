@@ -18,6 +18,7 @@ use opentelemetry_sdk::metrics::{
 use crate::export::metrics::Exporter;
 
 pub fn init(resource: Resource) -> Result<SdkMeterProvider> {
+    println!(">>> initializing metrics");
     let exporter = Exporter::new()?;
     let reader = Reader::new(exporter);
     let provider = SdkMeterProvider::builder().with_resource(resource).with_reader(reader).build();
@@ -59,6 +60,7 @@ impl MetricReader for Reader {
     }
 
     fn shutdown_with_timeout(&self, _: Duration) -> OTelSdkResult {
+        println!(">>> shutting down metrics reader");
         let mut rm = ResourceMetrics::default();
         self.reader.collect(&mut rm)?;
         block_on(async { self.exporter.export(&rm).await })

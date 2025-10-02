@@ -30,6 +30,7 @@ opentelemetry.workspace = true
 opentelemetry_sdk.workspace = true
 sdk-http.workspace = true
 sdk-otel-attr.workspace = true
+tokio.workspace = true
 wit-bindgen.workspace = true
 
 # tracing

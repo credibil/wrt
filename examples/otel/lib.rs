@@ -18,7 +18,7 @@ impl Guest for HttpGuest {
     // #[sdk_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
     fn handle(request: IncomingRequest, response: ResponseOutparam) {
         let _shutdown = sdk_otel::init();
-        tracing::span!(Level::INFO, "http_guest_handle").in_scope(|| {
+        tracing::span!(Level::DEBUG, "http_guest_handle").in_scope(|| {
             // tracing metrics
             tracing::info!(monotonic_counter.tracing_counter = 1, key1 = "value 1");
             tracing::info!(gauge.tracing_gauge = 1);
