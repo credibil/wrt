@@ -7,7 +7,7 @@ To get started add a `.env` file to this folder. See the `.env.example` file in 
 In a console, build and run the `otel` example:
 
 ```bash
-# build the guest from a 
+# build the guest.
 cargo build --example otel --target wasm32-wasip2 --release
 
 Run the services in Docker containers using docker compose.
