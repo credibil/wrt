@@ -24,13 +24,7 @@ impl Exporter {
 
 impl PushMetricExporter for Exporter {
     async fn export(&self, metrics: &ResourceMetrics) -> Result<(), OTelSdkError> {
-        println!(">>> spawning export task for metrics");
         let metrics: wasi::ResourceMetrics = metrics.into();
-        // wit_bindgen::spawn(async move {
-        //     if let Err(e) = wasi::export(metrics).await {
-        //         tracing::error!("failed to export metrics: {e}");
-        //     }
-        // });
         wit_bindgen::block_on(async move {
             if let Err(e) = wasi::export(metrics).await {
                 tracing::error!("failed to export metrics: {e}");

@@ -82,7 +82,6 @@ pub struct Shutdown {
 
 impl Drop for Shutdown {
     fn drop(&mut self) {
-        println!(">>> telemetry shutdown");
         #[cfg(feature = "tracing")]
         if let Err(e) = self.tracing.shutdown() {
             ::tracing::error!("failed to export tracing: {e}");

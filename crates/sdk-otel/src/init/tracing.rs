@@ -15,7 +15,6 @@ use crate::export::tracing::Exporter;
 use crate::generated::wasi::otel::tracing as wasi;
 
 pub fn init(resource: Resource) -> Result<SdkTracerProvider> {
-    println!(">>> initializing tracing");
     let exporter = Exporter::new()?;
     let processor = Processor::new(exporter);
     let provider =
@@ -58,7 +57,6 @@ impl SpanProcessor for Processor {
     fn on_start(&self, _: &mut Span, _cx: &Context) {}
 
     fn on_end(&self, span: SpanData) {
-        println!(">>> span ended: {}", span.name);
         if !span.span_context.is_sampled() {
             return;
         }
@@ -72,7 +70,6 @@ impl SpanProcessor for Processor {
     }
 
     fn shutdown_with_timeout(&self, _: Duration) -> OTelSdkResult {
-        println!(">>> shutting down tracing processor");
         let spans =
             self.spans.lock().map_err(|e| OTelSdkError::InternalFailure(e.to_string()))?.to_vec();
         if spans.is_empty() {

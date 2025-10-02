@@ -23,14 +23,15 @@ use prost::Message;
 use wasmtime::component::Accessor;
 
 use crate::generated::wasi::otel::{metrics as wasi, metrics, types};
-use crate::{Host, Data, DEF_HTTP_ADDR};
+use crate::{DEF_HTTP_ADDR, Data, Host};
 
 // *** WASIP3 ***
 // use `HostWithStore` to add async support`
 
 impl metrics::HostWithStore for Data {
-    async fn export<T>(accessor: &Accessor<T, Self>, rm: wasi::ResourceMetrics,) -> Result<(), wasi::Error> {
-        println!("### host export metrics");
+    async fn export<T>(
+        accessor: &Accessor<T, Self>, rm: wasi::ResourceMetrics,
+    ) -> Result<(), wasi::Error> {
         let http_client = accessor.with(move |mut access| {
             let c = access.get().http_client;
             c.clone()
@@ -50,7 +51,7 @@ impl metrics::HostWithStore for Data {
         {
             tracing::error!("failed to send metrics: {e}");
         }
-        
+
         Ok(())
     }
 }

@@ -39,15 +39,13 @@ args = ["test", "--doc", "--all-features", "--workspace"]
 # -------------------------------------
 
 [tasks.fmt]
-dependencies = ["fmt-toml"]
-command = "cargo"
-args = ["fmt", "--all"]
-install_crate = "rustfmt"
+script = "cargo +nightly fmt --all"
+# dependencies = ["fmt-toml"]
 
-[tasks.fmt-toml]
-command = "taplo"
-args = ["format"]
-install_crate = "taplo-cli"
+# [tasks.fmt-toml]
+# command = "taplo"
+# args = ["format"]
+# install_crate = "taplo-cli"
 
 [tasks.lint]
 command = "cargo"
@@ -108,4 +106,4 @@ dependencies = ["audit", "fmt", "lint", "outdated", "unused"]
 
 # Emulate CI
 [tasks.ci]
-dependencies = ["lint", "test", "test-doc", "vet", "miri", "outdated", "deny"]
+dependencies = ["lint", "test", "test-doc", "vet", "miri", "outdated", "deny", "fmt"]

@@ -18,7 +18,7 @@ use wasmtime::component::Accessor;
 
 use crate::generated::wasi::otel as wasi_otel;
 use crate::generated::wasi::otel::tracing::{self as wasi};
-use crate::{Data, Host, DEF_HTTP_ADDR};
+use crate::{DEF_HTTP_ADDR, Data, Host};
 
 // *** WASIP3 ***
 // use `HostWithStore` to add async support`
@@ -27,7 +27,6 @@ impl wasi_otel::tracing::HostWithStore for Data {
     async fn export<T>(
         accessor: &Accessor<T, Self>, span: Vec<wasi::SpanData>,
     ) -> Result<(), wasi::Error> {
-        println!("### host export spans");
         let http_client = accessor.with(move |mut access| {
             let c = access.get().http_client;
             c.clone()
@@ -57,7 +56,7 @@ impl wasi_otel::tracing::HostWithStore for Data {
 }
 
 impl wasi_otel::tracing::Host for Host<'_> {
-    async fn context(&mut self,) -> wasmtime::Result<wasi::SpanContext> {
+    async fn context(&mut self) -> wasmtime::Result<wasi::SpanContext> {
         let ctx = tracing::Span::current().context();
         let span = ctx.span();
         Ok(wasi::SpanContext::from(span.span_context()))
