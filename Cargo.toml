@@ -55,7 +55,8 @@ axum = { workspace = true, features = ["macros"] }
 bytes.workspace = true
 http.workspace = true
 sdk-http.workspace = true
-sdk-otel = { workspace = true, features = ["guest-export"] }
+sdk-otel.workspace = true
+# sdk-otel = { workspace = true, features = ["guest-export"] }
 serde_json.workspace = true
 tower-http.workspace = true
 tracing.workspace = true
@@ -85,7 +86,7 @@ crate-type = ["cdylib"]
 
 [[example]]
 name = "otel"
-path = "examples/otel.rs"
+path = "examples/otel/lib.rs"
 crate-type = ["cdylib"]
 
 [[example]]
