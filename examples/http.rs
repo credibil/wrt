@@ -9,6 +9,7 @@ use wasi::exports::http::incoming_handler::Guest;
 use wasi::http::types::{IncomingRequest, ResponseOutparam};
 
 struct HttpGuest;
+wasi::http::proxy::export!(HttpGuest);
 
 impl Guest for HttpGuest {
     #[sdk_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
@@ -29,5 +30,3 @@ async fn handler(Json(body): Json<Value>) -> Result<Json<Value>> {
         "request": body
     })))
 }
-
-wasi::http::proxy::export!(HttpGuest);
