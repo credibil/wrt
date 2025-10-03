@@ -838,9 +838,9 @@ dependencies = [
 
 [[package]]
 name = "credibil-encoding"
-version = "0.2.1"
+version = "0.3.0"
 source = "sparse+https://pkgs.dev.azure.com/credibil/_packaging/credibil/Cargo/index/"
-checksum = "bb8330fd67fec3fd2f2f77ce539b40f4f32931c73d2ab3ed4a1aa55ce4caa962"
+checksum = "08eea1fbbc44bff5bc920cc8b8e49620a07054d39c13efa6e0e2d923f452d7bd"
 dependencies = [
  "anyhow",
  "percent-encoding",
@@ -850,9 +850,9 @@ dependencies = [
 
 [[package]]
 name = "credibil-otel"
-version = "0.2.1"
+version = "0.3.0"
 source = "sparse+https://pkgs.dev.azure.com/credibil/_packaging/credibil/Cargo/index/"
-checksum = "ee394d945adbe289ab8c74d6c43fab984e59074e8dedf12a15a3cf38c19c2674"
+checksum = "d4f254c5ed227319282faf4d5bf7a60d54177f9b9bc11a012f53c8b988111083"
 dependencies = [
  "anyhow",
  "http",
@@ -1159,7 +1159,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.61.1",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -1679,7 +1679,7 @@ dependencies = [
  "libc",
  "percent-encoding",
  "pin-project-lite",
- "socket2 0.6.0",
+ "socket2 0.5.10",
  "system-configuration",
  "tokio",
  "tower-service",
@@ -3032,7 +3032,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys 0.11.0",
- "windows-sys 0.61.1",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -3639,7 +3639,7 @@ dependencies = [
  "getrandom 0.3.3",
  "once_cell",
  "rustix 1.1.2",
- "windows-sys 0.61.1",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -4902,7 +4902,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.61.1",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]

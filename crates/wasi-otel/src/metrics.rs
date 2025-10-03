@@ -32,10 +32,17 @@ impl metrics::HostWithStore for Data {
     async fn export<T>(
         accessor: &Accessor<T, Self>, rm: wasi::ResourceMetrics,
     ) -> Result<(), wasi::Error> {
+        // return if opentelemetry is not initialized
+        if credibil_otel::init::resource().is_none() {
+            tracing::warn!("otel resource not initialized, skipping metrics export");
+            return Ok(());
+        }
+
         let http_client = accessor.with(move |mut access| {
             let c = access.get().http_client;
             c.clone()
         });
+
         // convert to opentelemetry export format
         let request = ExportMetricsServiceRequest::from(rm);
         let body = Message::encode_to_vec(&request);
