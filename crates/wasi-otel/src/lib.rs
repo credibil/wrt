@@ -88,7 +88,12 @@ impl Host<'_> {
 
 impl wasi_otel::resource::Host for Host<'_> {
     async fn resource(&mut self) -> Result<types::Resource> {
-        Ok(init::resource().into())
+        let Some(resource) = init::resource() else {
+            ::tracing::warn!("otel resource not initialized");
+            let empty = &Resource::builder().build();
+            return Ok(empty.into());
+        };
+        Ok(resource.into())
     }
 }
 

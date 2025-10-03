@@ -4,7 +4,6 @@ use std::collections::HashMap;
 use std::env;
 
 use anyhow::{Context, Result};
-use credibil_otel::init;
 use http::header::CONTENT_TYPE;
 use opentelemetry::trace::{self as otel, TraceContextExt};
 use opentelemetry_proto::tonic::collector::trace::v1::ExportTraceServiceRequest;
@@ -27,13 +26,19 @@ impl wasi_otel::tracing::HostWithStore for Data {
     async fn export<T>(
         accessor: &Accessor<T, Self>, span: Vec<wasi::SpanData>,
     ) -> Result<(), wasi::Error> {
+        // return if opentelemetry is not initialized
+        let Some(resource) = credibil_otel::init::resource() else {
+            tracing::warn!("otel resource not initialized, skipping trace export");
+            return Ok(());
+        };
+
         let http_client = accessor.with(move |mut access| {
             let c = access.get().http_client;
             c.clone()
         });
 
         // convert to opentelemetry export format
-        let resource_spans = resource_spans(span, init::resource());
+        let resource_spans = resource_spans(span, resource);
         let request = ExportTraceServiceRequest { resource_spans };
 
         let body = Message::encode_to_vec(&request);
