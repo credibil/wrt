@@ -17,6 +17,7 @@ use crate::traits::Service;
 pub struct Runtime {
     wasm: PathBuf,
     services: Vec<Box<dyn Service>>,
+    telemetry: bool,
 }
 
 impl Runtime {
@@ -29,6 +30,7 @@ impl Runtime {
         Self {
             wasm,
             services: vec![],
+            telemetry: true,
         }
     }
 
@@ -42,6 +44,16 @@ impl Runtime {
         self
     }
 
+    /// Enable or disable telemetry for the runtime.
+    ///
+    /// By default, telemetry is enabled so this method is only required
+    /// to disable telemetry.
+    #[must_use]
+    pub const fn telemetry(mut self, telemetry: bool) -> Self {
+        self.telemetry = telemetry;
+        self
+    }
+
     /// Start the runtime, instantiating each registered service on its own
     /// thread.
     ///
@@ -51,7 +63,9 @@ impl Runtime {
     ///
     /// Returns an error if there is an issue processing the shutdown signal.
     pub async fn serve(self) -> Result<()> {
-        self.init_tracing()?;
+        if self.telemetry {
+            self.init_tracing()?;
+        }
         self.init_runtime()?;
 
         // wait for shutdown signal
@@ -100,7 +114,7 @@ impl Runtime {
             let instance_pre = instance_pre.clone();
             tokio::spawn(async move {
                 if let Err(e) = service.start(instance_pre).await {
-                    tracing::error!("error running {service:?} service: {e}");
+                    tracing::warn!("issue starting {service:?} service: {e}");
                 }
             });
         }

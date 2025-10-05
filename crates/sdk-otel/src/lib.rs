@@ -3,6 +3,7 @@
 //! Wasm component (guest) OpenTelemetry SDK.
 
 mod generated {
+    #![allow(clippy::future_not_send)]
     #![allow(clippy::collection_is_never_read)]
 
     wit_bindgen::generate!({
