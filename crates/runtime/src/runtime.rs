@@ -114,7 +114,7 @@ impl Runtime {
             let instance_pre = instance_pre.clone();
             tokio::spawn(async move {
                 if let Err(e) = service.start(instance_pre).await {
-                    tracing::error!("error running {service:?} service: {e}");
+                    tracing::warn!("issue starting {service:?} service: {e}");
                 }
             });
         }

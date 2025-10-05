@@ -104,6 +104,11 @@ name = "vault"
 path = "examples/vault.rs"
 crate-type = ["cdylib"]
 
+[profile.release]
+lto = true
+opt-level = "s"
+strip = true
+
 [package.metadata.cargo-machete]
 ignored = ["openssl"]
 
