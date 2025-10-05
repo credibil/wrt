@@ -5,7 +5,7 @@ use std::env;
 use std::pin::Pin;
 use std::sync::Arc;
 
-use anyhow::{Result, anyhow};
+use anyhow::{Context, Result, anyhow};
 use azure_core::credentials::{Secret, TokenCredential};
 use azure_identity::{ClientSecretCredential, DeveloperToolsCredential};
 use azure_security_keyvault_secrets::SecretClient;
@@ -38,9 +38,12 @@ impl ResourceBuilder<SecretClient> for AzKeyVault {
             DeveloperToolsCredential::new(None)
                 .map_err(|e| anyhow!("could not create credential: {e}"))?
         } else {
-            let tenant_id = env::var("AZURE_TENANT_ID")?;
-            let client_id = env::var("AZURE_CLIENT_ID")?;
-            let client_secret = env::var("AZURE_CLIENT_SECRET")?;
+            let tenant_id =
+                env::var("AZURE_TENANT_ID").context("getting AZURE_TENANT_ID env var")?;
+            let client_id =
+                env::var("AZURE_CLIENT_ID").context("getting AZURE_CLIENT_ID env var")?;
+            let client_secret =
+                env::var("AZURE_CLIENT_SECRET").context("getting AZURE_CLIENT_SECRET env var")?;
             let secret = Secret::new(client_secret);
             ClientSecretCredential::new(&tenant_id, client_id, secret, None)?
         };
