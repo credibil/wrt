@@ -54,6 +54,7 @@ openssl = { version = "0.10", features = ["vendored"] }
 axum = { workspace = true, features = ["macros"] }
 bytes.workspace = true
 http.workspace = true
+opentelemetry.workspace = true
 sdk-http.workspace = true
 sdk-otel.workspace = true
 # sdk-otel = { workspace = true, features = ["guest-export"] }

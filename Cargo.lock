@@ -2956,6 +2956,7 @@ dependencies = [
  "bytes",
  "http",
  "openssl",
+ "opentelemetry",
  "res-azkeyvault",
  "res-mongodb",
  "res-nats",
