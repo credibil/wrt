@@ -20,36 +20,50 @@ use opentelemetry_proto::tonic::metrics::v1::{
 use opentelemetry_proto::tonic::resource::v1::Resource;
 use opentelemetry_sdk::error::OTelSdkError;
 use prost::Message;
+use wasmtime::component::Accessor;
 
 use crate::generated::wasi::otel::{metrics as wasi, metrics, types};
-use crate::{DEF_HTTP_ADDR, Host};
+use crate::{DEF_HTTP_ADDR, Data, Host};
 
-impl metrics::Host for Host<'_> {
-    async fn export(&mut self, rm: wasi::ResourceMetrics) -> Result<(), wasi::Error> {
-        let http_client = self.http_client.clone();
+// *** WASIP3 ***
+// use `HostWithStore` to add async support`
 
-        // export to collector in background to avoid blocking
-        tokio::spawn(async move {
-            // convert to opentelemetry export format
-            let request = ExportMetricsServiceRequest::from(rm);
-            let body = Message::encode_to_vec(&request);
-            let addr = env::var("OTEL_HTTP_ADDR").unwrap_or_else(|_| DEF_HTTP_ADDR.to_string());
+impl metrics::HostWithStore for Data {
+    async fn export<T>(
+        accessor: &Accessor<T, Self>, rm: wasi::ResourceMetrics,
+    ) -> Result<(), wasi::Error> {
+        // return if opentelemetry is not initialized
+        if credibil_otel::init::resource().is_none() {
+            tracing::warn!("otel resource not initialized, skipping metrics export");
+            return Ok(());
+        }
 
-            // export to collector
-            if let Err(e) = http_client
-                .post(format!("{addr}/v1/metrics"))
-                .header(CONTENT_TYPE, "application/x-protobuf")
-                .body(body)
-                .send()
-                .await
-            {
-                tracing::error!("failed to send metrics: {e}");
-            }
+        let http_client = accessor.with(move |mut access| {
+            let c = access.get().http_client;
+            c.clone()
         });
+
+        // convert to opentelemetry export format
+        let request = ExportMetricsServiceRequest::from(rm);
+        let body = Message::encode_to_vec(&request);
+        let addr = env::var("OTEL_HTTP_ADDR").unwrap_or_else(|_| DEF_HTTP_ADDR.to_string());
+
+        // export to collector
+        if let Err(e) = http_client
+            .post(format!("{addr}/v1/metrics"))
+            .header(CONTENT_TYPE, "application/x-protobuf")
+            .body(body)
+            .send()
+            .await
+        {
+            tracing::error!("failed to send metrics: {e}");
+        }
 
         Ok(())
     }
 }
+
+impl metrics::Host for Host<'_> {}
 
 impl types::Host for Host<'_> {
     fn convert_error(&mut self, err: wasi::Error) -> anyhow::Result<wasi::Error> {

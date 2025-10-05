@@ -6,7 +6,7 @@ interface metrics {
     /// SDK and stores it in the provided [ResourceMetrics] reference.
     ///
     /// An error is returned if this is called after shutdown.
-    %export: func(rm: resource-metrics) -> result<_, error>;
+    %export: async func(rm: resource-metrics) -> result<_, error>;
 
     /// A collection of scope metrics and the associated resource that created them.
     record resource-metrics {

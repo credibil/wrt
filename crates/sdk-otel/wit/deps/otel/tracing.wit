@@ -6,7 +6,7 @@ interface tracing {
     context: func() -> span-context;
 
     /// Called by the guest to export spans.
-    %export: func(span: list<span-data>) -> result<_, error>;
+    %export: async func(span: list<span-data>) -> result<_, error>;
 
     /// The data associated with a span.
     record span-data {
