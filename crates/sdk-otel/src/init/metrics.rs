@@ -4,7 +4,6 @@ use std::sync::{Arc, Weak};
 use std::time::Duration;
 
 use anyhow::Result;
-use futures::executor::block_on;
 use opentelemetry::global;
 use opentelemetry_sdk::Resource;
 use opentelemetry_sdk::error::OTelSdkResult;
@@ -61,6 +60,8 @@ impl MetricReader for Reader {
     fn shutdown_with_timeout(&self, _: Duration) -> OTelSdkResult {
         let mut rm = ResourceMetrics::default();
         self.reader.collect(&mut rm)?;
-        block_on(async { self.exporter.export(&rm).await })
+
+        let exporter = Arc::clone(&self.exporter);
+        wit_bindgen::block_on(async move { exporter.export(&rm).await })
     }
 }

@@ -8,7 +8,7 @@ use opentelemetry_sdk::trace::SpanData;
 
 use crate::generated::wasi::otel::tracing as wasi;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Exporter;
 
 impl Exporter {
@@ -20,7 +20,7 @@ impl Exporter {
 
 impl opentelemetry_sdk::trace::SpanExporter for Exporter {
     async fn export(&self, batch: Vec<SpanData>) -> Result<(), OTelSdkError> {
-        wit_bindgen::block_on(async move {
+        wit_bindgen::spawn(async move {
             let spans = batch.into_iter().map(Into::into).collect::<Vec<_>>();
             if let Err(e) = wasi::export(spans).await {
                 tracing::error!("failed to export spans: {e}");

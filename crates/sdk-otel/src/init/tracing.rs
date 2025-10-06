@@ -4,7 +4,6 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use anyhow::Result;
-use futures::executor::block_on;
 use opentelemetry::trace::{SpanContext, TraceContextExt};
 use opentelemetry::{Context, ContextGuard, global, trace as otel};
 use opentelemetry_sdk::Resource;
@@ -76,11 +75,13 @@ impl SpanProcessor for Processor {
             return Ok(());
         }
 
-        block_on(async { self.exporter.export(spans).await })?;
+        let exporter = self.exporter.clone();
+        wit_bindgen::block_on(async move { exporter.export(spans).await })?;
         Ok(())
     }
 
     fn set_resource(&mut self, resource: &Resource) {
+        
         self.exporter.set_resource(resource);
     }
 }
