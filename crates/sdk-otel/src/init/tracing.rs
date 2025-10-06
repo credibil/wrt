@@ -81,7 +81,6 @@ impl SpanProcessor for Processor {
     }
 
     fn set_resource(&mut self, resource: &Resource) {
-        
         self.exporter.set_resource(resource);
     }
 }
