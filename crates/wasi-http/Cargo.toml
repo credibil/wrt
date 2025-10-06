@@ -1,7 +1,6 @@
 [package]
 name = "wasi-http"
 description = "Wasm http WIT implementation using wasmtime-wasi-http"
-publish = false
 readme = "README.md"
 authors.workspace = true
 categories.workspace = true
