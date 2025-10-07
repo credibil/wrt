@@ -46,16 +46,6 @@ impl RuntimeBuilder {
         self
     }
 
-    /// Enable or disable telemetry for the runtime.
-    ///
-    /// By default, telemetry is enabled so this method is only required
-    /// to disable telemetry.
-    #[must_use]
-    pub const fn telemetry(mut self, telemetry: bool) -> Self {
-        self.telemetry = telemetry;
-        self
-    }
-
     /// Return the runtime instance
     #[must_use]
     pub fn build(self) -> Runtime {
