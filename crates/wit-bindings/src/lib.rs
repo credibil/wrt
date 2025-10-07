@@ -75,3 +75,15 @@ pub mod vault {
         pub_export_macro: true
     });
 }
+
+/// Bindings for the `wasi:sql` world.
+pub mod sql {
+    pub use self::wasi::sql::*;
+
+    wit_bindgen::generate!({
+        world: "sql",
+        path: "wit",
+        generate_all,
+        pub_export_macro: true
+    });
+}
