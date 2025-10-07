@@ -1,9 +1,9 @@
 //! # WebAssembly Runtime
 
-use std::env;
 use std::path::PathBuf;
+use std::{env, vec};
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use cfg_if::cfg_if;
 use credibil_otel::Telemetry;
 use futures::future::{BoxFuture, FutureExt};
@@ -13,25 +13,27 @@ use wasmtime::{Config, Engine};
 
 use crate::traits::Service;
 
-/// Runtime for a wasm component.
-pub struct Runtime {
+pub struct RuntimeBuilder {
     wasm: PathBuf,
     services: Vec<Box<dyn Service>>,
     telemetry: bool,
 }
 
-impl Runtime {
+impl RuntimeBuilder {
     /// Create a new Runtime instance from the provided file reference.
     ///
     /// The file can either be a serialized (pre-compiled) wasmtime `Component`
     /// or a standard `wasm32-wasip2` wasm component.
+    ///
+    /// Set telemetry to true to enable OpenTelemetry tracing.
     #[must_use]
-    pub fn new(wasm: PathBuf) -> Self {
-        Self {
+    pub fn new(wasm: PathBuf, telemetry: bool) -> Self {
+        let res = Self {
             wasm,
             services: vec![],
-            telemetry: true,
-        }
+            telemetry,
+        };
+        res.init()
     }
 
     /// Register a service with the runtime.
@@ -54,6 +56,41 @@ impl Runtime {
         self
     }
 
+    /// Return the runtime instance
+    #[must_use]
+    pub fn build(self) -> Runtime {
+        Runtime {
+            wasm: self.wasm,
+            services: self.services,
+        }
+    }
+
+    /// Initialise telemetry for the runtime.
+    fn init(self) -> Self {
+        if self.telemetry {
+            let file_name = self.wasm.file_name().and_then(|s| s.to_str()).unwrap_or("unknown");
+            let (prefix, _) = file_name.rsplit_once('.').unwrap_or((file_name, ""));
+
+            // initialize telemetry
+            let mut builder = Telemetry::new(prefix);
+            if let Ok(endpoint) = env::var("OTEL_GRPC_ADDR") {
+                builder = builder.endpoint(endpoint);
+            }
+            builder.build().unwrap_or_else(|e| {
+                tracing::warn!("failed to initialize telemetry: {e}");
+            });
+        }
+        self
+    }
+}
+
+/// Runtime for a wasm component.
+pub struct Runtime {
+    wasm: PathBuf,
+    services: Vec<Box<dyn Service>>,
+}
+
+impl Runtime {
     /// Start the runtime, instantiating each registered service on its own
     /// thread.
     ///
@@ -63,9 +100,6 @@ impl Runtime {
     ///
     /// Returns an error if there is an issue processing the shutdown signal.
     pub async fn serve(self) -> Result<()> {
-        if self.telemetry {
-            self.init_tracing()?;
-        }
         self.init_runtime()?;
 
         // wait for shutdown signal
@@ -122,18 +156,6 @@ impl Runtime {
         tracing::info!("runtime intialized");
 
         Ok(())
-    }
-
-    fn init_tracing(&self) -> Result<()> {
-        let file_name = self.wasm.file_name().and_then(|s| s.to_str()).unwrap_or("unknown");
-        let (prefix, _) = file_name.rsplit_once('.').unwrap_or((file_name, ""));
-
-        // initialize telemetry
-        let mut builder = Telemetry::new(prefix);
-        if let Ok(endpoint) = env::var("OTEL_GRPC_ADDR") {
-            builder = builder.endpoint(endpoint);
-        }
-        builder.build().context("initializing telemetry")
     }
 }
 
