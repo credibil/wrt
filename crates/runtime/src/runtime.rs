@@ -16,7 +16,6 @@ use crate::traits::Service;
 pub struct RuntimeBuilder {
     wasm: PathBuf,
     services: Vec<Box<dyn Service>>,
-    telemetry: bool,
 }
 
 impl RuntimeBuilder {
@@ -31,9 +30,8 @@ impl RuntimeBuilder {
         let res = Self {
             wasm,
             services: vec![],
-            telemetry,
         };
-        res.init()
+        res.init(telemetry)
     }
 
     /// Register a service with the runtime.
@@ -56,8 +54,8 @@ impl RuntimeBuilder {
     }
 
     /// Initialise telemetry for the runtime.
-    fn init(self) -> Self {
-        if self.telemetry {
+    fn init(self, telemetry: bool) -> Self {
+        if telemetry {
             let file_name = self.wasm.file_name().and_then(|s| s.to_str()).unwrap_or("unknown");
             let (prefix, _) = file_name.rsplit_once('.').unwrap_or((file_name, ""));
 
