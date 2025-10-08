@@ -67,7 +67,11 @@ impl RuntimeBuilder {
                 builder = builder.endpoint(endpoint);
             }
             builder.build().unwrap_or_else(|e| {
-                tracing::warn!("failed to initialize telemetry: {e}");
+                tracing::warn!(
+                    "Failed to initialize telemetry: {e}. Tracing is functional but Telemetry will be unavailable for this session. \
+                     Please check your OpenTelemetry configuration (e.g., OTEL_GRPC_ADDR environment variable, network connectivity, \
+                     docker container, and endpoint settings) and try again."
+                );
             });
         }
         self
