@@ -3,7 +3,6 @@ use bytes::Bytes;
 use http::header::{AUTHORIZATION, CONTENT_TYPE};
 use http::uri::Authority;
 use http::{HeaderMap, HeaderName, Response};
-use percent_encoding::{AsciiSet, NON_ALPHANUMERIC, utf8_percent_encode};
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use wasi::http::outgoing_handler;
@@ -12,15 +11,6 @@ use wasi::http::types::{
 };
 
 use crate::uri::UriLike;
-
-const UNRESERVED: &AsciiSet = &NON_ALPHANUMERIC
-    .remove(b'=')
-    .remove(b'&')
-    .remove(b'.')
-    .remove(b'_')
-    .remove(b'-')
-    .remove(b'~')
-    .remove(b'/');
 
 #[derive(Default)]
 pub struct Client;
@@ -250,12 +240,15 @@ impl<B, J, F> RequestBuilder<B, J, F> {
             .map_err(|()| anyhow!("issue setting authority"))?;
 
         // path + query
-        let path = uri.path().to_string();
-        let mut path_with_query = utf8_percent_encode(&path, UNRESERVED).to_string();
+        let mut path_with_query = uri.path().to_string();
         if let Some(query) = uri.query() {
-            let query = utf8_percent_encode(query, UNRESERVED).to_string();
             path_with_query = format!("{path_with_query}?{query}");
         }
+        // let mut path_with_query = utf8_percent_encode(&path, UNRESERVED).to_string();
+        // if let Some(query) = uri.query() {
+        //     let query = utf8_percent_encode(query, UNRESERVED).to_string();
+        //     path_with_query = format!("{path_with_query}?{query}");
+        // }
         tracing::trace!("encoded path_with_query: {path_with_query}");
 
         request
@@ -320,8 +313,8 @@ impl<B, J, F> RequestBuilder<B, J, F> {
         let status = response.status();
 
         if !(200..300).contains(&status) {
-            let body = String::from_utf8_lossy(&body);
-            return Err(anyhow!("request unsuccessful {status}, {body}"));
+            let msg = serde_json::from_slice::<serde_json::Value>(&body)?;
+            return Err(anyhow!("request unsuccessful {status}, {msg}"));
         }
 
         drop(stream);
