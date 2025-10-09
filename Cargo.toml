@@ -39,6 +39,7 @@ res-mongodb.workspace = true
 res-nats.workspace = true
 runtime.workspace = true
 tokio = { workspace = true, features = ["signal"] }
+tracing.workspace = true
 wasi-blobstore-mdb.workspace = true
 wasi-http.workspace = true
 wasi-keyvalue-nats.workspace = true
