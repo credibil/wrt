@@ -1,3 +1,4 @@
+use crate::uri::UriLike;
 use anyhow::{Result, anyhow};
 use bytes::Bytes;
 use http::header::{AUTHORIZATION, CONTENT_TYPE};
@@ -5,12 +6,11 @@ use http::uri::Authority;
 use http::{HeaderMap, HeaderName, Response};
 use serde::Serialize;
 use serde::de::DeserializeOwned;
+use serde_json::Value;
 use wasi::http::outgoing_handler;
 use wasi::http::types::{
     FutureIncomingResponse, Headers, Method, OutgoingBody, OutgoingRequest, Scheme,
 };
-
-use crate::uri::UriLike;
 
 #[derive(Default)]
 pub struct Client;
@@ -311,9 +311,17 @@ impl<B, J, F> RequestBuilder<B, J, F> {
 
         // transform unsuccessful requests into an error
         let status = response.status();
-
         if !(200..300).contains(&status) {
-            let msg = serde_json::from_slice::<serde_json::Value>(&body)?;
+            if body.is_empty() {
+                return Err(anyhow!("request unsuccessful {status}"));
+            }
+
+            // extract error description from body
+            let msg = if let Ok(msg) = serde_json::from_slice::<Value>(&body) {
+                serde_json::to_string(&msg)?
+            } else {
+                String::from_utf8_lossy(&body).to_string()
+            };
             return Err(anyhow!("request unsuccessful {status}, {msg}"));
         }
 
