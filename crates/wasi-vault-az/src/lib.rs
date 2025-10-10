@@ -123,7 +123,7 @@ impl vault::HostLocker for Host<'_> {
             }
         };
 
-        let secret: Secret = response.into_body().await.context("issue deserializing secret")?;
+        let secret: Secret = response.into_body().context("issue deserializing secret")?;
         let Some(value) = secret.value else {
             return Ok(None);
         };

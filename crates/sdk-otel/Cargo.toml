@@ -25,17 +25,14 @@ tracing = ["dep:tracing-opentelemetry", "dep:tracing-subscriber"]
 [dependencies]
 anyhow.workspace = true
 cfg-if.workspace = true
-futures.workspace = true
 opentelemetry.workspace = true
 opentelemetry_sdk.workspace = true
-sdk-http.workspace = true
 sdk-otel-attr.workspace = true
-tokio.workspace = true
 wit-bindgen.workspace = true
 
 # tracing
 tracing.workspace = true
-tracing-opentelemetry = { workspace = true, features = ["metrics_gauge_unstable"], optional = true }
+tracing-opentelemetry = { workspace = true, optional = true }
 tracing-subscriber = { workspace = true, features = ["env-filter"], optional = true }
 
 # host-export dependencies
