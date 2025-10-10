@@ -1,4 +1,3 @@
-use crate::uri::UriLike;
 use anyhow::{Result, anyhow};
 use bytes::Bytes;
 use http::header::{AUTHORIZATION, CONTENT_TYPE};
@@ -11,6 +10,8 @@ use wasi::http::outgoing_handler;
 use wasi::http::types::{
     FutureIncomingResponse, Headers, Method, OutgoingBody, OutgoingRequest, Scheme,
 };
+
+use crate::uri::UriLike;
 
 #[derive(Default)]
 pub struct Client;
