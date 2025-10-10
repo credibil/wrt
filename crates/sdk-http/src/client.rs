@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use anyhow::{Result, anyhow};
+use anyhow::{Context, Result, anyhow};
 use bytes::Bytes;
 use http::header::{AUTHORIZATION, CONTENT_TYPE};
 use http::uri::Authority;
@@ -329,8 +329,10 @@ impl<B, J, F> RequestBuilder<B, J, F> {
         // convert response
         let mut resp = Response::new(Bytes::from(body));
         for (name, value) in response.headers().entries() {
-            let name = HeaderName::from_str(&name)?;
-            let value = HeaderValue::from_bytes(&value)?;
+            let name = HeaderName::from_str(&name)
+                .with_context(|| format!("Failed to parse header: {name}"))?;
+            let value = HeaderValue::from_bytes(&value)
+                .with_context(|| format!("Failed to parse header value for {name}"))?;
             resp.headers_mut().insert(name, value);
         }
 
