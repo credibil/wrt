@@ -331,7 +331,7 @@ impl<B, J, F> RequestBuilder<B, J, F> {
         for (name, value) in response.headers().entries() {
             let name = HeaderName::from_str(&name)?;
             let value = HeaderValue::from_bytes(&value)?;
-            resp.headers_mut().append(name, value);
+            resp.headers_mut().insert(name, value);
         }
 
         drop(stream);
