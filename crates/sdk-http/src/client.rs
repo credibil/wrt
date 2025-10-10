@@ -1,8 +1,10 @@
+use std::str::FromStr;
+
 use anyhow::{Result, anyhow};
 use bytes::Bytes;
 use http::header::{AUTHORIZATION, CONTENT_TYPE};
 use http::uri::Authority;
-use http::{HeaderMap, HeaderName, Response};
+use http::{HeaderMap, HeaderName, HeaderValue, Response};
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use serde_json::Value;
@@ -209,6 +211,9 @@ impl<B, J, F> RequestBuilder<B, J, F> {
             request.authority().unwrap_or_default(),
             request.path_with_query().unwrap_or_default()
         );
+        for (name, value) in request.headers().entries().as_slice() {
+            tracing::trace!("request header: {name}: {:?}", String::from_utf8_lossy(value));
+        }
 
         let fut_resp = outgoing_handler::handle(request, None)
             .map_err(|e| anyhow!("issue making request: {e}"))?;
@@ -245,11 +250,6 @@ impl<B, J, F> RequestBuilder<B, J, F> {
         if let Some(query) = uri.query() {
             path_with_query = format!("{path_with_query}?{query}");
         }
-        // let mut path_with_query = utf8_percent_encode(&path, UNRESERVED).to_string();
-        // if let Some(query) = uri.query() {
-        //     let query = utf8_percent_encode(query, UNRESERVED).to_string();
-        //     path_with_query = format!("{path_with_query}?{query}");
-        // }
         tracing::trace!("encoded path_with_query: {path_with_query}");
 
         request
@@ -326,10 +326,18 @@ impl<B, J, F> RequestBuilder<B, J, F> {
             return Err(anyhow!("request unsuccessful {status}, {msg}"));
         }
 
+        // convert response
+        let mut resp = Response::new(Bytes::from(body));
+        for (name, value) in response.headers().entries() {
+            let name = HeaderName::from_str(&name)?;
+            let value = HeaderValue::from_bytes(&value)?;
+            resp.headers_mut().append(name, value);
+        }
+
         drop(stream);
         drop(response);
 
-        Ok(Response::new(Bytes::from(body)))
+        Ok(resp)
     }
 }
 
