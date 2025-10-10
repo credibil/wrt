@@ -95,7 +95,7 @@ version = "2.15.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.cc]]
-version = "1.2.40"
+version = "1.2.39"
 criteria = "safe-to-deploy"
 
 [[exemptions.chrono]]
@@ -231,7 +231,7 @@ version = "0.3.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.find-msvc-tools]]
-version = "0.1.3"
+version = "0.1.2"
 criteria = "safe-to-deploy"
 
 [[exemptions.funty]]
@@ -483,7 +483,7 @@ version = "0.4.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.redox_syscall]]
-version = "0.5.18"
+version = "0.5.17"
 criteria = "safe-to-deploy"
 
 [[exemptions.resolv-conf]]
@@ -575,11 +575,11 @@ version = "0.7.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.serde_with]]
-version = "3.15.0"
+version = "3.14.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.serde_with_macros]]
-version = "3.15.0"
+version = "3.14.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.signal-hook-registry]]
@@ -592,10 +592,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.spki]]
 version = "0.7.3"
-criteria = "safe-to-deploy"
-
-[[exemptions.stable_deref_trait]]
-version = "1.2.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.stringprep]]
@@ -695,7 +691,7 @@ version = "0.20.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.typenum]]
-version = "1.19.0"
+version = "1.18.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.typespec]]
@@ -767,11 +763,11 @@ version = "0.26.11"
 criteria = "safe-to-deploy"
 
 [[exemptions.webpki-roots]]
-version = "1.0.3"
+version = "1.0.2"
 criteria = "safe-to-deploy"
 
 [[exemptions.widestring]]
-version = "1.2.1"
+version = "1.2.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.winreg]]

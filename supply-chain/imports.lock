@@ -9,8 +9,8 @@ user-login = "BurntSushi"
 user-name = "Andrew Gallant"
 
 [[publisher.anstream]]
-version = "0.6.21"
-when = "2025-10-02"
+version = "0.6.20"
+when = "2025-08-05"
 user-id = 6743
 user-login = "epage"
 user-name = "Ed Page"
@@ -169,80 +169,80 @@ user-login = "jrmuizel"
 user-name = "Jeff Muizelaar"
 
 [[publisher.cranelift-assembler-x64]]
-version = "0.124.2"
-when = "2025-10-07"
+version = "0.124.1"
+when = "2025-09-23"
 user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.cranelift-assembler-x64-meta]]
-version = "0.124.2"
-when = "2025-10-07"
+version = "0.124.1"
+when = "2025-09-23"
 user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.cranelift-bforest]]
-version = "0.124.2"
-when = "2025-10-07"
+version = "0.124.1"
+when = "2025-09-23"
 user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.cranelift-bitset]]
-version = "0.124.2"
-when = "2025-10-07"
+version = "0.124.1"
+when = "2025-09-23"
 user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.cranelift-codegen]]
-version = "0.124.2"
-when = "2025-10-07"
+version = "0.124.1"
+when = "2025-09-23"
 user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.cranelift-codegen-meta]]
-version = "0.124.2"
-when = "2025-10-07"
+version = "0.124.1"
+when = "2025-09-23"
 user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.cranelift-codegen-shared]]
-version = "0.124.2"
-when = "2025-10-07"
+version = "0.124.1"
+when = "2025-09-23"
 user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.cranelift-control]]
-version = "0.124.2"
-when = "2025-10-07"
+version = "0.124.1"
+when = "2025-09-23"
 user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.cranelift-entity]]
-version = "0.124.2"
-when = "2025-10-07"
+version = "0.124.1"
+when = "2025-09-23"
 user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.cranelift-frontend]]
-version = "0.124.2"
-when = "2025-10-07"
+version = "0.124.1"
+when = "2025-09-23"
 user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.cranelift-isle]]
-version = "0.124.2"
-when = "2025-10-07"
+version = "0.124.1"
+when = "2025-09-23"
 user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.cranelift-native]]
-version = "0.124.2"
-when = "2025-10-07"
+version = "0.124.1"
+when = "2025-09-23"
 user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.cranelift-srcgen]]
-version = "0.124.2"
-when = "2025-10-07"
+version = "0.124.1"
+when = "2025-09-23"
 user-id = 73222
 user-login = "wasmtime-publish"
 
@@ -289,8 +289,8 @@ user-login = "str4d"
 user-name = "Jack Grigg"
 
 [[publisher.flate2]]
-version = "1.1.4"
-when = "2025-10-05"
+version = "1.1.2"
+when = "2025-06-07"
 user-id = 980
 user-login = "Byron"
 user-name = "Sebastian Thiel"
@@ -412,8 +412,8 @@ user-login = "epage"
 user-name = "Ed Page"
 
 [[publisher.libc]]
-version = "0.2.177"
-when = "2025-10-09"
+version = "0.2.176"
+when = "2025-09-23"
 user-id = 55123
 user-login = "rust-lang-owner"
 
@@ -438,8 +438,8 @@ user-login = "sunfishcode"
 user-name = "Dan Gohman"
 
 [[publisher.lock_api]]
-version = "0.4.14"
-when = "2025-10-03"
+version = "0.4.13"
+when = "2025-05-29"
 user-id = 2915
 user-login = "Amanieu"
 user-name = "Amanieu d'Antras"
@@ -494,15 +494,15 @@ user-login = "alexcrichton"
 user-name = "Alex Crichton"
 
 [[publisher.parking_lot]]
-version = "0.12.5"
-when = "2025-10-03"
+version = "0.12.4"
+when = "2025-05-29"
 user-id = 2915
 user-login = "Amanieu"
 user-name = "Amanieu d'Antras"
 
 [[publisher.parking_lot_core]]
-version = "0.9.12"
-when = "2025-10-03"
+version = "0.9.11"
+when = "2025-05-29"
 user-id = 2915
 user-login = "Amanieu"
 user-name = "Amanieu d'Antras"
@@ -529,14 +529,14 @@ user-login = "dtolnay"
 user-name = "David Tolnay"
 
 [[publisher.pulley-interpreter]]
-version = "37.0.2"
-when = "2025-10-07"
+version = "37.0.1"
+when = "2025-09-23"
 user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.pulley-macros]]
-version = "37.0.2"
-when = "2025-10-07"
+version = "37.0.1"
+when = "2025-09-23"
 user-id = 73222
 user-login = "wasmtime-publish"
 
@@ -872,128 +872,128 @@ user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.wasmtime]]
-version = "37.0.2"
-when = "2025-10-07"
+version = "37.0.1"
+when = "2025-09-23"
 user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.wasmtime-environ]]
-version = "37.0.2"
-when = "2025-10-07"
+version = "37.0.1"
+when = "2025-09-23"
 user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.wasmtime-internal-asm-macros]]
-version = "37.0.2"
-when = "2025-10-07"
+version = "37.0.1"
+when = "2025-09-23"
 user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.wasmtime-internal-component-macro]]
-version = "37.0.2"
-when = "2025-10-07"
+version = "37.0.1"
+when = "2025-09-23"
 user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.wasmtime-internal-component-util]]
-version = "37.0.2"
-when = "2025-10-07"
+version = "37.0.1"
+when = "2025-09-23"
 user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.wasmtime-internal-cranelift]]
-version = "37.0.2"
-when = "2025-10-07"
+version = "37.0.1"
+when = "2025-09-23"
 user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.wasmtime-internal-fiber]]
-version = "37.0.2"
-when = "2025-10-07"
+version = "37.0.1"
+when = "2025-09-23"
 user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.wasmtime-internal-jit-debug]]
-version = "37.0.2"
-when = "2025-10-07"
+version = "37.0.1"
+when = "2025-09-23"
 user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.wasmtime-internal-jit-icache-coherence]]
-version = "37.0.2"
-when = "2025-10-07"
+version = "37.0.1"
+when = "2025-09-23"
 user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.wasmtime-internal-math]]
-version = "37.0.2"
-when = "2025-10-07"
+version = "37.0.1"
+when = "2025-09-23"
 user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.wasmtime-internal-slab]]
-version = "37.0.2"
-when = "2025-10-07"
+version = "37.0.1"
+when = "2025-09-23"
 user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.wasmtime-internal-unwinder]]
-version = "37.0.2"
-when = "2025-10-07"
+version = "37.0.1"
+when = "2025-09-23"
 user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.wasmtime-internal-versioned-export-macros]]
-version = "37.0.2"
-when = "2025-10-07"
+version = "37.0.1"
+when = "2025-09-23"
 user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.wasmtime-internal-winch]]
-version = "37.0.2"
-when = "2025-10-07"
+version = "37.0.1"
+when = "2025-09-23"
 user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.wasmtime-internal-wit-bindgen]]
-version = "37.0.2"
-when = "2025-10-07"
+version = "37.0.1"
+when = "2025-09-23"
 user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.wasmtime-wasi]]
-version = "37.0.2"
-when = "2025-10-07"
+version = "37.0.1"
+when = "2025-09-23"
 user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.wasmtime-wasi-http]]
-version = "37.0.2"
-when = "2025-10-07"
+version = "37.0.1"
+when = "2025-09-23"
 user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.wasmtime-wasi-io]]
-version = "37.0.2"
-when = "2025-10-07"
+version = "37.0.1"
+when = "2025-09-23"
 user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.wiggle]]
-version = "37.0.2"
-when = "2025-10-07"
+version = "37.0.1"
+when = "2025-09-23"
 user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.wiggle-generate]]
-version = "37.0.2"
-when = "2025-10-07"
+version = "37.0.1"
+when = "2025-09-23"
 user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.wiggle-macro]]
-version = "37.0.2"
-when = "2025-10-07"
+version = "37.0.1"
+when = "2025-09-23"
 user-id = 73222
 user-login = "wasmtime-publish"
 
@@ -1005,28 +1005,28 @@ user-login = "BurntSushi"
 user-name = "Andrew Gallant"
 
 [[publisher.winch-codegen]]
-version = "37.0.2"
-when = "2025-10-07"
+version = "37.0.1"
+when = "2025-09-23"
 user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.windows-core]]
-version = "0.62.2"
-when = "2025-10-06"
+version = "0.62.1"
+when = "2025-09-25"
 user-id = 64539
 user-login = "kennykerr"
 user-name = "Kenny Kerr"
 
 [[publisher.windows-implement]]
-version = "0.60.2"
-when = "2025-10-06"
+version = "0.60.1"
+when = "2025-09-25"
 user-id = 64539
 user-login = "kennykerr"
 user-name = "Kenny Kerr"
 
 [[publisher.windows-interface]]
-version = "0.59.3"
-when = "2025-10-06"
+version = "0.59.2"
+when = "2025-09-25"
 user-id = 64539
 user-login = "kennykerr"
 user-name = "Kenny Kerr"
@@ -1039,8 +1039,8 @@ user-login = "kennykerr"
 user-name = "Kenny Kerr"
 
 [[publisher.windows-link]]
-version = "0.2.1"
-when = "2025-10-06"
+version = "0.2.0"
+when = "2025-09-04"
 user-id = 64539
 user-login = "kennykerr"
 user-name = "Kenny Kerr"
@@ -1060,8 +1060,8 @@ user-login = "kennykerr"
 user-name = "Kenny Kerr"
 
 [[publisher.windows-result]]
-version = "0.4.1"
-when = "2025-10-06"
+version = "0.4.0"
+when = "2025-09-04"
 user-id = 64539
 user-login = "kennykerr"
 user-name = "Kenny Kerr"
@@ -1074,8 +1074,8 @@ user-login = "kennykerr"
 user-name = "Kenny Kerr"
 
 [[publisher.windows-strings]]
-version = "0.5.1"
-when = "2025-10-06"
+version = "0.5.0"
+when = "2025-09-04"
 user-id = 64539
 user-login = "kennykerr"
 user-name = "Kenny Kerr"
@@ -1109,8 +1109,8 @@ user-login = "kennykerr"
 user-name = "Kenny Kerr"
 
 [[publisher.windows-sys]]
-version = "0.61.2"
-when = "2025-10-06"
+version = "0.61.1"
+when = "2025-09-25"
 user-id = 64539
 user-login = "kennykerr"
 user-name = "Kenny Kerr"
@@ -1130,8 +1130,8 @@ user-login = "kennykerr"
 user-name = "Kenny Kerr"
 
 [[publisher.windows-targets]]
-version = "0.53.5"
-when = "2025-10-06"
+version = "0.53.4"
+when = "2025-09-25"
 user-id = 64539
 user-login = "kennykerr"
 user-name = "Kenny Kerr"
@@ -1151,8 +1151,8 @@ user-login = "kennykerr"
 user-name = "Kenny Kerr"
 
 [[publisher.windows_aarch64_gnullvm]]
-version = "0.53.1"
-when = "2025-10-06"
+version = "0.53.0"
+when = "2025-01-07"
 user-id = 64539
 user-login = "kennykerr"
 user-name = "Kenny Kerr"
@@ -1172,8 +1172,8 @@ user-login = "kennykerr"
 user-name = "Kenny Kerr"
 
 [[publisher.windows_aarch64_msvc]]
-version = "0.53.1"
-when = "2025-10-06"
+version = "0.53.0"
+when = "2025-01-07"
 user-id = 64539
 user-login = "kennykerr"
 user-name = "Kenny Kerr"
@@ -1193,8 +1193,8 @@ user-login = "kennykerr"
 user-name = "Kenny Kerr"
 
 [[publisher.windows_i686_gnu]]
-version = "0.53.1"
-when = "2025-10-06"
+version = "0.53.0"
+when = "2025-01-07"
 user-id = 64539
 user-login = "kennykerr"
 user-name = "Kenny Kerr"
@@ -1207,8 +1207,8 @@ user-login = "kennykerr"
 user-name = "Kenny Kerr"
 
 [[publisher.windows_i686_gnullvm]]
-version = "0.53.1"
-when = "2025-10-06"
+version = "0.53.0"
+when = "2025-01-07"
 user-id = 64539
 user-login = "kennykerr"
 user-name = "Kenny Kerr"
@@ -1228,8 +1228,8 @@ user-login = "kennykerr"
 user-name = "Kenny Kerr"
 
 [[publisher.windows_i686_msvc]]
-version = "0.53.1"
-when = "2025-10-06"
+version = "0.53.0"
+when = "2025-01-07"
 user-id = 64539
 user-login = "kennykerr"
 user-name = "Kenny Kerr"
@@ -1249,8 +1249,8 @@ user-login = "kennykerr"
 user-name = "Kenny Kerr"
 
 [[publisher.windows_x86_64_gnu]]
-version = "0.53.1"
-when = "2025-10-06"
+version = "0.53.0"
+when = "2025-01-07"
 user-id = 64539
 user-login = "kennykerr"
 user-name = "Kenny Kerr"
@@ -1270,8 +1270,8 @@ user-login = "kennykerr"
 user-name = "Kenny Kerr"
 
 [[publisher.windows_x86_64_gnullvm]]
-version = "0.53.1"
-when = "2025-10-06"
+version = "0.53.0"
+when = "2025-01-07"
 user-id = 64539
 user-login = "kennykerr"
 user-name = "Kenny Kerr"
@@ -1291,8 +1291,8 @@ user-login = "kennykerr"
 user-name = "Kenny Kerr"
 
 [[publisher.windows_x86_64_msvc]]
-version = "0.53.1"
-when = "2025-10-06"
+version = "0.53.0"
+when = "2025-01-07"
 user-id = 64539
 user-login = "kennykerr"
 user-name = "Kenny Kerr"
@@ -2696,16 +2696,11 @@ version = "0.10.5"
 notes = "Reviewed on https://fxrev.dev/712371."
 aggregated-from = "https://fuchsia.googlesource.com/fuchsia/+/refs/heads/main/third_party/rust_crates/supply-chain/audits.toml?format=TEXT"
 
-[[audits.google.audits.simd-adler32]]
-who = "Lukasz Anforowicz <lukasza@chromium.org>"
+[[audits.google.audits.stable_deref_trait]]
+who = "Manish Goregaokar <manishearth@google.com>"
 criteria = "safe-to-deploy"
-version = "0.3.7"
-notes = """
-Security review of earlier versions of the crate can be found at
-(Google-internal, sorry): go/image-crate-chromium-security-review
-
-Audit comments for 1.3.2 can be found at https://crrev.com/c/4723145.
-"""
+version = "1.2.0"
+notes = "Purely a trait, crates using this should be carefully vetted since self-referential stuff can be super tricky around various unsafe rust edges."
 aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
 
 [[audits.google.audits.strsim]]
