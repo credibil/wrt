@@ -2,58 +2,24 @@
 
 Unreleased
 
-### Added
-
 ### Changed
 
-## What's Changed
-* Bump to 0.5.0 by @github-actions[bot] in https://github.com/credibil/wrt/pull/13
-* fix bug extracting authority from request by @andrew-goldie in https://github.com/credibil/wrt/pull/14
-* WASI-p3 support by @andrewweston in https://github.com/credibil/wrt/pull/15
-* update example guest READMEs by @andrewweston in https://github.com/credibil/wrt/pull/18
-* update to wasmtime 37 by @andrewweston in https://github.com/credibil/wrt/pull/19
-* rename tempo -> wrt by @andrewweston in https://github.com/credibil/wrt/pull/20
-* Bump to 0.6.0 by @github-actions[bot] in https://github.com/credibil/wrt/pull/21
-* sdk-otel macro support for async fns by @andrewweston in https://github.com/credibil/wrt/pull/22
-* pre-empt  warning by @andrewweston in https://github.com/credibil/wrt/pull/23
-* Enhance linting by @andrewweston in https://github.com/credibil/wrt/pull/24
-* Workflow improvements by @andrewweston in https://github.com/credibil/wrt/pull/25
-* run workflow manually by @andrewweston in https://github.com/credibil/wrt/pull/26
-* revert publish workflow by @andrewweston in https://github.com/credibil/wrt/pull/27
-* refine lints by @andrewweston in https://github.com/credibil/wrt/pull/28
-* correct order of duplicates by @andrewweston in https://github.com/credibil/wrt/pull/29
-* reformat by @andrewweston in https://github.com/credibil/wrt/pull/30
-* 1pwd by @andrewweston in https://github.com/credibil/wrt/pull/31
-* add crate publishing to workflow by @andrewweston in https://github.com/credibil/wrt/pull/32
-* move wit files to crate using them by @andrewweston in https://github.com/credibil/wrt/pull/33
-* inherit workflow secret by @andrewweston in https://github.com/credibil/wrt/pull/34
-* Bump to 0.7.0 by @github-actions[bot] in https://github.com/credibil/wrt/pull/35
-* Workflow secret by @andrewweston in https://github.com/credibil/wrt/pull/36
-* refactor by @andrewweston in https://github.com/credibil/wrt/pull/37
-* Bump to 0.8.0 by @github-actions[bot] in https://github.com/credibil/wrt/pull/38
-* Packaging by @andrewweston in https://github.com/credibil/wrt/pull/39
-* Publish crates by @andrewweston in https://github.com/credibil/wrt/pull/41
-* Bump to 0.9.0 by @github-actions[bot] in https://github.com/credibil/wrt/pull/42
-* update azure deps by @andrewweston in https://github.com/credibil/wrt/pull/43
-* simplify examples by @andrewweston in https://github.com/credibil/wrt/pull/44
-* Examples 2 by @andrewweston in https://github.com/credibil/wrt/pull/45
-* publish wasi-vault-az by @andrewweston in https://github.com/credibil/wrt/pull/46
-* update fmt to use nightly by @andrewweston in https://github.com/credibil/wrt/pull/47
-* update deps by @andrewweston in https://github.com/credibil/wrt/pull/48
-* cache builds by @andrewweston in https://github.com/credibil/wrt/pull/49
-* OTel wasi3p preparation by @andrew-goldie in https://github.com/credibil/wrt/pull/50
-* Bump to 0.10.0 by @github-actions[bot] in https://github.com/credibil/wrt/pull/51
-* No telemetry by @andrewweston in https://github.com/credibil/wrt/pull/52
-* Usability by @andrewweston in https://github.com/credibil/wrt/pull/54
-* Deps by @andrewweston in https://github.com/credibil/wrt/pull/55
-* OTel Export Concurrency by @andrew-goldie in https://github.com/credibil/wrt/pull/56
-* add sql to wit-bindgen by @andrew-goldie in https://github.com/credibil/wrt/pull/57
-* Start telemetry early by @quynhduongphl in https://github.com/credibil/wrt/pull/58
-* remove percent encoding from outgoing http by @andrewweston in https://github.com/credibil/wrt/pull/59
-* better error response by @andrewweston in https://github.com/credibil/wrt/pull/60
-
-## New Contributors
-* @quynhduongphl made their first contribution in https://github.com/credibil/wrt/pull/58
+* update azure deps
+* simplify examples
+* Examples 2
+* publish wasi-vault-az
+* update fmt to use nightly
+* update deps
+* cache builds
+* OTel wasi3p preparation
+* No telemetry
+* Usability
+* Deps
+* OTel Export Concurrency
+* add sql to wit-bindgen
+* Start telemetry early
+* remove percent encoding from outgoing http
+* better error response
 
 **Full Changelog**: https://github.com/credibil/wrt/compare/v0.4.0...v0.10.0
 
