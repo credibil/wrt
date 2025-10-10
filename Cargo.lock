@@ -4397,6 +4397,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "wasi-proxy-nats"
+version = "0.11.0"
+dependencies = [
+ "anyhow",
+ "async-nats",
+ "futures",
+ "http",
+ "hyper",
+ "runtime",
+ "tokio",
+ "tracing",
+ "wasmtime",
+ "wasmtime-wasi",
+ "wasmtime-wasi-http",
+]
+
+[[package]]
 name = "wasi-vault-az"
 version = "0.11.0"
 dependencies = [
