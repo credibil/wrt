@@ -2908,7 +2908,7 @@ dependencies = [
 
 [[package]]
 name = "res-azkeyvault"
-version = "0.10.0"
+version = "0.11.0"
 dependencies = [
  "anyhow",
  "azure_core",
@@ -2920,7 +2920,7 @@ dependencies = [
 
 [[package]]
 name = "res-mongodb"
-version = "0.10.0"
+version = "0.11.0"
 dependencies = [
  "anyhow",
  "mongodb",
@@ -2930,7 +2930,7 @@ dependencies = [
 
 [[package]]
 name = "res-nats"
-version = "0.10.0"
+version = "0.11.0"
 dependencies = [
  "anyhow",
  "async-nats",
@@ -2971,7 +2971,7 @@ dependencies = [
 
 [[package]]
 name = "runtime"
-version = "0.10.0"
+version = "0.11.0"
 dependencies = [
  "anyhow",
  "cfg-if",
@@ -2987,7 +2987,7 @@ dependencies = [
 
 [[package]]
 name = "runtime-cli"
-version = "0.10.0"
+version = "0.11.0"
 dependencies = [
  "anyhow",
  "axum",
@@ -3219,7 +3219,7 @@ checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
 name = "sdk-http"
-version = "0.10.0"
+version = "0.11.0"
 dependencies = [
  "anyhow",
  "axum",
@@ -3237,7 +3237,7 @@ dependencies = [
 
 [[package]]
 name = "sdk-otel"
-version = "0.10.0"
+version = "0.11.0"
 dependencies = [
  "anyhow",
  "cfg-if",
@@ -3253,7 +3253,7 @@ dependencies = [
 
 [[package]]
 name = "sdk-otel-attr"
-version = "0.10.0"
+version = "0.11.0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -4299,7 +4299,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-blobstore-mdb"
-version = "0.10.0"
+version = "0.11.0"
 dependencies = [
  "anyhow",
  "bytes",
@@ -4316,7 +4316,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-blobstore-nats"
-version = "0.10.0"
+version = "0.11.0"
 dependencies = [
  "anyhow",
  "async-nats",
@@ -4332,7 +4332,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-http"
-version = "0.10.0"
+version = "0.11.0"
 dependencies = [
  "anyhow",
  "futures",
@@ -4347,7 +4347,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-keyvalue-nats"
-version = "0.10.0"
+version = "0.11.0"
 dependencies = [
  "anyhow",
  "async-nats",
@@ -4361,7 +4361,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-messaging-nats"
-version = "0.10.0"
+version = "0.11.0"
 dependencies = [
  "anyhow",
  "async-nats",
@@ -4378,7 +4378,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-otel"
-version = "0.10.0"
+version = "0.11.0"
 dependencies = [
  "anyhow",
  "credibil-otel",
@@ -4398,7 +4398,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-vault-az"
-version = "0.10.0"
+version = "0.11.0"
 dependencies = [
  "anyhow",
  "azure_security_keyvault_secrets",
@@ -4960,7 +4960,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.48.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -5384,7 +5384,7 @@ dependencies = [
 
 [[package]]
 name = "wit-bindings"
-version = "0.10.0"
+version = "0.11.0"
 dependencies = [
  "wit-bindgen",
 ]
