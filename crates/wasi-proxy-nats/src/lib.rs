@@ -3,10 +3,10 @@
 //! This module implements a runtime service for `wasi:http`
 //! (<https://github.com/WebAssembly/wasi-http>). It manages caching and
 //! forwarding entirely on the host.
-//! 
+//!
 //! To control caching the following HTTP headers are supported:
 //! - `Cache-Control`
-//! 
+//!
 //! If no `Cache-Control` header is present, this host service will act exactly
 //! like our standard `wasi-http` service, and just pass the request to the
 //! wasm guest for handling.
@@ -14,7 +14,7 @@
 use std::clone::Clone;
 use std::env;
 
-use anyhow::{Result, anyhow};
+use anyhow::{Result, anyhow, bail};
 use futures::future::{BoxFuture, FutureExt};
 use http::uri::{PathAndQuery, Uri};
 use hyper::body::Incoming;
@@ -95,27 +95,59 @@ impl Http {
     }
 }
 
+#[derive(Debug, Default)]
+struct CacheControl {
+    // Store the response in cache if true.
+    pub store: bool,
+    // Length of time to cache the response.
+    pub age: u64,
+    // ETag to use as the cache key.
+    pub etag: String,
+}
+
 #[derive(Clone)]
 struct Handler {
     proxy_pre: ProxyPre<RunState>,
 }
 
 impl Handler {
-    // Forward request to the wasm Guest.
     async fn handle(&self, request: Request<Incoming>) -> Result<Response<HyperOutgoingBody>> {
         tracing::debug!("handling request: {request:?}");
+        let (request, scheme) = prepare_request(request)?;
 
-        // prepare wasmtime http request and response
+        // determine cache control (if any)
+        if let Some(control) = cache_headers(request.headers())? {
+            tracing::debug!("cache control: {control:?}");
+
+            // If we have a cache age request greater than zero, we should check
+            // the cache first.
+
+            let res = self.forward_to_guest(request, scheme).await?;
+
+            // If we got a good response and we are required to cache it, do so.
+            if res.status().is_success() && control.store {
+                tracing::debug!("caching response for etag: {}", control.etag);
+            }
+
+            Ok(res)
+        } else {
+            tracing::debug!("no cache control. Passing to guest.");
+            self.forward_to_guest(request, scheme).await
+        }
+    }
+
+    /// Forward a prepared request to the guest component and return its response.
+    async fn forward_to_guest(
+        &self, request: Request<Incoming>, scheme: Scheme,
+    ) -> Result<Response<HyperOutgoingBody>> {
         let mut store = Store::new(self.proxy_pre.engine(), RunState::new());
 
-        let (request, scheme) = prepare_request(request)?;
         tracing::trace!("sending request: {request:#?}");
 
         let (sender, receiver) = oneshot::channel();
         let incoming = store.data_mut().new_incoming_request(scheme, request)?;
         let outgoing = store.data_mut().new_response_outparam(sender)?;
 
-        // call guest with request
         let proxy = self.proxy_pre.instantiate_async(&mut store).await?;
         let task =
             proxy.wasi_http_incoming_handler().call_handle(&mut store, incoming, outgoing).await;
@@ -141,6 +173,7 @@ impl Handler {
     }
 }
 
+// Prepare the request for the guest.
 // Prepare the request for the guest.
 fn prepare_request(mut request: Request<Incoming>) -> Result<(Request<Incoming>, Scheme)> {
     // let req_id = self.next_id.fetch_add(1, Ordering::Relaxed);
@@ -181,4 +214,162 @@ fn prepare_request(mut request: Request<Incoming>) -> Result<(Request<Incoming>,
     };
 
     Ok((request, scheme))
+}
+
+/// Parse the `Cache-Control` header into a strongly typed representation.
+fn cache_headers(headers: &http::HeaderMap) -> Result<Option<CacheControl>> {
+    let Some(cache_header) = headers.get(http::header::CACHE_CONTROL) else {
+        return Ok(None);
+    };
+
+    let raw = cache_header.to_str()?.trim();
+    if raw.is_empty() {
+        bail!("Cache-Control header is empty");
+    }
+
+    let mut control = CacheControl::default();
+    let mut no_cache = false;
+    let mut max_age = false;
+    let mut no_store = false;
+
+    for directive in raw.split(',') {
+        let directive = directive.trim();
+        if directive.is_empty() {
+            continue;
+        }
+
+        let directive_lower = directive.to_ascii_lowercase();
+
+        if directive_lower == "no-store" {
+            if no_cache || max_age || control.store {
+                return Err(anyhow!("`no-store` cannot be combined with other cache directives"));
+            }
+            no_store = true;
+            control.store = false;
+            continue;
+        }
+
+        if directive_lower == "no-cache" {
+            if no_store {
+                return Err(anyhow!("`no-cache` cannot be combined with `no-store`"));
+            }
+            if max_age {
+                return Err(anyhow!("`no-cache` cannot be combined with `max-age`"));
+            }
+            no_cache = true;
+            control.store = true;
+            continue;
+        }
+
+        if directive_lower.starts_with("max-age=") {
+            if no_store {
+                return Err(anyhow!("`max-age` cannot be combined with `no-store`"));
+            }
+            if no_cache {
+                return Err(anyhow!("`max-age` cannot be combined with `no-cache`"));
+            }
+
+            let seconds = directive[8..].trim();
+            let age = seconds
+                .parse::<u64>()
+                .map_err(|err| anyhow!("invalid `max-age` value `{seconds}`: {err}"))?;
+            control.store = true;
+            control.age = age;
+            max_age = true;
+        }
+        // ignore other directives
+    }
+
+    if control.store {
+        let Some(etag) = headers.get(http::header::IF_NONE_MATCH) else {
+            bail!(
+                "`If-None-Match` header required when using `Cache-Control: max-age` or `no-cache`"
+            );
+        };
+        let etag = etag.to_str()?.trim();
+        if etag.is_empty() {
+            bail!("`If-None-Match` header is empty");
+        }
+        if etag.contains(',') {
+            bail!("multiple `etag` values in `If-None-Match` header are not supported");
+        }
+        if etag.starts_with("W/") {
+            bail!("weak `etag` values in `If-None-Match` header are not supported");
+        }
+        control.etag = etag.to_string();
+    }
+
+    Ok(Some(control))
+}
+
+#[cfg(test)]
+mod tests {
+    use http::HeaderMap;
+    use http::header::{CACHE_CONTROL, IF_NONE_MATCH};
+
+    use super::*;
+
+    #[test]
+    fn returns_none_when_header_missing() {
+        let headers = HeaderMap::new();
+        let result = cache_headers(&headers).expect("parsing succeeds without header");
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn parses_max_age_with_etag() {
+        let mut headers = HeaderMap::new();
+        headers.insert(CACHE_CONTROL, "max-age=120".parse().expect("valid header value"));
+        headers.insert(IF_NONE_MATCH, "\"strong-etag\"".parse().expect("valid etag"));
+
+        let control =
+            cache_headers(&headers).expect("parsing succeeds").expect("cache control present");
+
+        assert!(control.store);
+        assert_eq!(control.age, 120);
+        assert_eq!(control.etag, "\"strong-etag\"");
+    }
+
+    #[test]
+    fn requires_etag_when_store_enabled() {
+        let mut headers = HeaderMap::new();
+        headers.insert(CACHE_CONTROL, "no-cache".parse().expect("valid header value"));
+
+        let Err(_) = cache_headers(&headers) else {
+            panic!("expected missing etag error");
+        };
+    }
+
+    #[test]
+    fn rejects_conflicting_directives() {
+        let mut headers = HeaderMap::new();
+        headers.insert(CACHE_CONTROL, "no-cache, max-age=10".parse().expect("valid header value"));
+        headers.insert(IF_NONE_MATCH, "\"etag\"".parse().expect("valid etag"));
+
+        let Err(_) = cache_headers(&headers) else {
+            panic!("expected conflicting directives error");
+        };
+    }
+
+    #[test]
+    fn rejects_weak_etag_value() {
+        let mut headers = HeaderMap::new();
+        headers.insert(CACHE_CONTROL, "no-cache".parse().expect("valid header value"));
+        headers.insert(IF_NONE_MATCH, "W/\"weak-etag\"".parse().expect("valid header value"));
+
+        let Err(_) = cache_headers(&headers) else {
+            panic!("expected weak etag rejection");
+        };
+    }
+
+    #[test]
+    fn rejects_multiple_etag_values() {
+        let mut headers = HeaderMap::new();
+        headers.insert(CACHE_CONTROL, "no-cache".parse().expect("valid header value"));
+        headers.insert(IF_NONE_MATCH, "\"etag1\", \"etag2\"".parse().expect("valid header value"));
+
+        let Err(_) = cache_headers(&headers) else {
+            panic!("expected multiple etag values rejection");
+        };
+    }
 }

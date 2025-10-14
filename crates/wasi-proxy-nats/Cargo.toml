@@ -18,11 +18,12 @@ workspace = true
 [features]
 
 [dependencies]
+# from workspace
 anyhow.workspace = true
 async-nats.workspace = true
 futures.workspace = true
 http.workspace = true
-hyper = "1.7.0"
+hyper.workspace = true
 runtime.workspace = true
 tokio.workspace = true
 tracing.workspace = true
