@@ -13,10 +13,16 @@
 
 use std::clone::Clone;
 use std::env;
+use std::sync::Arc;
+use std::time::Duration;
 
 use anyhow::{Result, anyhow, bail};
+use async_nats::jetstream::kv::Config;
+use async_nats::{AuthError, ConnectOptions, jetstream};
 use futures::future::{BoxFuture, FutureExt};
 use http::uri::{PathAndQuery, Uri};
+// use http_body_util::{BodyExt, Full};
+// use hyper::body::{Body, Bytes, Incoming};
 use hyper::body::Incoming;
 use hyper::header::{FORWARDED, HOST};
 use hyper::server::conn::http1;
@@ -35,6 +41,8 @@ use wasmtime_wasi_http::body::HyperOutgoingBody;
 use wasmtime_wasi_http::io::TokioIo;
 
 const DEF_HTTP_ADDR: &str = "0.0.0.0:8080";
+const DEF_NATS_ADDR: &str = "nats:4222";
+const DEF_NATS_BUCKET: &str = "credibil_cache";
 
 #[derive(Debug)]
 pub struct Http;
@@ -67,6 +75,7 @@ impl Http {
 
         let handler = Handler {
             proxy_pre: ProxyPre::new(pre.clone())?,
+            nats_client: connect_nats().await?,
         };
 
         // listen for requests until terminated
@@ -108,6 +117,7 @@ struct CacheControl {
 #[derive(Clone)]
 struct Handler {
     proxy_pre: ProxyPre<RunState>,
+    nats_client: async_nats::Client,
 }
 
 impl Handler {
@@ -170,6 +180,57 @@ impl Handler {
                 Err(anyhow!("guest did not invoke `response-outparam::set`: {e}"))
             }
         }
+    }
+
+    // /// Put a serialized response into the cache and return an unconsumed
+    // /// response that can be sent back to the client.
+    // async fn put_cache(
+    //     &self, key: &str, response: Response<HyperOutgoingBody>, _age: Option<u64>,
+    // ) -> Result<Response<HyperOutgoingBody>> {
+    //     if let Some(size) = response.size_hint().upper() {
+    //         // don't cache responses larger than 1 MiB
+    //         if size > 1024 * 1024 {
+    //             bail!("response too large to cache");
+    //         }
+    //     } else {
+    //         // no upper bound, don't cache
+    //         bail!("unable to determine response size");
+    //     }
+    //     let (parts, body) = response.into_parts();
+    //     let body_bytes = body.collect().await?.to_bytes();
+    //     let full_body = Full::<Bytes>::new(body_bytes.clone());
+    //     let mapped_body = full_body.map_err(|e| match e {});
+    //     let box_body = mapped_body.boxed();
+    //     let fwd_response = Response::from_parts(parts, HyperOutgoingBody::from(box_body));
+
+    //     let cache_value = serialize_response(&parts, &body_bytes)?;
+
+    //     let kv = self.kv().await?;
+    //     // kv.put(key, response.into_body().into_bytes().await?).await?;
+    //     Ok(fwd_response)
+    // }
+
+    /// Get a handle to a `JetStream` key-value bucket
+    async fn kv(&self) -> Result<jetstream::kv::Store> {
+        let bucket_id = env::var("NATS_BUCKET").unwrap_or_else(|_| DEF_NATS_BUCKET.into());
+        let js = jetstream::new(self.nats_client.clone());
+        let bucket = if let Ok(bucket) = js.get_key_value(&bucket_id).await {
+            bucket
+        } else {
+            js.create_key_value(Config {
+                bucket: bucket_id.clone(),
+                history: 1,
+                max_age: Duration::from_secs(10 * 60), // configurable?
+                max_bytes: 100 * 1024 * 1024,          // 100 MiB, configurable?
+                ..Default::default()
+            })
+            .await
+            .map_err(|e| {
+                tracing::error!("failed to create nats kv bucket '{bucket_id}': {e}");
+                anyhow!("failed to create nats kv bucket '{bucket_id}': {e}")
+            })?
+        };
+        Ok(bucket)
     }
 }
 
@@ -300,6 +361,30 @@ fn cache_headers(headers: &http::HeaderMap) -> Result<Option<CacheControl>> {
     }
 
     Ok(Some(control))
+}
+
+async fn connect_nats() -> Result<async_nats::Client> {
+    let addr = env::var("NATS_ADDR").unwrap_or_else(|_| DEF_NATS_ADDR.into());
+    let jwt = env::var("NATS_JWT").ok();
+    let seed = env::var("NATS_SEED").ok();
+
+    let mut opts = ConnectOptions::new();
+    if let Some(jwt) = jwt {
+        let key_pair = nkeys::KeyPair::from_seed(&seed.unwrap_or_default())
+            .map_err(|e| anyhow!("failed to create KeyPair: {e}"))?;
+        let key_pair = Arc::new(key_pair);
+        opts = opts.jwt(jwt, move |nonce| {
+            let key_pair = Arc::clone(&key_pair);
+            async move { key_pair.sign(&nonce).map_err(AuthError::new) }
+        });
+    }
+    let client = opts.connect(addr).await.map_err(|e| {
+        tracing::error!("failed to connect to nats: {e}");
+        anyhow!("failed to connect to nats: {e}")
+    })?;
+    tracing::info!("connected to nats");
+
+    Ok(client)
 }
 
 #[cfg(test)]

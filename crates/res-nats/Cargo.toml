@@ -19,6 +19,6 @@ workspace = true
 [dependencies]
 anyhow.workspace = true
 async-nats.workspace = true
-nkeys = { version = "0.4.5" }
+nkeys.workspace = true
 runtime.workspace = true
 tracing.workspace = true
