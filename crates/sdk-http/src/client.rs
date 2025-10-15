@@ -13,6 +13,7 @@ use wasi::http::types::{
     FutureIncomingResponse, Headers, Method, OutgoingBody, OutgoingRequest, Scheme,
 };
 
+use crate::cache::Cache;
 use crate::uri::UriLike;
 
 #[derive(Default)]
@@ -178,9 +179,9 @@ impl<B: Serialize> RequestBuilder<NoBody, HasJson<B>, NoForm> {
     ///
     /// Returns an error if the request fails to send.
     pub fn send(&mut self) -> Result<Response<Bytes>> {
+        self.headers.insert(CONTENT_TYPE, "application/json".into());
         let body =
             serde_json::to_vec(&self.json.0).map_err(|e| anyhow!("issue serializing json: {e}"))?;
-        self.headers.insert(CONTENT_TYPE, "application/json".into());
         self.send_bytes(Some(&body))
     }
 }
@@ -192,11 +193,11 @@ impl<B: Serialize> RequestBuilder<NoBody, NoJson, HasForm<B>> {
     ///
     /// Returns an error if the request fails to send.
     pub fn send(&mut self) -> Result<Response<Bytes>> {
+        self.headers.insert(CONTENT_TYPE, "application/x-www-form-urlencoded".into());
         let body = credibil_encoding::form_encode(&self.form.0)
             .map_err(|e| anyhow!("issue serializing form: {e}"))?;
         let bytes =
             serde_json::to_vec(&body).map_err(|e| anyhow!("issue serializing form: {e}"))?;
-        self.headers.insert(CONTENT_TYPE, "application/x-www-form-urlencoded".into());
         self.send_bytes(Some(&bytes))
     }
 }
@@ -215,9 +216,47 @@ impl<B, J, F> RequestBuilder<B, J, F> {
             tracing::trace!("request header: {name}: {:?}", String::from_utf8_lossy(value));
         }
 
+        let cache = Cache::new(&request.headers())
+            .map_err(|e| anyhow!("issue parsing cache headers: {e}"))?;
+        if cache.should_use_cache() {
+            let fut_resp = match cache.get() {
+                Ok(Some(resp)) => {
+                    tracing::debug!("response found in cache");
+                    return Ok(resp);
+                }
+                Ok(None) => {
+                    tracing::debug!("no cached response found, fetching from origin");
+                    outgoing_handler::handle(request, None)
+                        .map_err(|e| anyhow!("issue making request: {e}"))?
+                }
+                Err(e) => {
+                    tracing::warn!("issue retrieving cached response: {e}, fetching from origin");
+                    outgoing_handler::handle(request, None)
+                        .map_err(|e| anyhow!("issue making request: {e}"))?
+                }
+            };
+            let response = Self::process_response(&fut_resp)?;
+            if cache.should_store()
+                && let Err(e) = cache.put(response.clone()) {
+                    tracing::warn!("issue storing response in cache: {e}");
+                }
+            return Ok(response);
+        }
+        // if cache-header == true{
+        // wit_bindings::keyvalue""store::get()
+        // }
+
+        // If writing to a cache this will need to be on a separate thread so
+        // the response is returned immediately.
+
         let fut_resp = outgoing_handler::handle(request, None)
             .map_err(|e| anyhow!("issue making request: {e}"))?;
-        Self::process_response(&fut_resp)
+        let response = Self::process_response(&fut_resp)?;
+            if cache.should_store()
+                && let Err(e) = cache.put(response.clone()) {
+                    tracing::warn!("issue storing response in cache: {e}");
+                }
+        Ok(response)
     }
 
     fn prepare_request(&self, body: Option<&[u8]>) -> Result<OutgoingRequest> {

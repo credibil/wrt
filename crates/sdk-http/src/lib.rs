@@ -2,6 +2,7 @@
 //!
 //! Wasm component (guest) HTTP SDK.
 
+mod cache;
 mod client;
 mod error;
 mod router;

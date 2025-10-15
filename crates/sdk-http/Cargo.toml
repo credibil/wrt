@@ -31,3 +31,4 @@ serde_json.workspace = true
 tower.workspace = true
 tracing.workspace = true
 wasi.workspace = true
+wit-bindings.workspace = true

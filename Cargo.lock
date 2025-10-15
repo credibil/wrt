@@ -3233,6 +3233,7 @@ dependencies = [
  "tower",
  "tracing",
  "wasi 0.14.7+wasi-0.2.4",
+ "wit-bindings",
 ]
 
 [[package]]
@@ -4394,27 +4395,6 @@ dependencies = [
  "tracing",
  "tracing-opentelemetry",
  "wasmtime",
-]
-
-[[package]]
-name = "wasi-proxy-nats"
-version = "0.11.0"
-dependencies = [
- "anyhow",
- "async-nats",
- "futures",
- "http",
- "http-body-util",
- "hyper",
- "hyper-util",
- "nkeys",
- "runtime",
- "serde_json",
- "tokio",
- "tracing",
- "wasmtime",
- "wasmtime-wasi",
- "wasmtime-wasi-http",
 ]
 
 [[package]]
