@@ -82,6 +82,11 @@ path = "examples/http-out/lib.rs"
 crate-type = ["cdylib"]
 
 [[example]]
+name = "proxy"
+path = "examples/proxy/lib.rs"
+crate-type = ["cdylib"]
+
+[[example]]
 name = "keyvalue"
 path = "examples/keyvalue.rs"
 crate-type = ["cdylib"]
