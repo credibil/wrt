@@ -1,9 +1,9 @@
 //! Cache header parsing and cache get/put
 
 use anyhow::{anyhow, bail};
+use bincode::{config, Decode, Encode};
 use bytes::Bytes;
 use http::Response;
-use serde::{Deserialize, Serialize};
 use wasi::http::types::Headers;
 use wit_bindings::keyvalue::store;
 
@@ -25,20 +25,29 @@ struct CacheControl {
 
 #[derive(Debug, Default)]
 pub struct Cache {
+    bucket: String,
     control: CacheControl,
 }
 
 impl Cache {
+    /// Create a new cache manager with the provided bucket name.
+    pub fn new(bucket: &str) -> Self {
+        Self {
+            bucket: bucket.to_string(),
+            control: CacheControl::default(),
+        }
+    }
+
     /// Parse cache-related headers from the provided `Headers`.
-    pub fn new(headers: &Headers) -> anyhow::Result<Self> {
+    pub fn headers(&mut self, headers: &Headers) -> anyhow::Result<()> {
         let mut control = CacheControl::default();
         let cache_header = headers.get(http::header::CACHE_CONTROL.as_str());
         if cache_header.is_empty() {
-            return Ok(Self { control });
+            return Ok(());
         }
         // Use only the first Cache-Control header if multiple are present.
         let Some(cache_header) = cache_header.first() else {
-            return Ok(Self { control });
+            return Ok(());
         };
         if cache_header.is_empty() {
             bail!("Cache-Control header is empty");
@@ -110,22 +119,23 @@ impl Cache {
             }
             control.etag = etag;
         }
-        Ok(Self { control })
+        self.control = control;
+        Ok(())
     }
 
     /// Return true if a response should be fetched from cache first.
-    pub fn should_use_cache(&self) -> bool {
+    pub const fn should_use_cache(&self) -> bool {
         !self.control.no_cache && !self.control.no_store && !self.control.etag.is_empty()
     }
 
     /// Return true if the response should be fetched from the origin server
     /// before checking the cache.
-    pub fn should_fetch(&self) -> bool {
+    pub const fn should_fetch(&self) -> bool {
         self.control.no_cache || self.control.no_store
     }
 
     /// Return true if the response should be cached.
-    pub fn should_store(&self) -> bool {
+    pub const fn should_store(&self) -> bool {
         !self.control.no_store && !self.control.etag.is_empty() && self.control.max_age > 0
     }
 
@@ -138,7 +148,8 @@ impl Cache {
         if !self.should_store() {
             return Ok(());
         }
-
+        let key = &self.control.etag;
+        let value = serialize_response(&response)?;
         Ok(())
     }
 
@@ -158,19 +169,43 @@ impl Cache {
     }
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Decode, Encode)]
 struct SerializableResponse {
     status: u16,
     headers: Vec<(String, String)>,
     body: Vec<u8>,
 }
 
-fn serialize_response(response: &Response<Bytes>) -> anyhow::Result<Bytes> {
-    todo!()
+fn serialize_response(response: &Response<Bytes>) -> anyhow::Result<Vec<u8>> {
+    let serializable = SerializableResponse {
+        status: response.status().as_u16(),
+        headers: response
+            .headers()
+            .iter()
+            .map(|(k, v)| {
+                (
+                    k.as_str().to_string(),
+                    v.to_str().unwrap_or_default().to_string(),
+                )
+            })
+            .collect(),
+        body: response.body().to_vec(),
+    };
+    bincode::encode_to_vec(&serializable, config::standard())
+        .map_err(|e| anyhow!("serializing response for cache: {e}"))
 }
 
 fn deserialize_response(data: &[u8]) -> anyhow::Result<Response<Bytes>> {
-    todo!()
+    let (serializable, _): (SerializableResponse, _) =
+        bincode::decode_from_slice(data, config::standard())
+            .map_err(|e| anyhow!("deserializing cached response: {e}"))?;
+    let mut response = Response::builder().status(serializable.status);
+    for (k, v) in serializable.headers {
+        response = response.header(&k, &v);
+    }
+    response
+        .body(Bytes::from(serializable.body))
+        .map_err(|e| anyhow!("building response from cached data: {e}"))
 }
 
 // #[cfg(test)]
