@@ -235,35 +235,31 @@ impl<B, J, F> RequestBuilder<B, J, F> {
         cache
             .headers(&request.headers())
             .map_err(|e| anyhow!("issue parsing cache headers: {e}"))?;
-        if cache.should_use_cache() {
-            let fut_resp = match cache.get() {
-                Ok(Some(resp)) => {
-                    tracing::debug!("response found in cache");
-                    return Ok(resp);
-                }
-                Ok(None) => {
-                    tracing::debug!("no cached response found, fetching from origin");
-                    outgoing_handler::handle(request, None)
-                        .map_err(|e| anyhow!("making request: {e}"))?
-                }
-                Err(e) => {
-                    tracing::error!("retrieving cached response: {e}, fetching from origin");
-                    outgoing_handler::handle(request, None)
-                        .map_err(|e| anyhow!("making request: {e}"))?
-                }
-            };
-            let response = Self::process_response(&fut_resp)?;
-            // TODO: spawn task for storing cache and return response immediately
-            if cache.should_store()
-                && let Err(e) = cache.put(&response)
-            {
-                tracing::error!("storing response in cache: {e}");
+        let response = {
+            if cache.should_use_cache() {
+                let fut_resp = match cache.get() {
+                    Ok(Some(resp)) => {
+                        tracing::debug!("response found in cache");
+                        return Ok(resp);
+                    }
+                    Ok(None) => {
+                        tracing::debug!("no cached response found, fetching from origin");
+                        outgoing_handler::handle(request, None)
+                            .map_err(|e| anyhow!("making request: {e}"))?
+                    }
+                    Err(e) => {
+                        tracing::error!("retrieving cached response: {e}, fetching from origin");
+                        outgoing_handler::handle(request, None)
+                            .map_err(|e| anyhow!("making request: {e}"))?
+                    }
+                };
+                Self::process_response(&fut_resp)
+            } else {
+                let fut_resp = outgoing_handler::handle(request, None)
+                    .map_err(|e| anyhow!("making request: {e}"))?;
+                Self::process_response(&fut_resp)
             }
-            return Ok(response);
-        }
-        let fut_resp =
-            outgoing_handler::handle(request, None).map_err(|e| anyhow!("making request: {e}"))?;
-        let response = Self::process_response(&fut_resp)?;
+        }?;
         // TODO: spawn task for storing cache and return response immediately
         if cache.should_store()
             && let Err(e) = cache.put(&response)
