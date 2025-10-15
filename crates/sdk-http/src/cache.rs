@@ -1,7 +1,7 @@
 //! Cache header parsing and cache get/put
 
 use anyhow::{anyhow, bail};
-use bincode::{config, Decode, Encode};
+use bincode::{Decode, Encode, config};
 use bytes::Bytes;
 use http::Response;
 use wasi::http::types::Headers;
@@ -32,6 +32,7 @@ pub struct Cache {
 impl Cache {
     /// Create a new cache manager with the provided bucket name.
     pub fn new(bucket: &str) -> Self {
+        let bucket = if bucket.is_empty() { "default" } else { bucket };
         Self {
             bucket: bucket.to_string(),
             control: CacheControl::default(),
@@ -128,12 +129,6 @@ impl Cache {
         !self.control.no_cache && !self.control.no_store && !self.control.etag.is_empty()
     }
 
-    /// Return true if the response should be fetched from the origin server
-    /// before checking the cache.
-    pub const fn should_fetch(&self) -> bool {
-        self.control.no_cache || self.control.no_store
-    }
-
     /// Return true if the response should be cached.
     pub const fn should_store(&self) -> bool {
         !self.control.no_store && !self.control.etag.is_empty() && self.control.max_age > 0
@@ -144,12 +139,16 @@ impl Cache {
     /// # Errors
     /// * serialization errors
     /// * cache storage errors
-    pub fn put(&self, response: Response<Bytes>) -> anyhow::Result<()> {
+    pub fn put(&self, response: &Response<Bytes>) -> anyhow::Result<()> {
         if !self.should_store() {
             return Ok(());
         }
-        let key = &self.control.etag;
-        let value = serialize_response(&response)?;
+        let value = serialize_response(response)?;
+        let bucket = store::open(&self.bucket)
+            .map_err(|e| anyhow!("opening cache bucket `{}`: {e}", &self.bucket))?;
+        bucket
+            .set(&self.control.etag, &value)
+            .map_err(|e| anyhow!("storing response in cache: {e}"))?;
         Ok(())
     }
 
@@ -164,8 +163,17 @@ impl Cache {
         if self.control.etag.is_empty() {
             bail!("no etag to use as cache key");
         }
-
-        todo!()
+        let bucket = store::open(&self.bucket)
+            .map_err(|e| anyhow!("opening cache bucket `{}`: {e}", &self.bucket))?;
+        let data = bucket
+            .get(&self.control.etag)
+            .map_err(|e| anyhow!("retrieving cached response: {e}"))?;
+        if let Some(data) = data {
+            let response = deserialize_response(&data)?;
+            Ok(Some(response))
+        } else {
+            Ok(None)
+        }
     }
 }
 
@@ -182,12 +190,7 @@ fn serialize_response(response: &Response<Bytes>) -> anyhow::Result<Vec<u8>> {
         headers: response
             .headers()
             .iter()
-            .map(|(k, v)| {
-                (
-                    k.as_str().to_string(),
-                    v.to_str().unwrap_or_default().to_string(),
-                )
-            })
+            .map(|(k, v)| (k.as_str().to_string(), v.to_str().unwrap_or_default().to_string()))
             .collect(),
         body: response.body().to_vec(),
     };

@@ -78,6 +78,14 @@ criteria = "safe-to-run"
 version = "1.8.0"
 criteria = "safe-to-deploy"
 
+[[exemptions.bincode]]
+version = "2.0.1"
+criteria = "safe-to-deploy"
+
+[[exemptions.bincode_derive]]
+version = "2.0.1"
+criteria = "safe-to-deploy"
+
 [[exemptions.bitvec]]
 version = "1.0.1"
 criteria = "safe-to-deploy"
@@ -666,12 +674,20 @@ criteria = "safe-to-deploy"
 version = "0.9.0"
 criteria = "safe-to-deploy"
 
+[[exemptions.unty]]
+version = "0.0.4"
+criteria = "safe-to-deploy"
+
 [[exemptions.uuid]]
 version = "1.18.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.version_check]]
 version = "0.9.5"
+criteria = "safe-to-deploy"
+
+[[exemptions.virtue]]
+version = "0.0.18"
 criteria = "safe-to-deploy"
 
 [[exemptions.wasm-bindgen]]

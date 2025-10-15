@@ -29,6 +29,7 @@ impl Client {
     }
 
     /// Set the cache bucket to use for caching responses.
+    #[must_use]
     pub fn cache_bucket(mut self, bucket: &str) -> Self {
         self.cache_bucket = bucket.to_string();
         self
@@ -231,7 +232,8 @@ impl<B, J, F> RequestBuilder<B, J, F> {
         }
 
         let mut cache = Cache::new(&self.cache);
-        cache.headers(&request.headers())
+        cache
+            .headers(&request.headers())
             .map_err(|e| anyhow!("issue parsing cache headers: {e}"))?;
         if cache.should_use_cache() {
             let fut_resp = match cache.get() {
@@ -251,18 +253,20 @@ impl<B, J, F> RequestBuilder<B, J, F> {
                 }
             };
             let response = Self::process_response(&fut_resp)?;
+            // TODO: spawn task for storing cache and return response immediately
             if cache.should_store()
-                && let Err(e) = cache.put(response.clone())
+                && let Err(e) = cache.put(&response)
             {
                 tracing::error!("storing response in cache: {e}");
             }
             return Ok(response);
         }
-        let fut_resp = outgoing_handler::handle(request, None)
-            .map_err(|e| anyhow!("making request: {e}"))?;
+        let fut_resp =
+            outgoing_handler::handle(request, None).map_err(|e| anyhow!("making request: {e}"))?;
         let response = Self::process_response(&fut_resp)?;
+        // TODO: spawn task for storing cache and return response immediately
         if cache.should_store()
-            && let Err(e) = cache.put(response.clone())
+            && let Err(e) = cache.put(&response)
         {
             tracing::warn!("storing response in cache: {e}");
         }
@@ -307,8 +311,7 @@ impl<B, J, F> RequestBuilder<B, J, F> {
 
         let out_body = request.body().map_err(|()| anyhow!("getting outgoing body"))?;
         if let Some(mut buf) = body {
-            let out_stream =
-                out_body.write().map_err(|()| anyhow!("getting output stream"))?;
+            let out_stream = out_body.write().map_err(|()| anyhow!("getting output stream"))?;
 
             let pollable = out_stream.subscribe();
             while !buf.is_empty() {
