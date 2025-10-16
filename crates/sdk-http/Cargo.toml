@@ -31,7 +31,10 @@ serde_json.workspace = true
 tower.workspace = true
 tracing.workspace = true
 wasi.workspace = true
-wit-bindings.workspace = true
+wit-bindgen.workspace = true
 # direct
 bincode = "2.0.1"
 percent-encoding = "2.3.2"
+
+[dev-dependencies]
+wit-bindings.workspace = true

@@ -5,7 +5,7 @@ use bincode::{Decode, Encode, config};
 use bytes::Bytes;
 use http::Response;
 use wasi::http::types::Headers;
-use wit_bindings::keyvalue::store;
+use crate::generated::wasi::keyvalue::store;
 
 #[derive(Clone, Debug, Default)]
 struct CacheControl {
