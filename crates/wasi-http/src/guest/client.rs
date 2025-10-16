@@ -13,7 +13,7 @@ use wasi::http::types::{
     FutureIncomingResponse, Headers, Method, OutgoingBody, OutgoingRequest, Scheme,
 };
 
-use crate::uri::UriLike;
+use crate::guest::uri::UriLike;
 
 #[derive(Default)]
 pub struct Client;

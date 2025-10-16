@@ -4,11 +4,11 @@ use anyhow::{Context, anyhow};
 use axum::routing::post;
 use axum::{Json, Router};
 use bytes::Bytes;
-use sdk_http::Result;
 use serde_json::Value;
 use tracing::Level;
 use wasi::exports::http::incoming_handler::Guest;
 use wasi::http::types::{IncomingRequest, ResponseOutparam};
+use wasi_http::Result;
 use wit_bindings::vault::vault;
 
 struct HttpGuest;
@@ -17,7 +17,7 @@ impl Guest for HttpGuest {
     #[wasi_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
     fn handle(request: IncomingRequest, response_out: ResponseOutparam) {
         let router = Router::new().route("/", post(handler));
-        let out = sdk_http::serve(router, request);
+        let out = wasi_http::serve(router, request);
         ResponseOutparam::set(response_out, out);
     }
 }

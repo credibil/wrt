@@ -5,7 +5,7 @@ use axum::{Json, Router};
 use http::Method;
 use opentelemetry::trace::{TraceContextExt, Tracer};
 use opentelemetry::{KeyValue, global};
-use sdk_http::Result;
+use wasi_http::Result;
 use serde_json::{Value, json};
 use tower_http::cors::{Any, CorsLayer};
 use tracing::Level;
@@ -54,7 +54,7 @@ impl Guest for HttpGuest {
                 )
                 .route("/", post(handler))
                 .route("/", options(handle_options));
-            sdk_http::serve(router, request)
+            wasi_http::serve(router, request)
         });
 
         ResponseOutparam::set(response, out);

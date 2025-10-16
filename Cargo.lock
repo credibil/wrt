@@ -2973,7 +2973,6 @@ dependencies = [
  "res-mongodb",
  "res-nats",
  "runtime",
- "sdk-http",
  "serde_json",
  "tokio",
  "tower-http",
@@ -3183,24 +3182,6 @@ name = "scopeguard"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
-
-[[package]]
-name = "sdk-http"
-version = "0.11.0"
-dependencies = [
- "anyhow",
- "axum",
- "bytes",
- "credibil-encoding",
- "futures",
- "http",
- "percent-encoding",
- "serde",
- "serde_json",
- "tower",
- "tracing",
- "wasi 0.14.7+wasi-0.2.4",
-]
 
 [[package]]
 name = "sdk-otel-attr"
@@ -4283,12 +4264,20 @@ name = "wasi-http"
 version = "0.11.0"
 dependencies = [
  "anyhow",
+ "axum",
+ "bytes",
+ "credibil-encoding",
  "futures",
  "http",
  "hyper",
+ "percent-encoding",
  "runtime",
+ "serde",
+ "serde_json",
  "tokio",
+ "tower",
  "tracing",
+ "wasi 0.14.7+wasi-0.2.4",
  "wasmtime",
  "wasmtime-wasi-http",
 ]

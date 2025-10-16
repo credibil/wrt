@@ -2,7 +2,7 @@
 
 use axum::routing::post;
 use axum::{Json, Router};
-use sdk_http::Result;
+use wasi_http::Result;
 use serde_json::{Value, json};
 use tracing::Level;
 use wasi::exports::http::incoming_handler::Guest;
@@ -16,7 +16,7 @@ impl Guest for HttpGuest {
     fn handle(request: IncomingRequest, response_out: ResponseOutparam) {
         tracing::info!("received request");
         let router = Router::new().route("/", post(handler));
-        let out = sdk_http::serve(router, request);
+        let out = wasi_http::serve(router, request);
         ResponseOutparam::set(response_out, out);
     }
 }

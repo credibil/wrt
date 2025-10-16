@@ -13,7 +13,7 @@ use tracing_subscriber::Registry;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 
-use super::generated::wasi::otel::{resource, types};
+use crate::guest::generated::wasi::otel::{resource, types};
 
 cfg_if! {
     if #[cfg(feature = "metrics" )] {

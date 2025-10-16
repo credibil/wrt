@@ -4,7 +4,7 @@ use anyhow::Context;
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use http::Method;
-use sdk_http::{Client, Decode, Result};
+use wasi_http::{Client, Decode, Result};
 use serde_json::{Value, json};
 use tower_http::cors::{Any, CorsLayer};
 use tracing::Level;
@@ -26,7 +26,7 @@ impl Guest for HttpGuest {
             )
             .route("/", post(post_handler));
 
-        let out = sdk_http::serve(router, request);
+        let out = wasi_http::serve(router, request);
         ResponseOutparam::set(response_out, out);
     }
 }
