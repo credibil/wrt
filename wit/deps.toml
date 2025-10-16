@@ -5,6 +5,9 @@
 blobstore = "https://github.com/WebAssembly/wasi-blobstore/archive/main.tar.gz"
 clocks = "https://github.com/WebAssembly/wasi-clocks/archive/main.tar.gz"
 io = "https://github.com/WebAssembly/wasi-io/archive/main.tar.gz"
-keyvalue = "https://github.com/WebAssembly/wasi-keyvalue/archive/main.tar.gz"
-messaging = "https://github.com/WebAssembly/wasi-messaging/archive/main.tar.gz"
+# keyvalue = "https://github.com/WebAssembly/wasi-keyvalue/archive/main.tar.gz"
+# messaging = "https://github.com/WebAssembly/wasi-messaging/archive/main.tar.gz"
 sql = "https://github.com/WebAssembly/wasi-sql/archive/main.tar.gz"
+
+keyvalue = "https://github.com/credibil/wasi-keyvalue/archive/main.tar.gz"
+messaging = "https://github.com/credibil/wasi-messaging/archive/main.tar.gz"

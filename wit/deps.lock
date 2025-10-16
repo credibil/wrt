@@ -5,29 +5,23 @@ sha512 = "7540f24272901a12bf65c12a6db3636c87d8ff9f8cdfe6c8a4fcdbd426feabec00688b
 
 [clocks]
 url = "https://github.com/WebAssembly/wasi-clocks/archive/main.tar.gz"
-sha256 = "59b8db7b6f3f8a72418510453c1fa9e437c7c7c2369c0bd5da83aa5d6d1d9b73"
-sha512 = "06ce14bbf34d5588ed0c26bd932d46b3025c16723d5b4558def5b8107781b2251471c1f7170640342e3d4f78efb560d5ff6383c6a127c1d9e757e83db31a0185"
+sha256 = "be1d8c61e2544e2b48d902c60df73577e293349063344ce752cda4d323f8b913"
+sha512 = "0fd7962c62b135da0e584c2b58a55147bf09873848b0bb5bd3913019bc3f8d4b5969fbd6f7f96fd99a015efaf562a3eeafe3bc13049f8572a6e13ef9ef0e7e75"
 
 [io]
 url = "https://github.com/WebAssembly/wasi-io/archive/main.tar.gz"
-sha256 = "0f5187f86b360d90613fc11922001746b872c1df4583d5f35b6b6f1720ae4822"
-sha512 = "b5b1474d0eaccf9d30e08f680474652f38da0baff4ac7a3dc945606ab35367fab4dd125e42c2da86c5a317711f60f1f8d0cfbba1e5f84490b40c8ef5e5572900"
+sha256 = "9f1ad5da70f621bbd4c69e3bd90250a0c12ecfde266aa8f99684fc44bc1e7c15"
+sha512 = "6d0a9db6848f24762933d1c168a5b5b1065ba838c253ee20454afeb8dd1a049b918d25deff556083d68095dd3126ae131ac3e738774320eee5d918f5a4b5354e"
 
 [keyvalue]
-url = "https://github.com/WebAssembly/wasi-keyvalue/archive/main.tar.gz"
-sha256 = "7eaf2e10af6e2de6d5a168893e2656c6685de2009bd37fdc944859f5a6753e55"
-sha512 = "ecf0dd2e0b6e5f62c2e10673cc8c2aab86c532f8b19c984fe2ecd9306e9a5c2783183143274477cc4fb3b037b2db2817f248a6bf84b3279180ca4dba832bf5dc"
+url = "https://github.com/credibil/wasi-keyvalue/archive/main.tar.gz"
+sha256 = "b9db68b016f0d291e8212cf5c794fcf981bf5cebe5254d4f3cf3ead5eb4e10b8"
+sha512 = "befc8a96dff139c1e7071a6adb8d34a881c8da1f86f3c2620b4ebe11a226c06a8135da48dcde6e074fbcc42e369e44ddd150818edc43431b94eefd7b7a3608cf"
 
 [messaging]
-url = "https://github.com/WebAssembly/wasi-messaging/archive/main.tar.gz"
-sha256 = "602487d60c3830fb4fcedcf933cdd6c20411a1a3dcb14db4c5b512f924532f3a"
-sha512 = "dfa9dc4062bad38bcff956aa8ef7b6a056912a2d865167953fbb3ec783b490347f443543f13c4a609c308fb054b75121937148266d178fac0b66d05826d32e44"
-
-[otel]
-url = "https://github.com/calebschoepp/wasi-otel/archive/main.tar.gz"
-sha256 = "2e5f8e6a3c63ea5cb8e05599e035e9577572b2ceb0f90fce5945938e53742444"
-sha512 = "0337941b694b16e3a1c0dff42d30953e08f06fcb1fa46a9ec9a30ec6f5a9edf0b3aae16ed831b0a972da852b76843f524d7055c25162d2c4154f59cead910741"
-deps = ["example-dep"]
+url = "https://github.com/credibil/wasi-messaging/archive/main.tar.gz"
+sha256 = "21edbaac3e1237980bbd3dc194b30d1dff6e52c76c84600ad9efd3f61e946371"
+sha512 = "5d57d8845ea9f00c929096b27dc47174d1cac92d180f7817a403a40e7cd046b7000b13d2ab197179aa90f9d85a3bf6ad10c24ef3bc5d49031fbfe9a059c9ddad"
 
 [sql]
 url = "https://github.com/WebAssembly/wasi-sql/archive/main.tar.gz"
