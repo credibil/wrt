@@ -11,16 +11,6 @@
 interface atomics {
   	use store.{bucket, error};
 
-	/// The error returned by a CAS operation
-	variant cas-error {
-		/// A store error occurred when performing the operation
-		store-error(error),
-		/// The CAS operation failed because the value was too old. This returns a new CAS handle
-		/// for easy retries. Implementors MUST return a CAS handle that has been updated to the
-		/// latest version or transaction.
-		cas-failed(cas),
-	}
-
 	/// A handle to a CAS (compare-and-swap) operation.
 	resource cas {
 		/// Construct a new CAS operation. Implementors can map the underlying functionality
@@ -42,5 +32,5 @@ interface atomics {
 
 	/// Perform the swap on a CAS operation. This consumes the CAS handle and returns an error if
 	/// the CAS operation failed.
-	swap: func(cas: cas, value: list<u8>) -> result<_, cas-error>;
+	swap: func(cas: cas, value: list<u8>) -> result<_, error>;
 }

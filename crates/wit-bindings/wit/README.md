@@ -1,6 +1,6 @@
 # WebAssembly Interface Types (WIT) Deps
 
-## Precursors
+## Prerequisites
 
 Install `wit-deps` from source (https://github.com/bytecodealliance/wit-deps)
 
@@ -12,8 +12,5 @@ Add dependencies to `deps.toml`:
 keyvalue = "https://github.com/credibil/wasi-keyvalue/archive/main.tar.gz"  
 ```
 
-Import/update dependencies with:
+Import/update dependencies using `wit-deps update` from the crate root.
 
-```bash
-wit-deps update
-```

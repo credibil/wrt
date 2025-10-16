@@ -64,24 +64,24 @@ pub mod otel {
     });
 }
 
-/// Bindings for the `wasi:vault` world.
-pub mod vault {
-    pub use self::wasi::vault::*;
-
-    wit_bindgen::generate!({
-        world: "vault",
-        path: "wit",
-        generate_all,
-        pub_export_macro: true
-    });
-}
-
 /// Bindings for the `wasi:sql` world.
 pub mod sql {
     pub use self::wasi::sql::*;
 
     wit_bindgen::generate!({
         world: "sql",
+        path: "wit",
+        generate_all,
+        pub_export_macro: true
+    });
+}
+
+/// Bindings for the `wasi:vault` world.
+pub mod vault {
+    pub use self::wasi::vault::*;
+
+    wit_bindgen::generate!({
+        world: "vault",
         path: "wit",
         generate_all,
         pub_export_macro: true

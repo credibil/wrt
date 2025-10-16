@@ -1,39 +1,34 @@
 [blobstore]
-url = "https://github.com/WebAssembly/wasi-blobstore/archive/main.tar.gz"
-sha256 = "c7ea6547bf52fe3bbf5e9e2d7f06ac99ce87ed95ec11579a03d9b8d895b5be12"
-sha512 = "7540f24272901a12bf65c12a6db3636c87d8ff9f8cdfe6c8a4fcdbd426feabec00688bf27c60d8a390461009ece4b7a18b8c814c7af8866e865583c676182a23"
-
-[clocks]
-url = "https://github.com/WebAssembly/wasi-clocks/archive/main.tar.gz"
-sha256 = "be1d8c61e2544e2b48d902c60df73577e293349063344ce752cda4d323f8b913"
-sha512 = "0fd7962c62b135da0e584c2b58a55147bf09873848b0bb5bd3913019bc3f8d4b5969fbd6f7f96fd99a015efaf562a3eeafe3bc13049f8572a6e13ef9ef0e7e75"
-
-[example-dep]
-sha256 = "fa0049f0cd840fb13d9e7f5c00301ebd5b77cb8b29ecccbc391b6d945dfdc56b"
-sha512 = "4cc4a3858487995e71ae2a97101edd62776199b12450208507570dfec5bd114bb3413eb50aa18ab2cd7d9e8a68f6d66683f75492db26e24260a9da0205e5fddb"
+url = "https://github.com/credibil/wasi-blobstore/archive/main.tar.gz"
+sha256 = "3407257d8a958d29065682b759048d644b76b6a52bd9d59a41643ada7205a960"
+sha512 = "77242e214262431f126ad18cac0f24ae8e798fa471b93f6e170b17607eab9ff4c19b0f3678313c42465e9db300feb186b34cb3dc4519c7ef884b2332b7309a44"
+deps = ["io"]
 
 [io]
-url = "https://github.com/WebAssembly/wasi-io/archive/main.tar.gz"
-sha256 = "9f1ad5da70f621bbd4c69e3bd90250a0c12ecfde266aa8f99684fc44bc1e7c15"
-sha512 = "6d0a9db6848f24762933d1c168a5b5b1065ba838c253ee20454afeb8dd1a049b918d25deff556083d68095dd3126ae131ac3e738774320eee5d918f5a4b5354e"
+sha256 = "2382f3c2d95677c7242a128c3809f54d98daf2fce61e941317d317f52d116586"
+sha512 = "63a7db48c0f07c03ddde047748f8abdabf34b176542e024c80793ee1652fd7440128e27223a3c6c2b5dfcc1f697cad8343b4b5e70027eb538175593756d91d35"
 
 [keyvalue]
-url = "https://github.com/WebAssembly/wasi-keyvalue/archive/main.tar.gz"
-sha256 = "7eaf2e10af6e2de6d5a168893e2656c6685de2009bd37fdc944859f5a6753e55"
-sha512 = "ecf0dd2e0b6e5f62c2e10673cc8c2aab86c532f8b19c984fe2ecd9306e9a5c2783183143274477cc4fb3b037b2db2817f248a6bf84b3279180ca4dba832bf5dc"
+url = "https://github.com/credibil/wasi-keyvalue/archive/main.tar.gz"
+sha256 = "b9db68b016f0d291e8212cf5c794fcf981bf5cebe5254d4f3cf3ead5eb4e10b8"
+sha512 = "befc8a96dff139c1e7071a6adb8d34a881c8da1f86f3c2620b4ebe11a226c06a8135da48dcde6e074fbcc42e369e44ddd150818edc43431b94eefd7b7a3608cf"
 
 [messaging]
-url = "https://github.com/WebAssembly/wasi-messaging/archive/main.tar.gz"
-sha256 = "602487d60c3830fb4fcedcf933cdd6c20411a1a3dcb14db4c5b512f924532f3a"
-sha512 = "dfa9dc4062bad38bcff956aa8ef7b6a056912a2d865167953fbb3ec783b490347f443543f13c4a609c308fb054b75121937148266d178fac0b66d05826d32e44"
+url = "https://github.com/credibil/wasi-messaging/archive/main.tar.gz"
+sha256 = "21edbaac3e1237980bbd3dc194b30d1dff6e52c76c84600ad9efd3f61e946371"
+sha512 = "5d57d8845ea9f00c929096b27dc47174d1cac92d180f7817a403a40e7cd046b7000b13d2ab197179aa90f9d85a3bf6ad10c24ef3bc5d49031fbfe9a059c9ddad"
 
 [otel]
-url = "https://github.com/calebschoepp/wasi-otel/archive/main.tar.gz"
-sha256 = "2e5f8e6a3c63ea5cb8e05599e035e9577572b2ceb0f90fce5945938e53742444"
-sha512 = "0337941b694b16e3a1c0dff42d30953e08f06fcb1fa46a9ec9a30ec6f5a9edf0b3aae16ed831b0a972da852b76843f524d7055c25162d2c4154f59cead910741"
-deps = ["example-dep"]
+url = "https://github.com/credibil/wasi-otel/archive/main.tar.gz"
+sha256 = "7c4ffc4d06bab925185cb5a7af024638a3393fa0832b3c5dafa94159821c6618"
+sha512 = "df9000719db8650773005968948b6eaaf3bfb9e4f8840511c2699a79cdf8c1d58c1837479ae1a5ca01c6b5fdac491a1c17a72316fc5318ea9a0834bfbcc44a45"
 
 [sql]
-url = "https://github.com/WebAssembly/wasi-sql/archive/main.tar.gz"
-sha256 = "b059c4b9951f656e24af3eff9f3dfedd2e45ffa3462bf5ddc17d8c51f757c315"
-sha512 = "cda940f0c995286ed6286ca40706e1811db1fc451f223b63db55edbf47deadff80e5be9fdef3fb3d307161df1671cbca399c6af2006a3498030b0d61bb5a0de1"
+url = "https://github.com/credibil/wasi-sql/archive/main.tar.gz"
+sha256 = "3bde1d592792fa0eea50a2ed3ba25255e63b47f60a86cf7dfb462b69d5a7316b"
+sha512 = "40510d9d4ac90543332854b257e5b88c0bf17fc7fcafb447ea82adf114f8c542b2052f7e8a88bf8dfdc037e741f0ad0b788af67e3b36a6dca62681b77bc89952"
+
+[vault]
+url = "https://github.com/credibil/wasi-vault/archive/main.tar.gz"
+sha256 = "29d92372f1735476f04e50c29615bc5d57c69ca79a09ddb7a72d79377675ca3b"
+sha512 = "e1c56238dcff58268608e903e9e9f8323a603af0b232dec483226f519a63339371d5602b1df95084548c1c3e4f2e0f3eea227119d1f4425368df585294bf74f2"
