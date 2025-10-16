@@ -3203,22 +3203,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sdk-otel"
-version = "0.11.0"
-dependencies = [
- "anyhow",
- "cfg-if",
- "num-traits",
- "opentelemetry",
- "opentelemetry_sdk",
- "sdk-otel-attr",
- "tracing",
- "tracing-opentelemetry",
- "tracing-subscriber",
- "wit-bindgen",
-]
-
-[[package]]
 name = "sdk-otel-attr"
 version = "0.11.0"
 dependencies = [
