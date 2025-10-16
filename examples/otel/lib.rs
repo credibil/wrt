@@ -15,7 +15,7 @@ use wasi::http::types::{IncomingRequest, ResponseOutparam};
 struct HttpGuest;
 
 impl Guest for HttpGuest {
-    #[sdk_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
+    #[wasi_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
     fn handle(request: IncomingRequest, response: ResponseOutparam) {
         // tracing metrics
         tracing::info!(monotonic_counter.tracing_counter = 1, key1 = "value 1");
@@ -63,7 +63,7 @@ impl Guest for HttpGuest {
 
 // A simple "Hello, World!" endpoint that returns the client's request.
 #[axum::debug_handler]
-#[sdk_otel::instrument]
+// #[wasi_otel::instrument]
 async fn handler(Json(body): Json<Value>) -> Result<Json<Value>> {
     tracing::info!("handling request: {:?}", body);
     Ok(Json(json!({

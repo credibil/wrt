@@ -22,8 +22,8 @@ use opentelemetry_sdk::error::OTelSdkError;
 use prost::Message;
 use wasmtime::component::Accessor;
 
-use crate::generated::wasi::otel::{metrics as wasi, metrics, types};
-use crate::{DEF_HTTP_ADDR, Data, Host};
+use crate::host::generated::wasi::otel::{metrics as wasi, metrics, types};
+use crate::host::{DEF_HTTP_ADDR, Data, Host};
 
 // *** WASIP3 ***
 // use `HostWithStore` to add async support`

@@ -15,9 +15,9 @@ use prost::Message;
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 use wasmtime::component::Accessor;
 
-use crate::generated::wasi::otel as wasi_otel;
-use crate::generated::wasi::otel::tracing::{self as wasi};
-use crate::{DEF_HTTP_ADDR, Data, Host};
+use crate::host::generated::wasi::otel as wasi_otel;
+use crate::host::generated::wasi::otel::tracing::{self as wasi};
+use crate::host::{DEF_HTTP_ADDR, Data, Host};
 
 // *** WASIP3 ***
 // use `HostWithStore` to add async support`

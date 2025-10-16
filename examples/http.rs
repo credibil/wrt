@@ -12,7 +12,7 @@ struct HttpGuest;
 wasi::http::proxy::export!(HttpGuest);
 
 impl Guest for HttpGuest {
-    #[sdk_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
+    #[wasi_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
     fn handle(request: IncomingRequest, response_out: ResponseOutparam) {
         tracing::info!("received request");
         let router = Router::new().route("/", post(handler));
@@ -23,7 +23,7 @@ impl Guest for HttpGuest {
 
 // A simple "Hello, World!" endpoint that returns the client's request.
 #[axum::debug_handler]
-#[sdk_otel::instrument]
+#[wasi_otel::instrument]
 async fn handler(Json(body): Json<Value>) -> Result<Json<Value>> {
     Ok(Json(json!({
         "message": "Hello, World!",

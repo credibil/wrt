@@ -7,7 +7,7 @@ use syn::parse::Result;
 use syn::spanned::Spanned;
 use syn::{Expr, ItemFn, LitStr, ReturnType, parse_macro_input, parse_quote};
 
-/// Instruments a function using the `[sdk_otel::instrument]` function.
+/// Instruments a function using the `[wasi_otel::instrument]` function.
 ///
 /// This macro can be used to automatically create spans for functions, making
 /// it easier to add observability to your code.
@@ -26,7 +26,7 @@ pub fn instrument(args: TokenStream, item: TokenStream) -> TokenStream {
     let new_fn = quote! {
         #signature {
             let _guard = if ::tracing::Span::current().is_none() {
-                let shutdown = ::sdk_otel::init();
+                let shutdown = ::wasi_otel::init();
                 Some(shutdown)
             } else {
                 None

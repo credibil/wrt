@@ -14,7 +14,7 @@ use wit_bindings::vault::vault;
 struct HttpGuest;
 
 impl Guest for HttpGuest {
-    #[sdk_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
+    #[wasi_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
     fn handle(request: IncomingRequest, response_out: ResponseOutparam) {
         let router = Router::new().route("/", post(handler));
         let out = sdk_http::serve(router, request);
@@ -22,7 +22,7 @@ impl Guest for HttpGuest {
     }
 }
 
-#[sdk_otel::instrument]
+#[wasi_otel::instrument]
 async fn handler(body: Bytes) -> Result<Json<Value>> {
     // write secret to vault
     let locker =
