@@ -232,11 +232,17 @@ impl<B, J, F> RequestBuilder<B, J, F> {
         }
 
         let mut cache = Cache::new(&self.cache);
-        cache
-            .headers(&request.headers())
-            .map_err(|e| anyhow!("issue parsing cache headers: {e}"))?;
+        match cache.headers(&request.headers()) {
+            Ok(()) => Ok(()),
+            Err(e) => {
+                let err = format!("issue setting cache headers: {e}");
+                tracing::error!(err);
+                Err(anyhow!(err))
+            }
+        }?;
         let response = {
             if cache.should_use_cache() {
+                tracing::debug!("cache-first enabled, checking cache");
                 let fut_resp = match cache.get() {
                     Ok(Some(resp)) => {
                         tracing::debug!("response found in cache");
@@ -255,16 +261,18 @@ impl<B, J, F> RequestBuilder<B, J, F> {
                 };
                 Self::process_response(&fut_resp)
             } else {
+                tracing::debug!("resource-first enabled, fetching from origin");
                 let fut_resp = outgoing_handler::handle(request, None)
                     .map_err(|e| anyhow!("making request: {e}"))?;
                 Self::process_response(&fut_resp)
             }
         }?;
         // TODO: spawn task for storing cache and return response immediately
-        if cache.should_store()
-            && let Err(e) = cache.put(&response)
-        {
-            tracing::warn!("storing response in cache: {e}");
+        if cache.should_store() {
+            tracing::debug!("storing response in cache");
+            if let Err(e) = cache.put(&response) {
+                tracing::error!("storing response in cache failed: {e}");
+            }
         }
         Ok(response)
     }

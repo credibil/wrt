@@ -4,6 +4,7 @@ use anyhow::Context;
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use http::Method;
+use http::header::{CACHE_CONTROL, IF_NONE_MATCH};
 use sdk_http::{Client, Decode, Result};
 use serde_json::{Value, json};
 use tower_http::cors::{Any, CorsLayer};
@@ -37,6 +38,8 @@ async fn get_handler() -> Result<Json<Value>> {
     let body = Client::new()
         .cache_bucket("credibil_bucket")
         .get("https://jsonplaceholder.cypress.io/posts/1")
+        .header(CACHE_CONTROL, "max-age=300") // enable caching for 5 minutes
+        .header(IF_NONE_MATCH, "qf55low9rjsrup46vsiz9r73") // provide cache key
         .send()?
         .json::<Value>()
         .context("issue sending request")?;
@@ -52,6 +55,7 @@ async fn post_handler(Json(body): Json<Value>) -> Result<Json<Value>> {
     let body = Client::new()
         .cache_bucket("credibil_bucket")
         .post("https://jsonplaceholder.cypress.io/posts")
+        .header(CACHE_CONTROL, "no-cache, max-age=300") // Go to origin for every request, but cache the response for 5 minutes
         .bearer_auth("some token") // not required, but shown for example
         .json(&body)
         .send()?
