@@ -6,6 +6,11 @@ Unreleased
 
 ### Changed
 
+* Fixed in HTTP SDK where headers were not being forwarded in outbound requests.
+* HTTP SDK will now use a key-value store as a cache. This is controlled in a guest by setting a `Cache-Control` header and using `no-cache`, `no-store` and `max-age` directives [as per specification](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cache-Control). If caching is used the guest must also supply a cache key via a [`If-None-Match` header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/If-None-Match).
+* Various other structural changes to the project (see below).
+* An initial tidy-up of WIT files (see below). This is temporary, however, and a major refactor is in the works to manage guest and runtime bindings and the model for plugging in infrastructure-specific resources.
+
 ## What's Changed
 * Bump to 0.5.0 by @github-actions[bot] in https://github.com/credibil/wrt/pull/13
 * fix bug extracting authority from request by @andrew-goldie in https://github.com/credibil/wrt/pull/14
