@@ -30,9 +30,9 @@ impl ResourceBuilder<Client> for MongoDb {
         let uri = env::var("MONGODB_URI").context("fetching MONGODB_URI env var")?;
 
         let client = mongodb::Client::with_uri_str(uri.clone()).await.map_err(|e| {
-            tracing::error!("failed to connect to mongo: {e}");
-            println!("failed to connect to mongo with uri {uri}");
-            anyhow!("failed to connect to mongo: {e}")
+            let err = format!("failed to connect to mongo at: {e}");
+            tracing::error!(err);
+            anyhow!(err)
         })?;
         tracing::info!("connected to mongo");
 
