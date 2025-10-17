@@ -106,4 +106,4 @@ dependencies = ["audit", "fmt", "lint", "outdated", "unused"]
 
 # Emulate CI
 [tasks.ci]
-dependencies = ["lint", "test", "test-doc", "vet", "miri", "outdated", "deny", "fmt"]
+dependencies = ["lint", "test", "test-doc", "vet", "miri", "deny", "fmt"]

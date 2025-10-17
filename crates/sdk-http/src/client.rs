@@ -13,23 +13,34 @@ use wasi::http::types::{
     FutureIncomingResponse, Headers, Method, OutgoingBody, OutgoingRequest, Scheme,
 };
 
+use crate::cache::Cache;
 use crate::uri::UriLike;
 
 #[derive(Default)]
-pub struct Client;
+pub struct Client {
+    /// The cache bucket to use for caching responses.
+    cache_bucket: String,
+}
 
 impl Client {
     #[must_use]
-    pub const fn new() -> Self {
-        Self
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Set the cache bucket to use for caching responses.
+    #[must_use]
+    pub fn cache_bucket(mut self, bucket: &str) -> Self {
+        self.cache_bucket = bucket.to_string();
+        self
     }
 
     pub fn get<U: Into<UriLike>>(&self, uri: U) -> RequestBuilder<NoBody, NoJson, NoForm> {
-        RequestBuilder::new(uri)
+        RequestBuilder::new(uri, self.cache_bucket.clone())
     }
 
     pub fn post<U: Into<UriLike>>(&self, uri: U) -> RequestBuilder<NoBody, NoJson, NoForm> {
-        RequestBuilder::new(uri).method(Method::Post)
+        RequestBuilder::new(uri, self.cache_bucket.clone()).method(Method::Post)
     }
 }
 
@@ -39,6 +50,7 @@ pub struct RequestBuilder<B, J, F> {
     uri: UriLike,
     headers: HeaderMap<String>,
     query: Option<String>,
+    cache: String,
     body: B,
     json: J,
     form: F,
@@ -66,12 +78,13 @@ pub struct NoForm;
 pub struct HasForm<T: Serialize>(T);
 
 impl RequestBuilder<NoBody, NoJson, NoForm> {
-    fn new<U: Into<UriLike>>(uri: U) -> Self {
+    fn new<U: Into<UriLike>, T: Into<String>>(uri: U, cache: T) -> Self {
         Self {
             method: Method::Get,
             uri: uri.into(),
             headers: HeaderMap::default(),
             query: None,
+            cache: cache.into(),
             body: NoBody,
             json: NoJson,
             form: NoForm,
@@ -84,6 +97,7 @@ impl RequestBuilder<NoBody, NoJson, NoForm> {
             uri: self.uri,
             headers: self.headers,
             query: self.query,
+            cache: self.cache,
             body: HasBody(body),
             json: NoJson,
             form: NoForm,
@@ -96,6 +110,7 @@ impl RequestBuilder<NoBody, NoJson, NoForm> {
             uri: self.uri,
             headers: self.headers,
             query: self.query,
+            cache: self.cache,
             body: NoBody,
             json: HasJson(json),
             form: NoForm,
@@ -108,6 +123,7 @@ impl RequestBuilder<NoBody, NoJson, NoForm> {
             uri: self.uri,
             headers: self.headers,
             query: self.query,
+            cache: self.cache,
             body: NoBody,
             json: NoJson,
             form: HasForm(form),
@@ -178,9 +194,9 @@ impl<B: Serialize> RequestBuilder<NoBody, HasJson<B>, NoForm> {
     ///
     /// Returns an error if the request fails to send.
     pub fn send(&mut self) -> Result<Response<Bytes>> {
+        self.headers.insert(CONTENT_TYPE, "application/json".into());
         let body =
             serde_json::to_vec(&self.json.0).map_err(|e| anyhow!("issue serializing json: {e}"))?;
-        self.headers.insert(CONTENT_TYPE, "application/json".into());
         self.send_bytes(Some(&body))
     }
 }
@@ -192,11 +208,11 @@ impl<B: Serialize> RequestBuilder<NoBody, NoJson, HasForm<B>> {
     ///
     /// Returns an error if the request fails to send.
     pub fn send(&mut self) -> Result<Response<Bytes>> {
+        self.headers.insert(CONTENT_TYPE, "application/x-www-form-urlencoded".into());
         let body = credibil_encoding::form_encode(&self.form.0)
             .map_err(|e| anyhow!("issue serializing form: {e}"))?;
         let bytes =
             serde_json::to_vec(&body).map_err(|e| anyhow!("issue serializing form: {e}"))?;
-        self.headers.insert(CONTENT_TYPE, "application/x-www-form-urlencoded".into());
         self.send_bytes(Some(&bytes))
     }
 }
@@ -215,9 +231,50 @@ impl<B, J, F> RequestBuilder<B, J, F> {
             tracing::trace!("request header: {name}: {:?}", String::from_utf8_lossy(value));
         }
 
-        let fut_resp = outgoing_handler::handle(request, None)
-            .map_err(|e| anyhow!("issue making request: {e}"))?;
-        Self::process_response(&fut_resp)
+        let mut cache = Cache::new(&self.cache);
+        match cache.headers(&request.headers()) {
+            Ok(()) => Ok(()),
+            Err(e) => {
+                let err = format!("issue setting cache headers: {e}");
+                tracing::error!(err);
+                Err(anyhow!(err))
+            }
+        }?;
+        let response = {
+            if cache.should_use_cache() {
+                tracing::debug!("cache-first enabled, checking cache");
+                let fut_resp = match cache.get() {
+                    Ok(Some(resp)) => {
+                        tracing::debug!("response found in cache");
+                        return Ok(resp);
+                    }
+                    Ok(None) => {
+                        tracing::debug!("no cached response found, fetching from origin");
+                        outgoing_handler::handle(request, None)
+                            .map_err(|e| anyhow!("making request: {e}"))?
+                    }
+                    Err(e) => {
+                        tracing::error!("retrieving cached response: {e}, fetching from origin");
+                        outgoing_handler::handle(request, None)
+                            .map_err(|e| anyhow!("making request: {e}"))?
+                    }
+                };
+                Self::process_response(&fut_resp)
+            } else {
+                tracing::debug!("resource-first enabled, fetching from origin");
+                let fut_resp = outgoing_handler::handle(request, None)
+                    .map_err(|e| anyhow!("making request: {e}"))?;
+                Self::process_response(&fut_resp)
+            }
+        }?;
+        // TODO: spawn task for storing cache and return response immediately
+        if cache.should_store() {
+            tracing::debug!("storing response in cache");
+            if let Err(e) = cache.put(&response) {
+                tracing::error!("storing response in cache failed: {e}");
+            }
+        }
+        Ok(response)
     }
 
     fn prepare_request(&self, body: Option<&[u8]>) -> Result<OutgoingRequest> {
@@ -225,10 +282,10 @@ impl<B, J, F> RequestBuilder<B, J, F> {
         for (key, value) in &self.headers {
             headers
                 .append(key.as_str(), value.as_bytes())
-                .map_err(|e| anyhow!("issue setting header: {e}"))?;
+                .map_err(|e| anyhow!("setting header: {e}"))?;
         }
         let request = OutgoingRequest::new(headers);
-        request.set_method(&self.method).map_err(|()| anyhow!("issue setting method"))?;
+        request.set_method(&self.method).map_err(|()| anyhow!("setting method"))?;
 
         // url
         let uri = self.uri.into_uri()?;
@@ -240,10 +297,10 @@ impl<B, J, F> RequestBuilder<B, J, F> {
             "https" => Scheme::Https,
             _ => return Err(anyhow!("unsupported scheme: {}", scheme.as_str())),
         };
-        request.set_scheme(Some(&scheme)).map_err(|()| anyhow!("issue setting scheme"))?;
+        request.set_scheme(Some(&scheme)).map_err(|()| anyhow!("setting scheme"))?;
         request
             .set_authority(uri.authority().map(Authority::as_str))
-            .map_err(|()| anyhow!("issue setting authority"))?;
+            .map_err(|()| anyhow!("setting authority"))?;
 
         // path + query
         let mut path_with_query = uri.path().to_string();
@@ -254,12 +311,11 @@ impl<B, J, F> RequestBuilder<B, J, F> {
 
         request
             .set_path_with_query(Some(&path_with_query))
-            .map_err(|()| anyhow!("issue setting path_with_query"))?;
+            .map_err(|()| anyhow!("setting path_with_query"))?;
 
-        let out_body = request.body().map_err(|()| anyhow!("issue getting outgoing body"))?;
+        let out_body = request.body().map_err(|()| anyhow!("getting outgoing body"))?;
         if let Some(mut buf) = body {
-            let out_stream =
-                out_body.write().map_err(|()| anyhow!("issue getting output stream"))?;
+            let out_stream = out_body.write().map_err(|()| anyhow!("getting output stream"))?;
 
             let pollable = out_stream.subscribe();
             while !buf.is_empty() {
@@ -273,13 +329,13 @@ impl<B, J, F> RequestBuilder<B, J, F> {
 
                 let (chunk, rest) = buf.split_at(len);
                 if out_stream.write(chunk).is_err() {
-                    return Err(anyhow!("issue writing to output stream"));
+                    return Err(anyhow!("writing to output stream"));
                 }
                 buf = rest;
             }
 
             if out_stream.flush().is_err() {
-                return Err(anyhow!("issue flushing output stream"));
+                return Err(anyhow!("flushing output stream"));
             }
 
             pollable.block();
