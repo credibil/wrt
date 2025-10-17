@@ -8,9 +8,10 @@ use std::pin::Pin;
 use std::sync::Arc;
 
 use anyhow::{Result, anyhow};
-use async_nats::{AuthError, Client, ConnectOptions};
+use async_nats::{AuthError, ConnectOptions};
 use runtime::ResourceBuilder;
 use tracing::instrument;
+use crate::client::NatsClient;
 
 const DEF_NATS_ADDR: &str = "demo.nats.io";
 
@@ -18,7 +19,7 @@ pub struct Nats {
     attributes: HashMap<String, String>,
 }
 
-impl ResourceBuilder<Client> for Nats {
+impl ResourceBuilder<NatsClient> for Nats {
     fn new() -> Self {
         Self {
             attributes: HashMap::new(),
@@ -31,7 +32,7 @@ impl ResourceBuilder<Client> for Nats {
     }
 
     #[instrument(name = "Nats::connect", skip(self))]
-    async fn connect(self) -> Result<Client> {
+    async fn connect(self) -> Result<NatsClient> {
         let addr = env::var("NATS_ADDR").unwrap_or_else(|_| DEF_NATS_ADDR.into());
         let jwt = env::var("NATS_JWT").ok();
         let seed = env::var("NATS_SEED").ok();
@@ -42,13 +43,13 @@ impl ResourceBuilder<Client> for Nats {
         })?;
         tracing::info!("connected to nats");
 
-        Ok(client)
+        Ok(NatsClient(client))
     }
 }
 
 impl IntoFuture for Nats {
     type IntoFuture = Pin<Box<dyn Future<Output = Self::Output> + Send + 'static>>;
-    type Output = Result<Client>;
+    type Output = Result<NatsClient>;
 
     fn into_future(self) -> Self::IntoFuture {
         Box::pin(self.connect())

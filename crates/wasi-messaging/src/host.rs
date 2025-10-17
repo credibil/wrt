@@ -1,16 +1,28 @@
 use std::time::Duration;
 
-use runtime::RunState;
-use wasmtime::component::{Accessor, HasData, Resource};
-use wasmtime_wasi::{ResourceTable, ResourceTableError};
-
 use super::generated::wasi::messaging::request_reply::RequestOptions;
 use super::generated::wasi::messaging::types::{Error, HostMessage, Message, Metadata, Topic};
 use super::generated::wasi::messaging::{producer, request_reply, types};
-use crate::client::Client;
-use crate::{ClientProxy, client};
+use crate::resource::{self, Client, ClientProxy};
+use anyhow::anyhow;
+use runtime::RunState;
+use std::sync::Arc;
+use wasmtime::component::{Accessor, HasData, Resource};
+use wasmtime_wasi::{ResourceTable, ResourceTableError};
+
+use crate::CLIENTS;
 
 pub type Result<T, E = Error> = anyhow::Result<T, E>;
+
+impl ClientProxy {
+    async fn try_from(name: &str) -> Result<Self> {
+        let clients = CLIENTS.lock().await;
+        let Some(client) = clients.get(name) else {
+            return Err(anyhow!("messaging client '{name}' not configured in host"))?;
+        };
+        Ok(Self(Arc::clone(client)))
+    }
+}
 
 pub struct Host<'a> {
     table: &'a mut ResourceTable,
@@ -37,7 +49,7 @@ impl types::HostClient for Host<'_> {
     async fn connect(&mut self, name: String) -> Result<Resource<ClientProxy>> {
         tracing::trace!("HostClient::connect {name}");
 
-        let client = ClientProxy::try_from(name).await?;
+        let client = ClientProxy::try_from(&name).await?;
         let resource = self.table.push(client)?;
         Ok(resource)
     }
@@ -112,7 +124,7 @@ impl request_reply::Host for Host<'_> {
 
         if let Some(reply) = &reply_to.reply {
             let message = self.table.get(&message)?.clone();
-            let client = ClientProxy::try_from(reply.client_name.clone()).await?;
+            let client = ClientProxy::try_from(&reply.client_name).await?;
             let topic = reply.topic.clone();
             client.send(topic.clone(), message).await?;
         }
@@ -274,7 +286,7 @@ impl HostMessage for Host<'_> {
     ) -> anyhow::Result<()> {
         tracing::trace!("HostMessage::set_metadata");
         let msg = self.table.get_mut(&self_)?;
-        let mut metadata = client::Metadata::new();
+        let mut metadata = resource::Metadata::new();
         for (k, v) in &meta {
             let values =
                 v.split(',').map(std::string::ToString::to_string).collect::<Vec<String>>();
@@ -298,7 +310,7 @@ impl HostMessage for Host<'_> {
         tracing::trace!("HostMessage::remove_metadata {key}");
         let msg = self.table.get_mut(&self_)?;
         let existing_headers = msg.metadata.take().unwrap_or_default();
-        let mut new_headers = client::Metadata::new();
+        let mut new_headers = resource::Metadata::new();
         for (k, v) in existing_headers.iter() {
             if k != &key {
                 new_headers.insert(k.clone(), v.clone());

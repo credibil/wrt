@@ -1,9 +1,23 @@
 interface types {
-    /// A type alias for list<tuple<string, string>> to represent metadata attached to a message
-    type metadata = list<tuple<string, string>>;
-
     /// A type alias for string to represent a message topic
     type topic = string;
+
+    /// A client-specific topic the guest subscribes to.
+    record client-topics {
+        /// The client for which to subscribe to topics
+        client: string,
+        /// The topics to which the client is subscribing
+        topics: list<topic>,
+    }
+
+    /// Server configuration.
+    ///
+    /// This can be extended to include other configuration options in the
+    /// future.
+    record configuration {
+        /// Subscription topics
+        topics: list<client-topics>,
+    }
 
     /// A connection to a message-exchange service (e.g., buffer, broker, etc.).
     resource client {
@@ -22,6 +36,9 @@ interface types {
         /// A catch all for other types of errors
         other(string),
     }
+
+    /// A type alias for list<tuple<string, string>> to represent metadata attached to a message
+    type metadata = list<tuple<string, string>>;
 
     /// A message with a binary payload and additional information
     resource message {

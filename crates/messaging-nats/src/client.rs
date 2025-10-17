@@ -5,17 +5,15 @@ use futures::future::{BoxFuture, FutureExt};
 use futures::stream::{self, StreamExt};
 use runtime::RunState;
 use tracing::{Instrument, info_span};
-use wasi_messaging::client::{Client, Message, Metadata, Reply};
-use wasi_messaging::{Error, Messaging2};
+use wasi_messaging::resource::{Client, Message, Metadata, Reply};
+use wasi_messaging::{Error, Messaging};
 use wasmtime::Store;
 use wasmtime::component::InstancePre;
 
 const CLIENT_NAME: &str = "nats";
 
 #[derive(Debug)]
-pub struct NatsClient {
-    pub inner: async_nats::Client,
-}
+pub struct NatsClient(pub async_nats::Client);
 
 impl Client for NatsClient {
     fn name(&self) -> &'static str {
@@ -25,7 +23,7 @@ impl Client for NatsClient {
     fn subscribe(
         &self, topics: Vec<String>, instance_pre: InstancePre<RunState>,
     ) -> BoxFuture<'static, Result<()>> {
-        let client = self.inner.clone();
+        let client = self.0.clone();
 
         async move {
             tracing::trace!("subscribing to messaging topics: {topics:?}");
@@ -63,7 +61,7 @@ impl Client for NatsClient {
     }
 
     fn send(&self, topic: String, message: Message) -> BoxFuture<'static, Result<()>> {
-        let client = self.inner.clone();
+        let client = self.0.clone();
 
         async move {
             let Some(headers) = message.metadata.clone() else {
@@ -90,7 +88,7 @@ impl Client for NatsClient {
     }
 
     fn request(&self, topic: String, message: Message) -> BoxFuture<'static, Result<Message>> {
-        let client = self.inner.clone();
+        let client = self.0.clone();
 
         async move {
             let payload = message.payload.clone();
@@ -124,7 +122,7 @@ async fn call_guest(message: Message, instance_pre: InstancePre<RunState>) -> Re
 
     let mut store = Store::new(instance_pre.engine(), state);
     let instance = instance_pre.instantiate_async(&mut store).await?;
-    let messaging = Messaging2::new(&mut store, &instance)?;
+    let messaging = Messaging::new(&mut store, &instance)?;
 
     // *** WASIP3 ***
     // use `run_concurrent` for non-blocking execution

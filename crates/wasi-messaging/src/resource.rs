@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::ops::{Deref, DerefMut};
+use std::sync::Arc;
 use std::time::Duration;
 
 use anyhow::Result;
@@ -19,6 +20,33 @@ pub trait Client: Debug + Send + Sync + 'static {
     fn send(&self, topic: String, message: Message) -> BoxFuture<'static, Result<()>>;
 
     fn request(&self, topic: String, message: Message) -> BoxFuture<'static, Result<Message>>;
+}
+
+#[derive(Clone, Debug)]
+pub struct ClientProxy(pub Arc<dyn Client>);
+
+impl Client for ClientProxy {
+    fn name(&self) -> &'static str {
+        self.0.name()
+    }
+
+    fn subscribe(
+        &self, topics: Vec<String>, instance_pre: InstancePre<RunState>,
+    ) -> BoxFuture<'static, Result<()>> {
+        self.0.subscribe(topics, instance_pre)
+    }
+
+    fn send(
+        &self, topic: String, message: crate::resource::Message,
+    ) -> BoxFuture<'static, Result<()>> {
+        self.0.send(topic, message)
+    }
+
+    fn request(
+        &self, topic: String, message: crate::resource::Message,
+    ) -> BoxFuture<'static, Result<crate::resource::Message>> {
+        self.0.request(topic, message)
+    }
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
@@ -124,9 +152,14 @@ pub struct Reply {
     pub topic: String,
 }
 
-pub struct Request {
-    pub payload: Option<Vec<u8>>,
-    pub metadata: Option<Metadata>,
-    pub timeout: Option<Option<Duration>>,
-    pub inbox: Option<String>,
+#[derive(Default)]
+pub struct RequestOptions {
+    pub timeout: Option<std::time::Duration>,
 }
+
+// pub struct Request {
+//     pub payload: Option<Vec<u8>>,
+//     pub metadata: Option<Metadata>,
+//     pub timeout: Option<Option<Duration>>,
+//     pub inbox: Option<String>,
+// }

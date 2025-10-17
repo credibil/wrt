@@ -2886,6 +2886,7 @@ dependencies = [
  "axum",
  "bytes",
  "http",
+ "messaging-nats",
  "openssl",
  "opentelemetry",
  "res-azkeyvault",
