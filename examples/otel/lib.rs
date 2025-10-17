@@ -5,12 +5,12 @@ use axum::{Json, Router};
 use http::Method;
 use opentelemetry::trace::{TraceContextExt, Tracer};
 use opentelemetry::{KeyValue, global};
-use wasi_http::Result;
 use serde_json::{Value, json};
 use tower_http::cors::{Any, CorsLayer};
 use tracing::Level;
 use wasi::exports::http::incoming_handler::Guest;
 use wasi::http::types::{IncomingRequest, ResponseOutparam};
+use wasi_http::Result;
 
 struct HttpGuest;
 

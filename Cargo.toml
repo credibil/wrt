@@ -43,7 +43,7 @@ tracing.workspace = true
 wasi-blobstore-mdb.workspace = true
 wasi-http.workspace = true
 wasi-keyvalue-nats.workspace = true
-wasi-messaging-nats.workspace = true
+wasi-messaging.workspace = true
 wasi-otel.workspace = true
 wasi-vault-az.workspace = true
 wasmtime = { workspace = true, features = ["runtime"] }
@@ -212,7 +212,7 @@ sdk-otel-attr = { path = "crates/sdk-otel-attr", version = "0.11.0", registry = 
 wasi-blobstore-mdb = { path = "crates/wasi-blobstore-mdb", version = "0.11.0", registry = "credibil" }
 wasi-http = { path = "crates/wasi-http", version = "0.11.0", registry = "credibil" }
 wasi-keyvalue-nats = { path = "crates/wasi-keyvalue-nats", version = "0.11.0", registry = "credibil" }
-wasi-messaging-nats = { path = "crates/wasi-messaging-nats", version = "0.11.0", registry = "credibil" }
+wasi-messaging = { path = "crates/wasi-messaging", version = "0.11.0", registry = "credibil" }
 wasi-otel = { path = "crates/wasi-otel", version = "0.11.0", registry = "credibil" }
 wasi-vault-az = { path = "crates/wasi-vault-az", version = "0.11.0", registry = "credibil" }
 wit-bindings = { path = "crates/wit-bindings", version = "0.11.0", registry = "credibil" }

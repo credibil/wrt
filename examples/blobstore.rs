@@ -4,11 +4,11 @@ use anyhow::{Context, anyhow};
 use axum::routing::post;
 use axum::{Json, Router};
 use bytes::Bytes;
-use wasi_http::Result;
 use serde_json::Value;
 use tracing::Level;
 use wasi::exports::http::incoming_handler::Guest;
 use wasi::http::types::{IncomingRequest, ResponseOutparam};
+use wasi_http::Result;
 use wit_bindings::blobstore::blobstore;
 use wit_bindings::blobstore::types::{IncomingValue, OutgoingValue};
 

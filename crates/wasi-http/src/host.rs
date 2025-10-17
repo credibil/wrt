@@ -1,5 +1,5 @@
 //! #WASI HTTP Host
-//! 
+//!
 //! This module implements a host-side service for `wasi:http`
 
 use std::clone::Clone;

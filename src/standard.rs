@@ -6,7 +6,7 @@ use runtime::{AddResource, Cli, Command, Parser, ResourceBuilder, RuntimeBuilder
 use wasi_blobstore_mdb::Blobstore;
 use wasi_http::Http;
 use wasi_keyvalue_nats::KeyValue;
-use wasi_messaging_nats::Messaging;
+// use wasi_messaging_nats::Messaging;
 use wasi_otel::Otel;
 use wasi_vault_az::Vault;
 
@@ -27,7 +27,7 @@ async fn main() -> Result<()> {
         .register(Blobstore.resource(mongodb)?)
         .register(KeyValue.resource(nats.clone())?)
         .register(Vault.resource(az_secret)?)
-        .register(Messaging.resource(nats)?)
+        // .register(Messaging.resource(nats)?)
         .build();
 
     runtime.await

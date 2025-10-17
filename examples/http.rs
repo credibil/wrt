@@ -2,11 +2,11 @@
 
 use axum::routing::post;
 use axum::{Json, Router};
-use wasi_http::Result;
 use serde_json::{Value, json};
 use tracing::Level;
 use wasi::exports::http::incoming_handler::Guest;
 use wasi::http::types::{IncomingRequest, ResponseOutparam};
+use wasi_http::Result;
 
 struct HttpGuest;
 wasi::http::proxy::export!(HttpGuest);
