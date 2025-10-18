@@ -1,6 +1,7 @@
 use anyhow::Context;
 use futures::StreamExt;
 use runtime::RunState;
+use tracing::{Instrument, info_span};
 use wasmtime::Store;
 use wasmtime::component::InstancePre;
 
@@ -51,7 +52,8 @@ pub async fn run(instance_pre: InstancePre<RunState>) -> anyhow::Result<()> {
                     if let Err(e) = call_guest(message, instance_pre).await {
                         tracing::error!("error processing message {e}");
                     }
-                }, // .instrument(info_span!("message")),
+                }
+                .instrument(info_span!("message")),
             );
         }
     }

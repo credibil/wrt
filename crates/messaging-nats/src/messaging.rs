@@ -1,11 +1,9 @@
 use std::collections::HashMap;
-use std::pin::Pin;
 
-use anyhow::{Result, anyhow};
-use futures::Stream;
-use futures::future::{BoxFuture, FutureExt};
+use anyhow::anyhow;
+use futures::future::FutureExt;
 use futures::stream::{self, StreamExt};
-use wasi_messaging::{Client, Message, Metadata, Reply};
+use wasi_messaging::{Client, FutureResult, Message, Metadata, Reply, Subscriptions};
 
 use crate::{CLIENT_NAME, NatsClient};
 
@@ -14,12 +12,9 @@ impl Client for NatsClient {
         CLIENT_NAME
     }
 
-    fn subscribe(
-        &self, topics: Vec<String>,
-    ) -> BoxFuture<'static, Result<Pin<Box<dyn Stream<Item = Message> + Send>>>> {
+    fn subscribe(&self, topics: Vec<String>) -> FutureResult<Subscriptions> {
         let client = self.0.clone();
 
-        
         async move {
             tracing::trace!("subscribing to messaging topics: {topics:?}");
 
@@ -36,12 +31,12 @@ impl Client for NatsClient {
 
             // process messages until terminated
             let stream = stream::select_all(subscribers).map(into_message);
-            Ok(Box::pin(stream) as Pin<Box<dyn Stream<Item = Message> + Send>>)
+            Ok(Box::pin(stream) as Subscriptions)
         }
         .boxed()
     }
 
-    fn send(&self, topic: String, message: Message) -> BoxFuture<'static, Result<()>> {
+    fn send(&self, topic: String, message: Message) -> FutureResult<()> {
         let client = self.0.clone();
 
         async move {
@@ -68,7 +63,7 @@ impl Client for NatsClient {
         .boxed()
     }
 
-    fn request(&self, topic: String, message: Message) -> BoxFuture<'static, Result<Message>> {
+    fn request(&self, topic: String, message: Message) -> FutureResult<Message> {
         let client = self.0.clone();
 
         async move {

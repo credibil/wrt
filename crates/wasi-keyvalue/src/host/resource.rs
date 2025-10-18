@@ -5,6 +5,8 @@ use std::sync::Arc;
 use anyhow::Result;
 use futures::future::BoxFuture;
 
+pub type FutureResult<T> = BoxFuture<'static, Result<T>>;
+
 /// Key-Value providers implement the [`Client`] trait to allow the host to
 /// connect to a backend (in-memory, redis, nats-kv, etc) and open buckets.
 pub trait Client: Debug + Send + Sync + 'static {
@@ -12,7 +14,7 @@ pub trait Client: Debug + Send + Sync + 'static {
     fn name(&self) -> &'static str;
 
     /// Open a bucket with the given identifier.
-    fn open(&self, identifier: String) -> BoxFuture<'static, Result<Arc<dyn Bucket>>>;
+    fn open(&self, identifier: String) -> FutureResult<Arc<dyn Bucket>>;
 }
 
 /// [`ClientProxy`] provides a concrete wrapper around a `dyn Client` object.
@@ -35,19 +37,19 @@ pub trait Bucket: Debug + Send + Sync + 'static {
     fn name(&self) -> &'static str;
 
     /// Get the value associated with the key.
-    fn get(&self, key: String) -> BoxFuture<'static, Result<Option<Vec<u8>>>>;
+    fn get(&self, key: String) -> FutureResult<Option<Vec<u8>>>;
 
     /// Set the value associated with the key.
-    fn set(&self, key: String, value: Vec<u8>) -> BoxFuture<'static, Result<()>>;
+    fn set(&self, key: String, value: Vec<u8>) -> FutureResult<()>;
 
     /// Delete the value associated with the key.
-    fn delete(&self, key: String) -> BoxFuture<'static, Result<()>>;
+    fn delete(&self, key: String) -> FutureResult<()>;
 
     /// Check if the entry exists.
-    fn exists(&self, key: String) -> BoxFuture<'static, Result<bool>>;
+    fn exists(&self, key: String) -> FutureResult<bool>;
 
     /// List all keys in the bucket.
-    fn keys(&self) -> BoxFuture<'static, Result<Vec<String>>>;
+    fn keys(&self) -> FutureResult<Vec<String>>;
 }
 
 #[derive(Clone, Debug)]

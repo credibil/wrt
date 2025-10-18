@@ -12,16 +12,17 @@ use serde::{Deserialize, Serialize};
 
 use crate::host::generated::wasi::messaging::types;
 
+pub type FutureResult<T> = BoxFuture<'static, Result<T>>;
+pub type Subscriptions = Pin<Box<dyn Stream<Item = Message> + Send>>;
+
 pub trait Client: Debug + Send + Sync + 'static {
     fn name(&self) -> &'static str;
 
-    fn subscribe(
-        &self, topics: Vec<String>,
-    ) -> BoxFuture<'static, Result<Pin<Box<dyn Stream<Item = Message> + Send>>>>;
+    fn subscribe(&self, topics: Vec<String>) -> FutureResult<Subscriptions>;
 
-    fn send(&self, topic: String, message: Message) -> BoxFuture<'static, Result<()>>;
+    fn send(&self, topic: String, message: Message) -> FutureResult<()>;
 
-    fn request(&self, topic: String, message: Message) -> BoxFuture<'static, Result<Message>>;
+    fn request(&self, topic: String, message: Message) -> FutureResult<Message>;
 }
 
 #[derive(Clone, Debug)]

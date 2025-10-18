@@ -1,12 +1,12 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use anyhow::{Context, Result, anyhow};
+use anyhow::{Context, anyhow};
 use async_nats::jetstream::kv::Config;
 use async_nats::jetstream::{self, kv};
 use futures::TryStreamExt;
-use futures::future::{BoxFuture, FutureExt};
-use wasi_keyvalue::{Bucket, Client};
+use futures::future::FutureExt;
+use wasi_keyvalue::{Bucket, Client, FutureResult};
 
 use crate::{CLIENT_NAME, NatsClient};
 
@@ -15,7 +15,7 @@ impl Client for NatsClient {
         CLIENT_NAME
     }
 
-    fn open(&self, identifier: String) -> BoxFuture<'static, Result<Arc<dyn Bucket>>> {
+    fn open(&self, identifier: String) -> FutureResult<Arc<dyn Bucket>> {
         let client = self.0.clone();
 
         async move {
@@ -53,7 +53,7 @@ impl Bucket for KvBucket {
         CLIENT_NAME
     }
 
-    fn get(&self, key: String) -> BoxFuture<'static, Result<Option<Vec<u8>>>> {
+    fn get(&self, key: String) -> FutureResult<Option<Vec<u8>>> {
         let store = self.0.clone();
 
         async move {
@@ -65,7 +65,7 @@ impl Bucket for KvBucket {
         .boxed()
     }
 
-    fn set(&self, key: String, value: Vec<u8>) -> BoxFuture<'static, Result<()>> {
+    fn set(&self, key: String, value: Vec<u8>) -> FutureResult<()> {
         let store = self.0.clone();
 
         async move {
@@ -76,7 +76,7 @@ impl Bucket for KvBucket {
         .boxed()
     }
 
-    fn delete(&self, key: String) -> BoxFuture<'static, Result<()>> {
+    fn delete(&self, key: String) -> FutureResult<()> {
         let store = self.0.clone();
 
         async move {
@@ -88,7 +88,7 @@ impl Bucket for KvBucket {
         .boxed()
     }
 
-    fn exists(&self, key: String) -> BoxFuture<'static, Result<bool>> {
+    fn exists(&self, key: String) -> FutureResult<bool> {
         let store = self.0.clone();
 
         async move {
@@ -100,7 +100,7 @@ impl Bucket for KvBucket {
         .boxed()
     }
 
-    fn keys(&self) -> BoxFuture<'static, Result<Vec<String>>> {
+    fn keys(&self) -> FutureResult<Vec<String>> {
         let store = self.0.clone();
 
         async move {
