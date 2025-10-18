@@ -37,6 +37,12 @@ interface store {
         other(string)
     }
 
+        /// A connection to a message-exchange service (e.g., buffer, broker, etc.).
+    resource client {
+        connect: static func(name: string) -> result<client, error>;
+        disconnect: func() -> result<_, error>;
+    }
+
     /// A response to a `list-keys` operation.
     record key-response {
         /// The list of keys returned by the query.
@@ -51,7 +57,7 @@ interface store {
     /// `identifier` must refer to a bucket provided by the host.
     ///
     /// `error::no-such-store` will be raised if the `identifier` is not recognized.
-    open: func(identifier: string) -> result<bucket, error>;
+    open: func(client: borrow<client>, identifier: string) -> result<bucket, error>;
 
     /// A bucket is a collection of key-value pairs. Each key-value pair is stored as a entry in the
     /// bucket, and the bucket itself acts as a collection of all these entries.

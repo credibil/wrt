@@ -5,8 +5,7 @@ use futures::future::{BoxFuture, FutureExt};
 use futures::stream::{self, StreamExt};
 use runtime::RunState;
 use tracing::{Instrument, info_span};
-use wasi_messaging::resource::{Client, Message, Metadata, Reply};
-use wasi_messaging::{Error, Messaging};
+use wasi_messaging::{Client, Error, Message, Messaging, Metadata, Reply};
 use wasmtime::Store;
 use wasmtime::component::InstancePre;
 

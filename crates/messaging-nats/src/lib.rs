@@ -11,6 +11,7 @@ use anyhow::{Result, anyhow};
 use async_nats::{AuthError, ConnectOptions};
 use runtime::ResourceBuilder;
 use tracing::instrument;
+
 use crate::client::NatsClient;
 
 const DEF_NATS_ADDR: &str = "demo.nats.io";

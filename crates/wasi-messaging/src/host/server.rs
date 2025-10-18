@@ -2,8 +2,8 @@ use runtime::RunState;
 use wasmtime::Store;
 use wasmtime::component::InstancePre;
 
-use crate::CLIENTS;
-use crate::generated::Messaging;
+use crate::host::CLIENTS;
+use crate::host::generated::Messaging;
 
 pub async fn run(instance_pre: InstancePre<RunState>) -> anyhow::Result<()> {
     // short-circuit when messaging not required

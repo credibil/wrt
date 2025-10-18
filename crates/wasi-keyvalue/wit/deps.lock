@@ -1,0 +1,4 @@
+[keyvalue]
+url = "https://github.com/credibil/wasi-keyvalue/archive/main.tar.gz"
+sha256 = "ac46f4506f9436f7b34f083d087c5fbc3bf592c65dd3e62dfa15ebd3ba9ee9de"
+sha512 = "9e48a4a16b48a7048a41fc5f9cdad1329142c22af478c291cc175282a6069d5ec4f554fbe8a4c16dbf95ebb765a2da7d9e6d04138efbcc940657e9bd3216ac10"

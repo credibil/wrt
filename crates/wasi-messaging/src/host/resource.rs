@@ -10,6 +10,8 @@ use runtime::RunState;
 use serde::{Deserialize, Serialize};
 use wasmtime::component::InstancePre;
 
+use crate::host::generated::wasi::messaging::types;
+
 pub trait Client: Debug + Send + Sync + 'static {
     fn name(&self) -> &'static str;
 
@@ -25,27 +27,11 @@ pub trait Client: Debug + Send + Sync + 'static {
 #[derive(Clone, Debug)]
 pub struct ClientProxy(pub Arc<dyn Client>);
 
-impl Client for ClientProxy {
-    fn name(&self) -> &'static str {
-        self.0.name()
-    }
+impl Deref for ClientProxy {
+    type Target = Arc<dyn Client>;
 
-    fn subscribe(
-        &self, topics: Vec<String>, instance_pre: InstancePre<RunState>,
-    ) -> BoxFuture<'static, Result<()>> {
-        self.0.subscribe(topics, instance_pre)
-    }
-
-    fn send(
-        &self, topic: String, message: crate::resource::Message,
-    ) -> BoxFuture<'static, Result<()>> {
-        self.0.send(topic, message)
-    }
-
-    fn request(
-        &self, topic: String, message: crate::resource::Message,
-    ) -> BoxFuture<'static, Result<crate::resource::Message>> {
-        self.0.request(topic, message)
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 
@@ -122,14 +108,6 @@ impl Metadata {
             inner: HashMap::new(),
         }
     }
-
-    // pub fn insert(&mut self, key: String, value: String) {
-    //     self.inner.entry(key).or_default().push(value);
-    // }
-
-    // pub fn get(&self, key: &str) -> Option<&Vec<String>> {
-    //     self.inner.get(key)
-    // }
 }
 
 impl Deref for Metadata {
@@ -143,6 +121,26 @@ impl Deref for Metadata {
 impl DerefMut for Metadata {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.inner
+    }
+}
+
+impl From<&Metadata> for types::Metadata {
+    fn from(meta: &Metadata) -> Self {
+        let mut metadata = Self::new();
+        for (k, v) in &meta.inner {
+            metadata.push((k.to_string(), v.to_string()));
+        }
+        metadata
+    }
+}
+
+impl From<types::Metadata> for Metadata {
+    fn from(meta: types::Metadata) -> Self {
+        let mut map = HashMap::new();
+        for (k, v) in meta {
+            map.insert(k, v);
+        }
+        Self { inner: map }
     }
 }
 

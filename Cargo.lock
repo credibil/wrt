@@ -2041,12 +2041,10 @@ dependencies = [
  "futures",
  "nkeys",
  "runtime",
- "time",
  "tokio",
  "tracing",
  "wasi-messaging",
  "wasmtime",
- "wasmtime-wasi",
 ]
 
 [[package]]
@@ -2900,7 +2898,7 @@ dependencies = [
  "wasi 0.14.7+wasi-0.2.4",
  "wasi-blobstore-mdb",
  "wasi-http",
- "wasi-keyvalue-nats",
+ "wasi-keyvalue",
  "wasi-messaging",
  "wasi-otel",
  "wasi-vault-az",
@@ -4189,7 +4187,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "wasi-keyvalue-nats"
+name = "wasi-keyvalue"
 version = "0.11.0"
 dependencies = [
  "anyhow",
@@ -4217,6 +4215,7 @@ dependencies = [
  "tracing",
  "wasmtime",
  "wasmtime-wasi",
+ "wit-bindgen",
 ]
 
 [[package]]

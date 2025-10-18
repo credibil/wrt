@@ -1,7 +1,7 @@
-//! # WASI Messaging
+//! # WASI Key-Value
 //!
-//! This module implements a runtime service for `wasi:messaging`
-//! (<https://github.com/WebAssembly/wasi-messaging>).
+//! This module implements a runtime service for `wasi:keyvalue`
+//! (<https://github.com/WebAssembly/wasi-keyvalue>).
 
 #[cfg(target_arch = "wasm32")]
 mod guest;

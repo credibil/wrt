@@ -1,5 +1,5 @@
 [package]
-name = "wasi-keyvalue-nats"
+name = "wasi-keyvalue"
 description = "WASI Keyvalue WIT implementation using NATS"
 publish = false
 readme = "README.md"
