@@ -2043,6 +2043,7 @@ dependencies = [
  "runtime",
  "tokio",
  "tracing",
+ "wasi-keyvalue",
  "wasi-messaging",
  "wasmtime",
 ]

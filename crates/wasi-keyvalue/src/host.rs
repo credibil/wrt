@@ -29,6 +29,7 @@ mod generated {
 use std::sync::Arc;
 
 use futures::lock::Mutex;
+pub use resource::*;
 use runtime::{RunState, Service};
 use std::collections::HashMap;
 use std::sync::LazyLock;
@@ -37,7 +38,7 @@ use wasmtime_wasi::ResourceTable;
 
 use self::generated::wasi::keyvalue::store::Error;
 use self::generated::wasi::keyvalue::{atomics, batch, store};
-use crate::host::resource::Client;
+
 pub use crate::host::resource::{BucketProxy, Cas, ClientProxy};
 
 static CLIENTS: LazyLock<Mutex<HashMap<&str, Arc<dyn Client>>>> =

@@ -1,6 +1,7 @@
 //! NATS Client.
 
-mod client;
+mod keyvalue;
+mod messaging;
 
 use std::collections::HashMap;
 use std::env;
@@ -12,7 +13,7 @@ use async_nats::{AuthError, ConnectOptions};
 use runtime::ResourceBuilder;
 use tracing::instrument;
 
-use crate::client::NatsClient;
+use crate::messaging::NatsClient;
 
 const DEF_NATS_ADDR: &str = "demo.nats.io";
 
