@@ -2041,11 +2041,9 @@ dependencies = [
  "futures",
  "nkeys",
  "runtime",
- "tokio",
  "tracing",
  "wasi-keyvalue",
  "wasi-messaging",
- "wasmtime",
 ]
 
 [[package]]
@@ -4132,6 +4130,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "wasi-blobstore"
+version = "0.11.0"
+dependencies = [
+ "anyhow",
+ "async-nats",
+ "bytes",
+ "futures",
+ "runtime",
+ "time",
+ "tokio",
+ "tracing",
+ "wasmtime",
+ "wasmtime-wasi",
+ "wit-bindgen",
+]
+
+[[package]]
 name = "wasi-blobstore-mdb"
 version = "0.11.0"
 dependencies = [
@@ -4143,22 +4158,6 @@ dependencies = [
  "runtime",
  "serde",
  "serde_json",
- "tracing",
- "wasmtime",
- "wasmtime-wasi",
-]
-
-[[package]]
-name = "wasi-blobstore-nats"
-version = "0.11.0"
-dependencies = [
- "anyhow",
- "async-nats",
- "bytes",
- "futures",
- "runtime",
- "time",
- "tokio",
  "tracing",
  "wasmtime",
  "wasmtime-wasi",
@@ -4199,6 +4198,7 @@ dependencies = [
  "tracing",
  "wasmtime",
  "wasmtime-wasi",
+ "wit-bindgen",
 ]
 
 [[package]]

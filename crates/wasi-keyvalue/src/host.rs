@@ -1,7 +1,9 @@
 //! # WASI Key-Value Service
 
-mod impls;
+mod atomics_impl;
+mod batch_impl;
 mod resource;
+mod store_impl;
 
 mod generated {
     #![allow(clippy::trait_duplication_in_bounds)]
@@ -36,10 +38,12 @@ use wasmtime_wasi::ResourceTable;
 
 use self::generated::wasi::keyvalue::store::Error;
 use self::generated::wasi::keyvalue::{atomics, batch, store};
-pub use crate::host::resource::{BucketProxy, Cas};
+pub use crate::host::resource::{BucketProxy, Cas, Client};
 
 static CLIENTS: LazyLock<Mutex<HashMap<&str, Arc<dyn Client>>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
+
+pub type Result<T, E = Error> = anyhow::Result<T, E>;
 
 #[derive(Debug)]
 pub struct WasiKeyValue;

@@ -1,6 +1,8 @@
-mod impls;
+mod producer_impl;
+mod request_reply_impl;
 mod resource;
 mod server;
+mod types_impl;
 
 mod generated {
     #![allow(clippy::trait_duplication_in_bounds)]
@@ -29,10 +31,10 @@ mod generated {
     });
 }
 
-// re-exports
 use std::collections::HashMap;
 use std::sync::{Arc, LazyLock};
 
+use anyhow::anyhow;
 use futures::future::{BoxFuture, FutureExt};
 use futures::lock::Mutex;
 pub use resource::*;
@@ -94,6 +96,22 @@ impl HasData for HostData {
 
 impl From<ResourceTableError> for Error {
     fn from(err: ResourceTableError) -> Self {
+        Self::Other(err.to_string())
+    }
+}
+
+impl ClientProxy {
+    async fn try_from(name: &str) -> Result<Self> {
+        let clients = CLIENTS.lock().await;
+        let Some(client) = clients.get(name) else {
+            return Err(anyhow!("client '{name}' is not registered"))?;
+        };
+        Ok(Self(Arc::clone(client)))
+    }
+}
+
+impl From<anyhow::Error> for Error {
+    fn from(err: anyhow::Error) -> Self {
         Self::Other(err.to_string())
     }
 }

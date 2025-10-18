@@ -1,11 +1,10 @@
 use anyhow::anyhow;
 use wasmtime::component::Resource;
 
-use crate::host::Host;
 use crate::host::generated::wasi::keyvalue::batch;
 use crate::host::generated::wasi::keyvalue::store::Error;
-use crate::host::impls::Result;
 use crate::host::resource::BucketProxy;
+use crate::host::{Host, Result};
 
 impl batch::Host for Host<'_> {
     async fn get_many(

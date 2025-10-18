@@ -1,12 +1,11 @@
 use anyhow::anyhow;
 use wasmtime::component::Resource;
 
-use crate::host::Host;
 use crate::host::generated::wasi::keyvalue::atomics;
 use crate::host::generated::wasi::keyvalue::atomics::CasError;
 use crate::host::generated::wasi::keyvalue::store::Error;
-use crate::host::impls::Result;
 use crate::host::resource::{BucketProxy, Cas};
+use crate::host::{Host, Result};
 
 impl atomics::HostCas for Host<'_> {
     /// Construct a new CAS operation. Implementors can map the underlying functionality

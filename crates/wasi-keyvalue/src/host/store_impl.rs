@@ -5,9 +5,8 @@ use wasmtime::component::Resource;
 
 use crate::host::generated::wasi::keyvalue::store;
 use crate::host::generated::wasi::keyvalue::store::{Error, KeyResponse};
-use crate::host::impls::Result;
 use crate::host::resource::{BucketProxy, ClientProxy};
-use crate::host::{CLIENTS, Host};
+use crate::host::{CLIENTS, Host, Result};
 
 impl ClientProxy {
     async fn try_from(_name: &str) -> anyhow::Result<Self> {

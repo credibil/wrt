@@ -7,7 +7,7 @@ Tempo is a modular WASI component runtime built on [wasmtime](https://github.com
 - **Crate Structure:**
   - Core runtime logic is in `src/` (e.g., `runtime.rs`, `state.rs`, `cli.rs`).
   - Host service implementations are in `crates/`, e.g.:
-    - `wasi-blobstore-nats`: WASI blobstore service backed by NATS JetStream ObjectStore.
+    - `wasi-blobstore`: WASI blobstore service backed by NATS JetStream ObjectStore.
     - `sdk-http`, `sdk-otel`, etc.: SDKs and service integrations for guests.
   - WASI interface definitions and bindings are in `wit/` and `crates/wit-bindings/`.
 - **Service Pattern:**
