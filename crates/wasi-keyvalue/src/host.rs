@@ -7,7 +7,7 @@ mod generated {
     #![allow(clippy::trait_duplication_in_bounds)]
 
     pub use self::wasi::keyvalue::store::Error;
-    pub use super::{BucketProxy, Cas, ClientProxy};
+    pub use super::{BucketProxy, Cas};
 
     wasmtime::component::bindgen!({
         world: "keyvalue",
@@ -16,7 +16,6 @@ mod generated {
             default: async | tracing | trappable,
         },
         with: {
-            "wasi:keyvalue/store/client": ClientProxy,
             "wasi:keyvalue/store/bucket": BucketProxy,
             "wasi:keyvalue/atomics/cas": Cas,
         },
@@ -26,20 +25,18 @@ mod generated {
     });
 }
 
-use std::sync::Arc;
+use std::collections::HashMap;
+use std::sync::{Arc, LazyLock};
 
 use futures::lock::Mutex;
 pub use resource::*;
 use runtime::{RunState, Service};
-use std::collections::HashMap;
-use std::sync::LazyLock;
 use wasmtime::component::{HasData, Linker, ResourceTableError};
 use wasmtime_wasi::ResourceTable;
 
 use self::generated::wasi::keyvalue::store::Error;
 use self::generated::wasi::keyvalue::{atomics, batch, store};
-
-pub use crate::host::resource::{BucketProxy, Cas, ClientProxy};
+pub use crate::host::resource::{BucketProxy, Cas};
 
 static CLIENTS: LazyLock<Mutex<HashMap<&str, Arc<dyn Client>>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
@@ -53,9 +50,8 @@ impl WasiKeyValue {
     /// # Errors
     ///
     /// If the client could not be registered
-    pub async fn client(self, client: impl Client + 'static) -> Self {
+    pub async fn client(self, client: impl Client + 'static) {
         CLIENTS.lock().await.insert(client.name(), Arc::new(client));
-        self
     }
 }
 

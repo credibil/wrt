@@ -8,12 +8,9 @@ use futures::TryStreamExt;
 use futures::future::{BoxFuture, FutureExt};
 use wasi_keyvalue::{Bucket, Client};
 
-const CLIENT_NAME: &str = "nats";
+use crate::{CLIENT_NAME, NatsClient};
 
-#[derive(Debug)]
-pub struct KvClient(pub async_nats::Client);
-
-impl Client for KvClient {
+impl Client for NatsClient {
     fn name(&self) -> &'static str {
         CLIENT_NAME
     }

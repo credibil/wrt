@@ -1,18 +1,13 @@
 use std::collections::HashMap;
+use std::pin::Pin;
 
-use anyhow::{Context, Result, anyhow};
+use anyhow::{Result, anyhow};
+use futures::Stream;
 use futures::future::{BoxFuture, FutureExt};
 use futures::stream::{self, StreamExt};
-use runtime::RunState;
-use tracing::{Instrument, info_span};
-use wasi_messaging::{Client, Error, Message, Messaging, Metadata, Reply};
-use wasmtime::Store;
-use wasmtime::component::InstancePre;
+use wasi_messaging::{Client, Message, Metadata, Reply};
 
-const CLIENT_NAME: &str = "nats";
-
-#[derive(Debug)]
-pub struct NatsClient(pub async_nats::Client);
+use crate::{CLIENT_NAME, NatsClient};
 
 impl Client for NatsClient {
     fn name(&self) -> &'static str {
@@ -20,10 +15,11 @@ impl Client for NatsClient {
     }
 
     fn subscribe(
-        &self, topics: Vec<String>, instance_pre: InstancePre<RunState>,
-    ) -> BoxFuture<'static, Result<()>> {
+        &self, topics: Vec<String>,
+    ) -> BoxFuture<'static, Result<Pin<Box<dyn Stream<Item = Message> + Send>>>> {
         let client = self.0.clone();
 
+        
         async move {
             tracing::trace!("subscribing to messaging topics: {topics:?}");
 
@@ -39,22 +35,8 @@ impl Client for NatsClient {
             tracing::info!("subscribed to {topics:?}");
 
             // process messages until terminated
-            let mut messages = stream::select_all(subscribers);
-            while let Some(nats_msg) = messages.next().await {
-                let message = to_message(nats_msg);
-                let instance_pre = instance_pre.clone();
-
-                tokio::spawn(
-                    async move {
-                        if let Err(e) = call_guest(message, instance_pre).await {
-                            tracing::error!("error processing message {e}");
-                        }
-                    }
-                    .instrument(info_span!("message")),
-                );
-            }
-
-            Ok(())
+            let stream = stream::select_all(subscribers).map(into_message);
+            Ok(Box::pin(stream) as Pin<Box<dyn Stream<Item = Message> + Send>>)
         }
         .boxed()
     }
@@ -108,32 +90,13 @@ impl Client for NatsClient {
                 .await
                 .map_err(|e| anyhow!("failed to send request: {e}"))?;
 
-            Ok(to_message(nats_msg))
+            Ok(into_message(nats_msg))
         }
         .boxed()
     }
 }
 
-// Forward message to the wasm component.
-async fn call_guest(message: Message, instance_pre: InstancePre<RunState>) -> Result<(), Error> {
-    let mut state = RunState::new();
-    let res_msg = state.table.push(message)?;
-
-    let mut store = Store::new(instance_pre.engine(), state);
-    let instance = instance_pre.instantiate_async(&mut store).await?;
-    let messaging = Messaging::new(&mut store, &instance)?;
-
-    // *** WASIP3 ***
-    // use `run_concurrent` for non-blocking execution
-    instance
-        .run_concurrent(&mut store, async |accessor| {
-            messaging.wasi_messaging_incoming_handler().call_handle(accessor, res_msg).await?
-        })
-        .await
-        .context("error running instance: {e}")?
-}
-
-fn to_message(nats_msg: async_nats::Message) -> Message {
+fn into_message(nats_msg: async_nats::Message) -> Message {
     let metadata = nats_msg.headers.map(|headers| {
         let mut header_map = HashMap::new();
         for (k, v) in headers.iter() {

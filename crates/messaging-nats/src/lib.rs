@@ -13,13 +13,15 @@ use async_nats::{AuthError, ConnectOptions};
 use runtime::ResourceBuilder;
 use tracing::instrument;
 
-use crate::messaging::NatsClient;
-
 const DEF_NATS_ADDR: &str = "demo.nats.io";
+const CLIENT_NAME: &str = "nats";
 
 pub struct Nats {
     attributes: HashMap<String, String>,
 }
+
+#[derive(Debug)]
+pub struct NatsClient(pub async_nats::Client);
 
 impl ResourceBuilder<NatsClient> for Nats {
     fn new() -> Self {

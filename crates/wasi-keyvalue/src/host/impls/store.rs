@@ -1,42 +1,50 @@
-use anyhow::Context;
+use std::sync::Arc;
 
+use anyhow::{Context, anyhow};
 use wasmtime::component::Resource;
 
-use crate::host::Host;
 use crate::host::generated::wasi::keyvalue::store;
 use crate::host::generated::wasi::keyvalue::store::{Error, KeyResponse};
 use crate::host::impls::Result;
-use crate::host::resource::BucketProxy;
-use crate::host::resource::ClientProxy;
+use crate::host::resource::{BucketProxy, ClientProxy};
+use crate::host::{CLIENTS, Host};
 
-impl store::HostClient for Host<'_> {
-    async fn connect(&mut self, name: String) -> Result<Resource<ClientProxy>> {
-        tracing::trace!("HostClient::connect {name}");
-        let client = ClientProxy::try_from(&name).await?;
-        let resource = self.table.push(client)?;
-        Ok(resource)
-    }
-
-    async fn disconnect(&mut self, _rep: Resource<ClientProxy>) -> Result<()> {
-        tracing::trace!("HostClient::disconnect");
-        Ok(())
-    }
-
-    async fn drop(&mut self, rep: Resource<ClientProxy>) -> anyhow::Result<()> {
-        tracing::trace!("HostClient::drop");
-        self.table.delete(rep)?;
-        Ok(())
+impl ClientProxy {
+    async fn try_from(_name: &str) -> anyhow::Result<Self> {
+        let clients = CLIENTS.lock().await;
+        let Some((_, client)) = clients.iter().next() else {
+            return Err(anyhow!("no client registered"))?;
+        };
+        Ok(Self(Arc::clone(client)))
     }
 }
 
+// impl store::HostClient for Host<'_> {
+//     async fn connect(&mut self, name: String) -> Result<Resource<ClientProxy>> {
+//         tracing::trace!("HostClient::connect {name}");
+//         let client = ClientProxy::try_from(&name).await?;
+//         let resource = self.table.push(client)?;
+//         Ok(resource)
+//     }
+
+//     async fn disconnect(&mut self, _rep: Resource<ClientProxy>) -> Result<()> {
+//         tracing::trace!("HostClient::disconnect");
+//         Ok(())
+//     }
+
+//     async fn drop(&mut self, rep: Resource<ClientProxy>) -> anyhow::Result<()> {
+//         tracing::trace!("HostClient::drop");
+//         self.table.delete(rep)?;
+//         Ok(())
+//     }
+// }
+
 impl store::Host for Host<'_> {
     // Open bucket specified by identifier, save to state and return as a resource.
-    async fn open(
-        &mut self, client: Resource<ClientProxy>, identifier: String,
-    ) -> Result<Resource<BucketProxy>> {
+    async fn open(&mut self, identifier: String) -> Result<Resource<BucketProxy>> {
         tracing::trace!("store::Host::open: identifier {identifier:?}");
-        let client = self.table.get(&client).context("failed to get client")?;
-
+        // let client = self.table.get(&client).context("failed to get client")?;
+        let client = ClientProxy::try_from("").await?;
         let bucket = client.open(identifier).await.context("failed to open bucket")?;
         let proxy = BucketProxy(bucket);
 

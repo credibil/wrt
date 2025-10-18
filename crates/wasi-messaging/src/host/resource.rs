@@ -1,14 +1,14 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::ops::{Deref, DerefMut};
+use std::pin::Pin;
 use std::sync::Arc;
 use std::time::Duration;
 
 use anyhow::Result;
+use futures::Stream;
 use futures::future::BoxFuture;
-use runtime::RunState;
 use serde::{Deserialize, Serialize};
-use wasmtime::component::InstancePre;
 
 use crate::host::generated::wasi::messaging::types;
 
@@ -16,8 +16,8 @@ pub trait Client: Debug + Send + Sync + 'static {
     fn name(&self) -> &'static str;
 
     fn subscribe(
-        &self, topics: Vec<String>, instance_pre: InstancePre<RunState>,
-    ) -> BoxFuture<'static, Result<()>>;
+        &self, topics: Vec<String>,
+    ) -> BoxFuture<'static, Result<Pin<Box<dyn Stream<Item = Message> + Send>>>>;
 
     fn send(&self, topic: String, message: Message) -> BoxFuture<'static, Result<()>>;
 
