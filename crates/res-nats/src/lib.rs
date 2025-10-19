@@ -23,7 +23,7 @@ pub struct Nats {
 }
 
 #[derive(Debug, Clone)]
-pub struct NatsClient(pub async_nats::Client);
+pub struct NatsClient(async_nats::Client);
 
 impl ResourceBuilder<NatsClient> for Nats {
     fn new() -> Self {

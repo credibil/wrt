@@ -45,6 +45,7 @@ wasi-http.workspace = true
 wasi-keyvalue.workspace = true
 wasi-messaging.workspace = true
 wasi-otel.workspace = true
+wasi-blobstore.workspace = true
 wasi-vault-az.workspace = true
 wasmtime = { workspace = true, features = ["runtime"] }
 

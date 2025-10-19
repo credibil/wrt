@@ -1,9 +1,9 @@
 use anyhow::{Result, anyhow};
 use res_mongodb::MongoDb;
-use runtime::{AddResource, Cli, Command, Parser, ResourceBuilder, RuntimeBuilder};
-use wasi_blobstore_mdb::Blobstore;
-use wasi_http::Http;
-use wasi_otel::Otel;
+use runtime::{Cli, Command, Parser, ResourceBuilder, RuntimeBuilder};
+use wasi_blobstore::WasiBlobstore;
+use wasi_http::WasiHttp;
+use wasi_otel::WasiOtel;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -14,7 +14,8 @@ async fn main() -> Result<()> {
     tracing::info!("Tracing initialised, logging available");
 
     let mongodb = MongoDb::new().await?;
-    let runtime =
-        builder.register(Otel).register(Http).register(Blobstore.resource(mongodb)?).build();
+    let blobstore = WasiBlobstore.client(mongodb).await;
+
+    let runtime = builder.register(WasiOtel).register(WasiHttp).register(blobstore).build();
     runtime.await
 }

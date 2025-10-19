@@ -16,7 +16,6 @@ impl Client for NatsClient {
         CLIENT_NAME
     }
 
-    /// Open a container.
     fn create_container(&self, name: String) -> FutureResult<Arc<dyn Container>> {
         tracing::trace!("creating container: {name}");
         let client = self.0.clone();
@@ -37,7 +36,6 @@ impl Client for NatsClient {
         .boxed()
     }
 
-    /// Get a container.
     fn get_container(&self, name: String) -> FutureResult<Arc<dyn Container>> {
         tracing::trace!("getting container: {name}");
         let client = self.0.clone();
@@ -54,7 +52,6 @@ impl Client for NatsClient {
         .boxed()
     }
 
-    /// Delete a container.
     fn delete_container(&self, name: String) -> FutureResult<()> {
         tracing::trace!("deleting container: {name}");
         let client = self.0.clone();
@@ -69,7 +66,6 @@ impl Client for NatsClient {
         .boxed()
     }
 
-    /// Check if a container exists.
     fn container_exists(&self, name: String) -> FutureResult<bool> {
         tracing::trace!("checking existence of container: {name}");
         let client = self.0.clone();
@@ -113,7 +109,6 @@ impl Container for NatsContainer {
         async move { Ok(metadata) }.boxed()
     }
 
-    /// Get the value associated with the key.
     fn get_data(&self, name: String, _start: u64, _end: u64) -> FutureResult<Option<Vec<u8>>> {
         tracing::trace!("getting object data: {name}");
         let store = self.store.clone();
@@ -127,7 +122,6 @@ impl Container for NatsContainer {
         .boxed()
     }
 
-    /// Set the value associated with the key.
     fn write_data(&self, name: String, data: Vec<u8>) -> FutureResult<()> {
         tracing::trace!("writing object data: {name}");
         let store = self.store.clone();
@@ -139,7 +133,6 @@ impl Container for NatsContainer {
         .boxed()
     }
 
-    /// List all objects in the container.
     fn list_objects(&self) -> FutureResult<Vec<String>> {
         tracing::trace!("listing objects");
         let store = self.store.clone();
@@ -161,14 +154,11 @@ impl Container for NatsContainer {
         .boxed()
     }
 
-    /// Delete the value associated with the key.
     fn delete_object(&self, name: String) -> FutureResult<()> {
         let store = self.store.clone();
-
         async move { store.delete(name).await.context("deleting object") }.boxed()
     }
 
-    /// Check if the object exists.
     fn has_object(&self, name: String) -> FutureResult<bool> {
         tracing::trace!("checking existence of object: {name}");
         let store = self.store.clone();

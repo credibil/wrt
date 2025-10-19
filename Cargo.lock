@@ -2809,9 +2809,14 @@ name = "res-mongodb"
 version = "0.11.0"
 dependencies = [
  "anyhow",
+ "chrono",
+ "futures",
  "mongodb",
  "runtime",
+ "serde",
+ "serde_json",
  "tracing",
+ "wasi-blobstore",
 ]
 
 [[package]]
@@ -2886,6 +2891,7 @@ dependencies = [
  "tower-http",
  "tracing",
  "wasi 0.14.7+wasi-0.2.4",
+ "wasi-blobstore",
  "wasi-blobstore-mdb",
  "wasi-http",
  "wasi-keyvalue",

@@ -28,9 +28,9 @@ use wasmtime_wasi_http::io::TokioIo;
 const DEF_HTTP_ADDR: &str = "0.0.0.0:8080";
 
 #[derive(Debug)]
-pub struct Http;
+pub struct WasiHttp;
 
-impl runtime::Service for Http {
+impl runtime::Service for WasiHttp {
     fn add_to_linker(&self, linker: &mut Linker<RunState>) -> Result<()> {
         wasmtime_wasi_http::add_only_http_to_linker_async(linker)
     }
@@ -41,7 +41,7 @@ impl runtime::Service for Http {
     }
 }
 
-impl Http {
+impl WasiHttp {
     /// Provide http proxy service the specified wasm component.
     async fn run(pre: InstancePre<RunState>) -> Result<()> {
         // bail if server is not required

@@ -38,9 +38,9 @@ const DEF_HTTP_ADDR: &str = "http://localhost:4318";
 static HTTP_CLIENT: OnceLock<reqwest::Client> = OnceLock::new();
 
 #[derive(Debug)]
-pub struct Otel;
+pub struct WasiOtel;
 
-impl runtime::Service for Otel {
+impl runtime::Service for WasiOtel {
     fn add_to_linker(&self, linker: &mut Linker<RunState>) -> Result<()> {
         wasi_otel::tracing::add_to_linker::<_, Data>(linker, Host::new)?;
         wasi_otel::metrics::add_to_linker::<_, Data>(linker, Host::new)?;

@@ -1,19 +1,25 @@
-//! Azure Key Vault Secrets Client.
+//! MongoDB Client.
+
+mod blobstore;
 
 use std::collections::HashMap;
 use std::env;
 use std::pin::Pin;
 
 use anyhow::{Context, Result, anyhow};
-use mongodb::Client;
 use runtime::ResourceBuilder;
 use tracing::instrument;
+
+const CLIENT_NAME: &str = "mongodb";
 
 pub struct MongoDb {
     attributes: HashMap<String, String>,
 }
 
-impl ResourceBuilder<Client> for MongoDb {
+#[derive(Debug, Clone)]
+pub struct MongoDbClient(mongodb::Client);
+
+impl ResourceBuilder<MongoDbClient> for MongoDb {
     fn new() -> Self {
         Self {
             attributes: HashMap::new(),
@@ -26,7 +32,7 @@ impl ResourceBuilder<Client> for MongoDb {
     }
 
     #[instrument(name = "MongoDb::connect", skip(self))]
-    async fn connect(self) -> Result<Client> {
+    async fn connect(self) -> Result<MongoDbClient> {
         let uri = env::var("MONGODB_URI").context("fetching MONGODB_URI env var")?;
 
         let client = mongodb::Client::with_uri_str(uri).await.map_err(|e| {
@@ -35,13 +41,13 @@ impl ResourceBuilder<Client> for MongoDb {
         })?;
         tracing::info!("connected to mongo");
 
-        Ok(client)
+        Ok(MongoDbClient(client))
     }
 }
 
 impl IntoFuture for MongoDb {
     type IntoFuture = Pin<Box<dyn Future<Output = Self::Output> + Send + 'static>>;
-    type Output = Result<Client>;
+    type Output = Result<MongoDbClient>;
 
     fn into_future(self) -> Self::IntoFuture {
         Box::pin(self.connect())
