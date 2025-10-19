@@ -11,10 +11,9 @@ use serde_json::{Value, json};
 use tracing::Level;
 use wasi::exports::http;
 use wasi::http::types::{IncomingRequest, ResponseOutparam};
-use wit_bindings::messaging;
-use wit_bindings::messaging::incoming_handler::Configuration;
-use wit_bindings::messaging::producer;
-use wit_bindings::messaging::types::{Client, Error, Message};
+use wasi_messaging::incoming_handler::Configuration;
+use wasi_messaging::producer;
+use wasi_messaging::types::{Client, Error, Message};
 
 pub struct Http;
 
@@ -45,7 +44,7 @@ wasi::http::proxy::export!(Http);
 
 pub struct Messaging;
 
-impl messaging::incoming_handler::Guest for Messaging {
+impl wasi_messaging::incoming_handler::Guest for Messaging {
     #[wasi_otel::instrument(name = "messaging_guest_handle",level = Level::DEBUG)]
     async fn handle(message: Message) -> Result<(), Error> {
         let data = message.data();
@@ -113,4 +112,4 @@ impl messaging::incoming_handler::Guest for Messaging {
     }
 }
 
-wit_bindings::messaging::export!(Messaging with_types_in wit_bindings::messaging);
+wasi_messaging::export!(Messaging with_types_in wasi_messaging);

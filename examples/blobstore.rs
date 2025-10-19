@@ -8,9 +8,9 @@ use serde_json::Value;
 use tracing::Level;
 use wasi::exports::http::incoming_handler::Guest;
 use wasi::http::types::{IncomingRequest, ResponseOutparam};
+use wasi_blobstore::blobstore;
+use wasi_blobstore::types::{IncomingValue, OutgoingValue};
 use wasi_http::Result;
-use wit_bindings::blobstore::blobstore;
-use wit_bindings::blobstore::types::{IncomingValue, OutgoingValue};
 
 struct HttpGuest;
 

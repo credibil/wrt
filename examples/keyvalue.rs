@@ -9,7 +9,7 @@ use tracing::Level;
 use wasi::exports::http::incoming_handler::Guest;
 use wasi::http::types::{IncomingRequest, ResponseOutparam};
 use wasi_http::Result;
-use wit_bindings::keyvalue::store;
+use wasi_keyvalue::store;
 
 struct HttpGuest;
 
