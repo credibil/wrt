@@ -9,7 +9,7 @@ mod types_impl;
 mod generated {
     #![allow(clippy::trait_duplication_in_bounds)]
 
-    // pub use self::wasi::sql::Error;
+    pub use super::{ConnectionProxy, Statement};
     pub use anyhow::Error;
 
     wasmtime::component::bindgen!({
@@ -18,11 +18,12 @@ mod generated {
         imports: {
             default: async | tracing | trappable,
         },
-        // with: {
-        //     "wasi:sql/vault/locker": LockerProxy,
-        // },
+        with: {
+            "wasi:sql/types/connection": ConnectionProxy,
+            "wasi:sql/types/statement": Statement,
+            "wasi:sql/types/error": Error,
+        },
         trappable_error_type: {
-            "wasi:sql/readwrite/error" => Error,
             "wasi:sql/types/error" => Error,
         },
     });
@@ -33,10 +34,9 @@ use std::sync::{Arc, LazyLock};
 
 use futures::lock::Mutex;
 use runtime::{RunState, Service};
-use wasmtime::component::{HasData, Linker, ResourceTableError};
+use wasmtime::component::{HasData, Linker};
 use wasmtime_wasi::ResourceTable;
 
-use self::generated::wasi::sql::types::Error;
 use self::generated::wasi::sql::{readwrite, types};
 pub use crate::host::resource::*;
 
@@ -47,12 +47,12 @@ static CLIENTS: LazyLock<Mutex<HashMap<&str, Arc<dyn Client>>>> =
 pub struct WasiSql;
 
 impl WasiSql {
-    /// Register a messaging client with the host
+    /// Register SQL connection client implementations with the host.
     ///
     /// # Errors
     ///
     /// If the client could not be registered
-    pub async fn client(self, client: impl Client + 'static) -> Self {
+    pub async fn resource(self, client: impl Client + 'static) -> Self {
         CLIENTS.lock().await.insert(client.name(), Arc::new(client));
         self
     }
@@ -79,9 +79,3 @@ impl Host<'_> {
         Host { table: &mut c.table }
     }
 }
-
-// impl From<ResourceTableError> for Error {
-//     fn from(err: ResourceTableError) -> Self {
-//         Self::Other(err.to_string())
-//     }
-// }

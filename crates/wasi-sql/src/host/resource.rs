@@ -2,26 +2,25 @@ use std::fmt::Debug;
 use std::ops::Deref;
 use std::sync::Arc;
 
+pub use crate::host::generated::wasi::sql::readwrite::Row;
 use anyhow::Result;
 use futures::future::BoxFuture;
 
-// use crate::host::generated::wasi::vault::{ContainerMetadata, ObjectMetadata};
-
 pub type FutureResult<T> = BoxFuture<'static, Result<T>>;
 
-/// Blobstore providers implement the [`Client`] trait to allow the host to
-/// connect to a backend (Azure Storage, NATS object store, etc) and open
+/// SQL providers implement the [`Client`] trait to allow the host to
+/// connect to a backend (Azure Table Storage, Postgres, etc) and open
 /// containers.
 pub trait Client: Debug + Send + Sync + 'static {
     /// The name of the backend this client is implemented for.
     fn name(&self) -> &'static str;
 
-    /// Open a container.
-    fn open(&self, identifier: String) -> FutureResult<Arc<dyn Locker>>;
+    /// Open a connection.
+    fn open(&self, name: String) -> FutureResult<Arc<dyn Connection>>;
 }
 
-/// [`ClientProxy`] provides a concrete wrapper around a `dyn Client` object.
-/// It is used to store client resources in the resource table.
+/// [`ClientProxy`] provides a concrete wrapper around a `dyn Connection` object.
+/// It is used to store connection resources in the resource table.
 #[derive(Clone, Debug)]
 pub struct ClientProxy(pub Arc<dyn Client>);
 
@@ -33,36 +32,36 @@ impl Deref for ClientProxy {
     }
 }
 
-/// Providers implement the [`Locker`] trait to allow the host to
-/// interact with different backend lockers (stores).
-pub trait Locker: Debug + Send + Sync + 'static {
-    /// The name of the locker.
-    fn identifier(&self) -> String;
+/// SQL providers implement the [`Connection`] trait to allow the host to
+/// connect to a backend (Azure Table Storage, Postgres, etc) and execute SQL
+/// statements.
+pub trait Connection: Debug + Send + Sync + 'static {
+    /// The name of the backend this client is implemented for.
+    fn name(&self) -> &'static str;
 
-    /// Get the value associated with the key.
-    fn get(&self, secret_id: String) -> FutureResult<Option<Vec<u8>>>;
+    fn query(&self, query: String, params: Vec<String>) -> FutureResult<Vec<Row>>;
 
-    /// Set the value associated with the key.
-    fn set(&self, secret_id: String, value: Vec<u8>) -> FutureResult<()>;
-
-    /// Delete the value associated with the key.
-    fn delete(&self, secret_id: String) -> FutureResult<()>;
-
-    /// Check if the entry exists.
-    fn exists(&self, secret_id: String) -> FutureResult<bool>;
-
-    /// List all keys in the bucket.
-    fn list_ids(&self) -> FutureResult<Vec<String>>;
+    fn exec(&self, query: String, params: Vec<String>) -> FutureResult<u32>;
 }
 
-/// Represents a locker resource in the WASI Vault.
-#[derive(Debug)]
-pub struct LockerProxy(pub Arc<dyn Locker>);
+/// [`ConnectionProxy`] provides a concrete wrapper around a `dyn Connection` object.
+/// It is used to store connection resources in the resource table.
+#[derive(Clone, Debug)]
+pub struct ConnectionProxy(pub Arc<dyn Connection>);
 
-impl Deref for LockerProxy {
-    type Target = Arc<dyn Locker>;
+impl Deref for ConnectionProxy {
+    type Target = Arc<dyn Connection>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
+}
+
+/// Represents a statement resource in the WASI SQL host.
+pub struct Statement {
+    /// SQL query string.
+    pub query: String,
+
+    /// Query parameters.
+    pub params: Vec<String>,
 }

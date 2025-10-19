@@ -52,11 +52,10 @@ impl Bucket for KvBucket {
     }
 
     fn get(&self, key: String) -> FutureResult<Option<Vec<u8>>> {
+        tracing::trace!("getting key: {key}");
         let store = self.0.clone();
 
         async move {
-            tracing::trace!("getting key: {key}");
-
             let entry = store.get(key).await.context("getting key")?;
             Ok(entry.map(Into::into))
         }
@@ -64,10 +63,10 @@ impl Bucket for KvBucket {
     }
 
     fn set(&self, key: String, value: Vec<u8>) -> FutureResult<()> {
+        tracing::trace!("setting key: {key}");
         let store = self.0.clone();
 
         async move {
-            tracing::trace!("setting key: {key}");
             store.put(key, value.into()).await.context("setting key")?;
             Ok(())
         }
@@ -75,11 +74,10 @@ impl Bucket for KvBucket {
     }
 
     fn delete(&self, key: String) -> FutureResult<()> {
+        tracing::trace!("deleting key: {key}");
         let store = self.0.clone();
 
         async move {
-            tracing::trace!("deleting key: {key}");
-
             store.delete(key).await.context("deleting key")?;
             Ok(())
         }
@@ -87,11 +85,10 @@ impl Bucket for KvBucket {
     }
 
     fn exists(&self, key: String) -> FutureResult<bool> {
+        tracing::trace!("checking existence of key: {key}");
         let store = self.0.clone();
 
         async move {
-            tracing::trace!("checking existence of key: {key}");
-
             let entry = store.get(key).await.context("checking key")?;
             Ok(entry.is_some())
         }
