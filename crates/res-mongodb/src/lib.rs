@@ -35,9 +35,10 @@ impl ResourceBuilder<MongoDbClient> for MongoDb {
     async fn connect(self) -> Result<MongoDbClient> {
         let uri = env::var("MONGODB_URI").context("fetching MONGODB_URI env var")?;
 
-        let client = mongodb::Client::with_uri_str(uri).await.map_err(|e| {
-            tracing::error!("failed to connect to mongo: {e}");
-            anyhow!("failed to connect to mongo: {e}")
+        let client = mongodb::Client::with_uri_str(uri.clone()).await.map_err(|e| {
+            let err = format!("failed to connect to mongo at: {e}");
+            tracing::error!(err);
+            anyhow!(err)
         })?;
         tracing::info!("connected to mongo");
 
