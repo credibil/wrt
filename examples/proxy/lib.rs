@@ -5,17 +5,17 @@ use axum::routing::{get, post};
 use axum::{Json, Router};
 use http::Method;
 use http::header::{CACHE_CONTROL, IF_NONE_MATCH};
-use wasi_http::{Client, Decode, Result};
 use serde_json::{Value, json};
 use tower_http::cors::{Any, CorsLayer};
 use tracing::Level;
 use wasi::exports::http::incoming_handler::Guest;
 use wasi::http::types::{IncomingRequest, ResponseOutparam};
+use wasi_http::{Client, Decode, Result};
 
 struct HttpGuest;
 
 impl Guest for HttpGuest {
-    #[sdk_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
+    #[wasi_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
     fn handle(request: IncomingRequest, response_out: ResponseOutparam) {
         let router = Router::new()
             .route("/", get(get_handler))
@@ -33,7 +33,7 @@ impl Guest for HttpGuest {
 }
 
 // Forward request to external service and return the response
-#[sdk_otel::instrument]
+#[wasi_otel::instrument]
 async fn get_handler() -> Result<Json<Value>> {
     let body = Client::new()
         .cache_bucket("credibil_bucket")
@@ -50,7 +50,7 @@ async fn get_handler() -> Result<Json<Value>> {
 }
 
 // Forward request to external service and return the response
-#[sdk_otel::instrument]
+#[wasi_otel::instrument]
 async fn post_handler(Json(body): Json<Value>) -> Result<Json<Value>> {
     let body = Client::new()
         .cache_bucket("credibil_bucket")
@@ -68,7 +68,7 @@ async fn post_handler(Json(body): Json<Value>) -> Result<Json<Value>> {
 }
 
 // Handle preflight OPTIONS requests for CORS.
-#[sdk_otel::instrument]
+#[wasi_otel::instrument]
 async fn handle_options() -> Result<()> {
     Ok(())
 }

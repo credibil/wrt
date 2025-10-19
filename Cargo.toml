@@ -63,7 +63,6 @@ wasi.workspace = true
 wasi-http.workspace = true
 wasi-otel.workspace = true
 wit-bindgen.workspace = true
-wit-bindings.workspace = true
 
 [[example]]
 name = "blobstore"
