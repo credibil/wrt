@@ -53,8 +53,9 @@ impl WasiKeyValue {
     /// # Errors
     ///
     /// If the client could not be registered
-    pub async fn client(self, client: impl Client + 'static) {
+    pub async fn client(self, client: impl Client + 'static) -> Self {
         CLIENTS.lock().await.insert(client.name(), Arc::new(client));
+        self
     }
 }
 

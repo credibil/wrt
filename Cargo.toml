@@ -48,8 +48,6 @@ wasi-otel.workspace = true
 wasi-vault-az.workspace = true
 wasmtime = { workspace = true, features = ["runtime"] }
 
-messaging-nats.workspace = true
-
 # required for azure_identity, etc.
 openssl = { version = "0.10", features = ["vendored"] }
 
@@ -211,16 +209,14 @@ res-mongodb = { path = "crates/res-mongodb", version = "0.11.0", registry = "cre
 res-nats = { path = "crates/res-nats", version = "0.11.0", registry = "credibil" }
 runtime = { path = "crates/runtime", version = "0.11.0", registry = "credibil" }
 sdk-otel-attr = { path = "crates/sdk-otel-attr", version = "0.11.0", registry = "credibil" }
+wasi-blobstore = { path = "crates/wasi-blobstore", version = "0.11.0", registry = "credibil" }
 wasi-blobstore-mdb = { path = "crates/wasi-blobstore-mdb", version = "0.11.0", registry = "credibil" }
 wasi-http = { path = "crates/wasi-http", version = "0.11.0", registry = "credibil" }
 wasi-keyvalue = { path = "crates/wasi-keyvalue", version = "0.11.0", registry = "credibil" }
-wasi-blobstore = { path = "crates/wasi-blobstore", version = "0.11.0", registry = "credibil" }
 wasi-messaging = { path = "crates/wasi-messaging", version = "0.11.0", registry = "credibil" }
 wasi-otel = { path = "crates/wasi-otel", version = "0.11.0", registry = "credibil" }
 wasi-vault-az = { path = "crates/wasi-vault-az", version = "0.11.0", registry = "credibil" }
 wit-bindings = { path = "crates/wit-bindings", version = "0.11.0", registry = "credibil" }
-
-messaging-nats = { path = "crates/messaging-nats", version = "0.11.0", registry = "credibil" }
 
 # [patch."https://github.com/credibil/core.git"]
 # credibil-otel = { path = "../../credibil/core/crates/otel" }

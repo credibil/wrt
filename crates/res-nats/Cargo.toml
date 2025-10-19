@@ -1,6 +1,6 @@
 [package]
 name = "res-nats"
-description = "NATS resource provider"
+description = "NATS provider for messaging, keyvalue, and blobstore"
 publish = false
 readme = "README.md"
 authors.workspace = true
@@ -19,6 +19,12 @@ workspace = true
 [dependencies]
 anyhow.workspace = true
 async-nats.workspace = true
+chrono.workspace = true
+futures.workspace = true
 nkeys = { version = "0.4.5" }
 runtime.workspace = true
+tokio.workspace = true
 tracing.workspace = true
+wasi-blobstore.workspace = true
+wasi-keyvalue.workspace = true
+wasi-messaging.workspace = true
