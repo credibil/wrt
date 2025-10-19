@@ -9,4 +9,4 @@ wit_bindgen::generate!({
     pub_export_macro: true
 });
 
-pub use self::wasi::blobstore::*;
+pub use self::wasi::vault::*;

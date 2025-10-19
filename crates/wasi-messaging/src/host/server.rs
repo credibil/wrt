@@ -79,5 +79,5 @@ async fn call_guest(
             messaging.wasi_messaging_incoming_handler().call_handle(accessor, res_msg).await?
         })
         .await
-        .context("error running instance: {e}")?
+        .context("running instance")?
 }

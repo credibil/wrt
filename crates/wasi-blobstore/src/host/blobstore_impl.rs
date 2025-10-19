@@ -11,7 +11,7 @@ impl ClientProxy {
     async fn try_from(_name: &str) -> anyhow::Result<Self> {
         let clients = CLIENTS.lock().await;
         let Some((_, client)) = clients.iter().next() else {
-            return Err(anyhow!("no client registered"))?;
+            return Err(anyhow!("no client registered"));
         };
         Ok(Self(Arc::clone(client)))
     }
