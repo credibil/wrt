@@ -214,6 +214,7 @@ sdk-otel-attr = { path = "crates/sdk-otel-attr", version = "0.11.0", registry = 
 wasi-blobstore-mdb = { path = "crates/wasi-blobstore-mdb", version = "0.11.0", registry = "credibil" }
 wasi-http = { path = "crates/wasi-http", version = "0.11.0", registry = "credibil" }
 wasi-keyvalue = { path = "crates/wasi-keyvalue", version = "0.11.0", registry = "credibil" }
+wasi-blobstore = { path = "crates/wasi-blobstore", version = "0.11.0", registry = "credibil" }
 wasi-messaging = { path = "crates/wasi-messaging", version = "0.11.0", registry = "credibil" }
 wasi-otel = { path = "crates/wasi-otel", version = "0.11.0", registry = "credibil" }
 wasi-vault-az = { path = "crates/wasi-vault-az", version = "0.11.0", registry = "credibil" }

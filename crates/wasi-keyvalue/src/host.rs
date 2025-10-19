@@ -38,7 +38,6 @@ use wasmtime_wasi::ResourceTable;
 
 use self::generated::wasi::keyvalue::store::Error;
 use self::generated::wasi::keyvalue::{atomics, batch, store};
-pub use crate::host::resource::{BucketProxy, Cas, Client};
 
 static CLIENTS: LazyLock<Mutex<HashMap<&str, Arc<dyn Client>>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));

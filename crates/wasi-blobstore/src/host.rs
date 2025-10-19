@@ -8,7 +8,7 @@ mod types_impl;
 mod generated {
     #![allow(clippy::trait_duplication_in_bounds)]
 
-    pub use super::{Container, IncomingValue, OutgoingValue, StreamObjectNames};
+    pub use super::{ContainerProxy, IncomingValue, OutgoingValue, StreamObjectNames};
 
     wasmtime::component::bindgen!({
         world: "blobstore",
@@ -21,7 +21,7 @@ mod generated {
 
             "wasi:blobstore/types/incoming-value": IncomingValue,
             "wasi:blobstore/types/outgoing-value": OutgoingValue,
-            "wasi:blobstore/container/container": Container,
+            "wasi:blobstore/container/container": ContainerProxy,
             "wasi:blobstore/container/stream-object-names": StreamObjectNames,
         },
         trappable_error_type: {
@@ -34,17 +34,16 @@ use std::collections::HashMap;
 use std::sync::{Arc, LazyLock};
 
 use anyhow::Result;
-use async_nats::jetstream::object_store::ObjectStore;
 use bytes::Bytes;
 use futures::lock::Mutex;
 use runtime::RunState;
 use wasmtime::component::{HasData, Linker, ResourceTable};
 use wasmtime_wasi::p2::pipe::MemoryOutputPipe;
 
+pub use self::generated::wasi::blobstore::container::{ContainerMetadata, ObjectMetadata};
 use self::generated::wasi::blobstore::{blobstore, container, types};
-use crate::host::resource::Client;
+pub use resource::*;
 
-pub type Container = ObjectStore;
 pub type IncomingValue = Bytes;
 pub type OutgoingValue = MemoryOutputPipe;
 pub type StreamObjectNames = Vec<String>;

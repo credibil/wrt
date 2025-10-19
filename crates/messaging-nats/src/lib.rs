@@ -1,5 +1,6 @@
 //! NATS Client.
 
+mod blobstore;
 mod keyvalue;
 mod messaging;
 

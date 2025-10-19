@@ -2038,10 +2038,13 @@ version = "0.11.0"
 dependencies = [
  "anyhow",
  "async-nats",
+ "chrono",
  "futures",
  "nkeys",
  "runtime",
+ "tokio",
  "tracing",
+ "wasi-blobstore",
  "wasi-keyvalue",
  "wasi-messaging",
 ]

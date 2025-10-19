@@ -5,16 +5,28 @@ use std::sync::Arc;
 use anyhow::Result;
 use futures::future::BoxFuture;
 
+use crate::host::generated::wasi::blobstore::container::{ContainerMetadata, ObjectMetadata};
+
 pub type FutureResult<T> = BoxFuture<'static, Result<T>>;
 
-/// Key-Value providers implement the [`Client`] trait to allow the host to
-/// connect to a backend (in-memory, redis, nats-kv, etc) and open buckets.
+/// Blobstore providers implement the [`Client`] trait to allow the host to
+/// connect to a backend (Azure Storage, NATS object store, etc) and open 
+/// containers.
 pub trait Client: Debug + Send + Sync + 'static {
     /// The name of the backend this client is implemented for.
     fn name(&self) -> &'static str;
 
-    /// Open a bucket with the given identifier.
-    fn open(&self, identifier: String) -> FutureResult<Arc<dyn Bucket>>;
+    /// Open a container.
+    fn create_container(&self, name: String) -> FutureResult<Arc<dyn Container>>;
+
+    /// Get a container.
+    fn get_container(&self, name: String) -> FutureResult<Arc<dyn Container>>;
+
+    /// Delete a container.
+    fn delete_container(&self, name: String) -> FutureResult<()>;
+
+    /// Check if a container exists.
+    fn container_exists(&self, name: String) -> FutureResult<bool>;
 }
 
 /// [`ClientProxy`] provides a concrete wrapper around a `dyn Client` object.
@@ -30,45 +42,39 @@ impl Deref for ClientProxy {
     }
 }
 
-/// Providers implement the [`Bucket`] trait to allow the host to
-/// interact with different backend buckets (stores).
-pub trait Bucket: Debug + Send + Sync + 'static {
-    /// The name of the bucket.
-    fn name(&self) -> &'static str;
+/// Providers implement the [`Container`] trait to allow the host to
+/// interact with different backend containers.
+pub trait Container: Debug + Send + Sync + 'static {
+    /// The name of the container.
+    fn name(&self) -> FutureResult<String>;
+
+    fn info(&self) -> FutureResult<ContainerMetadata>;
 
     /// Get the value associated with the key.
-    fn get(&self, key: String) -> FutureResult<Option<Vec<u8>>>;
+    fn get_data(&self, name: String, _start: u64, _end: u64) -> FutureResult<Option<Vec<u8>>>;
 
     /// Set the value associated with the key.
-    fn set(&self, key: String, value: Vec<u8>) -> FutureResult<()>;
+    fn write_data(&self, name: String, data: Vec<u8>) -> FutureResult<()>;
+
+    /// List all objects in the container.
+    fn list_objects(&self) -> FutureResult<Vec<String>>;
 
     /// Delete the value associated with the key.
-    fn delete(&self, key: String) -> FutureResult<()>;
+    fn delete_object(&self, name: String) -> FutureResult<()>;
 
-    /// Check if the entry exists.
-    fn exists(&self, key: String) -> FutureResult<bool>;
+    /// Check if the object exists.
+    fn has_object(&self, name: String) -> FutureResult<bool>;
 
-    /// List all keys in the bucket.
-    fn keys(&self) -> FutureResult<Vec<String>>;
+    fn object_info(&self, name: String) -> FutureResult<ObjectMetadata>;
 }
 
 #[derive(Clone, Debug)]
-pub struct BucketProxy(pub Arc<dyn Bucket>);
+pub struct ContainerProxy(pub Arc<dyn Container>);
 
-impl Deref for BucketProxy {
-    type Target = Arc<dyn Bucket>;
+impl Deref for ContainerProxy {
+    type Target = Arc<dyn Container>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
-}
-
-/// CAS (Compare-And-Swap) operation handle.
-#[derive(Clone, Debug)]
-pub struct Cas {
-    /// The key associated with the CAS operation.
-    pub key: String,
-
-    /// The current value associated with the key.
-    pub current: Option<Vec<u8>>,
 }

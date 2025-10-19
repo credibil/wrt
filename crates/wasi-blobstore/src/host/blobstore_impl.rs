@@ -1,55 +1,53 @@
-use anyhow::{Result, anyhow};
-use async_nats::jetstream;
-use async_nats::jetstream::object_store::{Config, ObjectStore};
+use std::sync::Arc;
+
+use anyhow::{Context, Result, anyhow};
 use wasmtime::component::Resource;
 
-use crate::host::Host;
 use crate::host::generated::wasi::blobstore::blobstore::{self, ObjectId};
+use crate::host::resource::{ClientProxy, ContainerProxy};
+use crate::host::{CLIENTS, Host};
 
-pub type Container = ObjectStore;
-
-fn nats() -> Result<&'static async_nats::Client> {
-    todo!()
+impl ClientProxy {
+    async fn try_from(_name: &str) -> anyhow::Result<Self> {
+        let clients = CLIENTS.lock().await;
+        let Some((_, client)) = clients.iter().next() else {
+            return Err(anyhow!("no client registered"))?;
+        };
+        Ok(Self(Arc::clone(client)))
+    }
 }
 
-// Implement the [`wasi_sql::ReadWriteView`]` trait for Host<'_>.
 impl blobstore::Host for Host<'_> {
-    async fn create_container(&mut self, name: String) -> Result<Resource<Container>> {
-        let jetstream = jetstream::new(nats()?.clone());
-        let store = jetstream
-            .create_object_store(Config {
-                bucket: name,
-                ..Config::default()
-            })
-            .await?;
+    async fn create_container(&mut self, name: String) -> Result<Resource<ContainerProxy>> {
+        tracing::trace!("create_container: {name}");
 
-        Ok(self.table.push(store)?)
+        let client = ClientProxy::try_from("").await?;
+        let container = client.create_container(name).await.context("creating container")?;
+        let proxy = ContainerProxy(container);
+        Ok(self.table.push(proxy)?)
     }
 
-    async fn get_container(&mut self, name: String) -> Result<Resource<Container>> {
-        let jetstream = jetstream::new(nats()?.clone());
-        let store = jetstream
-            .get_object_store(&name)
-            .await
-            .map_err(|e| anyhow!("issue getting object store: {e}"))?;
+    async fn get_container(&mut self, name: String) -> Result<Resource<ContainerProxy>> {
+        tracing::trace!("get_container: {name}");
 
-        Ok(self.table.push(store)?)
+        let client = ClientProxy::try_from("").await?;
+        let container = client.get_container(name).await.context("getting container")?;
+        let proxy = ContainerProxy(container);
+        Ok(self.table.push(proxy)?)
     }
 
     async fn delete_container(&mut self, name: String) -> Result<()> {
-        let jetstream = jetstream::new(nats()?.clone());
-        jetstream
-            .delete_object_store(&name)
-            .await
-            .map_err(|e| anyhow!("issue deleting object store: {e}"))?;
+        tracing::trace!("delete_container: {name}");
 
-        Ok(())
+        let client = ClientProxy::try_from("").await?;
+        client.delete_container(name).await.context("deleting container")
     }
 
     async fn container_exists(&mut self, name: String) -> Result<bool> {
-        let jetstream = jetstream::new(nats()?.clone());
-        let exists = jetstream.get_object_store(&name).await.is_ok();
-        Ok(exists)
+        tracing::trace!("container_exists: {name}");
+
+        let client = ClientProxy::try_from("").await?;
+        client.container_exists(name).await.context("checking container exists")
     }
 
     async fn copy_object(&mut self, _src: ObjectId, _dest: ObjectId) -> Result<()> {

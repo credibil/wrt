@@ -46,7 +46,6 @@ impl store::Host for Host<'_> {
         let client = ClientProxy::try_from("").await?;
         let bucket = client.open(identifier).await.context("failed to open bucket")?;
         let proxy = BucketProxy(bucket);
-
         Ok(self.table.push(proxy)?)
     }
 
