@@ -2,12 +2,10 @@ use std::fmt::Debug;
 use std::sync::Arc;
 
 use anyhow::{Context, anyhow};
-use async_nats::jetstream::object_store::Config;
-use async_nats::jetstream::object_store::ObjectStore;
 use async_nats::jetstream;
+use async_nats::jetstream::object_store::{Config, ObjectStore};
 use chrono::Utc;
-use futures::FutureExt;
-use futures::StreamExt;
+use futures::{FutureExt, StreamExt};
 use tokio::io::AsyncReadExt;
 use wasi_blobstore::{Client, Container, ContainerMetadata, FutureResult, ObjectMetadata};
 

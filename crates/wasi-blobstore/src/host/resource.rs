@@ -10,7 +10,7 @@ use crate::host::generated::wasi::blobstore::container::{ContainerMetadata, Obje
 pub type FutureResult<T> = BoxFuture<'static, Result<T>>;
 
 /// Blobstore providers implement the [`Client`] trait to allow the host to
-/// connect to a backend (Azure Storage, NATS object store, etc) and open 
+/// connect to a backend (Azure Storage, NATS object store, etc) and open
 /// containers.
 pub trait Client: Debug + Send + Sync + 'static {
     /// The name of the backend this client is implemented for.

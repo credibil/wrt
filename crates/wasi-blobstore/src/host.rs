@@ -36,13 +36,13 @@ use std::sync::{Arc, LazyLock};
 use anyhow::Result;
 use bytes::Bytes;
 use futures::lock::Mutex;
+pub use resource::*;
 use runtime::RunState;
 use wasmtime::component::{HasData, Linker, ResourceTable};
 use wasmtime_wasi::p2::pipe::MemoryOutputPipe;
 
 pub use self::generated::wasi::blobstore::container::{ContainerMetadata, ObjectMetadata};
 use self::generated::wasi::blobstore::{blobstore, container, types};
-pub use resource::*;
 
 pub type IncomingValue = Bytes;
 pub type OutgoingValue = MemoryOutputPipe;
