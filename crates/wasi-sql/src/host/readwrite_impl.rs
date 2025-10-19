@@ -1,10 +1,9 @@
 use anyhow::{Context, Result};
 use wasmtime::component::Resource;
 
+use crate::host::Host;
 use crate::host::generated::wasi::sql::readwrite;
 use crate::host::generated::wasi::sql::readwrite::{Connection, Error, Row, Statement};
-
-use crate::host::Host;
 
 impl readwrite::Host for Host<'_> {
     async fn query(

@@ -9,8 +9,9 @@ mod types_impl;
 mod generated {
     #![allow(clippy::trait_duplication_in_bounds)]
 
-    pub use super::{ConnectionProxy, Statement};
     pub use anyhow::Error;
+
+    pub use super::{ConnectionProxy, Statement};
 
     wasmtime::component::bindgen!({
         world: "sql",

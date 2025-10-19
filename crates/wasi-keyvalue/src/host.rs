@@ -32,7 +32,7 @@ use std::sync::{Arc, LazyLock};
 
 use futures::lock::Mutex;
 pub use resource::*;
-use runtime::{RunState, Service};
+use runtime::{AddResource, RunState, Service};
 use wasmtime::component::{HasData, Linker, ResourceTableError};
 use wasmtime_wasi::ResourceTable;
 
@@ -47,15 +47,10 @@ pub type Result<T, E = Error> = anyhow::Result<T, E>;
 #[derive(Debug)]
 pub struct WasiKeyValue;
 
-impl WasiKeyValue {
-    /// Register a messaging client with the host
-    ///
-    /// # Errors
-    ///
-    /// If the client could not be registered
-    pub async fn client(self, client: impl Client + 'static) -> Self {
-        CLIENTS.lock().await.insert(client.name(), Arc::new(client));
-        self
+impl<T: Client + 'static> AddResource<T> for WasiKeyValue {
+    async fn resource(self, resource: T) -> anyhow::Result<Self> {
+        CLIENTS.lock().await.insert(resource.name(), Arc::new(resource));
+        Ok(self)
     }
 }
 

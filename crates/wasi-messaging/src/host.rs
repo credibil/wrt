@@ -38,7 +38,7 @@ use anyhow::anyhow;
 use futures::future::{BoxFuture, FutureExt};
 use futures::lock::Mutex;
 pub use resource::*;
-use runtime::{RunState, Service};
+use runtime::{AddResource, RunState, Service};
 use wasmtime::component::{HasData, InstancePre, Linker};
 use wasmtime_wasi::{ResourceTable, ResourceTableError};
 
@@ -54,15 +54,10 @@ static CLIENTS: LazyLock<Mutex<HashMap<&str, Arc<dyn Client>>>> =
 #[derive(Debug)]
 pub struct WasiMessaging;
 
-impl WasiMessaging {
-    /// Register a messaging client with the host
-    ///
-    /// # Errors
-    ///
-    /// If the client could not be registered
-    pub async fn client(self, client: impl Client + 'static) -> Self {
-        CLIENTS.lock().await.insert(client.name(), Arc::new(client));
-        self
+impl<T: Client + 'static> AddResource<T> for WasiMessaging {
+    async fn resource(self, resource: T) -> anyhow::Result<Self> {
+        CLIENTS.lock().await.insert(resource.name(), Arc::new(resource));
+        Ok(self)
     }
 }
 

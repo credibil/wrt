@@ -2,7 +2,7 @@ use anyhow::{Result, anyhow};
 use res_azkeyvault::AzKeyVault;
 use res_mongodb::MongoDb;
 use res_nats::Nats;
-use runtime::{Cli, Command, Parser, ResourceBuilder, RuntimeBuilder};
+use runtime::{AddResource, Cli, Command, Parser, ResourceBuilder, RuntimeBuilder};
 use wasi_blobstore::WasiBlobstore;
 use wasi_http::WasiHttp;
 use wasi_keyvalue::WasiKeyValue;
@@ -21,10 +21,10 @@ async fn main() -> Result<()> {
     let (mongodb, nats, az_vault) =
         tokio::try_join!(MongoDb::new(), Nats::new(), AzKeyVault::new())?;
 
-    let messaging = WasiMessaging.client(nats.clone()).await;
-    let keyvalue = WasiKeyValue.client(nats).await;
-    let blobstore = WasiBlobstore.client(mongodb).await;
-    let vault = WasiVault.client(az_vault).await;
+    let messaging = WasiMessaging.resource(nats.clone()).await?;
+    let keyvalue = WasiKeyValue.resource(nats).await?;
+    let blobstore = WasiBlobstore.resource(mongodb).await?;
+    let vault = WasiVault.resource(az_vault).await?;
 
     let runtime = builder
         .register(WasiOtel)

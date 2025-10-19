@@ -37,7 +37,7 @@ use anyhow::Result;
 use bytes::Bytes;
 use futures::lock::Mutex;
 pub use resource::*;
-use runtime::RunState;
+use runtime::{AddResource, RunState, Service};
 use wasmtime::component::{HasData, Linker, ResourceTable};
 use wasmtime_wasi::p2::pipe::MemoryOutputPipe;
 
@@ -54,19 +54,14 @@ static CLIENTS: LazyLock<Mutex<HashMap<&str, Arc<dyn Client>>>> =
 #[derive(Debug)]
 pub struct WasiBlobstore;
 
-impl WasiBlobstore {
-    /// Register a messaging client with the host
-    ///
-    /// # Errors
-    ///
-    /// If the client could not be registered
-    pub async fn client(self, client: impl Client + 'static) -> Self {
-        CLIENTS.lock().await.insert(client.name(), Arc::new(client));
-        self
+impl<T: Client + 'static> AddResource<T> for WasiBlobstore {
+    async fn resource(self, resource: T) -> Result<Self> {
+        CLIENTS.lock().await.insert(resource.name(), Arc::new(resource));
+        Ok(self)
     }
 }
 
-impl runtime::Service for WasiBlobstore {
+impl Service for WasiBlobstore {
     fn add_to_linker(&self, linker: &mut Linker<RunState>) -> Result<()> {
         blobstore::add_to_linker::<_, Data>(linker, Host::new)?;
         container::add_to_linker::<_, Data>(linker, Host::new)?;

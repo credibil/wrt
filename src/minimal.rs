@@ -1,6 +1,6 @@
 use anyhow::{Result, anyhow};
 use res_mongodb::MongoDb;
-use runtime::{Cli, Command, Parser, ResourceBuilder, RuntimeBuilder};
+use runtime::{AddResource, Cli, Command, Parser, ResourceBuilder, RuntimeBuilder};
 use wasi_blobstore::WasiBlobstore;
 use wasi_http::WasiHttp;
 use wasi_otel::WasiOtel;
@@ -14,7 +14,7 @@ async fn main() -> Result<()> {
     tracing::info!("Tracing initialised, logging available");
 
     let mongodb = MongoDb::new().await?;
-    let blobstore = WasiBlobstore.client(mongodb).await;
+    let blobstore = WasiBlobstore.resource(mongodb).await?;
 
     let runtime = builder.register(WasiOtel).register(WasiHttp).register(blobstore).build();
     runtime.await

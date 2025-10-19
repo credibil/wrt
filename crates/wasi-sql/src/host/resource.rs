@@ -2,9 +2,10 @@ use std::fmt::Debug;
 use std::ops::Deref;
 use std::sync::Arc;
 
-pub use crate::host::generated::wasi::sql::readwrite::Row;
 use anyhow::Result;
 use futures::future::BoxFuture;
+
+pub use crate::host::generated::wasi::sql::readwrite::Row;
 
 pub type FutureResult<T> = BoxFuture<'static, Result<T>>;
 
