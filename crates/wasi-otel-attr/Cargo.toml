@@ -1,5 +1,5 @@
 [package]
-name = "sdk-otel-attr"
+name = "wasi-otel-attr"
 description = "Openteleemetry attribute macros for WASI components"
 readme = "README.md"
 authors.workspace = true

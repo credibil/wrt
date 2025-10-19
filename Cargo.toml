@@ -208,12 +208,12 @@ res-azkeyvault = { path = "crates/res-azkeyvault", version = "0.11.0", registry 
 res-mongodb = { path = "crates/res-mongodb", version = "0.11.0", registry = "credibil" }
 res-nats = { path = "crates/res-nats", version = "0.11.0", registry = "credibil" }
 runtime = { path = "crates/runtime", version = "0.11.0", registry = "credibil" }
-sdk-otel-attr = { path = "crates/sdk-otel-attr", version = "0.11.0", registry = "credibil" }
 wasi-blobstore = { path = "crates/wasi-blobstore", version = "0.11.0", registry = "credibil" }
 wasi-http = { path = "crates/wasi-http", version = "0.11.0", registry = "credibil" }
 wasi-keyvalue = { path = "crates/wasi-keyvalue", version = "0.11.0", registry = "credibil" }
 wasi-messaging = { path = "crates/wasi-messaging", version = "0.11.0", registry = "credibil" }
 wasi-otel = { path = "crates/wasi-otel", version = "0.11.0", registry = "credibil" }
+wasi-otel-attr = { path = "crates/wasi-otel-attr", version = "0.11.0", registry = "credibil" }
 wasi-vault = { path = "crates/wasi-vault", version = "0.11.0", registry = "credibil" }
 wit-bindings = { path = "crates/wit-bindings", version = "0.11.0", registry = "credibil" }
 

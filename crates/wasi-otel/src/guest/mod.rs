@@ -22,7 +22,7 @@ mod generated {
     });
 }
 
-pub use sdk_otel_attr::instrument;
+pub use wasi_otel_attr::instrument;
 
 use self::init::Shutdown;
 
