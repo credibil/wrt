@@ -63,7 +63,7 @@ impl Guest for HttpGuest {
 
 // A simple "Hello, World!" endpoint that returns the client's request.
 #[axum::debug_handler]
-// #[wasi_otel::instrument]
+#[wasi_otel::instrument]
 async fn handler(Json(body): Json<Value>) -> Result<Json<Value>> {
     tracing::info!("handling request: {:?}", body);
     Ok(Json(json!({
