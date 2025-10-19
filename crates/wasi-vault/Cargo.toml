@@ -1,5 +1,5 @@
 [package]
-name = "wasi-vault-az"
+name = "wasi-vault"
 description = "WASI Vault WIT implementation using Azure Key Vault"
 readme = "README.md"
 authors.workspace = true
@@ -19,10 +19,7 @@ workspace = true
 
 [dependencies]
 anyhow.workspace = true
-azure_security_keyvault_secrets.workspace = true
-base64ct.workspace = true
 futures.workspace = true
-http.workspace = true
 runtime.workspace = true
 tracing.workspace = true
 wasmtime.workspace = true

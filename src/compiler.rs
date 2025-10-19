@@ -10,7 +10,7 @@ use wasi_http::Http;
 use wasi_keyvalue::KeyValue;
 use wasi_messaging_nats::Messaging;
 use wasi_otel::Otel;
-use wasi_vault_az::Vault;
+use wasi_vault::Vault;
 
 #[tokio::main]
 async fn main() -> Result<()> {

@@ -16,13 +16,11 @@ impl Client for NatsClient {
     }
 
     fn open(&self, identifier: String) -> FutureResult<Arc<dyn Bucket>> {
+        tracing::trace!("opening bucket: {identifier}");
         let client = self.0.clone();
 
         async move {
-            tracing::trace!("opening bucket: {identifier}");
-
             let jetstream = jetstream::new(client);
-
             let store = if let Ok(store) = jetstream.get_key_value(&identifier).await {
                 store
             } else {
