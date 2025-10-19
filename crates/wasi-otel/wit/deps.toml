@@ -1,7 +1,2 @@
-# 1. Install `wit-deps` from source (https://github.com/bytecodealliance/wit-deps)
-# 2. Update this file (deps.toml) with dependencies to import
-# 3. Run `wit-deps update` to import dependencies specified in deps.toml
 
-clocks = "https://github.com/WebAssembly/wasi-clocks/archive/main.tar.gz"
-io = "https://github.com/WebAssembly/wasi-io/archive/main.tar.gz"
-otel = "https://github.com/calebschoepp/wasi-otel/archive/main.tar.gz"
+otel = "https://github.com/credibil/wasi-otel/archive/main.tar.gz"

@@ -51,7 +51,7 @@ pub trait AddResource<T>: Sized {
     /// # Errors
     ///
     /// Returns an error if there is an issue adding the resource.
-    fn resource(self, resource: T) -> Result<Self>;
+    fn resource(self, resource: T) -> impl Future<Output = Result<Self>> + Send;
 }
 
 /// Services implement this trait so that the runtime can link their dependencies

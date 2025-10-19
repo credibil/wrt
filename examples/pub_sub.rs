@@ -11,24 +11,23 @@ use serde_json::{Value, json};
 use tracing::Level;
 use wasi::exports::http;
 use wasi::http::types::{IncomingRequest, ResponseOutparam};
-use wit_bindings::messaging;
-use wit_bindings::messaging::incoming_handler::Configuration;
-use wit_bindings::messaging::producer;
-use wit_bindings::messaging::types::{Client, Error, Message};
+use wasi_messaging::incoming_handler::Configuration;
+use wasi_messaging::producer;
+use wasi_messaging::types::{Client, Error, Message};
 
 pub struct Http;
 
 impl http::incoming_handler::Guest for Http {
-    #[sdk_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
+    #[wasi_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
     fn handle(request: IncomingRequest, response_out: ResponseOutparam) {
         let router = Router::new().route("/", post(handler));
-        let out = sdk_http::serve(router, request);
+        let out = wasi_http::serve(router, request);
         ResponseOutparam::set(response_out, out);
     }
 }
 
 #[axum::debug_handler]
-#[sdk_otel::instrument]
+#[wasi_otel::instrument]
 async fn handler(body: Bytes) -> Json<Value> {
     let client = Client::connect("nats").unwrap();
     let message = Message::new(&body);
@@ -45,8 +44,8 @@ wasi::http::proxy::export!(Http);
 
 pub struct Messaging;
 
-impl messaging::incoming_handler::Guest for Messaging {
-    #[sdk_otel::instrument(name = "messaging_guest_handle",level = Level::DEBUG)]
+impl wasi_messaging::incoming_handler::Guest for Messaging {
+    #[wasi_otel::instrument(name = "messaging_guest_handle",level = Level::DEBUG)]
     async fn handle(message: Message) -> Result<(), Error> {
         let data = message.data();
         let data_str =
@@ -105,7 +104,7 @@ impl messaging::incoming_handler::Guest for Messaging {
     }
 
     // Subscribe to topics.
-    #[sdk_otel::instrument(name = "messaging_guest_configure",level = Level::DEBUG)]
+    #[wasi_otel::instrument(name = "messaging_guest_configure",level = Level::DEBUG)]
     async fn configure() -> Result<Configuration, Error> {
         Ok(Configuration {
             topics: vec!["a".to_string(), "b".to_string()],
@@ -113,4 +112,4 @@ impl messaging::incoming_handler::Guest for Messaging {
     }
 }
 
-wit_bindings::messaging::export!(Messaging with_types_in wit_bindings::messaging);
+wasi_messaging::export!(Messaging with_types_in wasi_messaging);

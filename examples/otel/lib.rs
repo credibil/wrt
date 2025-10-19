@@ -5,17 +5,17 @@ use axum::{Json, Router};
 use http::Method;
 use opentelemetry::trace::{TraceContextExt, Tracer};
 use opentelemetry::{KeyValue, global};
-use sdk_http::Result;
 use serde_json::{Value, json};
 use tower_http::cors::{Any, CorsLayer};
 use tracing::Level;
 use wasi::exports::http::incoming_handler::Guest;
 use wasi::http::types::{IncomingRequest, ResponseOutparam};
+use wasi_http::Result;
 
 struct HttpGuest;
 
 impl Guest for HttpGuest {
-    #[sdk_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
+    #[wasi_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
     fn handle(request: IncomingRequest, response: ResponseOutparam) {
         // tracing metrics
         tracing::info!(monotonic_counter.tracing_counter = 1, key1 = "value 1");
@@ -54,7 +54,7 @@ impl Guest for HttpGuest {
                 )
                 .route("/", post(handler))
                 .route("/", options(handle_options));
-            sdk_http::serve(router, request)
+            wasi_http::serve(router, request)
         });
 
         ResponseOutparam::set(response, out);
@@ -63,7 +63,7 @@ impl Guest for HttpGuest {
 
 // A simple "Hello, World!" endpoint that returns the client's request.
 #[axum::debug_handler]
-#[sdk_otel::instrument]
+#[wasi_otel::instrument]
 async fn handler(Json(body): Json<Value>) -> Result<Json<Value>> {
     tracing::info!("handling request: {:?}", body);
     Ok(Json(json!({

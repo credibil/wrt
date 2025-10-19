@@ -1,0 +1,27 @@
+[package]
+name = "wasi-vault"
+description = "WASI Vault WIT implementation"
+readme = "README.md"
+authors.workspace = true
+categories.workspace = true
+edition.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[lints]
+workspace = true
+
+[features]
+
+[dependencies]
+# workspace
+anyhow.workspace = true
+futures.workspace = true
+runtime.workspace = true
+tracing.workspace = true
+wasmtime.workspace = true
+wasmtime-wasi.workspace = true

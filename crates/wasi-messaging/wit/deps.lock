@@ -1,0 +1,4 @@
+[messaging]
+url = "https://github.com/credibil/wasi-messaging/archive/main.tar.gz"
+sha256 = "de5edf08223a5c6d405b849de3d138c4666e8b44ec04cd1a3220c060f5be695d"
+sha512 = "96b2436bc82d9f4b010efb97ece147c989f883ecc8a640c7e2340858855cf795ce9c009c085e09ccf54ff755d5821e806db7917123d621ae685cd90eb92f408b"
