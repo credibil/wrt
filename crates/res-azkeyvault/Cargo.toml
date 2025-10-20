@@ -19,8 +19,12 @@ workspace = true
 
 [dependencies]
 anyhow.workspace = true
+http.workspace = true
 azure_core.workspace = true
 azure_identity.workspace = true
 azure_security_keyvault_secrets.workspace = true
+base64ct.workspace = true
+futures.workspace = true
 runtime.workspace = true
 tracing.workspace = true
+wasi-vault.workspace = true

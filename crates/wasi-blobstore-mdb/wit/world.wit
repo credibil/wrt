@@ -1,5 +1,0 @@
-package credibil:wasi-blobstore-mdb;
-
-world blobstore {
-	include wasi:blobstore/imports@0.2.0-draft;
-}

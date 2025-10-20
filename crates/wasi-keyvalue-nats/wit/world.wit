@@ -1,5 +1,0 @@
-package credibil:wasi-keyvalue-nats;
-
-world keyvalue {
-	include wasi:keyvalue/watch-service@0.2.0-draft2;
-}

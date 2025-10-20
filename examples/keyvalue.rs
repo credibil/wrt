@@ -4,25 +4,25 @@ use anyhow::Context;
 use axum::routing::post;
 use axum::{Json, Router};
 use bytes::Bytes;
-use sdk_http::Result;
 use serde_json::{Value, json};
 use tracing::Level;
 use wasi::exports::http::incoming_handler::Guest;
 use wasi::http::types::{IncomingRequest, ResponseOutparam};
-use wit_bindings::keyvalue::store;
+use wasi_http::Result;
+use wasi_keyvalue::store;
 
 struct HttpGuest;
 
 impl Guest for HttpGuest {
-    #[sdk_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
+    #[wasi_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
     fn handle(request: IncomingRequest, response_out: ResponseOutparam) {
         let router = Router::new().route("/", post(handler));
-        let out = sdk_http::serve(router, request);
+        let out = wasi_http::serve(router, request);
         ResponseOutparam::set(response_out, out);
     }
 }
 
-#[sdk_otel::instrument]
+#[wasi_otel::instrument]
 async fn handler(body: Bytes) -> Result<Json<Value>> {
     let bucket = store::open("credibil_bucket").context("opening bucket")?;
     bucket.set("my_key", &body).context("storing data")?;
