@@ -26,16 +26,14 @@ impl http::incoming_handler::Guest for Http {
     }
 }
 
+// #[wasi_otel::instrument]
 #[axum::debug_handler]
-#[wasi_otel::instrument]
 async fn handler(body: Bytes) -> Json<Value> {
     let client = Client::connect("nats").unwrap();
     let message = Message::new(&body);
-
-    // *** WASIP3 ***
-    // use `spawn` to avoid blocking for non-blocking execution
-    wit_bindgen::block_on(producer::send(client, "a".to_string(), message))
-        .expect("should send message");
+    wit_bindgen::spawn(async move {
+        producer::send(&client, "a".to_string(), message).await.expect("should send message");
+    });
 
     Json(json!({"message": "message published"}))
 }
@@ -79,7 +77,7 @@ impl wasi_messaging::incoming_handler::Guest for Messaging {
                         let data = format!("topic a iteration {i}");
                         let message = Message::new(data.as_bytes());
 
-                        if let Err(e) = producer::send(client, "b".to_string(), message).await {
+                        if let Err(e) = producer::send(&client, "b".to_string(), message).await {
                             tracing::error!("error sending message to topic 'b': {e}");
                         }
 

@@ -36,10 +36,12 @@ pub async fn run(instance_pre: InstancePre<RunState>) -> anyhow::Result<()> {
         tracing::info!("starting messaging server for client: {}", client.name());
 
         // subscribe to topics for client
-        let Some(topics) = config.topics.iter().find(|ct| ct.client == client.name()) else {
-            continue;
-        };
-        let mut stream = client.subscribe(topics.topics.clone()).await.map_err(|e| {
+        // let Some(topics) = config.topics.iter().find(|ct| ct.client == client.name()) else {
+        //     continue;
+        // };
+        let topics = config.topics.clone();
+
+        let mut stream = client.subscribe(topics).await.map_err(|e| {
             tracing::error!("failed to start messaging server: {e}");
             e
         })?;

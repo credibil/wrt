@@ -425,6 +425,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "build-macro"
+version = "0.11.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "bumpalo"
 version = "3.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2902,6 +2911,7 @@ version = "0.11.0"
 dependencies = [
  "anyhow",
  "axum",
+ "build-macro",
  "bytes",
  "http",
  "openssl",
@@ -2921,7 +2931,6 @@ dependencies = [
  "wasi-messaging",
  "wasi-otel",
  "wasi-vault",
- "wasmtime",
  "wit-bindgen",
 ]
 
@@ -4155,12 +4164,9 @@ name = "wasi-blobstore"
 version = "0.11.0"
 dependencies = [
  "anyhow",
- "async-nats",
  "bytes",
  "futures",
  "runtime",
- "time",
- "tokio",
  "tracing",
  "wasmtime",
  "wasmtime-wasi",
@@ -4271,6 +4277,7 @@ dependencies = [
  "tracing",
  "wasmtime",
  "wasmtime-wasi",
+ "wit-bindgen",
 ]
 
 [[package]]
@@ -4283,6 +4290,7 @@ dependencies = [
  "tracing",
  "wasmtime",
  "wasmtime-wasi",
+ "wit-bindgen",
 ]
 
 [[package]]
