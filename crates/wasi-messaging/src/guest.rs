@@ -1,7 +1,7 @@
 //! # WASI Messaging Guest
 
-/// Bindings for the `wasi:messaging` world.
-/// See (<https://github.com/WebAssembly/wasi-messaging/>)
+// Bindings for the `wasi:messaging` world.
+// See (<https://github.com/WebAssembly/wasi-messaging/>)
 wit_bindgen::generate!({
     world: "messaging",
     path: "wit",
