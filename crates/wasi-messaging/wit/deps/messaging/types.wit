@@ -2,21 +2,13 @@ interface types {
     /// A type alias for string to represent a message topic
     type topic = string;
 
-    /// A client-specific topic the guest subscribes to.
-    record client-topics {
-        /// The client for which to subscribe to topics
-        client: string,
-        /// The topics to which the client is subscribing
-        topics: list<topic>,
-    }
-
     /// Server configuration.
     ///
     /// This can be extended to include other configuration options in the
     /// future.
     record configuration {
         /// Subscription topics
-        topics: list<client-topics>,
+        topics: list<topic>,
     }
 
     /// A connection to a message-exchange service (e.g., buffer, broker, etc.).
