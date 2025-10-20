@@ -20,8 +20,7 @@ RUN \
     --mount=type=cache,target=$CARGO_HOME/registry \
     cargo build --bin $BIN --release
 
-# N.B. 'alpine' image is ~10Mb larger but appears to perform 
-# marginally better than 'scratch'
+# N.B. 'alpine' is ~10Mb larger than 'scratch' but appears to perform better
 FROM alpine:latest
 ARG BIN
 
