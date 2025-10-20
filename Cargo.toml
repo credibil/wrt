@@ -28,7 +28,7 @@ workspace = true
 [features]
 default = ["jit"]
 # Enables just-in-time wasm to machine code compilation.
-jit = ["wasmtime/cranelift"]
+jit = ["runtime/jit"] 
 
 [dependencies]
 anyhow.workspace = true
@@ -46,7 +46,8 @@ wasi-messaging.workspace = true
 wasi-otel.workspace = true
 wasi-blobstore.workspace = true
 wasi-vault.workspace = true
-wasmtime = { workspace = true, features = ["runtime"] }
+
+build-macro={path="crates/build-macro",version="0.11.0",registry="credibil"}
 
 # required for azure_identity, etc.
 openssl = { version = "0.10", features = ["vendored"] }
