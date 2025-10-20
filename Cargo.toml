@@ -32,11 +32,6 @@ jit = ["runtime/jit"]
 
 [dependencies]
 anyhow.workspace = true
-res-azkeyvault.workspace = true
-res-mongodb.workspace = true
-res-nats.workspace = true
-runtime.workspace = true
-tokio = { workspace = true, features = ["signal"] }
 tracing.workspace = true
 wasi-blobstore.workspace = true
 wasi-http.workspace = true
@@ -45,7 +40,13 @@ wasi-messaging.workspace = true
 wasi-otel.workspace = true
 wasi-vault.workspace = true
 
+[target.'cfg(unix)'.dependencies]
 build-macro = { path = "crates/build-macro", version = "0.11.0", registry = "credibil" }
+res-azkeyvault.workspace = true
+res-mongodb.workspace = true
+res-nats.workspace = true
+runtime.workspace = true
+tokio = { workspace = true, features = ["signal"] }
 
 # required for azure_identity, etc.
 openssl = { version = "0.10", features = ["vendored"] }

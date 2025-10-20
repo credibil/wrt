@@ -1,3 +1,3 @@
-# OpenTelemetry Attribute Macros for Wasm Components
+# Build Macros for Wasm Components
 
-This crate provides OpenTelemetry attribute macros for use in Credibil WebAssembly components.
+This crate provides build macros that simplify runtime construction for Credibil WebAssembly components.
