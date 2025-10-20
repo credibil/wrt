@@ -16,15 +16,12 @@ RUN \
     --mount=type=bind,src=src,dst=src \
     --mount=type=bind,source=crates,target=crates \
     --mount=type=bind,source=examples,target=examples \
-    --mount=type=bind,source=wit,target=wit \
-    # --mount=type=cache,target=$CARGO_HOME/git/db \
-    # --mount=type=cache,target=$CARGO_HOME/registry \
+    --mount=type=cache,target=$CARGO_HOME/git/db \
+    --mount=type=cache,target=$CARGO_HOME/registry \
     cargo build --bin $BIN --release
 
-# N.B. 'alpine' image is ~10Mb larger but appears to perform 
-# marginally better than 'scratch'
+# N.B. 'alpine' is ~10Mb larger than 'scratch' but appears to perform better
 FROM alpine:latest
-# FROM scratch
 ARG BIN
 
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
