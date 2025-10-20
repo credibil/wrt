@@ -34,10 +34,13 @@ wasmtime-wasi-http.workspace = true
 # guest dependencies
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 axum.workspace = true
+bincode = "2.0.1"
 bytes.workspace = true
 credibil-encoding.workspace = true
-percent-encoding = "2.3.2"
 serde.workspace = true
 serde_json.workspace = true
 tower.workspace = true
 wasi.workspace = true
+wit-bindgen.workspace = true
+percent-encoding = "2.3.2"
+wasi-keyvalue.workspace = true
