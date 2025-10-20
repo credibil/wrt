@@ -9,7 +9,7 @@
 mod export;
 mod init;
 
-// Bindings for the `wasi:blobstore` world.
+// Bindings for the `wasi:otel` world.
 mod generated {
     #![allow(clippy::future_not_send)]
     #![allow(clippy::collection_is_never_read)]
