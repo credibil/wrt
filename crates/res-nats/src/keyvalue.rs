@@ -48,7 +48,7 @@ pub struct KvBucket(pub kv::Store);
 
 impl Bucket for KvBucket {
     fn name(&self) -> &'static str {
-        CLIENT_NAME
+        Box::leak(self.0.name.clone().into_boxed_str())
     }
 
     fn get(&self, key: String) -> FutureResult<Option<Vec<u8>>> {
