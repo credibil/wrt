@@ -17,9 +17,7 @@ workspace = true
 
 [features]
 default = ["metrics", "tracing"]
-# Export signals directly from the wasm guest rather than the host.
-# guest-export = ["dep:async-trait", "dep:bytes", "dep:http", "dep:opentelemetry-http", "dep:opentelemetry-otlp"]
-metrics = []
+metrics = ["dep:tracing-opentelemetry", "dep:tracing-subscriber"]
 tracing = ["dep:tracing-opentelemetry", "dep:tracing-subscriber"]
 
 [dependencies]

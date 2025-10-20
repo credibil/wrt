@@ -21,12 +21,9 @@ workspace = true
 # host dependencies
 [target.'cfg(unix)'.dependencies]
 anyhow.workspace = true
-async-nats.workspace = true
 bytes.workspace = true
 futures.workspace = true
 runtime.workspace = true
-time.workspace = true
-tokio.workspace = true
 tracing.workspace = true
 wasmtime.workspace = true
 wasmtime-wasi.workspace = true

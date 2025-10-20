@@ -28,7 +28,7 @@ workspace = true
 [features]
 default = ["jit"]
 # Enables just-in-time wasm to machine code compilation.
-jit = ["runtime/jit"] 
+jit = ["runtime/jit"]
 
 [dependencies]
 anyhow.workspace = true
@@ -47,22 +47,26 @@ wasi-otel.workspace = true
 wasi-blobstore.workspace = true
 wasi-vault.workspace = true
 
-build-macro={path="crates/build-macro",version="0.11.0",registry="credibil"}
+build-macro = { path = "crates/build-macro", version = "0.11.0", registry = "credibil" }
 
 # required for azure_identity, etc.
 openssl = { version = "0.10", features = ["vendored"] }
 
-[dev-dependencies]
+[target.'cfg(target_arch = "wasm32")'.dev-dependencies]
 axum = { workspace = true, features = ["macros"] }
 bytes.workspace = true
 http.workspace = true
-opentelemetry.workspace = true
 serde_json.workspace = true
+opentelemetry.workspace = true
 tower-http.workspace = true
 tracing.workspace = true
 wasi.workspace = true
+wasi-blobstore.workspace = true
 wasi-http.workspace = true
+wasi-messaging.workspace = true
+wasi-keyvalue.workspace = true
 wasi-otel.workspace = true
+wasi-vault.workspace = true
 wit-bindgen.workspace = true
 
 [[example]]

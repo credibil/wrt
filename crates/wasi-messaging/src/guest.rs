@@ -1,3 +1,6 @@
+#![allow(clippy::future_not_send)]
+#![allow(clippy::collection_is_never_read)]
+
 //! # WASI Messaging Guest
 
 // Bindings for the `wasi:messaging` world.
