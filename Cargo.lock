@@ -426,7 +426,7 @@ dependencies = [
 
 [[package]]
 name = "build-macro"
-version = "0.11.0"
+version = "0.12.0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -4161,7 +4161,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-blobstore"
-version = "0.11.0"
+version = "0.12.0"
 dependencies = [
  "anyhow",
  "bytes",
@@ -4201,7 +4201,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-keyvalue"
-version = "0.11.0"
+version = "0.12.0"
 dependencies = [
  "anyhow",
  "async-nats",
@@ -4216,7 +4216,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-messaging"
-version = "0.11.0"
+version = "0.12.0"
 dependencies = [
  "anyhow",
  "async-nats",
@@ -4259,7 +4259,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-otel-attr"
-version = "0.11.0"
+version = "0.12.0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -4269,7 +4269,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-sql"
-version = "0.11.0"
+version = "0.12.0"
 dependencies = [
  "anyhow",
  "futures",
@@ -4282,7 +4282,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-vault"
-version = "0.11.0"
+version = "0.12.0"
 dependencies = [
  "anyhow",
  "futures",
