@@ -12,35 +12,35 @@ use wasi_vault::WasiVault;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // let Command::Run { wasm } = Cli::parse().command else {
-    //     return Err(anyhow!("only run command is supported"));
-    // };
-    // let builder = RuntimeBuilder::new(wasm, true);
-    // tracing::info!("Tracing initialised, logging available");
+    // build_macro::buildgen! ({
+    //     messaging: [Nats],
+    //     keyvalue: [Nats],
+    //     blobstore: [MongoDb],
+    //     vault: [AzKeyVault],
+    // });
 
-    // let (mongodb, nats, az_vault) =
-    //     tokio::try_join!(MongoDb::new(), Nats::new(), AzKeyVault::new())?;
+    let Command::Run { wasm } = Cli::parse().command else {
+        return Err(anyhow!("only run command is supported"));
+    };
+    let builder = RuntimeBuilder::new(wasm, true);
+    tracing::info!("Tracing initialised, logging available");
 
-    // let messaging = WasiMessaging.resource(nats.clone()).await?;
-    // let keyvalue = WasiKeyValue.resource(nats).await?;
-    // let blobstore = WasiBlobstore.resource(mongodb).await?;
-    // let vault = WasiVault.resource(az_vault).await?;
+    let (mongodb, nats, az_vault) =
+        tokio::try_join!(MongoDb::new(), Nats::new(), AzKeyVault::new())?;
 
-    // let runtime = builder
-    //     .register(WasiOtel)
-    //     .register(WasiHttp)
-    //     .register(blobstore)
-    //     .register(keyvalue)
-    //     .register(messaging)
-    //     .register(vault)
-    //     .build();
+    let messaging = WasiMessaging.resource(nats.clone()).await?;
+    let keyvalue = WasiKeyValue.resource(nats).await?;
+    let blobstore = WasiBlobstore.resource(mongodb).await?;
+    let vault = WasiVault.resource(az_vault).await?;
 
-    // runtime.await;
+    let runtime = builder
+        .register(WasiOtel)
+        .register(WasiHttp)
+        .register(blobstore)
+        .register(keyvalue)
+        .register(messaging)
+        .register(vault)
+        .build();
 
-    build_macro::buildgen! ({
-        messaging: [Nats],
-        keyvalue: [Nats],
-        blobstore: [MongoDb],
-        vault: [AzKeyVault],
-    });
+    runtime.await
 }

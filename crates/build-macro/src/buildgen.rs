@@ -1,6 +1,6 @@
-use proc_macro2::{Span, TokenStream};
+use proc_macro2::TokenStream;
 use quote::quote;
-use syn::parse::{ Parse, ParseStream, Result};
+use syn::parse::{Parse, ParseStream, Result};
 use syn::punctuated::Punctuated;
 use syn::{Token, braced, token};
 
@@ -15,14 +15,8 @@ pub struct Component {
     pub resources: Vec<String>,
 }
 
-pub fn expand(input: &Config) -> Result<TokenStream> {
-    // let mut src = match input.components.generate(&input.resolve, input.world) {
-    //     Ok(s) => s,
-    //     Err(e) => return Err(Error::new(Span::call_site(), e.to_string())),
-    // };
-
-    // println!("{:#?}", input);
-
+#[allow(clippy::unnecessary_wraps)]
+pub fn expand(_input: &Config) -> Result<TokenStream> {
     Ok(quote! {
         let Command::Run { wasm } = Cli::parse().command else {
             return Err(anyhow!("only run command is supported"));
@@ -53,12 +47,12 @@ pub fn expand(input: &Config) -> Result<TokenStream> {
 
 impl Parse for Config {
     fn parse(input: ParseStream<'_>) -> Result<Self> {
-        let call_site = Span::call_site();
+        // let call_site = Span::call_site();
         let mut config = Self::default();
 
         // content should be wrapped in braces
         if !input.peek(token::Brace) {
-            return Err(input.error("expected JSON object"));
+            return Err(input.error("expected object"));
         }
 
         let content;
