@@ -23,7 +23,6 @@ RUN \
 # N.B. 'alpine' image is ~10Mb larger but appears to perform 
 # marginally better than 'scratch'
 FROM alpine:latest
-# FROM scratch
 ARG BIN
 
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
