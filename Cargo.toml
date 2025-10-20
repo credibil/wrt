@@ -32,19 +32,17 @@ jit = ["runtime/jit"]
 
 [dependencies]
 anyhow.workspace = true
-
-[target.'cfg(unix)'.dependencies]
 res-azkeyvault.workspace = true
 res-mongodb.workspace = true
 res-nats.workspace = true
 runtime.workspace = true
 tokio = { workspace = true, features = ["signal"] }
 tracing.workspace = true
+wasi-blobstore.workspace = true
 wasi-http.workspace = true
 wasi-keyvalue.workspace = true
 wasi-messaging.workspace = true
 wasi-otel.workspace = true
-wasi-blobstore.workspace = true
 wasi-vault.workspace = true
 
 build-macro = { path = "crates/build-macro", version = "0.11.0", registry = "credibil" }
@@ -56,17 +54,10 @@ openssl = { version = "0.10", features = ["vendored"] }
 axum = { workspace = true, features = ["macros"] }
 bytes.workspace = true
 http.workspace = true
-serde_json.workspace = true
 opentelemetry.workspace = true
+serde_json.workspace = true
 tower-http.workspace = true
-tracing.workspace = true
 wasi.workspace = true
-wasi-blobstore.workspace = true
-wasi-http.workspace = true
-wasi-messaging.workspace = true
-wasi-keyvalue.workspace = true
-wasi-otel.workspace = true
-wasi-vault.workspace = true
 wit-bindgen.workspace = true
 
 [[example]]
@@ -194,8 +185,11 @@ mongodb = "3.3.0"
 nkeys = "0.4.5"
 opentelemetry = "0.31.0"
 opentelemetry_sdk = { version = "0.31.0", features = ["experimental_metrics_custom_reader"] }
+proc-macro2 = "1.0.101"
+quote = "1.0.40"
 serde = { version = "1.0.225", features = ["derive"] }
 serde_json = "1.0.145"
+syn = { version = "2.0.106", features = ["parsing"] }
 time = "0.3.44"
 tokio = { version = "1.47.1", default-features = false }
 tower = "0.5.2"
