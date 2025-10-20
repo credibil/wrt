@@ -40,8 +40,8 @@ wasi-messaging.workspace = true
 wasi-otel.workspace = true
 wasi-vault.workspace = true
 
-# Unix-specific dependencies (exclude from wasm32 builds)
-[target.'cfg(unix)'.dependencies]
+# [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 build-macro = { path = "crates/build-macro", version = "0.12.0", registry = "credibil" }
 res-azkeyvault.workspace = true
 res-mongodb.workspace = true

@@ -8,7 +8,7 @@ mod guest;
 #[cfg(target_arch = "wasm32")]
 pub use guest::*;
 
-#[cfg(unix)]
+#[cfg(not(target_arch = "wasm32"))]
 mod host;
-#[cfg(unix)]
+#[cfg(not(target_arch = "wasm32"))]
 pub use host::*;
