@@ -82,16 +82,16 @@ criteria = "safe-to-deploy"
 version = "2.0.1"
 criteria = "safe-to-deploy"
 
+[[exemptions.bitflags]]
+version = "2.10.0"
+criteria = "safe-to-deploy"
+
 [[exemptions.bitvec]]
 version = "1.0.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.bson]]
 version = "2.15.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.cfg-if]]
-version = "1.0.4"
 criteria = "safe-to-deploy"
 
 [[exemptions.chrono]]
