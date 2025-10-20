@@ -52,7 +52,7 @@ build-macro = { path = "crates/build-macro", version = "0.11.0", registry = "cre
 # required for azure_identity, etc.
 openssl = { version = "0.10", features = ["vendored"] }
 
-[target.'cfg(target_arch = "wasm32")'.dev-dependencies]
+[dev-dependencies]
 axum = { workspace = true, features = ["macros"] }
 bytes.workspace = true
 http.workspace = true
