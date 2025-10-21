@@ -10,7 +10,6 @@ use tower_http::cors::{Any, CorsLayer};
 use tracing::Level;
 use wasi::exports::http::incoming_handler::Guest;
 use wasi::http::types::{IncomingRequest, ResponseOutparam};
-// use wasi_http::handler;
 use wasi_http::{Client, Decode, Result};
 
 struct HttpGuest;

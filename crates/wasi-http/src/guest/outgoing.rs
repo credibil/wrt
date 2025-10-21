@@ -18,6 +18,7 @@ use wasi::http::types::{
 // };
 // use wasmtime_wasi_http::types::OutgoingRequestConfig;
 use crate::guest::cache::{CACHE_BUCKET, Cache};
+// use crate::guest::handler;
 use crate::guest::uri::UriLike;
 
 #[derive(Default)]
@@ -284,13 +285,18 @@ impl<B, J, F> RequestBuilder<B, J, F> {
                     tracing::debug!("no cached response found, fetching from origin");
                     outgoing_handler::handle(request, None)
                         .map_err(|e| anyhow!("making request: {e}"))?
+
+                    // handler::handle(request).await.context("making request")?
                 }
                 Err(e) => {
                     tracing::error!("retrieving cached response: {e}, fetching from origin");
                     outgoing_handler::handle(request, None)
                         .map_err(|e| anyhow!("making request: {e}"))?
+
+                    // handler::handle(request).await.context("making request")?
                 }
             };
+
             Self::process_response(&fut_resp)
         } else {
             tracing::debug!("resource-first enabled, fetching from origin");
