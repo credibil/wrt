@@ -1,3 +1,5 @@
+#![cfg(not(target_arch = "wasm32"))]
+
 use tokio::time;
 
 // Send messages to each of the subjects a, b, and c.

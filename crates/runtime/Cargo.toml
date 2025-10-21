@@ -23,11 +23,13 @@ jit = ["wasmtime/cranelift"]
 [dependencies]
 anyhow.workspace = true
 cfg-if.workspace = true
+futures.workspace = true
+tracing.workspace = true
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+tokio = { workspace = true, features = ["signal"] }
 clap = { version = "4.5.48", features = ["derive"] }
 credibil-otel.workspace = true
-futures.workspace = true
-tokio = { workspace = true, features = ["signal"] }
-tracing.workspace = true
 wasmtime = { workspace = true, features = ["runtime"] }
 wasmtime-wasi.workspace = true
 wasmtime-wasi-http.workspace = true

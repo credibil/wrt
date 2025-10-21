@@ -1,3 +1,5 @@
+#![cfg(not(target_arch = "wasm32"))]
+
 use anyhow::{Result, anyhow};
 use res_azkeyvault::AzKeyVault;
 use res_mongodb::MongoDb;

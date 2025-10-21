@@ -44,3 +44,4 @@ wasi.workspace = true
 wit-bindgen.workspace = true
 percent-encoding = "2.3.2"
 wasi-keyvalue.workspace = true
+# wasmtime-wasi-http.workspace = true
