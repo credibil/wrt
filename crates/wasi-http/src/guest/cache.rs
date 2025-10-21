@@ -7,6 +7,8 @@ use http::Response;
 use wasi::http::types::Headers;
 use wasi_keyvalue::store;
 
+pub const CACHE_BUCKET: &str = "default-cache";
+
 #[derive(Clone, Debug, Default)]
 struct CacheControl {
     // If true, make the HTTP request and then update the cache with the

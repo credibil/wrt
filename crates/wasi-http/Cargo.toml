@@ -24,7 +24,7 @@ http.workspace = true
 tracing.workspace = true
 
 # host dependencies
-[target.'cfg(unix)'.dependencies]
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 hyper = "1.7.0"
 runtime.workspace = true
 tokio.workspace = true
@@ -44,3 +44,4 @@ wasi.workspace = true
 wit-bindgen.workspace = true
 percent-encoding = "2.3.2"
 wasi-keyvalue.workspace = true
+# wasmtime-wasi-http.workspace = true

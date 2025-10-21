@@ -40,8 +40,7 @@ wasi-messaging.workspace = true
 wasi-otel.workspace = true
 wasi-vault.workspace = true
 
-# Unix-specific dependencies (exclude from wasm32 builds)
-[target.'cfg(unix)'.dependencies]
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 build-macro = { path = "crates/build-macro", version = "0.12.0", registry = "credibil" }
 res-azkeyvault.workspace = true
 res-mongodb.workspace = true
@@ -79,7 +78,7 @@ crate-type = ["cdylib"]
 
 [[example]]
 name = "proxy"
-path = "examples/proxy/lib.rs"
+path = "examples/proxy.rs"
 crate-type = ["cdylib"]
 
 [[example]]
@@ -199,7 +198,7 @@ tower-http = { version = "0.6.6", features = ["cors", "trace"] }
 tracing = "0.1.41"
 tracing-opentelemetry = "0.32.0"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter", "fmt"] }
-wasi = "=0.14.7"
+wasi = "0.14.7"
 wasmtime = { version = "38.0.1", default-features = false, features = ["component-model-async"] }
 wasmtime-wasi = { version = "38.0.1", features = ["p3"] }
 wasmtime-wasi-http = { version = "38.0.1", features = ["p3"] }

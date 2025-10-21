@@ -1,3 +1,5 @@
+#![cfg(not(target_arch = "wasm32"))]
+
 //! Azure Key Vault Secrets Client.
 
 mod vault;

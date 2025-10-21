@@ -13,13 +13,17 @@ use wasi::http::types::{
     FutureIncomingResponse, Headers, Method, OutgoingBody, OutgoingRequest, Scheme,
 };
 
-use crate::guest::cache::Cache;
+// use wasmtime_wasi_http::types::{
+//     FutureIncomingResponse, Headers, Method, OutgoingBody, OutgoingRequest, Scheme,
+// };
+// use wasmtime_wasi_http::types::OutgoingRequestConfig;
+use crate::guest::cache::{CACHE_BUCKET, Cache};
 use crate::guest::uri::UriLike;
 
 #[derive(Default)]
 pub struct Client {
     /// The cache bucket to use for caching responses.
-    cache_bucket: String,
+    cache: Option<String>,
 }
 
 impl Client {
@@ -28,19 +32,25 @@ impl Client {
         Self::default()
     }
 
-    /// Set the cache bucket to use for caching responses.
+    /// Set the cache to use when caching responses.
     #[must_use]
-    pub fn cache_bucket(mut self, bucket: &str) -> Self {
-        self.cache_bucket = bucket.to_string();
+    pub fn cache(mut self, cache: impl Into<String>) -> Self {
+        self.cache = Some(cache.into());
         self
     }
 
     pub fn get<U: Into<UriLike>>(&self, uri: U) -> RequestBuilder<NoBody, NoJson, NoForm> {
-        RequestBuilder::new(uri, self.cache_bucket.clone())
+        let Some(cache) = &self.cache else {
+            return RequestBuilder::new(uri);
+        };
+        RequestBuilder::new(uri).cache(cache.clone())
     }
 
     pub fn post<U: Into<UriLike>>(&self, uri: U) -> RequestBuilder<NoBody, NoJson, NoForm> {
-        RequestBuilder::new(uri, self.cache_bucket.clone()).method(Method::Post)
+        let Some(cache) = &self.cache else {
+            return RequestBuilder::new(uri).method(Method::Post);
+        };
+        RequestBuilder::new(uri).method(Method::Post).cache(cache.clone())
     }
 }
 
@@ -50,7 +60,8 @@ pub struct RequestBuilder<B, J, F> {
     uri: UriLike,
     headers: HeaderMap<String>,
     query: Option<String>,
-    cache: String,
+    cache: Option<String>,
+    identity: Option<String>,
     body: B,
     json: J,
     form: F,
@@ -78,13 +89,14 @@ pub struct NoForm;
 pub struct HasForm<T: Serialize>(T);
 
 impl RequestBuilder<NoBody, NoJson, NoForm> {
-    fn new<U: Into<UriLike>, T: Into<String>>(uri: U, cache: T) -> Self {
+    fn new<U: Into<UriLike>>(uri: U) -> Self {
         Self {
             method: Method::Get,
             uri: uri.into(),
             headers: HeaderMap::default(),
             query: None,
-            cache: cache.into(),
+            cache: None,
+            identity: None,
             body: NoBody,
             json: NoJson,
             form: NoForm,
@@ -98,6 +110,7 @@ impl RequestBuilder<NoBody, NoJson, NoForm> {
             headers: self.headers,
             query: self.query,
             cache: self.cache,
+            identity: None,
             body: HasBody(body),
             json: NoJson,
             form: NoForm,
@@ -111,6 +124,7 @@ impl RequestBuilder<NoBody, NoJson, NoForm> {
             headers: self.headers,
             query: self.query,
             cache: self.cache,
+            identity: None,
             body: NoBody,
             json: HasJson(json),
             form: NoForm,
@@ -124,6 +138,7 @@ impl RequestBuilder<NoBody, NoJson, NoForm> {
             headers: self.headers,
             query: self.query,
             cache: self.cache,
+            identity: None,
             body: NoBody,
             json: NoJson,
             form: HasForm(form),
@@ -161,6 +176,19 @@ impl<B, J, F> RequestBuilder<B, J, F> {
     #[must_use]
     pub fn bearer_auth(mut self, token: &str) -> Self {
         self.headers.insert(AUTHORIZATION, format!("Bearer {token}"));
+        self
+    }
+
+    #[must_use]
+    pub fn cache(mut self, cache: impl Into<String>) -> Self {
+        self.cache = Some(cache.into());
+        self
+    }
+
+    /// Sets the identity to be used for client certificate authentication.
+    #[must_use]
+    pub fn identity(mut self, identity: impl Into<String>) -> Self {
+        self.identity = Some(identity.into());
         self
     }
 }
@@ -231,7 +259,10 @@ impl<B, J, F> RequestBuilder<B, J, F> {
             tracing::trace!("request header: {name}: {:?}", String::from_utf8_lossy(value));
         }
 
-        let mut cache = Cache::new(&self.cache);
+        // caching
+        let bucket = self.cache.as_deref().unwrap_or(CACHE_BUCKET);
+        let mut cache = Cache::new(bucket);
+
         match cache.headers(&request.headers()) {
             Ok(()) => Ok(()),
             Err(e) => {
@@ -240,33 +271,35 @@ impl<B, J, F> RequestBuilder<B, J, F> {
                 Err(anyhow!(err))
             }
         }?;
-        let response = {
-            if cache.should_use_cache() {
-                tracing::debug!("cache-first enabled, checking cache");
-                let fut_resp = match cache.get() {
-                    Ok(Some(resp)) => {
-                        tracing::debug!("response found in cache");
-                        return Ok(resp);
-                    }
-                    Ok(None) => {
-                        tracing::debug!("no cached response found, fetching from origin");
-                        outgoing_handler::handle(request, None)
-                            .map_err(|e| anyhow!("making request: {e}"))?
-                    }
-                    Err(e) => {
-                        tracing::error!("retrieving cached response: {e}, fetching from origin");
-                        outgoing_handler::handle(request, None)
-                            .map_err(|e| anyhow!("making request: {e}"))?
-                    }
-                };
-                Self::process_response(&fut_resp)
-            } else {
-                tracing::debug!("resource-first enabled, fetching from origin");
-                let fut_resp = outgoing_handler::handle(request, None)
-                    .map_err(|e| anyhow!("making request: {e}"))?;
-                Self::process_response(&fut_resp)
-            }
+
+        let response = if cache.should_use_cache() {
+            tracing::debug!("cache-first enabled, checking cache");
+
+            let fut_resp = match cache.get() {
+                Ok(Some(resp)) => {
+                    tracing::debug!("response found in cache");
+                    return Ok(resp);
+                }
+                Ok(None) => {
+                    tracing::debug!("no cached response found, fetching from origin");
+                    outgoing_handler::handle(request, None)
+                        .map_err(|e| anyhow!("making request: {e}"))?
+                }
+                Err(e) => {
+                    tracing::error!("retrieving cached response: {e}, fetching from origin");
+                    outgoing_handler::handle(request, None)
+                        .map_err(|e| anyhow!("making request: {e}"))?
+                }
+            };
+            Self::process_response(&fut_resp)
+        } else {
+            tracing::debug!("resource-first enabled, fetching from origin");
+
+            let fut_resp = outgoing_handler::handle(request, None)
+                .map_err(|e| anyhow!("making request: {e}"))?;
+            Self::process_response(&fut_resp)
         }?;
+
         // TODO: spawn task for storing cache and return response immediately
         if cache.should_store() {
             tracing::debug!("storing response in cache");
@@ -278,6 +311,7 @@ impl<B, J, F> RequestBuilder<B, J, F> {
     }
 
     fn prepare_request(&self, body: Option<&[u8]>) -> Result<OutgoingRequest> {
+        // headers
         let headers = Headers::new();
         for (key, value) in &self.headers {
             headers
@@ -285,10 +319,14 @@ impl<B, J, F> RequestBuilder<B, J, F> {
                 .map_err(|e| anyhow!("setting header: {e}"))?;
         }
         let request = OutgoingRequest::new(headers);
+
+        // method
         request.set_method(&self.method).map_err(|()| anyhow!("setting method"))?;
 
         // url
         let uri = self.uri.into_uri()?;
+
+        // scheme
         let Some(scheme) = uri.scheme() else {
             return Err(anyhow!("missing scheme"));
         };
@@ -298,6 +336,8 @@ impl<B, J, F> RequestBuilder<B, J, F> {
             _ => return Err(anyhow!("unsupported scheme: {}", scheme.as_str())),
         };
         request.set_scheme(Some(&scheme)).map_err(|()| anyhow!("setting scheme"))?;
+
+        // authority
         request
             .set_authority(uri.authority().map(Authority::as_str))
             .map_err(|()| anyhow!("setting authority"))?;
@@ -307,12 +347,13 @@ impl<B, J, F> RequestBuilder<B, J, F> {
         if let Some(query) = uri.query() {
             path_with_query = format!("{path_with_query}?{query}");
         }
-        tracing::trace!("encoded path_with_query: {path_with_query}");
-
         request
             .set_path_with_query(Some(&path_with_query))
             .map_err(|()| anyhow!("setting path_with_query"))?;
 
+        tracing::trace!("encoded path_with_query: {path_with_query}");
+
+        // body
         let out_body = request.body().map_err(|()| anyhow!("getting outgoing body"))?;
         if let Some(mut buf) = body {
             let out_stream = out_body.write().map_err(|()| anyhow!("getting output stream"))?;

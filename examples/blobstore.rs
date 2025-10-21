@@ -28,7 +28,7 @@ async fn handler(body: Bytes) -> Result<Json<Value>> {
     // write to blobstore
     let outgoing = OutgoingValue::new_outgoing_value();
     let stream =
-        outgoing.outgoing_value_write_body().map_err(|_| anyhow!("failed create stream"))?;
+        outgoing.outgoing_value_write_body().map_err(|()| anyhow!("failed create stream"))?;
     stream.blocking_write_and_flush(&body).context("writing body")?;
 
     let container = blobstore::create_container("container")
