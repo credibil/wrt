@@ -55,3 +55,20 @@ impl WasiHttpView for RunState {
         &mut self.table
     }
 }
+
+pub trait WasiStateView: Send {
+    /// Returns the table used to manage resources.
+    fn table(&mut self) -> &mut ResourceTable;
+}
+
+impl WasiStateView for RunState {
+    fn table(&mut self) -> &mut ResourceTable {
+        &mut self.table
+    }
+}
+
+impl<T: ?Sized + WasiStateView> WasiStateView for &mut T {
+    fn table(&mut self) -> &mut ResourceTable {
+        T::table(self)
+    }
+}

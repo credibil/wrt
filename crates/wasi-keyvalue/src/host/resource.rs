@@ -7,6 +7,8 @@ use futures::future::BoxFuture;
 
 pub type FutureResult<T> = BoxFuture<'static, Result<T>>;
 
+pub trait Provider: Client + Bucket {}
+
 /// Key-Value providers implement the [`Client`] trait to allow the host to
 /// connect to a backend (in-memory, redis, nats-kv, etc) and open buckets.
 pub trait Client: Debug + Send + Sync + 'static {

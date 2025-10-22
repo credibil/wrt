@@ -30,56 +30,59 @@ mod generated {
 use std::collections::HashMap;
 use std::sync::{Arc, LazyLock};
 
+use async_nats::client;
 use futures::lock::Mutex;
-pub use resource::*;
-use runtime::{AddResource, RunState, WasiHost};
+use runtime::WasiStateView;
 use wasmtime::component::{HasData, Linker, ResourceTableError};
 use wasmtime_wasi::ResourceTable;
 
 use self::generated::wasi::keyvalue::store::Error;
 use self::generated::wasi::keyvalue::{atomics, batch, store};
+pub use self::resource::*;
 
 static CLIENTS: LazyLock<Mutex<HashMap<&str, Arc<dyn Client>>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
 pub type Result<T, E = Error> = anyhow::Result<T, E>;
 
-#[derive(Debug)]
-pub struct WasiKeyValue;
+/// Add all of the `wasi:keyvalue` world's interfaces to a
+/// [`wasmtime::component::Linker`].
+///
+/// # Errors
+///
+/// Will return an error if one or more of the interfaces could not be added to
+/// the linker.
+pub fn add_to_linker<T: WasiStateView + 'static>(linker: &mut Linker<T>) -> anyhow::Result<()> {
+    store::add_to_linker::<_, WasiKeyValue<T>>(linker, |x| WasiKeyValueImpl(x))?;
+    atomics::add_to_linker::<_, WasiKeyValue<T>>(linker, |x| WasiKeyValueImpl(x))?;
+    batch::add_to_linker::<_, WasiKeyValue<T>>(linker, |x| WasiKeyValueImpl(x))
+}
 
-impl<T: Client + 'static> AddResource<T> for WasiKeyValue {
-    async fn resource(self, resource: T) -> anyhow::Result<Self> {
-        CLIENTS.lock().await.insert(resource.name(), Arc::new(resource));
-        Ok(self)
+pub fn client<T>(client: impl Client + 'static) -> WasiKeyValueImpl<T> {
+    todo!()
+}
+
+#[repr(transparent)]
+struct WasiKeyValueImpl<T>(pub T);
+impl<T> WasiKeyValueImpl<T> {
+    pub fn new(inner: T) -> Self {
+        Self(inner)
     }
 }
 
-impl WasiHost for WasiKeyValue {
-    fn add_to_linker(&self, linker: &mut Linker<RunState>) -> anyhow::Result<()> {
-        store::add_to_linker::<_, Data>(linker, Host::new)?;
-        atomics::add_to_linker::<_, Data>(linker, Host::new)?;
-        batch::add_to_linker::<_, Data>(linker, Host::new)?;
-        Ok(())
-    }
-}
-
-struct Data;
-impl HasData for Data {
-    type Data<'a> = Host<'a>;
-}
-
-pub struct Host<'a> {
-    table: &'a mut ResourceTable,
-}
-
-impl Host<'_> {
-    const fn new(c: &mut RunState) -> Host<'_> {
-        Host { table: &mut c.table }
-    }
+struct WasiKeyValue<T>(T);
+impl<T: 'static> HasData for WasiKeyValue<T> {
+    type Data<'a> = WasiKeyValueImpl<&'a mut T>;
 }
 
 impl From<ResourceTableError> for Error {
     fn from(err: ResourceTableError) -> Self {
         Self::Other(err.to_string())
+    }
+}
+
+impl<T: WasiStateView> WasiStateView for WasiKeyValueImpl<T> {
+    fn table(&mut self) -> &mut ResourceTable {
+        self.0.table()
     }
 }
