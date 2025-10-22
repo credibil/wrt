@@ -1,13 +1,13 @@
 use anyhow::anyhow;
-use runtime::WasiStateView;
 use wasmtime::component::Resource;
 
+use crate::WasiKeyValueView;
 use crate::host::generated::wasi::keyvalue::batch;
 use crate::host::generated::wasi::keyvalue::store::Error;
 use crate::host::resource::BucketProxy;
 use crate::host::{Result, WasiKeyValueImpl};
 
-impl<T: WasiStateView> batch::Host for WasiKeyValueImpl<T> {
+impl<T: WasiKeyValueView> batch::Host for WasiKeyValueImpl<T> {
     async fn get_many(
         &mut self, bucket: Resource<BucketProxy>, keys: Vec<String>,
     ) -> Result<Vec<Option<(String, Vec<u8>)>>> {

@@ -30,9 +30,7 @@ mod generated {
 use std::collections::HashMap;
 use std::sync::{Arc, LazyLock};
 
-use async_nats::client;
 use futures::lock::Mutex;
-use runtime::WasiStateView;
 use wasmtime::component::{HasData, Linker, ResourceTableError};
 use wasmtime_wasi::ResourceTable;
 
@@ -52,23 +50,14 @@ pub type Result<T, E = Error> = anyhow::Result<T, E>;
 ///
 /// Will return an error if one or more of the interfaces could not be added to
 /// the linker.
-pub fn add_to_linker<T: WasiStateView + 'static>(linker: &mut Linker<T>) -> anyhow::Result<()> {
+pub fn add_to_linker<T: WasiKeyValueView + 'static>(linker: &mut Linker<T>) -> anyhow::Result<()> {
     store::add_to_linker::<_, WasiKeyValue<T>>(linker, |x| WasiKeyValueImpl(x))?;
     atomics::add_to_linker::<_, WasiKeyValue<T>>(linker, |x| WasiKeyValueImpl(x))?;
     batch::add_to_linker::<_, WasiKeyValue<T>>(linker, |x| WasiKeyValueImpl(x))
 }
 
-pub fn client<T>(client: impl Client + 'static) -> WasiKeyValueImpl<T> {
-    todo!()
-}
-
 #[repr(transparent)]
 struct WasiKeyValueImpl<T>(pub T);
-impl<T> WasiKeyValueImpl<T> {
-    pub fn new(inner: T) -> Self {
-        Self(inner)
-    }
-}
 
 struct WasiKeyValue<T>(T);
 impl<T: 'static> HasData for WasiKeyValue<T> {
@@ -81,8 +70,29 @@ impl From<ResourceTableError> for Error {
     }
 }
 
-impl<T: WasiStateView> WasiStateView for WasiKeyValueImpl<T> {
+pub trait WasiKeyValueView: Send {
+    /// Returns the table used to manage resources.
+    fn table(&mut self) -> &mut ResourceTable;
+
+    fn client(&mut self) -> impl Client;
+}
+
+impl<T: WasiKeyValueView> WasiKeyValueView for WasiKeyValueImpl<T> {
     fn table(&mut self) -> &mut ResourceTable {
         self.0.table()
+    }
+
+    fn client(&mut self) -> impl Client {
+        self.0.client()
+    }
+}
+
+impl<T: ?Sized + WasiKeyValueView> WasiKeyValueView for &mut T {
+    fn table(&mut self) -> &mut ResourceTable {
+        T::table(self)
+    }
+
+    fn client(&mut self) -> impl Client {
+        T::client(self)
     }
 }

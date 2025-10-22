@@ -1,14 +1,14 @@
 use anyhow::anyhow;
-use runtime::WasiStateView;
 use wasmtime::component::Resource;
 
+use crate::WasiKeyValueView;
 use crate::host::generated::wasi::keyvalue::atomics;
 use crate::host::generated::wasi::keyvalue::atomics::CasError;
 use crate::host::generated::wasi::keyvalue::store::Error;
 use crate::host::resource::{BucketProxy, Cas};
 use crate::host::{Result, WasiKeyValueImpl};
 
-impl<T: WasiStateView> atomics::HostCas for WasiKeyValueImpl<T> {
+impl<T: WasiKeyValueView> atomics::HostCas for WasiKeyValueImpl<T> {
     /// Construct a new CAS operation. Implementors can map the underlying functionality
     /// (transactions, versions, etc) as desired.
     async fn new(&mut self, bucket: Resource<BucketProxy>, key: String) -> Result<Resource<Cas>> {
@@ -38,7 +38,7 @@ impl<T: WasiStateView> atomics::HostCas for WasiKeyValueImpl<T> {
     }
 }
 
-impl<T: WasiStateView> atomics::Host for WasiKeyValueImpl<T> {
+impl<T: WasiKeyValueView> atomics::Host for WasiKeyValueImpl<T> {
     /// Atomically increment the value associated with the key in the store by
     /// the given delta. It returns the new value.
     ///
