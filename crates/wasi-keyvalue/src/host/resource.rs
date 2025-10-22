@@ -7,8 +7,6 @@ use futures::future::BoxFuture;
 
 pub type FutureResult<T> = BoxFuture<'static, Result<T>>;
 
-
-
 /// Key-Value providers implement the [`Client`] trait to allow the host to
 /// connect to a backend (in-memory, redis, nats-kv, etc) and open buckets.
 pub trait Client: Debug + Send + Sync + 'static {
@@ -16,21 +14,21 @@ pub trait Client: Debug + Send + Sync + 'static {
     fn name(&self) -> &'static str;
 
     /// Open a bucket with the given identifier.
-    fn open(&self, identifier: String) -> FutureResult<Arc<dyn Bucket>>;
+    fn open(&self, identifier: String) -> FutureResult<impl Bucket>;
 }
 
-/// [`ClientProxy`] provides a concrete wrapper around a `dyn Client` object.
-/// It is used to store client resources in the resource table.
-#[derive(Clone, Debug)]
-pub struct ClientProxy(pub Arc<dyn Client>);
+// /// [`ClientProxy`] provides a concrete wrapper around a `dyn Client` object.
+// /// It is used to store client resources in the resource table.
+// #[derive(Clone, Debug)]
+// pub struct ClientProxy<T: Client>(pub T);
 
-impl Deref for ClientProxy {
-    type Target = Arc<dyn Client>;
+// impl<T: Client> Deref for ClientProxy<T> {
+//     type Target = T;
 
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
+//     fn deref(&self) -> &Self::Target {
+//         &self.0
+//     }
+// }
 
 /// Providers implement the [`Bucket`] trait to allow the host to
 /// interact with different backend buckets (stores).

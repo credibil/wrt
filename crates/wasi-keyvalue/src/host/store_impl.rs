@@ -1,32 +1,22 @@
+use anyhow::Context;
 use std::sync::Arc;
-
-use anyhow::{Context, anyhow};
 use wasmtime::component::Resource;
 
 use crate::WasiKeyValueView;
 use crate::host::generated::wasi::keyvalue::store;
 use crate::host::generated::wasi::keyvalue::store::{Error, KeyResponse};
-use crate::host::resource::{BucketProxy, ClientProxy,Client};
-use crate::host::{CLIENTS, Result, WasiKeyValueImpl};
+use crate::host::resource::{BucketProxy, Client};
+use crate::host::{Result, WasiKeyValueImpl};
 
-// impl ClientProxy {
-//     async fn try_from(_name: &str) -> anyhow::Result<Self> {
-//         let clients = CLIENTS.lock().await;
-//         let Some((_, client)) = clients.iter().next() else {
-//             return Err(anyhow!("no client registered"));
-//         };
-//         Ok(Self(Arc::clone(client)))
-//     }
-// }
+use crate::host::generated::wasi::keyvalue::store::Bucket;
 
 impl<T: WasiKeyValueView> store::Host for WasiKeyValueImpl<T> {
     // Open bucket specified by identifier, save to state and return as a resource.
     async fn open(&mut self, identifier: String) -> Result<Resource<BucketProxy>> {
         tracing::trace!("store::Host::open: identifier {identifier:?}");
-        // let client = ClientProxy::try_from("").await?;
         let client = self.client();
         let bucket = client.open(identifier).await.context("failed to open bucket")?;
-        let proxy = BucketProxy(bucket);
+        let proxy = BucketProxy(Arc::new(bucket));
         Ok(self.table().push(proxy)?)
     }
 
@@ -37,7 +27,7 @@ impl<T: WasiKeyValueView> store::Host for WasiKeyValueImpl<T> {
 }
 
 impl<T: WasiKeyValueView> store::HostBucket for WasiKeyValueImpl<T> {
-    async fn get(&mut self, self_: Resource<BucketProxy>, key: String) -> Result<Option<Vec<u8>>> {
+    async fn get(&mut self, self_: Resource<Bucket>, key: String) -> Result<Option<Vec<u8>>> {
         let Ok(bucket) = self.table().get(&self_) else {
             return Err(Error::NoSuchStore);
         };

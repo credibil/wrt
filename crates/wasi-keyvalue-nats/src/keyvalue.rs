@@ -15,7 +15,7 @@ impl Client for NatsClient {
         CLIENT_NAME
     }
 
-    fn open(&self, identifier: String) -> FutureResult<Arc<dyn Bucket>> {
+    fn open(&self, identifier: String) -> FutureResult<impl Bucket> {
         tracing::trace!("opening bucket: {identifier}");
         let client = self.0.clone();
 
@@ -37,7 +37,7 @@ impl Client for NatsClient {
                 result.map_err(|e| anyhow!("failed to create bucket: {e}"))?
             };
 
-            Ok(Arc::new(KvBucket(store)) as Arc<dyn Bucket>)
+            Ok(KvBucket(store))
         }
         .boxed()
     }

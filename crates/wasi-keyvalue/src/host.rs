@@ -27,19 +27,12 @@ mod generated {
     });
 }
 
-use std::collections::HashMap;
-use std::sync::{Arc, LazyLock};
-
-use futures::lock::Mutex;
 use wasmtime::component::{HasData, Linker, ResourceTableError};
 use wasmtime_wasi::ResourceTable;
 
 use self::generated::wasi::keyvalue::store::Error;
 use self::generated::wasi::keyvalue::{atomics, batch, store};
 pub use self::resource::*;
-
-static CLIENTS: LazyLock<Mutex<HashMap<&str, Arc<dyn Client>>>> =
-    LazyLock::new(|| Mutex::new(HashMap::new()));
 
 pub type Result<T, E = Error> = anyhow::Result<T, E>;
 

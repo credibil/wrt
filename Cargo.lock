@@ -4232,23 +4232,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "wasi-keyvalue-nats"
-version = "0.12.0"
-dependencies = [
- "anyhow",
- "async-nats",
- "chrono",
- "futures",
- "nkeys",
- "runtime",
- "tokio",
- "tracing",
- "wasi-blobstore",
- "wasi-keyvalue",
- "wasi-messaging",
-]
-
-[[package]]
 name = "wasi-messaging"
 version = "0.12.0"
 dependencies = [
@@ -4264,23 +4247,6 @@ dependencies = [
  "wasmtime",
  "wasmtime-wasi",
  "wit-bindgen",
-]
-
-[[package]]
-name = "wasi-messaging-nats"
-version = "0.12.0"
-dependencies = [
- "anyhow",
- "async-nats",
- "chrono",
- "futures",
- "nkeys",
- "runtime",
- "tokio",
- "tracing",
- "wasi-blobstore",
- "wasi-keyvalue",
- "wasi-messaging",
 ]
 
 [[package]]
