@@ -7,3 +7,6 @@ global-credential-providers = [
   "cargo:macos-keychain",
   # "cargo-credential-1password --account credibil.1password.com --vault Credibil",
 ]
+
+# [build]
+# targets = ["aarch64-apple-darwin", "wasm32-wasip2"]

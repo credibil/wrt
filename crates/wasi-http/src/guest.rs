@@ -15,12 +15,3 @@ pub use self::error::*;
 pub use self::incoming::*;
 pub use self::outgoing::*;
 pub use self::uri::*;
-
-// Bindings for the `wasi:http` world.
-wit_bindgen::generate!({
-    world: "wasi:http/proxy",
-    path: "wit",
-    generate_all,
-});
-
-pub use self::wasi::http::*;
