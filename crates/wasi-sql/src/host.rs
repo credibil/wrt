@@ -34,7 +34,7 @@ use std::collections::HashMap;
 use std::sync::{Arc, LazyLock};
 
 use futures::lock::Mutex;
-use runtime::{RunState, Service};
+use runtime::{RunState, WasiHost};
 use wasmtime::component::{HasData, Linker};
 use wasmtime_wasi::ResourceTable;
 
@@ -59,7 +59,7 @@ impl WasiSql {
     }
 }
 
-impl Service for WasiSql {
+impl WasiHost for WasiSql {
     fn add_to_linker(&self, linker: &mut Linker<RunState>) -> anyhow::Result<()> {
         readwrite::add_to_linker::<_, Data>(linker, Host::new)?;
         types::add_to_linker::<_, Data>(linker, Host::new)

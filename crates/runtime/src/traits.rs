@@ -56,7 +56,7 @@ pub trait AddResource<T>: Sized {
 
 /// Services implement this trait so that the runtime can link their dependencies
 /// and, optionally, run them in the context of the runtime.
-pub trait Service: Debug + Sync + Send {
+pub trait WasiHost: Debug + Sync + Send {
     /// Link the service's dependencies prior to component instantiation.
     ///
     /// This method optionally allows the service to access the runtime

@@ -27,7 +27,7 @@ use futures::FutureExt;
 use futures::future::BoxFuture;
 use opentelemetry::{Array, Key, Value};
 use opentelemetry_sdk::Resource;
-use runtime::RunState;
+use runtime::{RunState, WasiHost};
 use wasmtime::component::{HasData, Linker};
 
 use self::generated::wasi::otel as wasi_otel;
@@ -40,7 +40,7 @@ static HTTP_CLIENT: OnceLock<reqwest::Client> = OnceLock::new();
 #[derive(Debug)]
 pub struct WasiOtel;
 
-impl runtime::Service for WasiOtel {
+impl WasiHost for WasiOtel {
     fn add_to_linker(&self, linker: &mut Linker<RunState>) -> Result<()> {
         wasi_otel::tracing::add_to_linker::<_, Data>(linker, Host::new)?;
         wasi_otel::metrics::add_to_linker::<_, Data>(linker, Host::new)?;
