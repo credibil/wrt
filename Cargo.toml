@@ -22,6 +22,10 @@ path = "src/standard.rs"
 name = "minimal"
 path = "src/minimal.rs"
 
+[[bin]]
+name = "websockets"
+path = "src/websockets.rs"
+
 [lints]
 workspace = true
 
@@ -39,6 +43,7 @@ wasi-keyvalue.workspace = true
 wasi-messaging.workspace = true
 wasi-otel.workspace = true
 wasi-vault.workspace = true
+wasi-websockets.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 build-macro = { path = "crates/build-macro", version = "0.12.0", registry = "credibil" }
@@ -104,6 +109,11 @@ crate-type = ["cdylib"]
 [[example]]
 name = "vault"
 path = "examples/vault.rs"
+crate-type = ["cdylib"]
+
+[[example]]
+name = "http-websockets"
+path = "examples/http_websockets.rs"
 crate-type = ["cdylib"]
 
 [profile.release]
@@ -180,6 +190,8 @@ bytes = "1.10.1"
 cfg-if = "1.0.3"
 chrono = "0.4.42"
 futures = "0.3.31"
+futures-channel = "0.3.31"
+futures-util = "0.3.31"
 http = "1.3.1"
 hyper = "1.7.0"
 mongodb = "3.3.0"
@@ -193,6 +205,7 @@ serde_json = "1.0.145"
 syn = { version = "2.0.106", features = ["parsing"] }
 time = "0.3.44"
 tokio = { version = "1.47.1", default-features = false }
+tokio-tungstenite = "0.28.0"
 tower = "0.5.2"
 tower-http = { version = "0.6.6", features = ["cors", "trace"] }
 tracing = "0.1.41"
@@ -221,6 +234,7 @@ wasi-messaging = { path = "crates/wasi-messaging", version = "0.12.0", registry 
 wasi-otel = { path = "crates/wasi-otel", version = "0.12.0", registry = "credibil" }
 wasi-otel-attr = { path = "crates/wasi-otel-attr", version = "0.12.0", registry = "credibil" }
 wasi-vault = { path = "crates/wasi-vault", version = "0.12.0", registry = "credibil" }
+wasi-websockets = { path = "crates/wasi-websockets", version = "0.12.0", registry = "credibil" }
 wit-bindings = { path = "crates/wit-bindings", version = "0.12.0", registry = "credibil" }
 
 # [patch."https://github.com/credibil/core.git"]

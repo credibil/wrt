@@ -1,0 +1,6 @@
+interface handler {
+    use types.{error};
+
+    /// Sends the message to all websocket peers
+    send: func(message: string) -> result<_, error>;
+}
