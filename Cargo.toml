@@ -22,6 +22,10 @@ path = "src/standard.rs"
 name = "minimal"
 path = "src/minimal.rs"
 
+[[bin]]
+name = "realtime"
+path = "src/realtime.rs"
+
 [lints]
 workspace = true
 
@@ -45,6 +49,7 @@ build-macro = { path = "crates/build-macro", version = "0.12.0", registry = "cre
 res-azkeyvault.workspace = true
 res-mongodb.workspace = true
 res-nats.workspace = true
+res-redis.workspace = true
 runtime.workspace = true
 tokio = { workspace = true, features = ["signal"] }
 
@@ -219,6 +224,7 @@ credibil-otel = { version = "0.4.0", registry = "credibil" }
 res-azkeyvault = { path = "crates/res-azkeyvault", version = "0.12.0", registry = "credibil" }
 res-mongodb = { path = "crates/res-mongodb", version = "0.12.0", registry = "credibil" }
 res-nats = { path = "crates/res-nats", version = "0.12.0", registry = "credibil" }
+res-redis = { path = "crates/res-redis", version = "0.12.0", registry = "credibil" }
 runtime = { path = "crates/runtime", version = "0.12.0", registry = "credibil" }
 wasi-blobstore = { path = "crates/wasi-blobstore", version = "0.12.0", registry = "credibil" }
 wasi-http = { path = "crates/wasi-http", version = "0.12.0", registry = "credibil" }

@@ -3004,6 +3004,7 @@ dependencies = [
  "res-azkeyvault",
  "res-mongodb",
  "res-nats",
+ "res-redis",
  "runtime",
  "serde_json",
  "tokio",

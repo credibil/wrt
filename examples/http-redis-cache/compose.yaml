@@ -15,7 +15,7 @@ services:
       secrets:
         - credibil
       args:
-        BIN: standard
+        BIN: realtime
     volumes:
        - ../../target/wasm32-wasip2/release/examples/http_redis_cache.wasm:/app.wasm
     ports:
