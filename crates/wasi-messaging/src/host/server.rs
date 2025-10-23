@@ -46,7 +46,6 @@ pub async fn run(instance_pre: InstancePre<RunState>) -> Result<()> {
 
     while let Some(message) = stream.next().await {
         let instance_pre = instance_pre.clone();
-        let message = message.clone();
 
         tokio::spawn(
             async move {
