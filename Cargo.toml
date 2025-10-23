@@ -106,6 +106,11 @@ name = "vault"
 path = "examples/vault.rs"
 crate-type = ["cdylib"]
 
+[[example]]
+name = "http-redis-cache"
+path = "examples/http-redis-cache/lib.rs"
+crate-type = ["cdylib"]
+
 [profile.release]
 lto = true
 opt-level = "s"
@@ -188,6 +193,7 @@ opentelemetry = "0.31.0"
 opentelemetry_sdk = { version = "0.31.0", features = ["experimental_metrics_custom_reader"] }
 proc-macro2 = "1.0.101"
 quote = "1.0.40"
+redis = { version = "0.32.6", features = ["aio", "connection-manager", "tokio-comp"] }
 serde = { version = "1.0.225", features = ["derive"] }
 serde_json = "1.0.145"
 syn = { version = "2.0.106", features = ["parsing"] }
