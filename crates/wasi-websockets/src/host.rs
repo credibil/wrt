@@ -81,10 +81,12 @@ impl handler::Host for Host<'_> {
                 connect_service_client(format!("ws://{addr}").as_str()).await.unwrap()
             })
             .await;
-        {
-            let _ = ws_client.lock().await.send(Message::Text(Utf8Bytes::from(message))).await;
-        }
+        let _ = ws_client.lock().await.send(Message::Text(Utf8Bytes::from(message))).await;
         Ok(())
+    }
+
+    async fn health_check(&mut self) -> Result<String, Error> {
+        Ok("websockets service is healthy".into())
     }
 }
 
@@ -93,6 +95,7 @@ type PeerMap = Arc<StdMutex<HashMap<SocketAddr, Tx>>>;
 static SERVICE_CLIENT: tokio::sync::OnceCell<
     tokio::sync::Mutex<WebSocketStream<MaybeTlsStream<TcpStream>>>,
 > = OnceCell::const_new();
+static PEER_MAP: OnceCell<PeerMap> = OnceCell::const_new();
 
 #[allow(clippy::significant_drop_tightening)]
 async fn accept_connection(peer_map: PeerMap, peer: SocketAddr, stream: TcpStream) {
@@ -138,6 +141,7 @@ impl WebSockets {
     /// Provide http proxy service the specified wasm component.
     async fn run() -> Result<()> {
         let state = PeerMap::new(StdMutex::new(HashMap::new()));
+        let _ = PEER_MAP.set(state);
 
         let addr = env::var("WEBSOCKETS_ADDR").unwrap_or_else(|_| DEF_HTTP_ADDR.into());
         let listener = TcpListener::bind(&addr).await?;
@@ -149,7 +153,7 @@ impl WebSockets {
             let peer = stream.peer_addr().expect("connected streams should have a peer address");
             tracing::info!("Peer address: {}", peer);
 
-            tokio::spawn(accept_connection(Arc::clone(&state), peer, stream));
+            tokio::spawn(accept_connection(Arc::clone(PEER_MAP.get().unwrap()), peer, stream));
         }
     }
 }

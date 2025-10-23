@@ -3,4 +3,7 @@ interface handler {
 
     /// Sends the message to all websocket peers
     send: func(message: string) -> result<_, error>;
+
+    /// Performs a health check of the websocket service
+    health-check: func() -> result<string, error>;
 }

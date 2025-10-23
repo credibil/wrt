@@ -26,10 +26,12 @@ impl Guest for HttpGuest {
 
 #[axum::debug_handler]
 //#[wasi_otel::instrument]
-async fn get_handler() -> Result<()> {
-    println!("handling health probe");
+async fn get_handler() -> Result<Json<Value>> {
+    let status = handler::health_check();
 
-    Ok(())
+    Ok(Json(json!({
+        "message": status.unwrap()
+    })))
 }
 
 #[axum::debug_handler]
@@ -38,7 +40,7 @@ async fn post_handler(body: String) -> Result<Json<Value>> {
     println!("handling websocket connection");
     let result = handler::send(&body);
     if let Err(e) = result {
-        println!("Error sending websocket message: {}", e);
+        println!("Error sending websocket message: {e}");
     }
 
     Ok(Json(json!({
