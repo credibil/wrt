@@ -3,7 +3,9 @@ use std::collections::HashMap;
 use anyhow::anyhow;
 use futures::future::FutureExt;
 use futures::stream::{self, StreamExt};
-use wasi_messaging::{Client, FutureResult, Message, Metadata, Reply, Subscriptions};
+use wasi_messaging::{
+    Client, FutureResult, Message, Metadata, Reply, RequestOptions, Subscriptions,
+};
 
 use crate::{CLIENT_NAME, NatsClient};
 
@@ -63,8 +65,18 @@ impl Client for NatsClient {
         .boxed()
     }
 
-    fn request(&self, topic: String, message: Message) -> FutureResult<Message> {
+    fn request(
+        &self, topic: String, message: Message, options: Option<RequestOptions>,
+    ) -> FutureResult<Message> {
         let client = self.0.clone();
+
+        // let timeout = if let Some(request_options) = options
+        //     && request_options.timeout.is_some()
+        // {
+        //     request_options.timeout
+        // } else {
+        //     None
+        // };
 
         async move {
             let payload = message.payload.clone();
@@ -73,7 +85,14 @@ impl Client for NatsClient {
             for (k, v) in headers.iter() {
                 nats_headers.insert(k.as_str(), v.as_str());
             }
-            let timeout = message.timeout.unwrap_or(None);
+
+            let timeout = if let Some(request_options) = options
+                && request_options.timeout.is_some()
+            {
+                request_options.timeout
+            } else {
+                None
+            };
 
             let request = async_nats::Request::new()
                 .payload(payload.into())
@@ -113,6 +132,5 @@ fn into_message(nats_msg: async_nats::Message) -> Message {
         description: None,
         length: nats_msg.payload.len(),
         reply,
-        timeout: None,
     }
 }

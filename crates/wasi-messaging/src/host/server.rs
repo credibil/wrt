@@ -1,4 +1,4 @@
-use anyhow::Context;
+use anyhow::{Context, Result};
 use futures::StreamExt;
 use runtime::RunState;
 use tracing::{Instrument, info_span};
@@ -7,9 +7,9 @@ use wasmtime::component::InstancePre;
 
 use crate::host::generated::Messaging;
 use crate::host::resource::Message;
-use crate::host::{CLIENTS, Error};
+use crate::host::{CLIENT, Error};
 
-pub async fn run(instance_pre: InstancePre<RunState>) -> anyhow::Result<()> {
+pub async fn run(instance_pre: InstancePre<RunState>) -> Result<()> {
     // short-circuit when messaging not required
     let component_type = instance_pre.component().component_type();
     let engine = instance_pre.engine();
@@ -18,7 +18,7 @@ pub async fn run(instance_pre: InstancePre<RunState>) -> anyhow::Result<()> {
         return Ok(());
     }
 
-    // guest configuration
+    // get guest configuration
     let mut store = Store::new(engine, RunState::new());
     let instance = instance_pre.instantiate_async(&mut store).await?;
     let messaging = Messaging::new(&mut store, &instance)?;
@@ -31,42 +31,45 @@ pub async fn run(instance_pre: InstancePre<RunState>) -> anyhow::Result<()> {
         })
         .await??;
 
+    let Some(client) = CLIENT.get() else {
+        return Err(anyhow::anyhow!("no messaging client registered"))?;
+    };
+
     // process requests
-    for client in CLIENTS.lock().await.values() {
-        tracing::info!("starting messaging server for client: {}", client.name());
+    tracing::info!("starting messaging server for client: {}", client.name());
 
-        // subscribe to topics for client
-        // let Some(topics) = config.topics.iter().find(|ct| ct.client == client.name()) else {
-        //     continue;
-        // };
-        let topics = config.topics.clone();
+    let topics = config.topics.clone();
+    let mut stream = client.subscribe(topics).await.map_err(|e| {
+        tracing::error!("failed to start messaging server: {e}");
+        e
+    })?;
 
-        let mut stream = client.subscribe(topics).await.map_err(|e| {
-            tracing::error!("failed to start messaging server: {e}");
-            e
-        })?;
+    while let Some(message) = stream.next().await {
+        let instance_pre = instance_pre.clone();
+        let message = message.clone();
 
-        while let Some(message) = stream.next().await {
-            let instance_pre = instance_pre.clone();
-
-            tokio::spawn(
-                async move {
-                    if let Err(e) = call_guest(message, instance_pre).await {
-                        tracing::error!("error processing message {e}");
-                    }
+        tokio::spawn(
+            async move {
+                if let Err(e) = client.pre_send(&message).await {
+                    tracing::error!("error processing message {e}");
+                    return;
                 }
-                .instrument(info_span!("message")),
-            );
-        }
+                if let Err(e) = call_guest(message.clone(), instance_pre).await {
+                    tracing::error!("error processing message {e}");
+                }
+                if let Err(e) = client.post_send(&message).await {
+                    tracing::error!("error processing message {e}");
+                }
+            }
+            .instrument(info_span!("message")),
+        );
     }
 
     Ok(())
 }
 
 // Forward message to the wasm component.
-async fn call_guest(
-    message: Message, instance_pre: InstancePre<RunState>,
-) -> anyhow::Result<(), Error> {
+async fn call_guest(message: Message, instance_pre: InstancePre<RunState>) -> Result<(), Error> {
     let mut state = RunState::new();
     let res_msg = state.table.push(message)?;
 

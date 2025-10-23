@@ -18,14 +18,16 @@ impl request_reply::Host for Host<'_> {
         tracing::trace!("request_reply::Host::request: topic {:?}", topic);
 
         let client = self.table.get(&c)?;
-        let mut request = self.table.get(&message)?.clone();
+        let request = self.table.get(&message)?.clone();
 
-        if let Some(opts) = options {
+        let options = if let Some(opts) = options {
             let options = self.table.get(&opts)?;
-            request = request.timeout(options.timeout);
-        }
+            Some(options.clone())
+        } else {
+            None
+        };
 
-        let reply = client.request(topic, request).await?;
+        let reply = client.request(topic, request, options).await?;
         Ok(vec![self.table.push(reply)?])
     }
 
@@ -39,7 +41,7 @@ impl request_reply::Host for Host<'_> {
 
         if let Some(reply) = &reply_to.reply {
             let message = self.table.get(&message)?.clone();
-            let client = ClientProxy::try_from(&reply.client_name).await?;
+            let client = ClientProxy::try_from(&reply.client_name)?;
             let topic = reply.topic.clone();
             client.send(topic.clone(), message).await?;
         }
@@ -72,8 +74,10 @@ impl request_reply::HostRequestOptions for Host<'_> {
     ///
     /// For NATS, this is not configurable so this function does nothing.
     async fn set_expected_replies(
-        &mut self, _: Resource<RequestOptions>, _expected_replies: u32,
+        &mut self, self_: Resource<RequestOptions>, expected_replies: u32,
     ) -> anyhow::Result<()> {
+        let options = self.table.get_mut(&self_)?;
+        options.expected_replies = Some(expected_replies);
         Ok(())
     }
 

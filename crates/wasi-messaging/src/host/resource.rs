@@ -3,7 +3,6 @@ use std::fmt::Debug;
 use std::ops::{Deref, DerefMut};
 use std::pin::Pin;
 use std::sync::Arc;
-use std::time::Duration;
 
 use anyhow::Result;
 use futures::Stream;
@@ -15,14 +14,25 @@ use crate::host::generated::wasi::messaging::types;
 pub type FutureResult<T> = BoxFuture<'static, Result<T>>;
 pub type Subscriptions = Pin<Box<dyn Stream<Item = Message> + Send>>;
 
+#[allow(unused_variables)]
 pub trait Client: Debug + Send + Sync + 'static {
     fn name(&self) -> &'static str;
 
     fn subscribe(&self, topics: Vec<String>) -> FutureResult<Subscriptions>;
 
+    fn pre_send(&self, message: &Message) -> FutureResult<()> {
+        Box::pin(async move { Ok(()) })
+    }
+
     fn send(&self, topic: String, message: Message) -> FutureResult<()>;
 
-    fn request(&self, topic: String, message: Message) -> FutureResult<Message>;
+    fn post_send(&self, message: &Message) -> FutureResult<()> {
+        Box::pin(async move { Ok(()) })
+    }
+
+    fn request(
+        &self, topic: String, message: Message, options: Option<RequestOptions>,
+    ) -> FutureResult<Message>;
 }
 
 #[derive(Clone, Debug)]
@@ -53,9 +63,6 @@ pub struct Message {
 
     /// Optional reply topic to which response can be published.
     pub reply: Option<Reply>,
-
-    /// Optional timeout for request-response pattern.
-    pub timeout: Option<Option<Duration>>,
 }
 
 impl Message {
@@ -78,11 +85,11 @@ impl Message {
         self
     }
 
-    #[must_use]
-    pub const fn timeout(mut self, timeout: Option<Duration>) -> Self {
-        self.timeout = Some(timeout);
-        self
-    }
+    // #[must_use]
+    // pub const fn timeout(mut self, timeout: Option<Duration>) -> Self {
+    //     self.timeout = Some(timeout);
+    //     self
+    // }
 
     #[must_use]
     pub fn description(mut self, description: String) -> Self {
@@ -151,14 +158,8 @@ pub struct Reply {
     pub topic: String,
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct RequestOptions {
     pub timeout: Option<std::time::Duration>,
+    pub expected_replies: Option<u32>,
 }
-
-// pub struct Request {
-//     pub payload: Option<Vec<u8>>,
-//     pub metadata: Option<Metadata>,
-//     pub timeout: Option<Option<Duration>>,
-//     pub inbox: Option<String>,
-// }
