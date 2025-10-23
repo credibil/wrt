@@ -43,7 +43,7 @@ wasi::http::proxy::export!(Http);
 pub struct Messaging;
 
 impl wasi_messaging::incoming_handler::Guest for Messaging {
-    #[wasi_otel::instrument(name = "messaging_guest_handle",level = Level::DEBUG)]
+    // #[wasi_otel::instrument(name = "messaging_guest_handle",level = Level::DEBUG)]
     async fn handle(message: Message) -> Result<(), Error> {
         let data = message.data();
         let data_str =
@@ -102,7 +102,7 @@ impl wasi_messaging::incoming_handler::Guest for Messaging {
     }
 
     // Subscribe to topics.
-    #[wasi_otel::instrument(name = "messaging_guest_configure",level = Level::DEBUG)]
+    // #[wasi_otel::instrument(name = "messaging_guest_configure",level = Level::DEBUG)]
     async fn configure() -> Result<Configuration, Error> {
         Ok(Configuration {
             topics: vec!["a".to_string(), "b".to_string()],

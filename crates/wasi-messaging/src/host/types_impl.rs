@@ -14,7 +14,7 @@ impl types::Host for Host<'_> {
 impl types::HostClient for Host<'_> {
     async fn connect(&mut self, name: String) -> Result<Resource<ClientProxy>> {
         tracing::trace!("HostClient::connect {name}");
-        let client = ClientProxy::try_from(&name).await?;
+        let client = ClientProxy::try_from(&name)?;
         let resource = self.table.push(client)?;
         Ok(resource)
     }

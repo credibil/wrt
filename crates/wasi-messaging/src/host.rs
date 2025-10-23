@@ -31,12 +31,10 @@ mod generated {
     });
 }
 
-use std::collections::HashMap;
-use std::sync::{Arc, LazyLock};
+use std::sync::{Arc, OnceLock};
 
 use anyhow::anyhow;
 use futures::future::{BoxFuture, FutureExt};
-use futures::lock::Mutex;
 pub use resource::*;
 use runtime::{AddResource, RunState, Service};
 use wasmtime::component::{HasData, InstancePre, Linker};
@@ -48,15 +46,16 @@ pub use self::generated::wasi::messaging::types::Error;
 
 pub type Result<T, E = Error> = anyhow::Result<T, E>;
 
-static CLIENTS: LazyLock<Mutex<HashMap<&str, Arc<dyn Client>>>> =
-    LazyLock::new(|| Mutex::new(HashMap::new()));
+static CLIENT: OnceLock<Arc<dyn Client>> = OnceLock::new();
 
 #[derive(Debug)]
 pub struct WasiMessaging;
 
 impl<T: Client + 'static> AddResource<T> for WasiMessaging {
     async fn resource(self, resource: T) -> anyhow::Result<Self> {
-        CLIENTS.lock().await.insert(resource.name(), Arc::new(resource));
+        if CLIENT.set(Arc::new(resource)).is_err() {
+            return Err(anyhow!("messaging client already registered"));
+        }
         Ok(self)
     }
 }
@@ -96,9 +95,8 @@ impl From<ResourceTableError> for Error {
 }
 
 impl ClientProxy {
-    async fn try_from(name: &str) -> Result<Self> {
-        let clients = CLIENTS.lock().await;
-        let Some(client) = clients.get(name) else {
+    fn try_from(name: &str) -> Result<Self> {
+        let Some(client) = CLIENT.get() else {
             return Err(anyhow!("client '{name}' is not registered"))?;
         };
         Ok(Self(Arc::clone(client)))
