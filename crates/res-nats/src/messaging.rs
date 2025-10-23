@@ -69,7 +69,7 @@ impl Client for NatsClient {
         &self, topic: String, message: Message, options: Option<RequestOptions>,
     ) -> FutureResult<Message> {
         let client = self.0.clone();
-        
+
         async move {
             let payload = message.payload.clone();
             let headers = message.metadata.clone().unwrap_or_default();
