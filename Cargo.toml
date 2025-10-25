@@ -58,7 +58,7 @@ http.workspace = true
 opentelemetry.workspace = true
 serde_json.workspace = true
 tower-http.workspace = true
-wasi.workspace = true
+wasip3.workspace = true
 wit-bindgen.workspace = true
 
 [[example]]
@@ -198,12 +198,12 @@ tower-http = { version = "0.6.6", features = ["cors", "trace"] }
 tracing = "0.1.41"
 tracing-opentelemetry = "0.32.0"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter", "fmt"] }
-wasi = "0.14.7"
-wasmtime = { version = "38.0.1", default-features = false, features = ["component-model-async"] }
-wasmtime-wasi = { version = "38.0.1", features = ["p3"] }
-wasmtime-wasi-http = { version = "38.0.1", features = ["p3"] }
-wasmtime-wasi-io = "38.0.1"
-wit-bindgen = "0.46.0"
+wasip3 = { version = "0.2.1", features = ["http-compat"] }
+wasmtime = { version = "38.0.3", default-features = false, features = ["component-model-async"] }
+wasmtime-wasi = { version = "38.0.3", features = ["p3"] }
+wasmtime-wasi-http = { version = "38.0.3", features = ["p3"] }
+wasmtime-wasi-io = "38.0.3"
+wit-bindgen = { version = "0.47.0", features = ["async-spawn"] }
 
 # credibil registry
 credibil-encoding = { version = "0.4.0", registry = "credibil" }

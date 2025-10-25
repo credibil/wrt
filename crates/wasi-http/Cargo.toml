@@ -19,6 +19,7 @@ workspace = true
 
 [dependencies]
 anyhow.workspace = true
+bytes.workspace = true
 futures.workspace = true
 http.workspace = true
 tracing.workspace = true
@@ -28,20 +29,21 @@ tracing.workspace = true
 hyper = "1.7.0"
 runtime.workspace = true
 tokio.workspace = true
-wasmtime.workspace = true
+wasmtime = { workspace = true, features = ["component-model-async"] }
 wasmtime-wasi-http.workspace = true
+http-body-util = "0.1.3"
 
 # guest dependencies
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 axum.workspace = true
 bincode = "2.0.1"
-bytes.workspace = true
 credibil-encoding.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 tower.workspace = true
-wasi.workspace = true
 wit-bindgen.workspace = true
 percent-encoding = "2.3.2"
 wasi-keyvalue.workspace = true
-# wasmtime-wasi-http.workspace = true
+wasip3.workspace = true
+
+wasi = "0.14.7"

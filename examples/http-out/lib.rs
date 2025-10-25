@@ -7,15 +7,16 @@ use http::Method;
 use serde_json::{Value, json};
 use tower_http::cors::{Any, CorsLayer};
 use tracing::Level;
-use wasi::exports::http::incoming_handler::Guest;
-use wasi::http::types::{IncomingRequest, ResponseOutparam};
 use wasi_http::{Client, Decode, Result};
+use wasip3::exports::http::handler::Guest;
+use wasip3::http::types::{ErrorCode, Request, Response};
 
-struct HttpGuest;
+struct Http;
+wasip3::http::proxy::export!(Http);
 
-impl Guest for HttpGuest {
+impl Guest for Http {
     #[wasi_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
-    fn handle(request: IncomingRequest, response_out: ResponseOutparam) {
+    async fn handle(request: Request) -> Result<Response, ErrorCode> {
         let router = Router::new()
             .route("/", get(get_handler))
             .layer(
@@ -25,9 +26,7 @@ impl Guest for HttpGuest {
                     .allow_origin(Any),
             )
             .route("/", post(post_handler));
-
-        let out = wasi_http::serve(router, request);
-        ResponseOutparam::set(response_out, out);
+        wasi_http::serve(router, request).await
     }
 }
 
@@ -61,4 +60,3 @@ async fn post_handler(Json(body): Json<Value>) -> Result<Json<Value>> {
     })))
 }
 
-wasi::http::proxy::export!(HttpGuest);

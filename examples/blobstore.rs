@@ -6,20 +6,20 @@ use axum::{Json, Router};
 use bytes::Bytes;
 use serde_json::Value;
 use tracing::Level;
-use wasi::exports::http::incoming_handler::Guest;
-use wasi::http::types::{IncomingRequest, ResponseOutparam};
 use wasi_blobstore::blobstore;
 use wasi_blobstore::types::{IncomingValue, OutgoingValue};
 use wasi_http::Result;
+use wasip3::exports::http::handler::Guest;
+use wasip3::http::types::{ErrorCode, Request, Response};
 
-struct HttpGuest;
+struct Http;
+wasip3::http::proxy::export!(Http);
 
-impl Guest for HttpGuest {
-    #[wasi_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
-    fn handle(request: IncomingRequest, response_out: ResponseOutparam) {
+impl Guest for Http {
+    // #[wasi_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
+    async fn handle(request: Request) -> Result<Response, ErrorCode> {
         let router = Router::new().route("/", post(handler));
-        let out = wasi_http::serve(router, request);
-        ResponseOutparam::set(response_out, out);
+        wasi_http::serve(router, request).await
     }
 }
 
@@ -47,5 +47,3 @@ async fn handler(body: Bytes) -> Result<Json<Value>> {
     let response = serde_json::from_slice::<Value>(&data).context("deserializing data")?;
     Ok(Json(response))
 }
-
-wasi::http::proxy::export!(HttpGuest);

@@ -1,5 +1,6 @@
 # https://doc.rust-lang.org/stable/clippy/index.html
 
+
 doc-valid-idents = ["WebAssembly", "MongoDB", "JetStream", "NATS", "OpenTelemetry"]
 
 allowed-duplicate-crates = [
@@ -43,4 +44,6 @@ allowed-duplicate-crates = [
   "windows_x86_64_gnu",
   "windows_x86_64_gnullvm",
   "windows_x86_64_msvc",
+
+  
 ]
