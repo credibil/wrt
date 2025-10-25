@@ -113,7 +113,7 @@ impl Handler {
         tracing::debug!("handling request: {request:?}");
 
         // prepare wasmtime http request and response
-        let request = prepare_request(request).context("preparing request")?;
+        let request = fix_request(request).context("preparing request")?;
 
         // instantiate the guest and get the proxy
         let mut store = Store::new(self.instance_pre.engine(), RunState::new());
@@ -162,7 +162,7 @@ impl Handler {
 }
 
 // Prepare the request for the guest.
-fn prepare_request(mut request: hyper::Request<Incoming>) -> Result<hyper::Request<Incoming>> {
+fn fix_request(mut request: hyper::Request<Incoming>) -> Result<hyper::Request<Incoming>> {
     // let req_id = self.next_id.fetch_add(1, Ordering::Relaxed);
 
     // rebuild Uri with scheme and authority explicitly set so they are passed to the Guest
@@ -181,7 +181,7 @@ fn prepare_request(mut request: hyper::Request<Incoming>) -> Result<hyper::Reque
             }
         }
     } else {
-        // should be running locally
+        // running locally
         let Some(host) = request.headers().get(HOST) else {
             return Err(anyhow!("missing host header"));
         };

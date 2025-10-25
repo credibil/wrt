@@ -1,17 +1,24 @@
+use std::any::Any;
 use std::str::FromStr;
 
 use anyhow::{Context, Result, anyhow};
 use bytes::Bytes;
 use http::header::{AUTHORIZATION, CONTENT_TYPE};
 use http::uri::Authority;
-use http::{HeaderMap, HeaderName, HeaderValue, Response};
+use http::{HeaderMap, HeaderName, HeaderValue, Response, request};
+use http_body_util::BodyExt;
+use http_body_util::combinators::BoxBody;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use serde_json::Value;
-use wasi::http::outgoing_handler;
-use wasi::http::types::{
-    FutureIncomingResponse, Headers, Method, OutgoingBody, OutgoingRequest, Scheme,
-};
+use wasip3::http::handler;
+use wasip3::http::types::Method;
+use wasip3::http_compat::{http_from_wasi_response, http_into_wasi_request};
+
+// use wasi::http::outgoing_handler;
+// use wasi::http::types::{
+//     FutureIncomingResponse, Headers, Method, OutgoingBody, OutgoingRequest, Scheme,
+// };
 
 // use wasmtime_wasi_http::types::{
 //     FutureIncomingResponse, Headers, Method, OutgoingBody, OutgoingRequest, Scheme,
@@ -20,6 +27,40 @@ use wasi::http::types::{
 use crate::guest::cache::{CACHE_BUCKET, Cache};
 // use crate::guest::handler;
 use crate::guest::uri::UriLike;
+
+/// Send an HTTP request using the WASI HTTP proxy handler.
+///
+/// # Errors
+///
+/// Returns an error if the request could not be sent.
+pub async fn handle<T>(request: http::Request<T>) -> Result<http::Response<String>>
+where
+    T: http_body::Body + Any,
+    T::Data: Into<Vec<u8>>,
+    T::Error: Into<Box<dyn std::error::Error + Send + Sync + 'static>>,
+{
+    let wasi_req =
+        http_into_wasi_request(request).map_err(|e| anyhow!("Issue converting request: {e}"))?;
+
+    println!("wasi request: {:?}", wasi_req.get_headers());
+
+    let wasi_resp =
+        handler::handle(wasi_req).await.map_err(|e| anyhow!("Issue calling proxy: {e}"))?;
+
+    println!("wasi response: {:?}", wasi_resp);
+
+    let response = http_from_wasi_response(wasi_resp)
+        .map_err(|e| anyhow!("Issue converting response: {e}"))?;
+
+    println!("response: {:?}", response.headers());
+    let body = response.into_body();
+    let bytes = body.collect().await?;
+    println!("body bytes: {}", bytes.to_bytes().len());
+
+    Ok(http::Response::new("Hello, WASI!".to_string()))
+}
+
+pub struct OutgoingBody(BoxBody<Bytes, anyhow::Error>);
 
 #[derive(Default)]
 pub struct Client {
@@ -248,217 +289,218 @@ impl<B: Serialize> RequestBuilder<NoBody, NoJson, HasForm<B>> {
 
 impl<B, J, F> RequestBuilder<B, J, F> {
     fn send_bytes(&self, body: Option<&[u8]>) -> Result<Response<Bytes>> {
-        let request = self.prepare_request(body)?;
+        todo!()
+        // let request = self.prepare_request(body)?;
 
-        tracing::trace!(
-            "sending request: {:?}://{}{}",
-            request.scheme().unwrap_or(Scheme::Http),
-            request.authority().unwrap_or_default(),
-            request.path_with_query().unwrap_or_default()
-        );
-        for (name, value) in request.headers().entries().as_slice() {
-            tracing::trace!("request header: {name}: {:?}", String::from_utf8_lossy(value));
-        }
+        // tracing::trace!(
+        //     "sending request: {:?}://{}{}",
+        //     request.scheme().unwrap_or(Scheme::Http),
+        //     request.authority().unwrap_or_default(),
+        //     request.path_with_query().unwrap_or_default()
+        // );
+        // for (name, value) in request.headers().entries().as_slice() {
+        //     tracing::trace!("request header: {name}: {:?}", String::from_utf8_lossy(value));
+        // }
 
-        // caching
-        let bucket = self.cache.as_deref().unwrap_or(CACHE_BUCKET);
-        let mut cache = Cache::new(bucket);
+        // // caching
+        // let bucket = self.cache.as_deref().unwrap_or(CACHE_BUCKET);
+        // let mut cache = Cache::new(bucket);
 
-        match cache.headers(&request.headers()) {
-            Ok(()) => Ok(()),
-            Err(e) => {
-                let err = format!("issue setting cache headers: {e}");
-                tracing::error!(err);
-                Err(anyhow!(err))
-            }
-        }?;
+        // match cache.headers(&request.headers()) {
+        //     Ok(()) => Ok(()),
+        //     Err(e) => {
+        //         let err = format!("issue setting cache headers: {e}");
+        //         tracing::error!(err);
+        //         Err(anyhow!(err))
+        //     }
+        // }?;
 
-        let response = if cache.should_use_cache() {
-            tracing::debug!("cache-first enabled, checking cache");
+        // let response = if cache.should_use_cache() {
+        //     tracing::debug!("cache-first enabled, checking cache");
 
-            let fut_resp = match cache.get() {
-                Ok(Some(resp)) => {
-                    tracing::debug!("response found in cache");
-                    return Ok(resp);
-                }
-                Ok(None) => {
-                    tracing::debug!("no cached response found, fetching from origin");
-                    outgoing_handler::handle(request, None)
-                        .map_err(|e| anyhow!("making request: {e}"))?
+        //     let fut_resp = match cache.get() {
+        //         Ok(Some(resp)) => {
+        //             tracing::debug!("response found in cache");
+        //             return Ok(resp);
+        //         }
+        //         Ok(None) => {
+        //             tracing::debug!("no cached response found, fetching from origin");
+        //             outgoing_handler::handle(request, None)
+        //                 .map_err(|e| anyhow!("making request: {e}"))?
 
-                    // handler::handle(request).await.context("making request")?
-                }
-                Err(e) => {
-                    tracing::error!("retrieving cached response: {e}, fetching from origin");
-                    outgoing_handler::handle(request, None)
-                        .map_err(|e| anyhow!("making request: {e}"))?
+        //             // handler::handle(request).await.context("making request")?
+        //         }
+        //         Err(e) => {
+        //             tracing::error!("retrieving cached response: {e}, fetching from origin");
+        //             outgoing_handler::handle(request, None)
+        //                 .map_err(|e| anyhow!("making request: {e}"))?
 
-                    // handler::handle(request).await.context("making request")?
-                }
-            };
+        //             // handler::handle(request).await.context("making request")?
+        //         }
+        //     };
 
-            Self::process_response(&fut_resp)
-        } else {
-            tracing::debug!("resource-first enabled, fetching from origin");
+        //     Self::process_response(&fut_resp)
+        // } else {
+        //     tracing::debug!("resource-first enabled, fetching from origin");
 
-            let fut_resp = outgoing_handler::handle(request, None)
-                .map_err(|e| anyhow!("making request: {e}"))?;
-            Self::process_response(&fut_resp)
-        }?;
+        //     let fut_resp = outgoing_handler::handle(request, None)
+        //         .map_err(|e| anyhow!("making request: {e}"))?;
+        //     Self::process_response(&fut_resp)
+        // }?;
 
-        // TODO: spawn task for storing cache and return response immediately
-        if cache.should_store() {
-            tracing::debug!("storing response in cache");
-            if let Err(e) = cache.put(&response) {
-                tracing::error!("storing response in cache failed: {e}");
-            }
-        }
-        Ok(response)
+        // // TODO: spawn task for storing cache and return response immediately
+        // if cache.should_store() {
+        //     tracing::debug!("storing response in cache");
+        //     if let Err(e) = cache.put(&response) {
+        //         tracing::error!("storing response in cache failed: {e}");
+        //     }
+        // }
+        // Ok(response)
     }
 
-    fn prepare_request(&self, body: Option<&[u8]>) -> Result<OutgoingRequest> {
-        // headers
-        let headers = Headers::new();
-        for (key, value) in &self.headers {
-            headers
-                .append(key.as_str(), value.as_bytes())
-                .map_err(|e| anyhow!("setting header: {e}"))?;
-        }
-        let request = OutgoingRequest::new(headers);
+    // fn prepare_request(&self, body: Option<&[u8]>) -> Result<OutgoingRequest> {
+    //     // headers
+    //     let headers = Headers::new();
+    //     for (key, value) in &self.headers {
+    //         headers
+    //             .append(key.as_str(), value.as_bytes())
+    //             .map_err(|e| anyhow!("setting header: {e}"))?;
+    //     }
+    //     let request = OutgoingRequest::new(headers);
 
-        // method
-        request.set_method(&self.method).map_err(|()| anyhow!("setting method"))?;
+    //     // method
+    //     request.set_method(&self.method).map_err(|()| anyhow!("setting method"))?;
 
-        // url
-        let uri = self.uri.into_uri()?;
+    //     // url
+    //     let uri = self.uri.into_uri()?;
 
-        // scheme
-        let Some(scheme) = uri.scheme() else {
-            return Err(anyhow!("missing scheme"));
-        };
-        let scheme = match scheme.as_str() {
-            "http" => Scheme::Http,
-            "https" => Scheme::Https,
-            _ => return Err(anyhow!("unsupported scheme: {}", scheme.as_str())),
-        };
-        request.set_scheme(Some(&scheme)).map_err(|()| anyhow!("setting scheme"))?;
+    //     // scheme
+    //     let Some(scheme) = uri.scheme() else {
+    //         return Err(anyhow!("missing scheme"));
+    //     };
+    //     let scheme = match scheme.as_str() {
+    //         "http" => Scheme::Http,
+    //         "https" => Scheme::Https,
+    //         _ => return Err(anyhow!("unsupported scheme: {}", scheme.as_str())),
+    //     };
+    //     request.set_scheme(Some(&scheme)).map_err(|()| anyhow!("setting scheme"))?;
 
-        // authority
-        request
-            .set_authority(uri.authority().map(Authority::as_str))
-            .map_err(|()| anyhow!("setting authority"))?;
+    //     // authority
+    //     request
+    //         .set_authority(uri.authority().map(Authority::as_str))
+    //         .map_err(|()| anyhow!("setting authority"))?;
 
-        // path + query
-        let mut path_with_query = uri.path().to_string();
-        if let Some(query) = uri.query() {
-            path_with_query = format!("{path_with_query}?{query}");
-        }
-        request
-            .set_path_with_query(Some(&path_with_query))
-            .map_err(|()| anyhow!("setting path_with_query"))?;
+    //     // path + query
+    //     let mut path_with_query = uri.path().to_string();
+    //     if let Some(query) = uri.query() {
+    //         path_with_query = format!("{path_with_query}?{query}");
+    //     }
+    //     request
+    //         .set_path_with_query(Some(&path_with_query))
+    //         .map_err(|()| anyhow!("setting path_with_query"))?;
 
-        tracing::trace!("encoded path_with_query: {path_with_query}");
+    //     tracing::trace!("encoded path_with_query: {path_with_query}");
 
-        // body
-        let out_body = request.body().map_err(|()| anyhow!("getting outgoing body"))?;
-        if let Some(mut buf) = body {
-            let out_stream = out_body.write().map_err(|()| anyhow!("getting output stream"))?;
+    //     // body
+    //     let out_body = request.body().map_err(|()| anyhow!("getting outgoing body"))?;
+    //     if let Some(mut buf) = body {
+    //         let out_stream = out_body.write().map_err(|()| anyhow!("getting output stream"))?;
 
-            let pollable = out_stream.subscribe();
-            while !buf.is_empty() {
-                pollable.block();
-                let Ok(permit) = out_stream.check_write() else {
-                    return Err(anyhow!("output stream is not writable"));
-                };
+    //         let pollable = out_stream.subscribe();
+    //         while !buf.is_empty() {
+    //             pollable.block();
+    //             let Ok(permit) = out_stream.check_write() else {
+    //                 return Err(anyhow!("output stream is not writable"));
+    //             };
 
-                #[expect(clippy::cast_possible_truncation)]
-                let len = buf.len().min(permit as usize);
+    //             #[expect(clippy::cast_possible_truncation)]
+    //             let len = buf.len().min(permit as usize);
 
-                let (chunk, rest) = buf.split_at(len);
-                if out_stream.write(chunk).is_err() {
-                    return Err(anyhow!("writing to output stream"));
-                }
-                buf = rest;
-            }
+    //             let (chunk, rest) = buf.split_at(len);
+    //             if out_stream.write(chunk).is_err() {
+    //                 return Err(anyhow!("writing to output stream"));
+    //             }
+    //             buf = rest;
+    //         }
 
-            if out_stream.flush().is_err() {
-                return Err(anyhow!("flushing output stream"));
-            }
+    //         if out_stream.flush().is_err() {
+    //             return Err(anyhow!("flushing output stream"));
+    //         }
 
-            pollable.block();
-            if out_stream.check_write().is_err() {
-                return Err(anyhow!("output stream error"));
-            }
-        }
+    //         pollable.block();
+    //         if out_stream.check_write().is_err() {
+    //             return Err(anyhow!("output stream error"));
+    //         }
+    //     }
 
-        OutgoingBody::finish(out_body, None)?;
-        Ok(request)
-    }
+    //     OutgoingBody::finish(out_body, None)?;
+    //     Ok(request)
+    // }
 
-    fn process_response(fut_resp: &FutureIncomingResponse) -> Result<Response<Bytes>> {
-        fut_resp.subscribe().block();
-        let Some(result) = fut_resp.get() else {
-            return Err(anyhow!("missing response"));
-        };
-        let response = result
-            .map_err(|()| anyhow!("issue getting response"))?
-            .map_err(|e| anyhow!("response error: {e}"))?;
+    // fn process_response(fut_resp: &FutureIncomingResponse) -> Result<Response<Bytes>> {
+    //     fut_resp.subscribe().block();
+    //     let Some(result) = fut_resp.get() else {
+    //         return Err(anyhow!("missing response"));
+    //     };
+    //     let response = result
+    //         .map_err(|()| anyhow!("issue getting response"))?
+    //         .map_err(|e| anyhow!("response error: {e}"))?;
 
-        // process body
-        let body = response.consume().map_err(|()| anyhow!("issue getting body"))?;
-        let stream = body.stream().map_err(|()| anyhow!("issue getting body's stream"))?;
+    //     // process body
+    //     let body = response.consume().map_err(|()| anyhow!("issue getting body"))?;
+    //     let stream = body.stream().map_err(|()| anyhow!("issue getting body's stream"))?;
 
-        let mut body = vec![];
-        while let Ok(chunk) = stream.blocking_read(1024 * 1024) {
-            body.extend_from_slice(&chunk);
-        }
+    //     let mut body = vec![];
+    //     while let Ok(chunk) = stream.blocking_read(1024 * 1024) {
+    //         body.extend_from_slice(&chunk);
+    //     }
 
-        // transform unsuccessful requests into an error
-        let status = response.status();
-        if !(200..300).contains(&status) {
-            if body.is_empty() {
-                return Err(anyhow!("request unsuccessful {status}"));
-            }
+    //     // transform unsuccessful requests into an error
+    //     let status = response.status();
+    //     if !(200..300).contains(&status) {
+    //         if body.is_empty() {
+    //             return Err(anyhow!("request unsuccessful {status}"));
+    //         }
 
-            // extract error description from body
-            let msg = if let Ok(msg) = serde_json::from_slice::<Value>(&body) {
-                serde_json::to_string(&msg)?
-            } else {
-                String::from_utf8_lossy(&body).to_string()
-            };
-            return Err(anyhow!("request unsuccessful {status}, {msg}"));
-        }
+    //         // extract error description from body
+    //         let msg = if let Ok(msg) = serde_json::from_slice::<Value>(&body) {
+    //             serde_json::to_string(&msg)?
+    //         } else {
+    //             String::from_utf8_lossy(&body).to_string()
+    //         };
+    //         return Err(anyhow!("request unsuccessful {status}, {msg}"));
+    //     }
 
-        // convert response
-        let mut resp = Response::new(Bytes::from(body));
-        for (name, value) in response.headers().entries() {
-            let name = HeaderName::from_str(&name)
-                .with_context(|| format!("Failed to parse header: {name}"))?;
-            let value = HeaderValue::from_bytes(&value)
-                .with_context(|| format!("Failed to parse header value for {name}"))?;
-            resp.headers_mut().insert(name, value);
-        }
+    //     // convert response
+    //     let mut resp = Response::new(Bytes::from(body));
+    //     for (name, value) in response.headers().entries() {
+    //         let name = HeaderName::from_str(&name)
+    //             .with_context(|| format!("Failed to parse header: {name}"))?;
+    //         let value = HeaderValue::from_bytes(&value)
+    //             .with_context(|| format!("Failed to parse header value for {name}"))?;
+    //         resp.headers_mut().insert(name, value);
+    //     }
 
-        drop(stream);
-        drop(response);
+    //     drop(stream);
+    //     drop(response);
 
-        Ok(resp)
-    }
+    //     Ok(resp)
+    // }
 }
 
-pub trait Decode {
-    /// Decode the response body as JSON.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the response body is not valid JSON.
-    fn json<T: DeserializeOwned>(self) -> Result<T>;
-}
+// pub trait Decode {
+//     /// Decode the response body as JSON.
+//     ///
+//     /// # Errors
+//     ///
+//     /// Returns an error if the response body is not valid JSON.
+//     fn json<T: DeserializeOwned>(self) -> Result<T>;
+// }
 
-impl Decode for Response<Bytes> {
-    fn json<T: DeserializeOwned>(self) -> Result<T> {
-        let body = self.into_body();
-        let data = serde_json::from_slice::<T>(&body)?;
-        Ok(data)
-    }
-}
+// impl Decode for Response<Bytes> {
+//     fn json<T: DeserializeOwned>(self) -> Result<T> {
+//         let body = self.into_body();
+//         let data = serde_json::from_slice::<T>(&body)?;
+//         Ok(data)
+//     }
+// }

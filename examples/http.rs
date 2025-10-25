@@ -21,7 +21,7 @@ impl Guest for Http {
 }
 
 #[axum::debug_handler]
-#[wasi_otel::instrument]
+// #[wasi_otel::instrument]
 async fn handler(Json(body): Json<Value>) -> Result<Json<Value>> {
     Ok(Json(json!({
         "message": "Hello, World!",

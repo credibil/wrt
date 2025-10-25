@@ -26,7 +26,8 @@ curl -d '{"text":"hello"}' http://localhost:8080
 ## Using Docker Compose
 
 ```bash
-docker compose up
+docker compose --file ./examples/otel/compose.yaml up
+```
 ```
 
 This will start a wasm runtime running a simple HTTP server instrumented with logging and metrics.

@@ -45,5 +45,6 @@ wit-bindgen.workspace = true
 percent-encoding = "2.3.2"
 wasi-keyvalue.workspace = true
 wasip3.workspace = true
-
-wasi = "0.14.7"
+http-body = "1.0.1"
+http-body-util.workspace = true
+bytes.workspace = true

@@ -7,7 +7,7 @@ use wasip3::http_compat::{http_from_wasi_request, http_into_wasi_response};
 ///
 /// # Errors
 ///
-/// Returns a [`wasi::http::types::ErrorCode`] if the request could not be served.
+/// Returns a [`ErrorCode`] if the request could not be served.
 pub async fn serve(
     router: axum::Router, request: wasi::Request,
 ) -> Result<wasi::Response, ErrorCode> {

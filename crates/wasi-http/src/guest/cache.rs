@@ -4,8 +4,8 @@ use anyhow::{anyhow, bail};
 use bincode::{Decode, Encode, config};
 use bytes::Bytes;
 use http::Response;
-use wasi::http::types::Headers;
 use wasi_keyvalue::store;
+use wasip3::http::types::Headers;
 
 pub const CACHE_BUCKET: &str = "default-cache";
 
