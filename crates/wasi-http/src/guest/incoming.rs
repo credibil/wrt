@@ -19,8 +19,7 @@ pub async fn serve(
         router.oneshot(http_req).await.map_err(|e| error!("issue processing request: {e}"))?;
     tracing::info!("guest response: {http_resp:?}");
 
-    let response = http_into_wasi_response(http_resp)?;
-    Ok(response)
+    http_into_wasi_response(http_resp)
 }
 
 macro_rules! error {
