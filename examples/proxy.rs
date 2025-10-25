@@ -8,6 +8,7 @@ use http::header::{CACHE_CONTROL, IF_NONE_MATCH};
 use http_body_util::{Empty, Full};
 use serde_json::Value;
 use tracing::Level;
+use http::Method;
 use wasi_http::Result;
 use wasip3::exports::http::handler::Guest;
 use wasip3::http::types::{ErrorCode, Request, Response};
@@ -30,7 +31,7 @@ async fn handle_cache() -> Result<Json<Value>> {
     let cache_key = "qf55low9rjsrup46vsiz9r73";
 
     let request = http::Request::builder()
-        .method(http::Method::GET)
+        .method(Method::GET)
         .uri("https://jsonplaceholder.cypress.io/posts/1")
         .header(CACHE_CONTROL, cache_expiry)
         .header(IF_NONE_MATCH, cache_key)
@@ -53,7 +54,7 @@ async fn handle_origin(body: Bytes) -> Result<Json<Value>> {
     let cache_expiry = "max-age=300";
 
     let request = http::Request::builder()
-        .method(http::Method::GET)
+        .method(Method::GET)
         .uri("https://jsonplaceholder.cypress.io/posts")
         .header(CACHE_CONTROL, cache_expiry)
         .body(Full::new(body))
