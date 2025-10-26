@@ -25,7 +25,7 @@ In a separate console, call the guest:
 curl -d '{"text":"hello"}' http://localhost:8080
 ```
 
-## Using Docker Compose
+## OpenTelemetry Collector
 
 ```bash
 docker compose --file ./examples/compose.yaml up
