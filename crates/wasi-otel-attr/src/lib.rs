@@ -1,11 +1,10 @@
 //! # OpenTelemetry Attribute Macros
 
 use proc_macro::TokenStream;
-use quote::{quote, quote_spanned};
+use quote::quote;
 use syn::meta::{self, ParseNestedMeta};
 use syn::parse::Result;
-use syn::spanned::Spanned;
-use syn::{Expr, ItemFn, LitStr, ReturnType, parse_macro_input, parse_quote};
+use syn::{Expr, ItemFn, LitStr, parse_macro_input};
 
 /// Instruments a function using the `[wasi_otel::instrument]` function.
 ///
@@ -22,15 +21,13 @@ pub fn instrument(args: TokenStream, item: TokenStream) -> TokenStream {
     let signature = signature(&item_fn);
     let body = body(attrs, &item_fn);
 
+    // println!("signature: {signature}");
+    // println!("body: {body}");
+
     // recreate function with the instrument macro wrapping the body
     let new_fn = quote! {
         #signature {
-            let _guard = if ::tracing::Span::current().is_none() {
-                let shutdown = ::wasi_otel::init();
-                Some(shutdown)
-            } else {
-                None
-            };
+            let _guard = ::tracing::Span::current().is_none().then(::wasi_otel::init);
             #body
         }
     };
@@ -38,29 +35,19 @@ pub fn instrument(args: TokenStream, item: TokenStream) -> TokenStream {
     TokenStream::from(new_fn)
 }
 
-// Function signature
 fn signature(item_fn: &ItemFn) -> proc_macro2::TokenStream {
-    let ident = item_fn.sig.ident.clone();
-    let inputs = item_fn.sig.inputs.clone();
-    let output = item_fn.sig.output.clone();
+    let signature = item_fn.sig.clone();
 
-    // rewrite async functions to return `Future + Send`
     if item_fn.sig.asyncness.is_some() {
-        let (return_type, return_span) = if let ReturnType::Type(_, return_type) = &output {
-            (return_type.to_owned(), return_type.span())
-        } else {
-            (parse_quote! { () }, ident.span())
-        };
-        quote_spanned! {return_span=>
-            #[allow(refining_impl_trait, reason="`Future` return type needs to be marked as `Send`")]
-            fn #ident(#inputs) -> impl Future<Output = #return_type> + Send
+        quote! {
+            #[allow(clippy::future_not_send)]
+            #signature
         }
     } else {
-        quote! {fn #ident(#inputs) #output}
+        quote! {#signature}
     }
 }
 
-// Function body
 fn body(attrs: Attributes, item_fn: &ItemFn) -> proc_macro2::TokenStream {
     let name = item_fn.sig.ident.clone();
     let block = item_fn.block.clone();
@@ -73,11 +60,9 @@ fn body(attrs: Attributes, item_fn: &ItemFn) -> proc_macro2::TokenStream {
     if item_fn.sig.asyncness.is_some() {
         quote! {
             ::tracing::Instrument::instrument(
-                async move {
-                    #block
-                },
+                #block,
                 ::tracing::span!(#level, #span_name)
-            )
+            ).into_inner()
         }
     } else {
         quote! {
