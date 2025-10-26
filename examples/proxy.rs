@@ -1,6 +1,6 @@
 #![cfg(target_arch = "wasm32")]
 
-use anyhow::Context;
+use anyhow::{Context, anyhow};
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use bytes::Bytes;
@@ -30,17 +30,25 @@ async fn handle_cache() -> Result<Json<Value>> {
     let max_age = "max-age=300";
     let cache_key = "qf55low9rjsrup46vsiz9r73";
 
-    let request = http::Request::builder()
-        .method(Method::GET)
-        .uri("https://jsonplaceholder.cypress.io/posts/1")
-        .header(CACHE_CONTROL, max_age)
-        .header(IF_NONE_MATCH, cache_key)
-        .body(Empty::<Bytes>::new())
-        .expect("Failed to build request");
+    // let request = http::Request::builder()
+    //     .method(Method::GET)
+    //     .uri("https://jsonplaceholder.cypress.io/posts/1")
+    //     .header(CACHE_CONTROL, max_age)
+    //     .header(IF_NONE_MATCH, cache_key)
+    //     .body(Empty::<Bytes>::new())
+    //     .expect("Failed to build request");
 
-    let response = wasi_http::handle(request).await?;
-    let body = response.into_body();
-    let body = serde_json::from_slice::<Value>(&body).context("issue parsing response body")?;
+    // let response = wasi_http::handle(request).await?;
+    // let body = response.into_body();
+    // let body = serde_json::from_slice::<Value>(&body).context("issue parsing response body")?;
+
+    let body = reqwest_p3::Client::new()
+        .get("https://jsonplaceholder.cypress.io/posts/1")
+        .send()
+        .await
+        .map_err(|e| anyhow!("{e}"))?
+        .json::<Value>()
+        .map_err(|e| anyhow!("{e}"))?;
 
     Ok(Json(body))
 }
