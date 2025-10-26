@@ -204,7 +204,7 @@ impl<B: Serialize + Safe> RequestBuilder<NoBody, NoJson, HasForm<B>> {
 
 impl<B: Safe, J: Safe, F: Safe> RequestBuilder<B, J, F> {
     async fn handle(&self, body: Option<Vec<u8>>) -> Result<http::Response<Bytes>> {
-        let uri = self.uri.into_uri()?;
+        let uri = self.uri.to_uri()?;
         let mut builder = http::Request::builder().method(Method::GET).uri(uri);
 
         for (key, value) in &self.headers {
