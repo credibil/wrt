@@ -1,15 +1,13 @@
 use anyhow::{Result, anyhow};
 use bytes::Bytes;
 use http::header::{AUTHORIZATION, CONTENT_TYPE};
-use http::{HeaderMap, HeaderName, Response};
+use http::{HeaderMap, HeaderName, Method, Response};
+use http_body_util::{Empty, Full};
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 
 use crate::guest::outgoing;
-use http_body_util::{Empty, Full};
-
 use crate::guest::uri::UriLike;
-use http::Method;
 
 pub trait Safe: Send + Sync {}
 impl<T: Send + Sync> Safe for T {}
@@ -163,7 +161,7 @@ impl<B, J, F> RequestBuilder<B, J, F> {
 
     #[must_use]
     pub fn bearer_auth(mut self, token: &str) -> Self {
-        self.headers.insert(AUTHORIZATION, format!("Bearer {token}").into());
+        self.headers.insert(AUTHORIZATION, format!("Bearer {token}"));
         self
     }
 
@@ -187,7 +185,7 @@ impl RequestBuilder<NoBody, NoJson, NoForm> {
     /// # Errors
     ///
     /// Returns an error if the request fails to send.
-    pub async fn send(&self) -> Result<Response<Bytes>> {
+    pub async fn send(&self) -> Result<http::Response<Bytes>> {
         self.handle(None).await
     }
 }
@@ -198,7 +196,7 @@ impl RequestBuilder<HasBody, NoJson, NoForm> {
     /// # Errors
     ///
     /// Returns an error if the request fails to send.
-    pub async fn send(&self) -> Result<Response<Bytes>> {
+    pub async fn send(&self) -> Result<http::Response<Bytes>> {
         self.handle(Some(self.body.0.clone())).await
     }
 }
@@ -223,7 +221,7 @@ impl<B: Serialize + Safe> RequestBuilder<NoBody, NoJson, HasForm<B>> {
     /// # Errors
     ///
     /// Returns an error if the request fails to send.
-    pub async fn send(&mut self) -> Result<Response<Bytes>> {
+    pub async fn send(&mut self) -> Result<http::Response<Bytes>> {
         self.headers.insert(CONTENT_TYPE, "application/x-www-form-urlencoded".into());
         let body = credibil_encoding::form_encode(&self.form.0)
             .map_err(|e| anyhow!("issue serializing form: {e}"))?;
@@ -234,7 +232,7 @@ impl<B: Serialize + Safe> RequestBuilder<NoBody, NoJson, HasForm<B>> {
 }
 
 impl<B: Safe, J: Safe, F: Safe> RequestBuilder<B, J, F> {
-    async fn handle(&self, body: Option<Vec<u8>>) -> Result<Response<Bytes>> {
+    async fn handle(&self, body: Option<Vec<u8>>) -> Result<http::Response<Bytes>> {
         let uri = self.uri.into_uri()?;
         let mut builder = http::Request::builder().method(Method::GET).uri(uri);
 
@@ -252,7 +250,7 @@ impl<B: Safe, J: Safe, F: Safe> RequestBuilder<B, J, F> {
     }
 }
 
-pub trait Decode {
+pub trait IntoJson {
     /// Decode the response body as JSON.
     ///
     /// # Errors
@@ -261,7 +259,7 @@ pub trait Decode {
     fn json<T: DeserializeOwned>(self) -> Result<T>;
 }
 
-impl Decode for Response<Bytes> {
+impl IntoJson for Response<Bytes> {
     fn json<T: DeserializeOwned>(self) -> Result<T> {
         let body = self.into_body();
         let data = serde_json::from_slice::<T>(&body)?;

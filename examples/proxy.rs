@@ -9,7 +9,7 @@ use http::header::{CACHE_CONTROL, IF_NONE_MATCH};
 use http_body_util::{Empty, Full};
 use serde_json::Value;
 use tracing::Level;
-use wasi_http::Result;
+use wasi_http::{Client, IntoJson, Result};
 use wasip3::exports::http::handler::Guest;
 use wasip3::http::types::{ErrorCode, Request, Response};
 
@@ -42,11 +42,20 @@ async fn handle_cache() -> Result<Json<Value>> {
     // let body = response.into_body();
     // let body = serde_json::from_slice::<Value>(&body).context("issue parsing response body")?;
 
-    let body = reqwest_p3::Client::new()
+    // let body = reqwest_p3::Client::new()
+    //     .get("https://jsonplaceholder.cypress.io/posts/1")
+    //     .send()
+    //     .await
+    //     .map_err(|e| anyhow!("{e}"))?
+    //     .json::<Value>()
+    //     .map_err(|e| anyhow!("{e}"))?;
+
+    let body = Client::new()
         .get("https://jsonplaceholder.cypress.io/posts/1")
+        .header(CACHE_CONTROL, max_age)
+        .header(IF_NONE_MATCH, cache_key)
         .send()
-        .await
-        .map_err(|e| anyhow!("{e}"))?
+        .await?
         .json::<Value>()
         .map_err(|e| anyhow!("{e}"))?;
 
