@@ -1,4 +1,5 @@
 mod request;
+mod uri;
 
 use anyhow::Result;
 use bytes::Bytes;
@@ -6,7 +7,7 @@ use http::{Method, Response};
 use serde::de::DeserializeOwned;
 
 use crate::guest::client::request::{NoBody, NoForm, NoJson, RequestBuilder};
-use crate::guest::uri::UriLike;
+use crate::guest::client::uri::UriLike;
 
 pub trait Safe: Send + Sync {}
 impl<T: Send + Sync> Safe for T {}

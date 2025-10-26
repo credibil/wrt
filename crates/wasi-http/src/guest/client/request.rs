@@ -5,8 +5,8 @@ use http::{HeaderMap, HeaderName, Method, Response};
 use http_body_util::{Empty, Full};
 use serde::Serialize;
 
+use crate::guest::client::uri::UriLike;
 use crate::guest::outgoing;
-use crate::guest::uri::UriLike;
 
 pub trait Safe: Send + Sync {}
 impl<T: Send + Sync> Safe for T {}
