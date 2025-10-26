@@ -1,6 +1,6 @@
 #![cfg(target_arch = "wasm32")]
 
-use anyhow::{Context, anyhow};
+use anyhow::Context;
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use bytes::Bytes;
@@ -56,8 +56,7 @@ async fn handle_cache() -> Result<Json<Value>> {
         .header(IF_NONE_MATCH, cache_key)
         .send()
         .await?
-        .json::<Value>()
-        .map_err(|e| anyhow!("{e}"))?;
+        .json::<Value>()?;
 
     Ok(Json(body))
 }
