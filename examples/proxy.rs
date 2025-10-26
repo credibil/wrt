@@ -4,11 +4,11 @@ use anyhow::Context;
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use bytes::Bytes;
+use http::Method;
 use http::header::{CACHE_CONTROL, IF_NONE_MATCH};
 use http_body_util::{Empty, Full};
 use serde_json::Value;
 use tracing::Level;
-use http::Method;
 use wasi_http::Result;
 use wasip3::exports::http::handler::Guest;
 use wasip3::http::types::{ErrorCode, Request, Response};
@@ -27,23 +27,20 @@ impl Guest for Http {
 // Attempt to get cached response with fallback to origin
 // #[wasi_otel::instrument]
 async fn handle_cache() -> Result<Json<Value>> {
-    let cache_expiry = "max-age=300";
+    let max_age = "max-age=300";
     let cache_key = "qf55low9rjsrup46vsiz9r73";
 
     let request = http::Request::builder()
         .method(Method::GET)
         .uri("https://jsonplaceholder.cypress.io/posts/1")
-        .header(CACHE_CONTROL, cache_expiry)
+        .header(CACHE_CONTROL, max_age)
         .header(IF_NONE_MATCH, cache_key)
         .body(Empty::<Bytes>::new())
         .expect("Failed to build request");
 
     let response = wasi_http::handle(request).await?;
-    println!("response: {:?}", response.headers());
-
     let body = response.into_body();
-    let body =
-        serde_json::from_slice::<Value>(&body.to_bytes()).context("issue parsing response body")?;
+    let body = serde_json::from_slice::<Value>(&body).context("issue parsing response body")?;
 
     Ok(Json(body))
 }
@@ -51,21 +48,18 @@ async fn handle_cache() -> Result<Json<Value>> {
 // Forward request to external service and cache the response
 #[wasi_otel::instrument]
 async fn handle_origin(body: Bytes) -> Result<Json<Value>> {
-    let cache_expiry = "max-age=300";
+    let max_age = "max-age=300";
 
     let request = http::Request::builder()
         .method(Method::GET)
         .uri("https://jsonplaceholder.cypress.io/posts")
-        .header(CACHE_CONTROL, cache_expiry)
+        .header(CACHE_CONTROL, max_age)
         .body(Full::new(body))
         .expect("Failed to build request");
 
     let response = wasi_http::handle(request).await?;
-    println!("response: {:?}", response.headers());
-
     let body = response.into_body();
-    let body =
-        serde_json::from_slice::<Value>(&body.to_bytes()).context("issue parsing response body")?;
+    let body = serde_json::from_slice::<Value>(&body).context("issue parsing response body")?;
 
     Ok(Json(body))
 }
