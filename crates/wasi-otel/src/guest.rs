@@ -18,10 +18,10 @@ mod generated {
         world: "otel",
         path: "wit",
         generate_all,
-        // pub_export_macro: true
     });
 }
 
+/// Re-exported `instrument` macro for use in guest code.
 pub use wasi_otel_attr::instrument;
 
 use self::init::Shutdown;

@@ -34,50 +34,50 @@ pub fn init() -> Result<Shutdown> {
     // get WASI host telemetry resource
     let resource: Resource = resource::resource().into();
 
-    // initialize providers
-    #[cfg(feature = "tracing")]
-    let tracing_provider =
-        tracing::init(resource.clone()).context("failed to initialize tracing")?;
-    #[cfg(feature = "metrics")]
-    let meter_provider = metrics::init(resource).context("failed to initialize metrics")?;
-
     // create subscriber layers
     let filter_layer = EnvFilter::from_default_env()
         .add_directive("hyper=off".parse()?)
         .add_directive("h2=off".parse()?)
         .add_directive("tonic=off".parse()?);
     let fmt_layer = tracing_subscriber::fmt::layer();
-    let tracing_layer = tracing_layer().with_tracer(tracing_provider.tracer("global"));
-    let metrics_layer = MetricsLayer::new(meter_provider.clone());
+    let registry = Registry::default().with(filter_layer).with(fmt_layer);
 
-    // set global default subscriber
-    Registry::default()
-        .with(filter_layer)
-        .with(fmt_layer)
-        .with(tracing_layer)
-        .with(metrics_layer)
-        .try_init()
-        .map_err(|e| anyhow!("issue initializing global subscriber: {e}"))?;
+    let mut shutdown = Shutdown::default();
 
-    Ok(Shutdown {
-        #[cfg(feature = "tracing")]
-        tracing: tracing_provider,
-        #[cfg(feature = "metrics")]
-        metrics: meter_provider,
-        #[cfg(feature = "tracing")]
-        _context: Some(tracing::context()),
-    })
+    // initialize tracing
+    #[cfg(feature = "tracing")]
+    let registry = {
+        let tracing_provider =
+            tracing::init(resource.clone()).context("failed to initialize tracing")?;
+        let tracing_layer = tracing_layer().with_tracer(tracing_provider.tracer("global"));
+        shutdown.tracing = tracing_provider;
+        shutdown.context = Some(tracing::context());
+        registry.with(tracing_layer)
+    };
+
+    // initialize metrics
+    #[cfg(feature = "metrics")]
+    let registry = {
+        let meter_provider = metrics::init(resource).context("failed to initialize metrics")?;
+        let metrics_layer = MetricsLayer::new(meter_provider.clone());
+        shutdown.metrics = meter_provider;
+        registry.with(metrics_layer)
+    };
+
+    registry.try_init().map_err(|e| anyhow!("issue initializing subscriber: {e}"))?;
+
+    Ok(shutdown)
 }
 
 /// [`Shutdown`] provides a guard to export telemetry data on drop
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct Shutdown {
     #[cfg(feature = "tracing")]
     tracing: SdkTracerProvider,
     #[cfg(feature = "metrics")]
     metrics: SdkMeterProvider,
     #[cfg(feature = "tracing")]
-    _context: Option<ContextGuard>,
+    context: Option<ContextGuard>,
 }
 
 impl Drop for Shutdown {
