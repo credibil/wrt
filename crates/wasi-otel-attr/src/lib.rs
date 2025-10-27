@@ -18,10 +18,10 @@ pub fn instrument(args: TokenStream, item: TokenStream) -> TokenStream {
     parse_macro_input!(args with arg_parser);
 
     let item_fn = parse_macro_input!(item as ItemFn);
-    let signature = signature(&item_fn);
+    let signature = &item_fn.sig;
     let body = body(attrs, &item_fn);
 
-    println!("{signature} {{\n {body}\n}}");
+    // println!("quote!{signature} {{\n {body}\n}}");
 
     // recreate function with the instrument macro wrapping the body
     let new_fn = quote! {
@@ -32,19 +32,6 @@ pub fn instrument(args: TokenStream, item: TokenStream) -> TokenStream {
     };
 
     TokenStream::from(new_fn)
-}
-
-fn signature(item_fn: &ItemFn) -> proc_macro2::TokenStream {
-    let signature = item_fn.sig.clone();
-
-    if item_fn.sig.asyncness.is_some() {
-        quote! {
-            #[allow(clippy::future_not_send)]
-            #signature
-        }
-    } else {
-        quote! {#signature}
-    }
 }
 
 fn body(attrs: Attributes, item_fn: &ItemFn) -> proc_macro2::TokenStream {
@@ -83,12 +70,12 @@ impl Attributes {
     fn parse(&mut self, meta: &ParseNestedMeta) -> Result<()> {
         if meta.path.is_ident("name") {
             self.name = Some(meta.value()?.parse()?);
-            Ok(())
         } else if meta.path.is_ident("level") {
             self.level = Some(meta.value()?.parse()?);
-            Ok(())
         } else {
-            Err(meta.error("unsupported property"))
+            return Err(meta.error("unsupported property"));
         }
+
+        Ok(())
     }
 }

@@ -17,7 +17,7 @@ struct Http;
 wasip3::http::proxy::export!(Http);
 
 impl Guest for Http {
-    // #[wasi_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
+    #[wasi_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
     async fn handle(request: Request) -> Result<Response, ErrorCode> {
         let router = Router::new().route("/", get(handle_cache)).route("/", post(handle_origin));
         wasi_http::serve(router, request).await

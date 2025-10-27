@@ -4,8 +4,8 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use anyhow::Result;
-use opentelemetry::trace::{SpanContext, TraceContextExt};
-use opentelemetry::{Context, ContextGuard, global, trace as otel};
+use opentelemetry::trace::{self as otel, SpanContext, TraceContextExt};
+use opentelemetry::{Context, ContextGuard, global};
 use opentelemetry_sdk::Resource;
 use opentelemetry_sdk::error::{OTelSdkError, OTelSdkResult};
 use opentelemetry_sdk::trace::{SdkTracerProvider, Span, SpanData, SpanExporter, SpanProcessor};
@@ -23,6 +23,7 @@ pub fn init(resource: Resource) -> Result<SdkTracerProvider> {
 }
 
 // propagate (inject) host context
+#[allow(dead_code)]
 #[must_use]
 pub fn context() -> ContextGuard {
     let host_ctx: SpanContext = wasi::context().into();

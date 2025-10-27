@@ -7,7 +7,7 @@ mod tracing;
 
 use anyhow::{Context, Result, anyhow};
 use cfg_if::cfg_if;
-use opentelemetry::{ContextGuard, KeyValue, Value};
+use opentelemetry::{KeyValue, Value};
 use opentelemetry_sdk::Resource;
 use tracing_subscriber::Registry;
 use tracing_subscriber::layer::SubscriberExt;
@@ -31,14 +31,9 @@ cfg_if! {
 }
 
 use std::sync::OnceLock;
-static INIT: OnceLock<bool> = OnceLock::new();
+pub static INIT: OnceLock<bool> = OnceLock::new();
 
-pub fn init() -> Result<Shutdown> {
-    if *INIT.get().unwrap_or(&false) {
-        return Ok(Shutdown::default());
-    }
-    INIT.set(true).map_err(|_e| anyhow!("OpenTelemetry is already initialized"))?;
-
+pub fn init() -> Result<ExitGuard> {
     println!("!!! Initializing OpenTelemetry");
 
     // get WASI host telemetry resource
@@ -52,7 +47,7 @@ pub fn init() -> Result<Shutdown> {
     let fmt_layer = tracing_subscriber::fmt::layer();
     let registry = Registry::default().with(filter_layer).with(fmt_layer);
 
-    let mut shutdown = Shutdown::default();
+    let mut guard = ExitGuard::default();
 
     // initialize tracing
     #[cfg(feature = "tracing")]
@@ -60,8 +55,8 @@ pub fn init() -> Result<Shutdown> {
         let tracer_provider =
             tracing::init(resource.clone()).context("failed to initialize tracing")?;
         let tracing_layer = tracing_layer().with_tracer(tracer_provider.tracer("global"));
-        shutdown.tracing = tracer_provider;
-        shutdown.context = Some(tracing::context());
+        guard.tracing = tracer_provider;
+        // guard.context = Some(tracing::context());
         registry.with(tracing_layer)
     };
 
@@ -70,7 +65,7 @@ pub fn init() -> Result<Shutdown> {
     let registry = {
         let meter_provider = metrics::init(resource).context("failed to initialize metrics")?;
         let metrics_layer = MetricsLayer::new(meter_provider.clone());
-        shutdown.metrics = meter_provider;
+        guard.metrics = meter_provider;
         registry.with(metrics_layer)
     };
 
@@ -78,23 +73,24 @@ pub fn init() -> Result<Shutdown> {
     registry.try_init().map_err(|e| anyhow!("issue initializing subscriber: {e}"))?;
     println!("!!! After try_init");
 
-    Ok(shutdown)
+    INIT.set(true).map_err(|_v| anyhow!("failed to set INIT"))?;
+    Ok(guard)
 }
 
-/// [`Shutdown`] provides a guard to export telemetry data on drop
+/// [`ExitGuard`] provides a guard to export telemetry data on drop.
 #[derive(Debug, Default)]
-pub struct Shutdown {
+pub struct ExitGuard {
     #[cfg(feature = "tracing")]
     tracing: SdkTracerProvider,
     #[cfg(feature = "metrics")]
     metrics: SdkMeterProvider,
-    #[cfg(feature = "tracing")]
-    context: Option<ContextGuard>,
+    // #[cfg(feature = "tracing")]
+    // context: Option<ContextGuard>,
 }
 
-impl Drop for Shutdown {
+impl Drop for ExitGuard {
     fn drop(&mut self) {
-        println!("!!! Drop Shutdown");
+        println!("!!! Drop ExitGuard");
 
         #[cfg(feature = "tracing")]
         if let Err(e) = self.tracing.shutdown() {

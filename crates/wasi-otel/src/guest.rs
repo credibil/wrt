@@ -24,25 +24,19 @@ mod generated {
 /// Re-exported `instrument` macro for use in guest code.
 pub use wasi_otel_attr::instrument;
 
-use self::init::Shutdown;
+use self::init::ExitGuard;
 
 /// Initialize OpenTelemetry SDK and tracing subscriber.
-pub fn init() -> Shutdown {
-    let shutdown = ::tracing::Span::current().is_none().then(init::init);
-
-    match shutdown {
-        Some(Ok(shutdown)) => shutdown,
-        Some(Err(e)) => {
-            ::tracing::error!("failed to initialize: {e}");
-            Shutdown::default()
-        }
-        None => Shutdown::default(),
+pub fn init() -> Option<ExitGuard> {
+    if init::INIT.get().is_some() {
+        return None;
     }
-    // match init::init() {
-    //     Ok(shutdown) => shutdown,
-    //     Err(e) => {
-    //         ::tracing::error!("failed to initialize: {e}");
-    //         Shutdown::default()
-    //     }
-    // }
+
+    match init::init() {
+        Ok(guard) => Some(guard),
+        Err(e) => {
+            ::tracing::error!("failed to initialize: {e}");
+            None
+        }
+    }
 }
