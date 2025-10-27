@@ -30,7 +30,17 @@ cfg_if! {
     }
 }
 
+use std::sync::OnceLock;
+static INIT: OnceLock<bool> = OnceLock::new();
+
 pub fn init() -> Result<Shutdown> {
+    if *INIT.get().unwrap_or(&false) {
+        return Ok(Shutdown::default());
+    }
+    INIT.set(true).map_err(|_e| anyhow!("OpenTelemetry is already initialized"))?;
+
+    println!("!!! Initializing OpenTelemetry");
+
     // get WASI host telemetry resource
     let resource: Resource = resource::resource().into();
 
@@ -47,10 +57,10 @@ pub fn init() -> Result<Shutdown> {
     // initialize tracing
     #[cfg(feature = "tracing")]
     let registry = {
-        let tracing_provider =
+        let tracer_provider =
             tracing::init(resource.clone()).context("failed to initialize tracing")?;
-        let tracing_layer = tracing_layer().with_tracer(tracing_provider.tracer("global"));
-        shutdown.tracing = tracing_provider;
+        let tracing_layer = tracing_layer().with_tracer(tracer_provider.tracer("global"));
+        shutdown.tracing = tracer_provider;
         shutdown.context = Some(tracing::context());
         registry.with(tracing_layer)
     };
@@ -64,7 +74,9 @@ pub fn init() -> Result<Shutdown> {
         registry.with(metrics_layer)
     };
 
+    println!("!!! Before try_init");
     registry.try_init().map_err(|e| anyhow!("issue initializing subscriber: {e}"))?;
+    println!("!!! After try_init");
 
     Ok(shutdown)
 }
@@ -82,6 +94,8 @@ pub struct Shutdown {
 
 impl Drop for Shutdown {
     fn drop(&mut self) {
+        println!("!!! Drop Shutdown");
+
         #[cfg(feature = "tracing")]
         if let Err(e) = self.tracing.shutdown() {
             ::tracing::error!("failed to export tracing: {e}");

@@ -28,11 +28,21 @@ use self::init::Shutdown;
 
 /// Initialize OpenTelemetry SDK and tracing subscriber.
 pub fn init() -> Shutdown {
-    match init::init() {
-        Ok(shutdown) => shutdown,
-        Err(e) => {
+    let shutdown = ::tracing::Span::current().is_none().then(init::init);
+
+    match shutdown {
+        Some(Ok(shutdown)) => shutdown,
+        Some(Err(e)) => {
             ::tracing::error!("failed to initialize: {e}");
             Shutdown::default()
         }
+        None => Shutdown::default(),
     }
+    // match init::init() {
+    //     Ok(shutdown) => shutdown,
+    //     Err(e) => {
+    //         ::tracing::error!("failed to initialize: {e}");
+    //         Shutdown::default()
+    //     }
+    // }
 }

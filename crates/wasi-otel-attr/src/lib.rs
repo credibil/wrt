@@ -21,13 +21,12 @@ pub fn instrument(args: TokenStream, item: TokenStream) -> TokenStream {
     let signature = signature(&item_fn);
     let body = body(attrs, &item_fn);
 
-    // println!("signature: {signature}");
-    // println!("body: {body}");
+    println!("{signature} {{\n {body}\n}}");
 
     // recreate function with the instrument macro wrapping the body
     let new_fn = quote! {
         #signature {
-            let _guard = ::tracing::Span::current().is_none().then(::wasi_otel::init);
+            let _guard = ::wasi_otel::init();
             #body
         }
     };
@@ -60,9 +59,9 @@ fn body(attrs: Attributes, item_fn: &ItemFn) -> proc_macro2::TokenStream {
     if item_fn.sig.asyncness.is_some() {
         quote! {
             ::tracing::Instrument::instrument(
-                #block,
+                async move #block,
                 ::tracing::span!(#level, #span_name)
-            ).into_inner()
+            ).await
         }
     } else {
         quote! {

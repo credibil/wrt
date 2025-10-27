@@ -25,15 +25,14 @@ pub fn init(resource: Resource) -> Result<SdkTracerProvider> {
 // propagate (inject) host context
 #[must_use]
 pub fn context() -> ContextGuard {
-    let host_ctx = wasi::context();
-    let context: SpanContext = host_ctx.into();
+    let host_ctx: SpanContext = wasi::context().into();
     let current = Context::current();
 
     // use current context if remote context is invalid
-    if !context.is_valid() {
+    if !host_ctx.is_valid() {
         return current.attach();
     }
-    current.with_remote_span_context(context).attach()
+    current.with_remote_span_context(host_ctx).attach()
 }
 
 #[derive(Debug)]
