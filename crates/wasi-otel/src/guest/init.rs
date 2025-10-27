@@ -1,10 +1,5 @@
 //! Initialise OpenTelemetry
 
-#[cfg(feature = "metrics")]
-mod metrics;
-#[cfg(feature = "tracing")]
-mod tracing;
-
 use anyhow::{Context, Result, anyhow};
 use cfg_if::cfg_if;
 use opentelemetry::{KeyValue, Value};
@@ -19,6 +14,7 @@ cfg_if! {
     if #[cfg(feature = "metrics" )] {
         use opentelemetry_sdk::metrics::SdkMeterProvider;
         use tracing_opentelemetry::MetricsLayer;
+        use crate::guest::metrics;
     }
 }
 cfg_if! {
@@ -27,6 +23,7 @@ cfg_if! {
         use tracing_opentelemetry::layer as tracing_layer;
         use tracing_subscriber::EnvFilter;
         use opentelemetry::trace::TracerProvider;
+        use crate::guest::tracing;
     }
 }
 
@@ -54,7 +51,6 @@ pub fn init() -> Result<ExitGuard> {
             tracing::init(resource.clone()).context("failed to initialize tracing")?;
         let tracing_layer = tracing_layer().with_tracer(tracer_provider.tracer("global"));
         guard.tracing = tracer_provider;
-        // guard.context = Some(tracing::context());
         registry.with(tracing_layer)
     };
 
@@ -69,7 +65,6 @@ pub fn init() -> Result<ExitGuard> {
 
     registry.try_init().map_err(|e| anyhow!("issue initializing subscriber: {e}"))?;
     INIT.set(true).map_err(|_v| anyhow!("failed to set INIT"))?;
-    // let _ = tracing::context();
 
     Ok(guard)
 }

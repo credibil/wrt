@@ -1,16 +1,75 @@
 //! # Metrics
-//!
-//! Convert OpenTelemetry metrics types in `wasi-otel` types.
 
+use std::sync::{Arc, Weak};
 use std::time::Duration;
 
 use anyhow::Result;
+use num_traits::ToPrimitive;
+use opentelemetry::global;
+use opentelemetry_sdk::Resource;
 use opentelemetry_sdk::error::{OTelSdkError, OTelSdkResult};
-use opentelemetry_sdk::metrics::Temporality;
-use opentelemetry_sdk::metrics::data::ResourceMetrics;
+use opentelemetry_sdk::metrics::data::{
+    AggregatedMetrics, Exemplar, ExponentialBucket, ExponentialHistogram,
+    ExponentialHistogramDataPoint, Gauge, GaugeDataPoint, Histogram, HistogramDataPoint, Metric,
+    MetricData, ResourceMetrics, ScopeMetrics, Sum, SumDataPoint,
+};
 use opentelemetry_sdk::metrics::exporter::PushMetricExporter;
+use opentelemetry_sdk::metrics::reader::MetricReader;
+use opentelemetry_sdk::metrics::{
+    InstrumentKind, ManualReader, Pipeline, SdkMeterProvider, Temporality,
+};
 
 use crate::guest::generated::wasi::otel::metrics as wasi;
+
+pub fn init(resource: Resource) -> Result<SdkMeterProvider> {
+    let exporter = Exporter::new()?;
+    let reader = Reader::new(exporter);
+    let provider = SdkMeterProvider::builder().with_resource(resource).with_reader(reader).build();
+    global::set_meter_provider(provider.clone());
+    Ok(provider)
+}
+
+#[derive(Debug, Clone)]
+struct Reader {
+    reader: Arc<ManualReader>,
+    exporter: Arc<Exporter>,
+}
+
+impl Reader {
+    #[must_use]
+    fn new(exporter: Exporter) -> Self {
+        Self {
+            reader: Arc::new(ManualReader::default()),
+            exporter: Arc::new(exporter),
+        }
+    }
+}
+
+impl MetricReader for Reader {
+    fn register_pipeline(&self, pipeline: Weak<Pipeline>) {
+        self.reader.register_pipeline(pipeline);
+    }
+
+    fn collect(&self, rm: &mut ResourceMetrics) -> OTelSdkResult {
+        self.reader.collect(rm)
+    }
+
+    fn force_flush(&self) -> OTelSdkResult {
+        self.reader.force_flush()
+    }
+
+    fn temporality(&self, kind: InstrumentKind) -> Temporality {
+        self.reader.temporality(kind)
+    }
+
+    fn shutdown_with_timeout(&self, _: Duration) -> OTelSdkResult {
+        let mut rm = ResourceMetrics::default();
+        self.reader.collect(&mut rm)?;
+
+        let exporter = Arc::clone(&self.exporter);
+        wit_bindgen::block_on(async move { exporter.export(&rm).await })
+    }
+}
 
 #[derive(Clone, Debug)]
 pub struct Exporter;
@@ -46,17 +105,7 @@ impl PushMetricExporter for Exporter {
     }
 }
 
-use num_traits::ToPrimitive;
-use opentelemetry_sdk::Resource;
-use opentelemetry_sdk::metrics::data::{
-    AggregatedMetrics, Exemplar, ExponentialBucket, ExponentialHistogram,
-    ExponentialHistogramDataPoint, Gauge, GaugeDataPoint, Histogram, HistogramDataPoint, Metric,
-    MetricData, ScopeMetrics, Sum, SumDataPoint,
-};
-
-use crate::guest::generated::wasi::otel::metrics as wm;
-
-impl From<&ResourceMetrics> for wm::ResourceMetrics {
+impl From<&ResourceMetrics> for wasi::ResourceMetrics {
     fn from(rm: &ResourceMetrics) -> Self {
         Self {
             resource: rm.resource().into(),
@@ -65,7 +114,7 @@ impl From<&ResourceMetrics> for wm::ResourceMetrics {
     }
 }
 
-impl From<&Resource> for wm::Resource {
+impl From<&Resource> for wasi::Resource {
     fn from(resource: &Resource) -> Self {
         Self {
             attributes: resource.iter().map(Into::into).collect(),
@@ -74,7 +123,7 @@ impl From<&Resource> for wm::Resource {
     }
 }
 
-impl From<&ScopeMetrics> for wm::ScopeMetrics {
+impl From<&ScopeMetrics> for wasi::ScopeMetrics {
     fn from(scope_metrics: &ScopeMetrics) -> Self {
         Self {
             scope: scope_metrics.scope().into(),
@@ -83,7 +132,7 @@ impl From<&ScopeMetrics> for wm::ScopeMetrics {
     }
 }
 
-impl From<&Metric> for wm::Metric {
+impl From<&Metric> for wasi::Metric {
     fn from(metric: &Metric) -> Self {
         Self {
             name: metric.name().to_string(),
@@ -94,7 +143,7 @@ impl From<&Metric> for wm::Metric {
     }
 }
 
-impl From<&AggregatedMetrics> for wm::AggregatedMetrics {
+impl From<&AggregatedMetrics> for wasi::AggregatedMetrics {
     fn from(am: &AggregatedMetrics) -> Self {
         match am {
             AggregatedMetrics::F64(v) => Self::F64(v.into()),
@@ -104,7 +153,7 @@ impl From<&AggregatedMetrics> for wm::AggregatedMetrics {
     }
 }
 
-impl<T: ToPrimitive + Copy> From<&MetricData<T>> for wm::MetricData {
+impl<T: ToPrimitive + Copy> From<&MetricData<T>> for wasi::MetricData {
     fn from(md: &MetricData<T>) -> Self {
         match md {
             MetricData::Gauge(v) => Self::Gauge(v.into()),
@@ -115,7 +164,7 @@ impl<T: ToPrimitive + Copy> From<&MetricData<T>> for wm::MetricData {
     }
 }
 
-impl<T: ToPrimitive + Copy> From<&Gauge<T>> for wm::Gauge {
+impl<T: ToPrimitive + Copy> From<&Gauge<T>> for wasi::Gauge {
     fn from(gauge: &Gauge<T>) -> Self {
         Self {
             data_points: gauge.data_points().map(Into::into).collect(),
@@ -125,7 +174,7 @@ impl<T: ToPrimitive + Copy> From<&Gauge<T>> for wm::Gauge {
     }
 }
 
-impl<T: ToPrimitive + Copy> From<&GaugeDataPoint<T>> for wm::GaugeDataPoint {
+impl<T: ToPrimitive + Copy> From<&GaugeDataPoint<T>> for wasi::GaugeDataPoint {
     fn from(data_point: &GaugeDataPoint<T>) -> Self {
         Self {
             attributes: data_point.attributes().map(Into::into).collect(),
@@ -135,7 +184,7 @@ impl<T: ToPrimitive + Copy> From<&GaugeDataPoint<T>> for wm::GaugeDataPoint {
     }
 }
 
-impl<T: ToPrimitive + Copy> From<&Exemplar<T>> for wm::Exemplar {
+impl<T: ToPrimitive + Copy> From<&Exemplar<T>> for wasi::Exemplar {
     fn from(exemplar: &Exemplar<T>) -> Self {
         Self {
             filtered_attributes: exemplar.filtered_attributes().map(Into::into).collect(),
@@ -147,7 +196,7 @@ impl<T: ToPrimitive + Copy> From<&Exemplar<T>> for wm::Exemplar {
     }
 }
 
-impl<T: ToPrimitive + Copy> From<&Sum<T>> for wm::Sum {
+impl<T: ToPrimitive + Copy> From<&Sum<T>> for wasi::Sum {
     fn from(sum: &Sum<T>) -> Self {
         Self {
             data_points: sum.data_points().map(Into::into).collect(),
@@ -159,7 +208,7 @@ impl<T: ToPrimitive + Copy> From<&Sum<T>> for wm::Sum {
     }
 }
 
-impl<T: ToPrimitive + Copy> From<&SumDataPoint<T>> for wm::SumDataPoint {
+impl<T: ToPrimitive + Copy> From<&SumDataPoint<T>> for wasi::SumDataPoint {
     fn from(data_point: &SumDataPoint<T>) -> Self {
         Self {
             attributes: data_point.attributes().map(Into::into).collect(),
@@ -169,7 +218,7 @@ impl<T: ToPrimitive + Copy> From<&SumDataPoint<T>> for wm::SumDataPoint {
     }
 }
 
-impl<T: ToPrimitive + Copy> From<&Histogram<T>> for wm::Histogram {
+impl<T: ToPrimitive + Copy> From<&Histogram<T>> for wasi::Histogram {
     fn from(histogram: &Histogram<T>) -> Self {
         Self {
             data_points: histogram.data_points().map(Into::into).collect(),
@@ -180,7 +229,7 @@ impl<T: ToPrimitive + Copy> From<&Histogram<T>> for wm::Histogram {
     }
 }
 
-impl<T: ToPrimitive + Copy> From<&HistogramDataPoint<T>> for wm::HistogramDataPoint {
+impl<T: ToPrimitive + Copy> From<&HistogramDataPoint<T>> for wasi::HistogramDataPoint {
     fn from(data_point: &HistogramDataPoint<T>) -> Self {
         Self {
             attributes: data_point.attributes().map(Into::into).collect(),
@@ -195,7 +244,7 @@ impl<T: ToPrimitive + Copy> From<&HistogramDataPoint<T>> for wm::HistogramDataPo
     }
 }
 
-impl<T: ToPrimitive + Copy> From<&ExponentialHistogram<T>> for wm::ExponentialHistogram {
+impl<T: ToPrimitive + Copy> From<&ExponentialHistogram<T>> for wasi::ExponentialHistogram {
     fn from(histogram: &ExponentialHistogram<T>) -> Self {
         Self {
             data_points: histogram.data_points().map(Into::into).collect(),
@@ -207,7 +256,7 @@ impl<T: ToPrimitive + Copy> From<&ExponentialHistogram<T>> for wm::ExponentialHi
 }
 
 impl<T: ToPrimitive + Copy> From<&ExponentialHistogramDataPoint<T>>
-    for wm::ExponentialHistogramDataPoint
+    for wasi::ExponentialHistogramDataPoint
 {
     fn from(data_point: &ExponentialHistogramDataPoint<T>) -> Self {
         Self {
@@ -226,7 +275,7 @@ impl<T: ToPrimitive + Copy> From<&ExponentialHistogramDataPoint<T>>
     }
 }
 
-impl<T: ToPrimitive> From<T> for wm::DataValue {
+impl<T: ToPrimitive> From<T> for wasi::DataValue {
     fn from(value: T) -> Self {
         value.to_u64().map_or_else(
             || {
@@ -239,7 +288,7 @@ impl<T: ToPrimitive> From<T> for wm::DataValue {
     }
 }
 
-impl From<&ExponentialBucket> for wm::ExponentialBucket {
+impl From<&ExponentialBucket> for wasi::ExponentialBucket {
     fn from(bucket: &ExponentialBucket) -> Self {
         Self {
             offset: bucket.offset(),
@@ -248,7 +297,7 @@ impl From<&ExponentialBucket> for wm::ExponentialBucket {
     }
 }
 
-impl From<Temporality> for wm::Temporality {
+impl From<Temporality> for wasi::Temporality {
     fn from(temporality: Temporality) -> Self {
         match temporality {
             Temporality::Delta => Self::Delta,

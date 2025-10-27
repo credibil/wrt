@@ -2,7 +2,9 @@
 
 use tokio::io;
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
-use wasmtime_wasi_http::p3::{WasiHttpCtx, WasiHttpCtxView, WasiHttpView};
+use wasmtime_wasi_http::p3::{WasiHttpCtxView, WasiHttpView};
+
+use crate::http_ctx::HttpCtx;
 
 /// `RunState` is used to share host state between the Wasm runtime and hosts
 /// each time they are instantiated.
@@ -55,5 +57,4 @@ impl WasiHttpView for RunState {
     }
 }
 
-pub struct HttpCtx;
-impl WasiHttpCtx for HttpCtx {}
+

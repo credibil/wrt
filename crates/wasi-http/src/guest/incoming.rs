@@ -12,13 +12,13 @@ pub async fn serve(
     router: axum::Router, request: wasi::Request,
 ) -> Result<wasi::Response, ErrorCode> {
     let http_req = http_from_wasi_request(request)?;
-    tracing::info!("serving request: {:?}", http_req.headers());
+    tracing::debug!("serving request: {:?}", http_req.headers());
 
-    // forward request to router to handle
+    // forward request to axum router to handle
     let http_resp =
         router.oneshot(http_req).await.map_err(|e| error!("issue processing request: {e}"))?;
-    tracing::info!("guest response: {http_resp:?}");
-
+    
+    tracing::debug!("guest response: {http_resp:?}");
     http_into_wasi_response(http_resp)
 }
 

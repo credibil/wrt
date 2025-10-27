@@ -6,8 +6,12 @@
 //!
 //! [wasi]: https://github.com/bytecodealliance/wasi
 
-mod export;
+mod convert;
 mod init;
+#[cfg(feature = "metrics")]
+mod metrics;
+#[cfg(feature = "tracing")]
+mod tracing;
 
 // Bindings for the `wasi:otel` world.
 mod generated {

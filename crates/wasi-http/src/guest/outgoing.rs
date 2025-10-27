@@ -30,6 +30,8 @@ where
         return Ok(hit);
     }
 
+    tracing::debug!("forwarding request to proxy: {:?}", request.headers());
+
     let wasi_req =
         http_into_wasi_request(request).map_err(|e| anyhow!("Issue converting request: {e}"))?;
     let wasi_resp =
@@ -42,6 +44,8 @@ where
     let collected = body.collect().await.context("failed to collect body")?;
     let bytes = collected.to_bytes();
     let response = http::Response::from_parts(parts, bytes);
+
+    tracing::debug!("proxy response: {response:?}");
 
     // cache response when indicated by request
     if let Some(cache) = maybe_cache {
