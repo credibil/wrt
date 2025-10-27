@@ -1,17 +1,12 @@
 use bytes::Bytes;
-use futures::Future;
-use futures::FutureExt;
-
+use futures::{Future, FutureExt};
 use http::uri;
-use http_body_util::BodyExt;
-use http_body_util::Full;
 use http_body_util::combinators::BoxBody;
+use http_body_util::{BodyExt, Full};
 use wasmtime_wasi::TrappableError;
 use wasmtime_wasi_http::body;
-
-use wasmtime_wasi_http::p3::RequestOptions;
-use wasmtime_wasi_http::p3::WasiHttpCtx;
 use wasmtime_wasi_http::p3::bindings::http::types::{self, ErrorCode};
+use wasmtime_wasi_http::p3::{RequestOptions, WasiHttpCtx};
 
 pub type HttpResult<T> = Result<T, HttpError>;
 pub type HttpError = TrappableError<ErrorCode>;

@@ -56,5 +56,3 @@ impl WasiHttpView for RunState {
         }
     }
 }
-
-

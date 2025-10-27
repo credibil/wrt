@@ -1,5 +1,7 @@
 //! Initialise OpenTelemetry
 
+use std::sync::RwLock;
+
 use anyhow::{Context, Result, anyhow};
 use cfg_if::cfg_if;
 use opentelemetry::{KeyValue, Value};
@@ -27,8 +29,7 @@ cfg_if! {
     }
 }
 
-use std::sync::OnceLock;
-pub static INIT: OnceLock<bool> = OnceLock::new();
+pub static INIT: RwLock<bool> = RwLock::new(false);
 
 pub fn init() -> Result<ExitGuard> {
     // get WASI host telemetry resource
@@ -64,7 +65,10 @@ pub fn init() -> Result<ExitGuard> {
     };
 
     registry.try_init().map_err(|e| anyhow!("issue initializing subscriber: {e}"))?;
-    INIT.set(true).map_err(|_v| anyhow!("failed to set INIT"))?;
+
+    let mut lock = INIT.write().map_err(|e| anyhow!("issue acquiring INIT write lock: {e}"))?;
+    *lock = true;
+    drop(lock);
 
     Ok(guard)
 }
@@ -80,6 +84,12 @@ pub struct ExitGuard {
 
 impl Drop for ExitGuard {
     fn drop(&mut self) {
+        if let Ok(mut lock) = INIT.write() {
+            *lock = true;
+        } else {
+            ::tracing::error!("failed to acquire INIT write lock");
+        }
+
         #[cfg(feature = "tracing")]
         if let Err(e) = self.tracing.shutdown() {
             ::tracing::error!("failed to export tracing: {e}");
@@ -88,6 +98,10 @@ impl Drop for ExitGuard {
         if let Err(e) = self.metrics.shutdown() {
             ::tracing::error!("failed to export metrics: {e}");
         }
+
+        // panic if this fails
+        let mut lock = INIT.write().expect("should acquire lock");
+        *lock = true;
     }
 }
 

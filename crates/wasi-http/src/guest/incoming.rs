@@ -17,7 +17,7 @@ pub async fn serve(
     // forward request to axum router to handle
     let http_resp =
         router.oneshot(http_req).await.map_err(|e| error!("issue processing request: {e}"))?;
-    
+
     tracing::debug!("guest response: {http_resp:?}");
     http_into_wasi_response(http_resp)
 }

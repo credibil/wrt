@@ -32,7 +32,7 @@ use self::init::ExitGuard;
 
 /// Initialize OpenTelemetry SDK and tracing subscriber.
 pub fn init() -> Option<ExitGuard> {
-    if init::INIT.get().is_some() {
+    if init::INIT.read().is_ok_and(|x| *x) {
         return None;
     }
 
