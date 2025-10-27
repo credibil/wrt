@@ -4,8 +4,8 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use anyhow::Result;
-use opentelemetry::trace::{self as otel, SpanContext, TraceContextExt};
-use opentelemetry::{Context, ContextGuard, global};
+use opentelemetry::trace as otel;
+use opentelemetry::{Context, global};
 use opentelemetry_sdk::Resource;
 use opentelemetry_sdk::error::{OTelSdkError, OTelSdkResult};
 use opentelemetry_sdk::trace::{SdkTracerProvider, Span, SpanData, SpanExporter, SpanProcessor};
@@ -22,19 +22,19 @@ pub fn init(resource: Resource) -> Result<SdkTracerProvider> {
     Ok(provider)
 }
 
-// propagate (inject) host context
-#[allow(dead_code)]
-#[must_use]
-pub fn context() -> ContextGuard {
-    let host_ctx: SpanContext = wasi::context().into();
-    let current = Context::current();
+// DEPRECATED: This is more simply done host-side
+// // propagate (inject) host context
+// #[must_use]
+// pub fn context() -> ContextGuard {
+//     let host_ctx: SpanContext = wasi::context().into();
+//     let current = Context::current();
 
-    // use current context if remote context is invalid
-    if !host_ctx.is_valid() {
-        return current.attach();
-    }
-    current.with_remote_span_context(host_ctx).attach()
-}
+//     // use current context if remote context is invalid
+//     if !host_ctx.is_valid() {
+//         return current.attach();
+//     }
+//     current.with_remote_span_context(host_ctx).attach()
+// }
 
 #[derive(Debug)]
 struct Processor {

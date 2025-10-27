@@ -29,7 +29,6 @@ fn handler2() -> Result<()> {
 #[axum::debug_handler]
 #[wasi_otel::instrument]
 async fn handler(Json(body): Json<Value>) -> Result<Json<Value>> {
-    println!("handler span active: {:?}", ::tracing::Span::current());
     Ok(Json(json!({
         "message": "Hello, World!",
         "request": body

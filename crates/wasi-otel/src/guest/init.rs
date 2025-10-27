@@ -34,8 +34,6 @@ use std::sync::OnceLock;
 pub static INIT: OnceLock<bool> = OnceLock::new();
 
 pub fn init() -> Result<ExitGuard> {
-    println!("!!! Initializing OpenTelemetry");
-
     // get WASI host telemetry resource
     let resource: Resource = resource::resource().into();
 
@@ -69,11 +67,10 @@ pub fn init() -> Result<ExitGuard> {
         registry.with(metrics_layer)
     };
 
-    println!("!!! Before try_init");
     registry.try_init().map_err(|e| anyhow!("issue initializing subscriber: {e}"))?;
-    println!("!!! After try_init");
-
     INIT.set(true).map_err(|_v| anyhow!("failed to set INIT"))?;
+    // let _ = tracing::context();
+
     Ok(guard)
 }
 
@@ -84,14 +81,10 @@ pub struct ExitGuard {
     tracing: SdkTracerProvider,
     #[cfg(feature = "metrics")]
     metrics: SdkMeterProvider,
-    // #[cfg(feature = "tracing")]
-    // context: Option<ContextGuard>,
 }
 
 impl Drop for ExitGuard {
     fn drop(&mut self) {
-        println!("!!! Drop ExitGuard");
-
         #[cfg(feature = "tracing")]
         if let Err(e) = self.tracing.shutdown() {
             ::tracing::error!("failed to export tracing: {e}");

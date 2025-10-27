@@ -22,8 +22,6 @@ impl opentelemetry_sdk::trace::SpanExporter for Exporter {
     async fn export(&self, batch: Vec<SpanData>) -> Result<(), OTelSdkError> {
         wit_bindgen::spawn(async move {
             let spans = batch.into_iter().map(Into::into).collect::<Vec<_>>();
-            println!("!!! Exporting {spans:?} spans");
-
             if let Err(e) = wasi::export(spans).await {
                 tracing::error!("failed to export spans: {e}");
             }

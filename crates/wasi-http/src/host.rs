@@ -19,7 +19,7 @@ use hyper::service::service_fn;
 use runtime::{RunState, Service};
 use tokio::net::TcpListener;
 use tokio::sync::oneshot;
-use tracing::{Instrument, info_span};
+use tracing::{Instrument, debug_span};
 use wasmtime::Store;
 use wasmtime::component::{InstancePre, Linker};
 use wasmtime_wasi_http::io::TokioIo;
@@ -82,7 +82,6 @@ impl WasiHttp {
                             async move {
                                 let response = handler
                                     .handle(request)
-                                    .instrument(info_span!("http-request"))
                                     .await
                                     .unwrap_or_else(|_e| internal_error());
                                 Ok::<_, Infallible>(response)
@@ -141,6 +140,7 @@ impl Handler {
 
                     anyhow::Ok(())
                 })
+                .instrument(debug_span!("http-request"))
                 .await?;
 
             if let Err(e) = guest_result {
