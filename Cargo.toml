@@ -57,7 +57,6 @@ bytes.workspace = true
 http.workspace = true
 http-body-util.workspace = true
 opentelemetry.workspace = true
-reqwest-p3 = { path = "../reqwest-p3", features = ["json"], version = "0.1.0", registry = "credibil" }
 serde_json.workspace = true
 tower-http.workspace = true
 wasip3.workspace = true
