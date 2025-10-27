@@ -94,6 +94,10 @@ criteria = "safe-to-deploy"
 version = "2.15.0"
 criteria = "safe-to-deploy"
 
+[[exemptions.cc]]
+version = "1.2.43"
+criteria = "safe-to-deploy"
+
 [[exemptions.chrono]]
 version = "0.4.42"
 criteria = "safe-to-deploy"
@@ -167,7 +171,7 @@ version = "0.7.10"
 criteria = "safe-to-deploy"
 
 [[exemptions.deranged]]
-version = "0.5.4"
+version = "0.5.5"
 criteria = "safe-to-deploy"
 
 [[exemptions.derive-syn-parse]]
@@ -399,7 +403,7 @@ version = "0.2.21"
 criteria = "safe-to-deploy"
 
 [[exemptions.proptest]]
-version = "1.8.0"
+version = "1.9.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.prost]]
@@ -447,7 +451,7 @@ version = "0.22.4"
 criteria = "safe-to-deploy"
 
 [[exemptions.rustls]]
-version = "0.23.33"
+version = "0.23.34"
 criteria = "safe-to-deploy"
 
 [[exemptions.rustls-native-certs]]
@@ -459,7 +463,7 @@ version = "2.2.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.rustls-pki-types]]
-version = "1.12.0"
+version = "1.13.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.rustls-webpki]]
@@ -511,11 +515,11 @@ version = "0.7.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.serde_with]]
-version = "3.15.0"
+version = "3.15.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.serde_with_macros]]
-version = "3.15.0"
+version = "3.15.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.signal-hook-registry]]
@@ -708,6 +712,22 @@ criteria = "safe-to-deploy"
 
 [[exemptions.winreg]]
 version = "0.50.0"
+criteria = "safe-to-deploy"
+
+[[exemptions.wit-bindgen]]
+version = "0.47.0"
+criteria = "safe-to-deploy"
+
+[[exemptions.wit-bindgen-core]]
+version = "0.47.0"
+criteria = "safe-to-deploy"
+
+[[exemptions.wit-bindgen-rust]]
+version = "0.47.0"
+criteria = "safe-to-deploy"
+
+[[exemptions.wit-bindgen-rust-macro]]
+version = "0.47.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.wyz]]

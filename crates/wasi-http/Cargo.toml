@@ -31,7 +31,7 @@ runtime.workspace = true
 tokio.workspace = true
 wasmtime = { workspace = true, features = ["component-model-async"] }
 wasmtime-wasi-http.workspace = true
-http-body-util = "0.1.3"
+http-body-util.workspace = true
 
 # guest dependencies
 [target.'cfg(target_arch = "wasm32")'.dependencies]
