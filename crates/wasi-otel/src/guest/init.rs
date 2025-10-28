@@ -29,7 +29,6 @@ cfg_if! {
     }
 }
 
-// pub static INIT: RwLock<bool> = RwLock::new(false);
 pub static INIT: OnceLock<bool> = OnceLock::new();
 
 pub fn init() -> Result<ExitGuard> {
@@ -91,13 +90,11 @@ impl Drop for ExitGuard {
         if let Err(e) = self.tracing.shutdown() {
             ::tracing::error!("failed to export tracing: {e}");
         }
-        println!("!!! Dropped ExitGuard Tracing");
-
         #[cfg(feature = "metrics")]
         if let Err(e) = self.metrics.shutdown() {
             ::tracing::error!("failed to export metrics: {e}");
         }
-        println!("!!! Dropped ExitGuard Metrics");
+        println!("!!! Dropped ExitGuard");
     }
 }
 

@@ -25,7 +25,8 @@ impl Cache {
             return Ok(None);
         }
 
-        let control = Control::try_from(headers).context("issue parsing Cache-Control headers")?;
+        let control = Control::try_from(headers)
+            .map_err(|e| anyhow!("issue parsing Cache-Control headers: {e}"))?;
 
         Ok(Some(Self {
             bucket: CACHE_BUCKET.to_string(),
@@ -101,24 +102,13 @@ struct Control {
     etag: String,
 }
 
-// impl Default for Control {
-//     fn default() -> Self {
-//         Self {
-//             no_cache: true,
-//             no_store: false,
-//             max_age: 0,
-//             etag: String::new(),
-//         }
-//     }
-// }
-
 impl TryFrom<&http::HeaderMap> for Control {
     type Error = anyhow::Error;
 
     fn try_from(headers: &http::HeaderMap) -> Result<Self> {
         let mut control = Self::default();
 
-        let cache_control = headers.get(http::header::CACHE_CONTROL);
+        let cache_control = headers.get(CACHE_CONTROL);
         let Some(cache_control) = cache_control else {
             tracing::debug!("no Cache-Control header present");
             return Ok(control);
