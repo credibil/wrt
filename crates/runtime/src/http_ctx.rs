@@ -30,8 +30,6 @@ impl WasiHttpCtx for HttpCtx {
             > + Send,
     > {
         Box::new(async move {
-            println!("!!! send_request called");
-
             let (parts, body) = request.into_parts();
             let body_bytes = body.collect().await.unwrap().to_bytes();
 
@@ -66,6 +64,4 @@ fn convert_error(e: reqwest::Error) -> ErrorCode {
     } else {
         ErrorCode::InternalError(Some(e.to_string()))
     }
-
-    // reqwest::Error::from(e)
 }

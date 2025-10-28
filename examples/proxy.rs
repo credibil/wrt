@@ -9,7 +9,7 @@ use http::header::{CACHE_CONTROL, IF_NONE_MATCH};
 use http_body_util::{Empty, Full};
 use serde_json::Value;
 use tracing::Level;
-use wasi_http::{Client, IntoJson, Result};
+use wasi_http::Result;
 use wasip3::exports::http::handler::Guest;
 use wasip3::http::types::{ErrorCode, Request, Response};
 
@@ -17,7 +17,7 @@ struct Http;
 wasip3::http::proxy::export!(Http);
 
 impl Guest for Http {
-    #[wasi_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
+    // #[wasi_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
     async fn handle(request: Request) -> Result<Response, ErrorCode> {
         let router = Router::new().route("/", get(handle_cache)).route("/", post(handle_origin));
         wasi_http::serve(router, request).await
@@ -27,20 +27,20 @@ impl Guest for Http {
 // Attempt to get cached response with fallback to origin
 #[wasi_otel::instrument]
 async fn handle_cache() -> Result<Json<Value>> {
-    let max_age = "max-age=300";
-    let cache_key = "qf34lofge4rstep95tsiz9r75";
+    // let max_age = "max-age=300";
+    // let cache_key = "qf34lofge4rstep95tsiz9r75";
 
-    let request = http::Request::builder()
-        .method(Method::GET)
-        .uri("https://jsonplaceholder.cypress.io/posts/1")
-        .header(CACHE_CONTROL, max_age)
-        .header(IF_NONE_MATCH, cache_key)
-        .body(Empty::<Bytes>::new())
-        .expect("Failed to build request");
+    // let request = http::Request::builder()
+    //     .method(Method::GET)
+    //     .uri("https://jsonplaceholder.cypress.io/posts/1")
+    //     .header(CACHE_CONTROL, max_age)
+    //     .header(IF_NONE_MATCH, cache_key)
+    //     .body(Empty::<Bytes>::new())
+    //     .expect("Failed to build request");
 
-    let response = wasi_http::handle(request).await?;
-    let body = response.into_body();
-    let body = serde_json::from_slice::<Value>(&body).context("issue parsing response body")?;
+    // let response = wasi_http::handle(request).await?;
+    // let body = response.into_body();
+    // let body = serde_json::from_slice::<Value>(&body).context("issue parsing response body")?;
 
     // let body = Client::new()
     //     .get("https://jsonplaceholder.cypress.io/posts/1")
@@ -50,7 +50,9 @@ async fn handle_cache() -> Result<Json<Value>> {
     //     .await?
     //     .json::<Value>()?;
 
-    Ok(Json(body))
+    Ok(Json(serde_json::json!({
+        "cached_response": "body"
+    })))
 }
 
 // Forward request to external service and cache the response

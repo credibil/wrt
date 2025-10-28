@@ -91,18 +91,13 @@ impl Drop for ExitGuard {
         if let Err(e) = self.tracing.shutdown() {
             ::tracing::error!("failed to export tracing: {e}");
         }
+        println!("!!! Dropped ExitGuard Tracing");
 
         #[cfg(feature = "metrics")]
         if let Err(e) = self.metrics.shutdown() {
             ::tracing::error!("failed to export metrics: {e}");
         }
-
-        // // panic if this fails
-        // let mut lock = INIT.write().expect("should acquire lock");
-        // *lock = false;
-        // drop(lock);
-
-        println!("!!! Dropped ExitGuard");
+        println!("!!! Dropped ExitGuard Metrics");
     }
 }
 
