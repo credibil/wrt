@@ -58,7 +58,6 @@ impl WasiHttpCtx for HttpCtx {
             }
 
             let client = builder.build().map_err(into_error)?;
-
             let resp = client
                 .request(parts.method, parts.uri.to_string())
                 .headers(parts.headers)

@@ -1,7 +1,4 @@
 #![cfg(target_arch = "wasm32")]
-
-use std::println;
-
 use anyhow::Context;
 use axum::routing::{get, post};
 use axum::{Json, Router};
@@ -40,7 +37,6 @@ async fn handle_cache() -> Result<Json<Value>> {
 -----BEGIN PRIVATE KEY-----
 ...Your Private Key Here...
 -----END PRIVATE KEY-----";
-    println!("DEBUG Building request to cache service...");
     let encoded_cert = Base64::encode_string(auth_cert.as_bytes());
     let request = http::Request::builder()
         .method(Method::GET)
