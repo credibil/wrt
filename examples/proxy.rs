@@ -40,8 +40,7 @@ async fn handle_cache() -> Result<Json<Value>> {
     let encoded_cert = Base64::encode_string(auth_cert.as_bytes());
     let request = http::Request::builder()
         .method(Method::GET)
-        //.uri("https://jsonplaceholder.cypress.io/posts/1")
-        .uri("https://cert-traffic.tomtom.com/tsq/hdf/NZL-HDF-OPENLR/d1ab4fdc-9108-43d4-9480-7b6da08506d2/content.proto")
+        .uri("https://jsonplaceholder.cypress.io/posts/1")
         .header(CACHE_CONTROL, max_age)
         .header(IF_NONE_MATCH, cache_key)
         .header("Client-Cert", &encoded_cert)
