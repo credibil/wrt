@@ -1,6 +1,8 @@
 # Examples
 
-Example runtimes can be used as a starting point for building and deploying WASI-based applications. The examples run in Docker containers but can readily be built and deployed as standalone binaries.
+Example runtimes can be used as a starting point for building and deploying WASI-based 
+applications. The examples run in Docker containers but can readily be built and deployed
+as standalone binaries.
 
 ## Quick Start
 
@@ -23,10 +25,10 @@ In a separate console, call the guest:
 curl -d '{"text":"hello"}' http://localhost:8080
 ```
 
-## Using Docker Compose
+## OpenTelemetry Collector
 
 ```bash
-docker compose up
+docker compose --file ./examples/compose.yaml up
 ```
 
 This will start a wasm runtime running a simple HTTP server instrumented with logging and metrics.

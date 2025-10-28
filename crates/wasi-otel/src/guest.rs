@@ -6,8 +6,12 @@
 //!
 //! [wasi]: https://github.com/bytecodealliance/wasi
 
-mod export;
+mod convert;
 mod init;
+#[cfg(feature = "metrics")]
+mod metrics;
+#[cfg(feature = "tracing")]
+mod tracing;
 
 // Bindings for the `wasi:otel` world.
 mod generated {
@@ -18,21 +22,29 @@ mod generated {
         world: "otel",
         path: "wit",
         generate_all,
-        // pub_export_macro: true
     });
 }
 
+/// Re-exported `instrument` macro for use in guest code.
 pub use wasi_otel_attr::instrument;
 
-use self::init::Shutdown;
+use self::init::ExitGuard;
+use crate::guest::init::INIT;
 
 /// Initialize OpenTelemetry SDK and tracing subscriber.
-pub fn init() -> Shutdown {
+pub fn init() -> Option<ExitGuard> {
+    // if init::INIT.read().is_ok_and(|x| *x) {
+    //     return None;
+    // }
+    if INIT.get().is_some() {
+        return None;
+    }
+
     match init::init() {
-        Ok(shutdown) => shutdown,
+        Ok(guard) => Some(guard),
         Err(e) => {
             ::tracing::error!("failed to initialize: {e}");
-            Shutdown::default()
+            None
         }
     }
 }

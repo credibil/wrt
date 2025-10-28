@@ -35,7 +35,7 @@ hex = "0.4.3"
 http.workspace = true
 opentelemetry-proto = "0.31.0"
 prost = "0.14.1"
-reqwest = "0.12.23"
+reqwest.workspace = true
 runtime.workspace = true
 wasmtime.workspace = true
 

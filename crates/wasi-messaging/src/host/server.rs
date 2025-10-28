@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use futures::StreamExt;
 use runtime::RunState;
-use tracing::{Instrument, info_span};
+use tracing::{Instrument, debug_span};
 use wasmtime::Store;
 use wasmtime::component::InstancePre;
 
@@ -47,21 +47,18 @@ pub async fn run(instance_pre: InstancePre<RunState>) -> Result<()> {
     while let Some(message) = stream.next().await {
         let instance_pre = instance_pre.clone();
 
-        tokio::spawn(
-            async move {
-                if let Err(e) = client.pre_send(&message).await {
-                    tracing::error!("error processing message {e}");
-                    return;
-                }
-                if let Err(e) = call_guest(message.clone(), instance_pre).await {
-                    tracing::error!("error processing message {e}");
-                }
-                if let Err(e) = client.post_send(&message).await {
-                    tracing::error!("error processing message {e}");
-                }
+        tokio::spawn(async move {
+            if let Err(e) = client.pre_send(&message).await {
+                tracing::error!("error processing message {e}");
+                return;
             }
-            .instrument(info_span!("message")),
-        );
+            if let Err(e) = call_guest(message.clone(), instance_pre).await {
+                tracing::error!("error processing message {e}");
+            }
+            if let Err(e) = client.post_send(&message).await {
+                tracing::error!("error processing message {e}");
+            }
+        });
     }
 
     Ok(())
@@ -82,6 +79,7 @@ async fn call_guest(message: Message, instance_pre: InstancePre<RunState>) -> Re
         .run_concurrent(&mut store, async |accessor| {
             messaging.wasi_messaging_incoming_handler().call_handle(accessor, res_msg).await?
         })
+        .instrument(debug_span!("messaging-handle"))
         .await
         .context("running instance")?
 }

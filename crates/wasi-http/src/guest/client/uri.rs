@@ -37,7 +37,7 @@ impl UriLike {
     /// # Errors
     ///
     /// Returns an error if the value cannot be converted into a valid URI.
-    pub fn into_uri(&self) -> Result<Uri> {
+    pub fn to_uri(&self) -> Result<Uri> {
         match self {
             Self::Uri(uri) => Ok(uri.clone()),
             Self::Str(s) => s.parse::<Uri>().map_err(|e| anyhow!("invalid URI string: {e}")),

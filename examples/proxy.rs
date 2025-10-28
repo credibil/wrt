@@ -3,82 +3,88 @@
 use anyhow::Context;
 use axum::routing::{get, post};
 use axum::{Json, Router};
+use bytes::Bytes;
 use http::Method;
 use http::header::{CACHE_CONTROL, IF_NONE_MATCH};
-use serde_json::{Value, json};
-use tower_http::cors::{Any, CorsLayer};
+use http_body_util::{Empty, Full};
+use serde_json::Value;
 use tracing::Level;
-use wasi::exports::http::incoming_handler::Guest;
-use wasi::http::types::{IncomingRequest, ResponseOutparam};
-use wasi_http::{Client, Decode, Result};
+use wasi_http::{CacheOptions, Result};
+use wasip3::exports::http::handler::Guest;
+use wasip3::http::types::{ErrorCode, Request, Response};
 
-struct HttpGuest;
+struct Http;
+wasip3::http::proxy::export!(Http);
 
-impl Guest for HttpGuest {
+impl Guest for Http {
     #[wasi_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
-    fn handle(request: IncomingRequest, response_out: ResponseOutparam) {
-        let router = Router::new()
-            .route("/", get(get_handler))
-            .layer(
-                CorsLayer::new()
-                    .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
-                    .allow_headers(Any)
-                    .allow_origin(Any),
-            )
-            .route("/", post(post_handler));
-
-        let out = wasi_http::serve(router, request);
-        ResponseOutparam::set(response_out, out);
+    async fn handle(request: Request) -> Result<Response, ErrorCode> {
+        let router =
+            Router::new().route("/cache", get(handle_cache)).route("/origin", post(handle_origin));
+        wasi_http::serve(router, request).await
     }
 }
 
-// Forward request to external service and return the response
+// Attempt to get cached response with fallback to origin
 #[wasi_otel::instrument]
-async fn get_handler() -> Result<Json<Value>> {
-    let body = Client::new()
-        .get("https://jsonplaceholder.cypress.io/posts/1")
-        .header(CACHE_CONTROL, "max-age=300") // enable caching for 5 minutes
-        .header(IF_NONE_MATCH, "qf55low9rjsrup46vsiz9r73") // provide cache key
-        .send()?
-        .json::<Value>()
-        .context("issue sending request")?;
+async fn handle_cache() -> Result<Json<Value>> {
+    let max_age = "max-age=300";
+    let cache_key = "qf34lofge4rstep95tsiz9r75";
+    // PEM-encoded private key and certificate
+    let auth_cert = "\
+        -----BEGIN CERTIFICATE-----
+        ...
+        -----BEGIN PRIVATE KEY-----
+        ...
+    ";
 
-    // let req = wasi_http::types::Request::new()
-    //     .set_method("GET");
-    //     .uri("https://jsonplaceholder.cypress.io/posts/1")
-    //     .header(CACHE_CONTROL, "max-age=300")
-    //     .header(IF_NONE_MATCH, "qf55low9rjsrup46vsiz9r73")
-    //     .body(())
-    //     .unwrap();
+    let request = http::Request::builder()
+        .method(Method::GET)
+        .uri("https://jsonplaceholder.cypress.io/posts/1")
+        .header(CACHE_CONTROL, max_age)
+        .header(IF_NONE_MATCH, cache_key)
+        .header("Client-Cert", auth_cert)
+        .extension(CacheOptions {
+            bucket_name: "example-bucket".to_string(),
+            ttl_seconds: 300,
+        })
+        .body(Empty::<Bytes>::new())
+        .expect("Failed to build request");
 
-    // handler::handle(req).await.unwrap();
+    let response = wasi_http::handle(request).await?;
+    let body = response.into_body();
+    let body = serde_json::from_slice::<Value>(&body).context("issue parsing response body")?;
 
-    Ok(Json(json!({
-        "response": body
+    // let body = Client::new()
+    //     .get("https://jsonplaceholder.cypress.io/posts/1")
+    //     .header(CACHE_CONTROL, max_age)
+    //     .header(IF_NONE_MATCH, cache_key)
+    //     .send()
+    //     .await?
+    //     .json::<Value>()?;
+
+    Ok(Json(serde_json::json!({
+        "cached_response": body
     })))
 }
 
-// Forward request to external service and return the response
+// Forward request to external service and cache the response
 #[wasi_otel::instrument]
-async fn post_handler(Json(body): Json<Value>) -> Result<Json<Value>> {
-    let body = Client::new()
-        .post("https://jsonplaceholder.cypress.io/posts")
-        .header(CACHE_CONTROL, "no-cache, max-age=300") // Go to origin for every request, but cache the response for 5 minutes
-        .bearer_auth("some token") // not required, but shown for example
-        .json(&body)
-        .send()?
-        .json::<Value>()
-        .context("issue sending request")?;
+async fn handle_origin(body: Bytes) -> Result<Json<Value>> {
+    let max_age = "max-age=300";
+    let cache_key = "qf34lofge4rstep95tsiz9r75";
 
-    Ok(Json(json!({
-        "response": body
-    })))
+    let request = http::Request::builder()
+        .method(Method::GET)
+        .uri("https://jsonplaceholder.cypress.io/posts")
+        .header(CACHE_CONTROL, max_age)
+        .header(IF_NONE_MATCH, cache_key)
+        .body(Full::new(body))
+        .expect("Failed to build request");
+
+    let response = wasi_http::handle(request).await?;
+    let body = response.into_body();
+    let body = serde_json::from_slice::<Value>(&body).context("issue parsing response body")?;
+
+    Ok(Json(body))
 }
-
-// Handle preflight OPTIONS requests for CORS.
-#[wasi_otel::instrument]
-async fn handle_options() -> Result<()> {
-    Ok(())
-}
-
-wasi::http::proxy::export!(HttpGuest);
