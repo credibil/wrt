@@ -9,8 +9,7 @@ use http::header::{CACHE_CONTROL, IF_NONE_MATCH};
 use http_body_util::{Empty, Full};
 use serde_json::Value;
 use tracing::Level;
-use wasi_http::CacheOptions;
-use wasi_http::Result;
+use wasi_http::{CacheOptions, Result};
 use wasip3::exports::http::handler::Guest;
 use wasip3::http::types::{ErrorCode, Request, Response};
 
@@ -31,17 +30,20 @@ impl Guest for Http {
 async fn handle_cache() -> Result<Json<Value>> {
     let max_age = "max-age=300";
     let cache_key = "qf34lofge4rstep95tsiz9r75";
-    // let auth_cert = ClientAuthCert {
-    //     certificate: "-----BEGIN CERTIFICATE-----\n...".to_string(),
-    //     key: "-----BEGIN PRIVATE KEY-----\n...".to_string(),
-    // };
+    // PEM-encoded private key and certificate
+    let auth_cert = "\
+        -----BEGIN CERTIFICATE-----
+        ...
+        -----BEGIN PRIVATE KEY-----
+        ...
+    ";
 
     let request = http::Request::builder()
         .method(Method::GET)
         .uri("https://jsonplaceholder.cypress.io/posts/1")
         .header(CACHE_CONTROL, max_age)
         .header(IF_NONE_MATCH, cache_key)
-        .header("Client-Cert", "auth_cert") // PEM-encoded private key and certificate
+        .header("Client-Cert", auth_cert)
         .extension(CacheOptions {
             bucket_name: "example-bucket".to_string(),
             ttl_seconds: 300,

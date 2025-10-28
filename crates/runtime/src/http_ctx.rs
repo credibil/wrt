@@ -36,29 +36,32 @@ impl WasiHttpCtx for HttpCtx {
     > {
         Box::new(async move {
             let (mut parts, body) = request.into_parts();
-            let body_bytes = body.collect().await.unwrap().to_bytes();
+            let collected =
+                body.collect().await.map_err(|e| ErrorCode::InternalError(Some(e.to_string())))?;
 
+            // build reqwest::Request
             let mut builder = reqwest::Client::builder();
 
+            // check for client certificate in headers
             if let Some(cert) = parts.headers.remove("Client-Cert") {
-                tracing::debug!("using client certificate for request");
-                let identity = reqwest::Identity::from_pem(cert.as_bytes()).unwrap();
+                tracing::debug!("using client certificate");
+                let identity = reqwest::Identity::from_pem(cert.as_bytes())
+                    .map_err(|e| ErrorCode::InternalError(Some(e.to_string())))?;
                 builder = builder.identity(identity);
             }
 
-            let client = builder.build().unwrap();
-
+            let client = builder.build().map_err(into_error)?;
             let resp = client
                 .request(parts.method, parts.uri.to_string())
                 .headers(parts.headers)
-                .body(body_bytes)
+                .body(collected.to_bytes())
                 .send()
                 .await
-                .unwrap();
+                .map_err(into_error)?;
 
             let converted: http::Response<reqwest::Body> = resp.into();
             let (parts, body) = converted.into_parts();
-            let body = body.map_err(convert_error).boxed();
+            let body = body.map_err(into_error).boxed();
             let response = http::Response::from_parts(parts, body);
 
             Ok((response, fut))
@@ -67,7 +70,7 @@ impl WasiHttpCtx for HttpCtx {
 }
 
 #[allow(clippy::needless_pass_by_value)]
-fn convert_error(e: reqwest::Error) -> ErrorCode {
+fn into_error(e: reqwest::Error) -> ErrorCode {
     if e.is_timeout() {
         ErrorCode::ConnectionTimeout
     } else if e.is_connect() {
