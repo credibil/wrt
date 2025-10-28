@@ -7,7 +7,6 @@ use http_body_util::BodyExt;
 use wasip3::http::handler;
 use wasip3::http_compat::{http_from_wasi_response, http_into_wasi_request};
 
-// use wasmtime_wasi_http::types::OutgoingRequestConfig;
 pub use crate::guest::cache::{Cache, CacheOptions};
 
 /// Send an HTTP request using the WASI HTTP proxy handler.
