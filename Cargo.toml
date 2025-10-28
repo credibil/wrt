@@ -53,6 +53,7 @@ openssl = { version = "0.10", features = ["vendored"] }
 
 [dev-dependencies]
 axum = { workspace = true, features = ["macros"] }
+base64ct.workspace = true
 bytes.workspace = true
 http.workspace = true
 http-body-util.workspace = true
