@@ -9,18 +9,7 @@ use serde_json::Value;
 use tokio::sync::Mutex;
 use tokio::time;
 
-/// Schema registry configuration
-#[derive(Debug, Clone)]
-pub struct SchemaConfig {
-    /// Schema registry URL
-    pub url: String,
-    /// Optional API key for schema registry
-    pub api_key: Option<String>,
-    /// Optional API secret for schema registry
-    pub api_secret: Option<String>,
-    /// Optional cache TTL in seconds for schema registry
-    pub cache_ttl_secs: Option<u64>,
-}
+use crate::SchemaConfig;
 
 /// Decoded Kafka message
 pub struct DecodedPayload<'a> {

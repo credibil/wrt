@@ -5,6 +5,7 @@ use res_redis::Redis;
 use runtime::{AddResource, Cli, Command, Parser, ResourceBuilder, RuntimeBuilder};
 use wasi_http::WasiHttp;
 use wasi_keyvalue::WasiKeyValue;
+use wasi_messaging_kafka::{Kafka, WasiMessaging};
 use wasi_otel::WasiOtel;
 
 #[tokio::main]
@@ -24,11 +25,14 @@ async fn main() -> Result<()> {
 
     let redis = Redis::new().await?;
     let keyvalue = WasiKeyValue.resource(redis).await?;
+    let kafka = Kafka::new().await?;
+    let messaging = WasiMessaging.resource(kafka).await?;
 
     let runtime = builder
         .register(WasiHttp)
         .register(WasiOtel)
         .register(keyvalue)
+        .register(messaging)
         .build();
 
     runtime.await

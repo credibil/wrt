@@ -41,6 +41,7 @@ wasi-blobstore.workspace = true
 wasi-http.workspace = true
 wasi-keyvalue.workspace = true
 wasi-messaging.workspace = true
+wasi-messaging-kafka.workspace = true
 wasi-otel.workspace = true
 wasi-vault.workspace = true
 
@@ -230,6 +231,7 @@ wasi-blobstore = { path = "crates/wasi-blobstore", version = "0.12.0", registry 
 wasi-http = { path = "crates/wasi-http", version = "0.12.0", registry = "credibil" }
 wasi-keyvalue = { path = "crates/wasi-keyvalue", version = "0.12.0", registry = "credibil" }
 wasi-messaging = { path = "crates/wasi-messaging", version = "0.12.0", registry = "credibil" }
+wasi-messaging-kafka = { path = "crates/wasi-messaging-kafka", version = "0.12.0", registry = "credibil" }
 wasi-otel = { path = "crates/wasi-otel", version = "0.12.0", registry = "credibil" }
 wasi-otel-attr = { path = "crates/wasi-otel-attr", version = "0.12.0", registry = "credibil" }
 wasi-vault = { path = "crates/wasi-vault", version = "0.12.0", registry = "credibil" }

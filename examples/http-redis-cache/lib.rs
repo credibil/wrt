@@ -10,12 +10,12 @@ use axum::routing::{get, post};
 use axum::{Json, Router};
 use http::Method;
 use http::header::{CACHE_CONTROL, IF_NONE_MATCH};
-use wasi_http::{Client, Decode, Result};
 use serde_json::{Value, json};
 use tower_http::cors::{Any, CorsLayer};
 use tracing::Level;
 use wasi::exports::http::incoming_handler::Guest;
 use wasi::http::types::{IncomingRequest, ResponseOutparam};
+use wasi_http::{Client, Decode, Result};
 
 struct HttpGuest;
 
