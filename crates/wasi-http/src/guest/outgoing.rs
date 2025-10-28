@@ -1,4 +1,5 @@
 use std::any::Any;
+use std::error::Error;
 
 use anyhow::{Context, Result, anyhow};
 use bytes::Bytes;
@@ -7,7 +8,7 @@ use wasip3::http::handler;
 use wasip3::http_compat::{http_from_wasi_response, http_into_wasi_request};
 
 // use wasmtime_wasi_http::types::OutgoingRequestConfig;
-use crate::guest::cache::Cache;
+pub use crate::guest::cache::{Cache, CacheOptions};
 
 /// Send an HTTP request using the WASI HTTP proxy handler.
 ///
@@ -18,13 +19,13 @@ pub async fn handle<T>(request: http::Request<T>) -> Result<http::Response<Bytes
 where
     T: http_body::Body + Any,
     T::Data: Into<Vec<u8>>,
-    T::Error: Into<Box<dyn std::error::Error + Send + Sync + 'static>>,
+    T::Error: Into<Box<dyn Error + Send + Sync + 'static>>,
 {
     let maybe_cache = Cache::maybe_from(&request)?;
 
     // check cache when indicated by request
     if let Some(cache) = maybe_cache.as_ref()
-        && let Some(hit) = cache.maybe_get()?
+        && let Some(hit) = cache.get()?
     {
         tracing::debug!("cache hit");
         return Ok(hit);
@@ -49,11 +50,38 @@ where
 
     // cache response when indicated by request
     if let Some(cache) = maybe_cache {
-        cache.maybe_put(&response)?;
+        cache.put(&response)?;
         tracing::debug!("response cached");
     }
 
     Ok(response)
 }
 
-// pub struct IncomingBody(BoxBody<Bytes, anyhow::Error>);
+// use serde::de::DeserializeOwned;
+// use std::fmt::Debug;
+
+// pub trait IntoJson: Debug {
+//     /// Decode the response body into JSON.
+//     ///
+//     /// # Errors
+//     ///
+//     /// Returns an error if the response body is not valid JSON.
+//     async fn json<T: DeserializeOwned>(self) -> Result<T>;
+// }
+
+// impl<T> IntoJson for T
+// where
+//     T: http_body::Body + Debug,
+//     T::Data: Into<Vec<u8>>,
+//     T::Error: Into<Box<dyn Error + Send + Sync + 'static>>,
+// {
+//     async fn json<U: DeserializeOwned>(self) -> Result<U> {
+//         let body = self
+//             .collect()
+//             .await
+//             .map_err(|e| anyhow!("failed to collect body: {}", e.into()))?
+//             .to_bytes();
+//         let data = serde_json::from_slice::<U>(&body)?;
+//         Ok(data)
+//     }
+// }

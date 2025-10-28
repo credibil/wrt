@@ -16,28 +16,48 @@ pub struct Cache {
     bucket: String,
 }
 
+/// Request extension used to indicate optional caching behavior.
+#[derive(Clone, Debug)]
+pub struct CacheOptions {
+    /// Name of the key-value store bucket to use for caching.
+    pub bucket_name: String,
+
+    /// Time-to-live for cached responses, in seconds.
+    pub ttl_seconds: u64,
+}
+
+impl Default for CacheOptions {
+    fn default() -> Self {
+        Self {
+            bucket_name: CACHE_BUCKET.to_string(),
+            ttl_seconds: 0,
+        }
+    }
+}
+
 impl Cache {
     /// Create a Cache instance from the request headers, if caching is indicated.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if cache control headers are malformed.
     pub fn maybe_from(request: &Request<impl Body>) -> Result<Option<Self>> {
         let headers = request.headers();
         if headers.get(CACHE_CONTROL).is_none() {
             tracing::debug!("no Cache-Control header present");
             return Ok(None);
         }
-
         let control = Control::try_from(headers)
             .map_err(|e| anyhow!("issue parsing Cache-Control headers: {e}"))?;
+        let cache_opts = request
+            .extensions()
+            .get::<CacheOptions>()
+            .map_or_else(CacheOptions::default, Clone::clone);
 
         Ok(Some(Self {
-            bucket: CACHE_BUCKET.to_string(),
+            bucket: cache_opts.bucket_name,
             control,
         }))
-    }
-
-    /// Optionally set the cache bucket name.
-    pub fn with_bucket(mut self, bucket: &str) -> Self {
-        self.bucket = bucket.to_string();
-        self
     }
 
     /// Get a cached response.
@@ -46,7 +66,7 @@ impl Cache {
     ///
     /// * cache retrieval errors
     /// * deserialization errors
-    pub fn maybe_get(&self) -> Result<Option<Response<Bytes>>> {
+    pub fn get(&self) -> Result<Option<Response<Bytes>>> {
         let ctrl = &self.control;
         if ctrl.no_cache || ctrl.no_store || ctrl.etag.is_empty() {
             tracing::debug!("cache is disabled");
@@ -72,7 +92,7 @@ impl Cache {
     ///
     /// * serialization errors
     /// * cache storage errors
-    pub fn maybe_put(&self, response: &Response<Bytes>) -> Result<()> {
+    pub fn put(&self, response: &Response<Bytes>) -> Result<()> {
         let ctrl = &self.control;
         if ctrl.no_store || ctrl.etag.is_empty() || ctrl.max_age == 0 {
             return Ok(());

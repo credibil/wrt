@@ -4257,6 +4257,7 @@ dependencies = [
  "hyper",
  "percent-encoding",
  "runtime",
+ "rustls-pki-types",
  "serde",
  "serde_json",
  "serde_urlencoded",

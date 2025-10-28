@@ -185,6 +185,7 @@ opentelemetry = "0.31.0"
 opentelemetry_sdk = { version = "0.31.0", features = ["experimental_metrics_custom_reader"] }
 proc-macro2 = "1.0.101"
 quote = "1.0.40"
+rustls-pki-types = "1.13.0"
 serde = { version = "1.0.225", features = ["derive"] }
 serde_json = "1.0.145"
 syn = { version = "2.0.106", features = ["parsing"] }
@@ -219,7 +220,6 @@ wasi-messaging = { path = "crates/wasi-messaging", version = "0.12.0", registry 
 wasi-otel = { path = "crates/wasi-otel", version = "0.12.0", registry = "credibil" }
 wasi-otel-attr = { path = "crates/wasi-otel-attr", version = "0.12.0", registry = "credibil" }
 wasi-vault = { path = "crates/wasi-vault", version = "0.12.0", registry = "credibil" }
-wit-bindings = { path = "crates/wit-bindings", version = "0.12.0", registry = "credibil" }
 
 # [patch."https://github.com/credibil/core.git"]
 # credibil-otel = { path = "../../credibil/core/crates/otel" }

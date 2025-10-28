@@ -11,7 +11,6 @@ pub type HttpError = TrappableError<ErrorCode>;
 
 // pub type HeaderResult<T> = Result<T, HeaderError>;
 // pub type HeaderError = TrappableError<types::HeaderError>;
-
 // pub type RequestOptionsResult<T> = Result<T, RequestOptionsError>;
 // pub type RequestOptionsError = TrappableError<types::RequestOptionsError>;
 
@@ -30,10 +29,20 @@ impl WasiHttpCtx for HttpCtx {
             > + Send,
     > {
         Box::new(async move {
-            let (parts, body) = request.into_parts();
+            let (mut parts, body) = request.into_parts();
             let body_bytes = body.collect().await.unwrap().to_bytes();
 
-            let resp = reqwest::Client::new()
+            let mut builder = reqwest::Client::builder();
+
+            if let Some(cert) = parts.headers.remove("Client-Cert") {
+                tracing::debug!("using client certificate for request");
+                let identity = reqwest::Identity::from_pem(cert.as_bytes()).unwrap();
+                builder = builder.identity(identity);
+            }
+
+            let client = builder.build().unwrap();
+
+            let resp = client
                 .request(parts.method, parts.uri.to_string())
                 .headers(parts.headers)
                 .body(body_bytes)

@@ -28,9 +28,8 @@ mod generated {
 /// Re-exported `instrument` macro for use in guest code.
 pub use wasi_otel_attr::instrument;
 
-use crate::guest::init::INIT;
-
 use self::init::ExitGuard;
+use crate::guest::init::INIT;
 
 /// Initialize OpenTelemetry SDK and tracing subscriber.
 pub fn init() -> Option<ExitGuard> {
