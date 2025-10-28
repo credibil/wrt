@@ -232,7 +232,7 @@ impl types::HostMessage for Host<'_> {
 }
 
 /// Helper to clone headers and optionally update a single key/value
-fn update_headers(
+pub fn update_headers(
     existing: Option<&OwnedHeaders>, key: &str, value: Option<&[u8]>,
 ) -> OwnedHeaders {
     let mut new_headers = OwnedHeaders::new();
