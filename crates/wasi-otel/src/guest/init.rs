@@ -1,8 +1,8 @@
 //! Initialise OpenTelemetry
 
-use std::sync::RwLock;
+use std::sync::OnceLock;
 
-use anyhow::{Context, Result, anyhow};
+use anyhow::{Result, anyhow};
 use cfg_if::cfg_if;
 use opentelemetry::{KeyValue, Value};
 use opentelemetry_sdk::Resource;
@@ -29,7 +29,8 @@ cfg_if! {
     }
 }
 
-pub static INIT: RwLock<bool> = RwLock::new(false);
+// pub static INIT: RwLock<bool> = RwLock::new(false);
+pub static INIT: OnceLock<bool> = OnceLock::new();
 
 pub fn init() -> Result<ExitGuard> {
     // get WASI host telemetry resource
@@ -48,8 +49,7 @@ pub fn init() -> Result<ExitGuard> {
     // initialize tracing
     #[cfg(feature = "tracing")]
     let registry = {
-        let tracer_provider =
-            tracing::init(resource.clone()).context("failed to initialize tracing")?;
+        let tracer_provider = tracing::init(resource.clone());
         let tracing_layer = tracing_layer().with_tracer(tracer_provider.tracer("global"));
         guard.tracing = tracer_provider;
         registry.with(tracing_layer)
@@ -58,7 +58,7 @@ pub fn init() -> Result<ExitGuard> {
     // initialize metrics
     #[cfg(feature = "metrics")]
     let registry = {
-        let meter_provider = metrics::init(resource).context("failed to initialize metrics")?;
+        let meter_provider = metrics::init(resource);
         let metrics_layer = MetricsLayer::new(meter_provider.clone());
         guard.metrics = meter_provider;
         registry.with(metrics_layer)
@@ -66,9 +66,10 @@ pub fn init() -> Result<ExitGuard> {
 
     registry.try_init().map_err(|e| anyhow!("issue initializing subscriber: {e}"))?;
 
-    let mut lock = INIT.write().map_err(|e| anyhow!("issue acquiring INIT write lock: {e}"))?;
-    *lock = true;
-    drop(lock);
+    // let mut lock = INIT.write().map_err(|e| anyhow!("issue acquiring INIT write lock: {e}"))?;
+    // *lock = true;
+    // drop(lock);
+    INIT.set(true).map_err(|_t| anyhow!("wasi-otel already initialized"))?;
 
     Ok(guard)
 }
@@ -84,24 +85,24 @@ pub struct ExitGuard {
 
 impl Drop for ExitGuard {
     fn drop(&mut self) {
-        if let Ok(mut lock) = INIT.write() {
-            *lock = true;
-        } else {
-            ::tracing::error!("failed to acquire INIT write lock");
-        }
+        println!("!!! Dropping ExitGuard");
 
         #[cfg(feature = "tracing")]
         if let Err(e) = self.tracing.shutdown() {
             ::tracing::error!("failed to export tracing: {e}");
         }
+
         #[cfg(feature = "metrics")]
         if let Err(e) = self.metrics.shutdown() {
             ::tracing::error!("failed to export metrics: {e}");
         }
 
-        // panic if this fails
-        let mut lock = INIT.write().expect("should acquire lock");
-        *lock = true;
+        // // panic if this fails
+        // let mut lock = INIT.write().expect("should acquire lock");
+        // *lock = false;
+        // drop(lock);
+
+        println!("!!! Dropped ExitGuard");
     }
 }
 

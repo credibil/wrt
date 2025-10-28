@@ -17,7 +17,7 @@ struct Http;
 wasip3::http::proxy::export!(Http);
 
 impl Guest for Http {
-    // #[wasi_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
+    #[wasi_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
     async fn handle(request: Request) -> Result<Response, ErrorCode> {
         let router = Router::new().route("/", get(handle_cache)).route("/", post(handle_origin));
         wasi_http::serve(router, request).await
@@ -25,10 +25,10 @@ impl Guest for Http {
 }
 
 // Attempt to get cached response with fallback to origin
-// #[wasi_otel::instrument]
+#[wasi_otel::instrument]
 async fn handle_cache() -> Result<Json<Value>> {
     let max_age = "max-age=300";
-    let cache_key = "qf34lofge4rstep95tsiz9r74";
+    let cache_key = "qf34lofge4rstep95tsiz9r75";
 
     let request = http::Request::builder()
         .method(Method::GET)

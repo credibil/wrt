@@ -200,6 +200,7 @@ wasmtime = { version = "38.0.3", default-features = false, features = ["componen
 wasmtime-wasi = { version = "38.0.3", features = ["p3"] }
 wasmtime-wasi-http = { version = "38.0.3", features = ["p3"] }
 wasmtime-wasi-io = "38.0.3"
+# wit-bindgen = { version = "0.46.0" }
 wit-bindgen = { version = "0.47.0", features = ["async-spawn"] }
 
 # credibil registry

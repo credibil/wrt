@@ -65,13 +65,7 @@ impl wasi_otel::tracing::HostWithStore for Data {
     }
 }
 
-impl wasi_otel::tracing::Host for Host<'_> {
-    // async fn context(&mut self) -> wasmtime::Result<wasi::SpanContext> {
-    //     let ctx = tracing::Span::current().context();
-    //     let span = ctx.span();
-    //     Ok(wasi::SpanContext::from(span.span_context()))
-    // }
-}
+impl wasi_otel::tracing::Host for Host<'_> {}
 
 pub fn resource_spans(
     spans: Vec<wasi::SpanData>, resource: &opentelemetry_sdk::Resource,

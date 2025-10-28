@@ -28,11 +28,16 @@ mod generated {
 /// Re-exported `instrument` macro for use in guest code.
 pub use wasi_otel_attr::instrument;
 
+use crate::guest::init::INIT;
+
 use self::init::ExitGuard;
 
 /// Initialize OpenTelemetry SDK and tracing subscriber.
 pub fn init() -> Option<ExitGuard> {
-    if init::INIT.read().is_ok_and(|x| *x) {
+    // if init::INIT.read().is_ok_and(|x| *x) {
+    //     return None;
+    // }
+    if INIT.get().is_some() {
         return None;
     }
 

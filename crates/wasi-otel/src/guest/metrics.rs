@@ -3,17 +3,15 @@
 use std::sync::{Arc, Weak};
 use std::time::Duration;
 
-use anyhow::Result;
 use num_traits::ToPrimitive;
 use opentelemetry::global;
 use opentelemetry_sdk::Resource;
-use opentelemetry_sdk::error::{OTelSdkError, OTelSdkResult};
+use opentelemetry_sdk::error::OTelSdkResult;
 use opentelemetry_sdk::metrics::data::{
     AggregatedMetrics, Exemplar, ExponentialBucket, ExponentialHistogram,
     ExponentialHistogramDataPoint, Gauge, GaugeDataPoint, Histogram, HistogramDataPoint, Metric,
     MetricData, ResourceMetrics, ScopeMetrics, Sum, SumDataPoint,
 };
-use opentelemetry_sdk::metrics::exporter::PushMetricExporter;
 use opentelemetry_sdk::metrics::reader::MetricReader;
 use opentelemetry_sdk::metrics::{
     InstrumentKind, ManualReader, Pipeline, SdkMeterProvider, Temporality,
@@ -21,92 +19,57 @@ use opentelemetry_sdk::metrics::{
 
 use crate::guest::generated::wasi::otel::metrics as wasi;
 
-pub fn init(resource: Resource) -> Result<SdkMeterProvider> {
-    let exporter = Exporter::new()?;
-    let reader = Reader::new(exporter);
+pub fn init(resource: Resource) -> SdkMeterProvider {
+    let reader = Reader::new();
     let provider = SdkMeterProvider::builder().with_resource(resource).with_reader(reader).build();
     global::set_meter_provider(provider.clone());
-    Ok(provider)
+    provider
 }
 
 #[derive(Debug, Clone)]
-struct Reader {
-    reader: Arc<ManualReader>,
-    exporter: Arc<Exporter>,
-}
+struct Reader(Arc<ManualReader>);
 
 impl Reader {
     #[must_use]
-    fn new(exporter: Exporter) -> Self {
-        Self {
-            reader: Arc::new(ManualReader::default()),
-            exporter: Arc::new(exporter),
-        }
+    fn new() -> Self {
+        Self(Arc::new(ManualReader::default()))
     }
 }
 
 impl MetricReader for Reader {
     fn register_pipeline(&self, pipeline: Weak<Pipeline>) {
-        self.reader.register_pipeline(pipeline);
+        self.0.register_pipeline(pipeline);
     }
 
     fn collect(&self, rm: &mut ResourceMetrics) -> OTelSdkResult {
-        self.reader.collect(rm)
+        self.0.collect(rm)
     }
 
     fn force_flush(&self) -> OTelSdkResult {
-        self.reader.force_flush()
+        self.0.force_flush()
     }
 
     fn temporality(&self, kind: InstrumentKind) -> Temporality {
-        self.reader.temporality(kind)
+        self.0.temporality(kind)
     }
 
     fn shutdown_with_timeout(&self, _: Duration) -> OTelSdkResult {
         let mut rm = ResourceMetrics::default();
-        self.reader.collect(&mut rm)?;
+        self.0.collect(&mut rm)?;
 
-        let exporter = Arc::clone(&self.exporter);
-        wit_bindgen::block_on(async move { exporter.export(&rm).await })
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct Exporter;
-
-impl Exporter {
-    #[expect(clippy::unnecessary_wraps)]
-    pub const fn new() -> Result<Self> {
-        Ok(Self)
-    }
-}
-
-impl PushMetricExporter for Exporter {
-    async fn export(&self, metrics: &ResourceMetrics) -> Result<(), OTelSdkError> {
-        let metrics: wasi::ResourceMetrics = metrics.into();
-        wit_bindgen::spawn(async move {
+        wit_bindgen::block_on(async move {
+            let metrics: wasi::ResourceMetrics = rm.into();
             if let Err(e) = wasi::export(metrics).await {
                 tracing::error!("failed to export metrics: {e}");
             }
         });
-        Ok(())
-    }
 
-    fn force_flush(&self) -> OTelSdkResult {
-        Ok(())
-    }
-
-    fn temporality(&self) -> Temporality {
-        Temporality::Cumulative
-    }
-
-    fn shutdown_with_timeout(&self, _: Duration) -> OTelSdkResult {
         Ok(())
     }
 }
 
-impl From<&ResourceMetrics> for wasi::ResourceMetrics {
-    fn from(rm: &ResourceMetrics) -> Self {
+impl From<ResourceMetrics> for wasi::ResourceMetrics {
+    fn from(rm: ResourceMetrics) -> Self {
         Self {
             resource: rm.resource().into(),
             scope_metrics: rm.scope_metrics().map(Into::into).collect(),

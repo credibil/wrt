@@ -1,27 +1,25 @@
 use bytes::Bytes;
-use futures::{Future, FutureExt};
-use http::uri;
+use futures::Future;
+use http_body_util::BodyExt;
 use http_body_util::combinators::BoxBody;
-use http_body_util::{BodyExt, Full};
 use wasmtime_wasi::TrappableError;
-use wasmtime_wasi_http::body;
-use wasmtime_wasi_http::p3::bindings::http::types::{self, ErrorCode};
+use wasmtime_wasi_http::p3::bindings::http::types::ErrorCode;
 use wasmtime_wasi_http::p3::{RequestOptions, WasiHttpCtx};
 
 pub type HttpResult<T> = Result<T, HttpError>;
 pub type HttpError = TrappableError<ErrorCode>;
 
-pub type HeaderResult<T> = Result<T, HeaderError>;
-pub type HeaderError = TrappableError<types::HeaderError>;
+// pub type HeaderResult<T> = Result<T, HeaderError>;
+// pub type HeaderError = TrappableError<types::HeaderError>;
 
-pub type RequestOptionsResult<T> = Result<T, RequestOptionsError>;
-pub type RequestOptionsError = TrappableError<types::RequestOptionsError>;
+// pub type RequestOptionsResult<T> = Result<T, RequestOptionsError>;
+// pub type RequestOptionsError = TrappableError<types::RequestOptionsError>;
 
 pub struct HttpCtx;
 impl WasiHttpCtx for HttpCtx {
     fn send_request(
         &mut self, request: http::Request<BoxBody<Bytes, ErrorCode>>,
-        options: Option<RequestOptions>,
+        _options: Option<RequestOptions>,
         fut: Box<dyn Future<Output = Result<(), ErrorCode>> + Send>,
     ) -> Box<
         dyn Future<
@@ -32,6 +30,8 @@ impl WasiHttpCtx for HttpCtx {
             > + Send,
     > {
         Box::new(async move {
+            println!("!!! send_request called");
+
             let (parts, body) = request.into_parts();
             let body_bytes = body.collect().await.unwrap().to_bytes();
 
