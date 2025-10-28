@@ -53,7 +53,6 @@ impl WasiHttpCtx for HttpCtx {
                     .map_err(|e| ErrorCode::InternalError(Some(e.to_string())))?;
                 let identity = reqwest::Identity::from_pem(&pem_bytes)
                     .map_err(|e| ErrorCode::InternalError(Some(e.to_string())))?;
-                tracing::debug!("using client certificate");
                 builder = builder.use_rustls_tls().identity(identity);
             }
 
