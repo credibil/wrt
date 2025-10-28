@@ -1,6 +1,6 @@
 //! Cache header parsing and cache get/put
 
-use anyhow::{Context, Result, anyhow, bail};
+use anyhow::{Result, anyhow, bail};
 use bincode::{Decode, Encode, config};
 use bytes::Bytes;
 use http::header::{CACHE_CONTROL, IF_NONE_MATCH};

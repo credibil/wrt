@@ -26,7 +26,7 @@ impl Guest for Http {
 }
 
 // Attempt to get cached response with fallback to origin
-// #[wasi_otel::instrument]
+#[wasi_otel::instrument]
 async fn handle_cache() -> Result<Json<Value>> {
     let max_age = "max-age=300";
     let cache_key = "qf34lofge4rstep95tsiz9r75";
@@ -36,13 +36,12 @@ async fn handle_cache() -> Result<Json<Value>> {
         .uri("https://jsonplaceholder.cypress.io/posts/1")
         .header(CACHE_CONTROL, max_age)
         .header(IF_NONE_MATCH, cache_key)
-        // .body(Empty::<Bytes>::new())
-        .body(Full::new(Bytes::from("body")))
+        .body(Empty::<Bytes>::new())
         .expect("Failed to build request");
 
-    // let response = wasi_http::handle(request).await?;
-    // let body = response.into_body();
-    // let body = serde_json::from_slice::<Value>(&body).context("issue parsing response body")?;
+    let response = wasi_http::handle(request).await?;
+    let body = response.into_body();
+    let body = serde_json::from_slice::<Value>(&body).context("issue parsing response body")?;
 
     // let body = Client::new()
     //     .get("https://jsonplaceholder.cypress.io/posts/1")
@@ -53,12 +52,12 @@ async fn handle_cache() -> Result<Json<Value>> {
     //     .json::<Value>()?;
 
     Ok(Json(serde_json::json!({
-        "cached_response": "body"
+        "cached_response": body
     })))
 }
 
 // Forward request to external service and cache the response
-// #[wasi_otel::instrument]
+#[wasi_otel::instrument]
 async fn handle_origin(body: Bytes) -> Result<Json<Value>> {
     let max_age = "max-age=300";
     let cache_key = "qf34lofge4rstep95tsiz9r75";

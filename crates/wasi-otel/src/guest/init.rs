@@ -84,8 +84,6 @@ pub struct ExitGuard {
 
 impl Drop for ExitGuard {
     fn drop(&mut self) {
-        println!("!!! Dropping ExitGuard");
-
         #[cfg(feature = "tracing")]
         if let Err(e) = self.tracing.shutdown() {
             ::tracing::error!("failed to export tracing: {e}");
@@ -94,7 +92,6 @@ impl Drop for ExitGuard {
         if let Err(e) = self.metrics.shutdown() {
             ::tracing::error!("failed to export metrics: {e}");
         }
-        println!("!!! Dropped ExitGuard");
     }
 }
 
