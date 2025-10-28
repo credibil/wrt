@@ -55,14 +55,6 @@ async fn handle_cache() -> Result<Json<Value>> {
     let body = response.into_body();
     let body = serde_json::from_slice::<Value>(&body).context("issue parsing response body")?;
 
-    // let body = Client::new()
-    //     .get("https://jsonplaceholder.cypress.io/posts/1")
-    //     .header(CACHE_CONTROL, max_age)
-    //     .header(IF_NONE_MATCH, cache_key)
-    //     .send()
-    //     .await?
-    //     .json::<Value>()?;
-
     Ok(Json(serde_json::json!({
         "cached_response": body
     })))
