@@ -11,7 +11,8 @@ impl<T: WasiKeyValueView> batch::Host for WasiKeyValueImpl<T> {
     async fn get_many(
         &mut self, bucket: Resource<BucketProxy>, keys: Vec<String>,
     ) -> Result<Vec<Option<(String, Vec<u8>)>>> {
-        let Ok(bucket) = self.table().get(&bucket) else {
+        let keyvalue = self.0.keyvalue();
+        let Ok(bucket) = keyvalue.table.get(&bucket) else {
             return Err(Error::NoSuchStore);
         };
 
@@ -30,7 +31,8 @@ impl<T: WasiKeyValueView> batch::Host for WasiKeyValueImpl<T> {
     async fn set_many(
         &mut self, bucket: Resource<BucketProxy>, key_values: Vec<(String, Vec<u8>)>,
     ) -> Result<()> {
-        let Ok(bucket) = self.table().get_mut(&bucket) else {
+        let keyvalue = self.0.keyvalue();
+        let Ok(bucket) = keyvalue.table.get_mut(&bucket) else {
             return Err(Error::NoSuchStore);
         };
 
@@ -46,7 +48,8 @@ impl<T: WasiKeyValueView> batch::Host for WasiKeyValueImpl<T> {
     async fn delete_many(
         &mut self, bucket: Resource<BucketProxy>, keys: Vec<String>,
     ) -> Result<()> {
-        let Ok(bucket) = self.table().get_mut(&bucket) else {
+        let keyvalue = self.0.keyvalue();
+        let Ok(bucket) = keyvalue.table.get_mut(&bucket) else {
             return Err(Error::NoSuchStore);
         };
 

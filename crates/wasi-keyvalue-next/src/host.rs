@@ -27,14 +27,19 @@ mod generated {
     });
 }
 
+use std::fmt::Debug;
+use std::sync::Arc;
+
 use wasmtime::component::{HasData, Linker, ResourceTableError};
 use wasmtime_wasi::ResourceTable;
+use runtime::{ WasiHost};
 
 use self::generated::wasi::keyvalue::store::Error;
 use self::generated::wasi::keyvalue::{atomics, batch, store};
 pub use self::resource::*;
 
 pub type Result<T, E = Error> = anyhow::Result<T, E>;
+
 
 /// Add all of the `wasi:keyvalue` world's interfaces to a
 /// [`wasmtime::component::Linker`].
@@ -63,29 +68,40 @@ impl From<ResourceTableError> for Error {
     }
 }
 
+/// A trait which provides internal WASI Key-Value state.
+///
+/// This is implemented by the `T` in `Linker<T>` — a single type shared across
+/// all WASI components for the runtime build.
 pub trait WasiKeyValueView: Send {
-    /// Returns the table used to manage resources.
-    fn table(&mut self) -> &mut ResourceTable;
-
-    fn client(&mut self) -> impl Client;
+    /// Return a [`WasiKeyValueCtxView`] from mutable reference to self.
+    fn keyvalue(&mut self) -> WasiKeyValueCtxView<'_>;
 }
 
 impl<T: WasiKeyValueView> WasiKeyValueView for WasiKeyValueImpl<T> {
-    fn table(&mut self) -> &mut ResourceTable {
-        self.0.table()
-    }
-
-    fn client(&mut self) -> impl Client {
-        self.0.client()
+    fn keyvalue(&mut self) -> WasiKeyValueCtxView<'_> {
+        self.0.keyvalue()
     }
 }
 
 impl<T: ?Sized + WasiKeyValueView> WasiKeyValueView for &mut T {
-    fn table(&mut self) -> &mut ResourceTable {
-        T::table(self)
+    fn keyvalue(&mut self) -> WasiKeyValueCtxView<'_> {
+        T::keyvalue(self)
     }
+}
 
-    fn client(&mut self) -> impl Client {
-        T::client(self)
-    }
+/// View into [`WasiKeyValueCtx`] implementation and [`ResourceTable`].
+pub struct WasiKeyValueCtxView<'a> {
+    /// Mutable reference to the WASI Key-Value context.
+    pub ctx: &'a mut dyn WasiKeyValueCtx,
+
+    /// Mutable reference to table used to manage resources.
+    pub table: &'a mut ResourceTable,
+}
+
+/// A trait which provides internal WASI Key-Value context.
+///
+/// This is implemented by the resource-specific provider of Key-Value
+/// functionality. For example, an in-memory store, or a Redis-backed store.
+pub trait WasiKeyValueCtx: Debug + Send + Sync + 'static {
+    fn open_bucket(&self, identifier: String) -> FutureResult<Arc<dyn Bucket>>;
 }

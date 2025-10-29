@@ -16,7 +16,7 @@ use hyper::body::Incoming;
 use hyper::header::{FORWARDED, HOST};
 use hyper::server::conn::http1;
 use hyper::service::service_fn;
-use runtime::{RunState, Service};
+use runtime::{RunState, WasiHost};
 use tokio::net::TcpListener;
 use tokio::sync::oneshot;
 use tracing::{Instrument, debug_span};
@@ -33,7 +33,7 @@ const DEF_HTTP_ADDR: &str = "0.0.0.0:8080";
 #[derive(Debug)]
 pub struct WasiHttp;
 
-impl Service for WasiHttp {
+impl WasiHost for WasiHttp {
     fn add_to_linker(&self, linker: &mut Linker<RunState>) -> Result<()> {
         wasmtime_wasi_http::p3::add_to_linker(linker)
     }

@@ -32,7 +32,7 @@ use std::sync::{Arc, LazyLock};
 
 use futures::lock::Mutex;
 pub use resource::*;
-use runtime::{AddResource, RunState, Service};
+use runtime::{AddResource, RunState, WasiHost};
 use wasmtime::component::{HasData, Linker, ResourceTableError};
 use wasmtime_wasi::ResourceTable;
 
@@ -54,7 +54,7 @@ impl<T: Client + 'static> AddResource<T> for WasiKeyValue {
     }
 }
 
-impl Service for WasiKeyValue {
+impl WasiHost for WasiKeyValue {
     fn add_to_linker(&self, linker: &mut Linker<RunState>) -> anyhow::Result<()> {
         store::add_to_linker::<_, Data>(linker, Host::new)?;
         atomics::add_to_linker::<_, Data>(linker, Host::new)?;

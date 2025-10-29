@@ -12,19 +12,21 @@ impl<T: WasiKeyValueView> atomics::HostCas for WasiKeyValueImpl<T> {
     /// Construct a new CAS operation. Implementors can map the underlying functionality
     /// (transactions, versions, etc) as desired.
     async fn new(&mut self, bucket: Resource<BucketProxy>, key: String) -> Result<Resource<Cas>> {
-        let Ok(bucket) = self.table().get(&bucket) else {
+        let keyvalue = self.0.keyvalue();
+        let Ok(bucket) = keyvalue.table.get(&bucket) else {
             return Err(Error::NoSuchStore);
         };
         let current =
             bucket.get(key.clone()).await.map_err(|e| anyhow!("issue getting key: {e}"))?;
         let cas = Cas { key, current };
 
-        Ok(self.table().push(cas)?)
+        Ok(keyvalue.table.push(cas)?)
     }
 
     /// Get the current value of the CAS handle.
     async fn current(&mut self, self_: Resource<Cas>) -> Result<Option<Vec<u8>>> {
-        let Ok(cas) = self.table().get(&self_) else {
+        let keyvalue = self.0.keyvalue();
+        let Ok(cas) = keyvalue.table.get(&self_) else {
             return Err(Error::NoSuchStore);
         };
         let value = cas.current.clone();
@@ -34,7 +36,8 @@ impl<T: WasiKeyValueView> atomics::HostCas for WasiKeyValueImpl<T> {
     /// Drop the CAS handle.
     async fn drop(&mut self, rep: Resource<Cas>) -> anyhow::Result<()> {
         tracing::trace!("atomics::HostCas::drop");
-        self.table().delete(rep).map(|_| Ok(()))?
+        let keyvalue = self.0.keyvalue();
+        keyvalue.table.delete(rep).map(|_| Ok(()))?
     }
 }
 
@@ -49,7 +52,8 @@ impl<T: WasiKeyValueView> atomics::Host for WasiKeyValueImpl<T> {
     async fn increment(
         &mut self, bucket: Resource<BucketProxy>, key: String, delta: i64,
     ) -> Result<i64> {
-        let Ok(bucket) = self.table().get_mut(&bucket) else {
+        let keyvalue = self.0.keyvalue();
+        let Ok(bucket) = keyvalue.table.get_mut(&bucket) else {
             return Err(Error::NoSuchStore);
         };
 

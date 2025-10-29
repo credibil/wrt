@@ -36,7 +36,7 @@ use std::sync::{Arc, OnceLock};
 use anyhow::anyhow;
 use futures::future::{BoxFuture, FutureExt};
 pub use resource::*;
-use runtime::{AddResource, RunState, Service};
+use runtime::{AddResource, RunState, WasiHost};
 use wasmtime::component::{HasData, InstancePre, Linker};
 use wasmtime_wasi::{ResourceTable, ResourceTableError};
 
@@ -60,7 +60,7 @@ impl<T: Client + 'static> AddResource<T> for WasiMessaging {
     }
 }
 
-impl Service for WasiMessaging {
+impl WasiHost for WasiMessaging {
     fn add_to_linker(&self, linker: &mut Linker<RunState>) -> anyhow::Result<()> {
         messaging::producer::add_to_linker::<_, HostData>(linker, Host::new)?;
         messaging::request_reply::add_to_linker::<_, HostData>(linker, Host::new)?;

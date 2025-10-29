@@ -2941,6 +2941,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "res-nats-next"
+version = "0.12.0"
+dependencies = [
+ "anyhow",
+ "async-nats",
+ "chrono",
+ "futures",
+ "nkeys",
+ "runtime",
+ "tokio",
+ "tracing",
+ "wasi-blobstore",
+ "wasi-keyvalue-next",
+ "wasi-messaging",
+]
+
+[[package]]
 name = "resolv-conf"
 version = "0.7.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2990,13 +3007,16 @@ dependencies = [
  "base64ct",
  "build-macro",
  "bytes",
+ "futures",
  "http",
  "http-body-util",
  "openssl",
  "opentelemetry",
+ "reqwest",
  "res-azkeyvault",
  "res-mongodb",
  "res-nats",
+ "res-nats-next",
  "runtime",
  "serde_json",
  "tokio",
@@ -3005,10 +3025,13 @@ dependencies = [
  "wasi-blobstore",
  "wasi-http",
  "wasi-keyvalue",
+ "wasi-keyvalue-next",
  "wasi-messaging",
  "wasi-otel",
  "wasi-vault",
  "wasip3",
+ "wasmtime-wasi",
+ "wasmtime-wasi-http",
  "wit-bindgen",
 ]
 

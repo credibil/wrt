@@ -11,11 +11,11 @@ use tracing::instrument;
 use wasmtime::component::{Component, Linker};
 use wasmtime::{Config, Engine};
 
-use crate::traits::Service;
+use crate::traits::WasiHost;
 
 pub struct RuntimeBuilder {
     wasm: PathBuf,
-    services: Vec<Box<dyn Service>>,
+    services: Vec<Box<dyn WasiHost>>,
 }
 
 impl RuntimeBuilder {
@@ -36,10 +36,10 @@ impl RuntimeBuilder {
 
     /// Register a service with the runtime.
     ///
-    /// The service must have implemented the [`Service`] trait in order to
+    /// The service must have implemented the [`WasiHost`] trait in order to
     /// register.
     #[must_use]
-    pub fn register<S: Service + 'static>(mut self, service: S) -> Self {
+    pub fn register<S: WasiHost + 'static>(mut self, service: S) -> Self {
         self.services.push(Box::new(service));
         self
     }
@@ -78,7 +78,7 @@ impl RuntimeBuilder {
 /// Runtime for a wasm component.
 pub struct Runtime {
     wasm: PathBuf,
-    services: Vec<Box<dyn Service>>,
+    services: Vec<Box<dyn WasiHost>>,
 }
 
 impl Runtime {

@@ -37,7 +37,7 @@ use anyhow::Result;
 use bytes::Bytes;
 use futures::lock::Mutex;
 pub use resource::*;
-use runtime::{AddResource, RunState, Service};
+use runtime::{AddResource, RunState, WasiHost};
 use wasmtime::component::{HasData, Linker, ResourceTable};
 use wasmtime_wasi::p2::pipe::MemoryOutputPipe;
 
@@ -61,7 +61,7 @@ impl<T: Client + 'static> AddResource<T> for WasiBlobstore {
     }
 }
 
-impl Service for WasiBlobstore {
+impl WasiHost for WasiBlobstore {
     fn add_to_linker(&self, linker: &mut Linker<RunState>) -> Result<()> {
         blobstore::add_to_linker::<_, Data>(linker, Host::new)?;
         container::add_to_linker::<_, Data>(linker, Host::new)?;

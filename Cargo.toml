@@ -22,6 +22,10 @@ path = "src/standard.rs"
 name = "minimal"
 path = "src/minimal.rs"
 
+[[bin]]
+name = "keyvalue"
+path = "src/keyvalue.rs"
+
 [lints]
 workspace = true
 
@@ -40,13 +44,24 @@ wasi-messaging.workspace = true
 wasi-otel.workspace = true
 wasi-vault.workspace = true
 
+wasi-keyvalue-next.workspace = true
+
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+base64ct.workspace = true
 build-macro = { path = "crates/build-macro", version = "0.12.0", registry = "credibil" }
+bytes.workspace = true
+futures.workspace = true
+http.workspace = true
+http-body-util.workspace = true
+reqwest.workspace = true
 res-azkeyvault.workspace = true
 res-mongodb.workspace = true
 res-nats.workspace = true
+res-nats-next = { path = "crates/res-nats-next" }
 runtime.workspace = true
 tokio = { workspace = true, features = ["signal"] }
+wasmtime-wasi.workspace = true
+wasmtime-wasi-http.workspace = true
 
 # required for azure_identity, etc.
 openssl = { version = "0.10", features = ["vendored"] }
@@ -221,6 +236,8 @@ wasi-messaging = { path = "crates/wasi-messaging", version = "0.12.0", registry 
 wasi-otel = { path = "crates/wasi-otel", version = "0.12.0", registry = "credibil" }
 wasi-otel-attr = { path = "crates/wasi-otel-attr", version = "0.12.0", registry = "credibil" }
 wasi-vault = { path = "crates/wasi-vault", version = "0.12.0", registry = "credibil" }
+
+wasi-keyvalue-next = { path = "crates/wasi-keyvalue-next" }
 
 # [patch."https://github.com/credibil/core.git"]
 # credibil-otel = { path = "../../credibil/core/crates/otel" }
