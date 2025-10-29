@@ -89,3 +89,12 @@ impl From<anyhow::Error> for Error {
         Self::Other(err.to_string())
     }
 }
+
+pub fn get_bucket<T>(
+    accessor: &Accessor<T, WasiKeyValue>, self_: &Resource<BucketProxy>,
+) -> Result<BucketProxy> {
+    accessor.with(|mut store| {
+        let bucket = store.get().table.get(self_).map_err(|_| Error::NoSuchStore)?;
+        Ok::<_, Error>(bucket.clone())
+    })
+}

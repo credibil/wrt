@@ -95,6 +95,47 @@ pub struct RunData {
 }
 
 impl WasiView for RunData {
+    // link all dependencies
+    let mut linker = runtime::RuntimeNext::new(wasm).init::<RunState>()?;
+    wasi_keyvalue_next::add_to_linker::<RunState>(&mut linker)?;
+    // wasi_http_next::add_to_linker::<RunState>(&mut linker)?;
+
+    // start servers
+    // wasi_http::serve();
+
+    let runstate = RunState::new();
+
+    todo!()
+}
+
+/// `RunState` is used to share host state between the Wasm runtime and hosts
+/// each time they are instantiated.
+pub struct RunState {
+    pub table: ResourceTable,
+    pub wasi_ctx: WasiCtx,
+    pub keyvalue_ctx: NatsClient,
+}
+
+impl RunState {
+    /// Create a new [`RunState`] instance.
+    #[must_use]
+    pub async fn new() -> Result<Self> {
+        let mut ctx = WasiCtxBuilder::new();
+        ctx.inherit_args();
+        ctx.inherit_env();
+        ctx.inherit_stdin();
+        ctx.stdout(io::stdout());
+        ctx.stderr(io::stderr());
+
+        Ok(Self {
+            table: ResourceTable::default(),
+            wasi_ctx: ctx.build(),
+            keyvalue_ctx: NatsClient::connect().await?,
+        })
+    }
+}
+
+impl WasiView for RunState {
     fn ctx(&mut self) -> WasiCtxView<'_> {
         WasiCtxView {
             ctx: &mut self.wasi_ctx,

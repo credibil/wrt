@@ -35,6 +35,8 @@ path = "src/realtime.rs"
 [[bin]]
 name = "keyvalue"
 path = "src/keyvalue.rs"
+name = "next"
+path = "src/next.rs"
 
 [lints]
 workspace = true
