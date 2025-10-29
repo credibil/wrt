@@ -54,8 +54,8 @@ pub trait AddResource<T>: Sized {
     fn resource(self, resource: T) -> impl Future<Output = Result<Self>> + Send;
 }
 
-/// Services implement this trait so that the runtime can link their dependencies
-/// and, optionally, run them in the context of the runtime.
+/// WASI hosts implement this trait so that the runtime can link their 
+/// dependencies and, optionally, run them in the context of the runtime.
 pub trait WasiHost: Debug + Sync + Send {
     /// Link the service's dependencies prior to component instantiation.
     ///
@@ -66,6 +66,29 @@ pub trait WasiHost: Debug + Sync + Send {
     ///
     /// Returns an linking error(s) from the service's generated bindings.
     fn add_to_linker(&self, linker: &mut Linker<RunState>) -> Result<()>;
+
+    /// Start the service.
+    ///
+    /// This is typically implemented by services that instantiate (or run)
+    /// wasm components.
+    #[expect(unused_variables)]
+    fn start(&self, pre: InstancePre<RunState>) -> BoxFuture<'static, Result<()>> {
+        async { Ok(()) }.boxed()
+    }
+}
+
+/// WASI hosts implement this trait so that the runtime can link their 
+/// dependencies and, optionally, run them in the context of the runtime.
+pub trait WasiHost2: Debug + Sync + Send {
+    /// Link the service's dependencies prior to component instantiation.
+    ///
+    /// This method optionally allows the service to access the runtime
+    /// linker's context (`Self::State`).
+    ///
+    /// # Errors
+    ///
+    /// Returns an linking error(s) from the service's generated bindings.
+    fn add_to_linker<T>(&self, linker: &mut Linker<T>) -> Result<()>;
 
     /// Start the service.
     ///

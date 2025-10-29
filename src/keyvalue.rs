@@ -14,12 +14,12 @@ async fn main() -> Result<()> {
         return Err(anyhow!("only run command is supported"));
     };
 
-    // let keyvalue = WasiKeyValue.resource(Nats::new().await?).await?;
-    // RuntimeBuilder::new(wasm, true).register(WasiHttp).register(keyvalue).build().await
+    // let resource = NatsClient::connect().await?;
+    // let runstate = RunState::new().await?;
+    let mut linker = runtime::RuntimeNext::new(wasm).init::<RunState>()?;
+    wasi_keyvalue_next::add_to_linker::<RunState>(&mut linker)?;
 
-    let runstate = RunState::new();
-
-    todo!()
+    Ok(())
 }
 
 /// `RunState` is used to share host state between the Wasm runtime and hosts

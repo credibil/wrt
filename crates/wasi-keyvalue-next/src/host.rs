@@ -30,16 +30,15 @@ mod generated {
 use std::fmt::Debug;
 use std::sync::Arc;
 
+use runtime::WasiHost2;
 use wasmtime::component::{HasData, Linker, ResourceTableError};
 use wasmtime_wasi::ResourceTable;
-use runtime::{ WasiHost};
 
 use self::generated::wasi::keyvalue::store::Error;
 use self::generated::wasi::keyvalue::{atomics, batch, store};
 pub use self::resource::*;
 
 pub type Result<T, E = Error> = anyhow::Result<T, E>;
-
 
 /// Add all of the `wasi:keyvalue` world's interfaces to a
 /// [`wasmtime::component::Linker`].
@@ -53,6 +52,17 @@ pub fn add_to_linker<T: WasiKeyValueView + 'static>(linker: &mut Linker<T>) -> a
     atomics::add_to_linker::<_, WasiKeyValue<T>>(linker, |x| WasiKeyValueImpl(x))?;
     batch::add_to_linker::<_, WasiKeyValue<T>>(linker, |x| WasiKeyValueImpl(x))
 }
+
+// #[derive(Debug)]
+// pub struct KeyValue;
+
+// impl WasiHost2 for KeyValue {
+//     fn add_to_linker<T: WasiKeyValueView + 'static>(
+//         &self, linker: &mut Linker<T>,
+//     ) -> anyhow::Result<()> {
+//         add_to_linker(linker)
+//     }
+// }
 
 #[repr(transparent)]
 struct WasiKeyValueImpl<T>(pub T);
