@@ -1,47 +1,19 @@
 use anyhow::anyhow;
 use wasmtime::component::Resource;
 
-use crate::WasiKeyValueView;
-use crate::host::generated::wasi::keyvalue::atomics;
+use crate::WasiKeyValueCtxView;
+use crate::host::Result;
+use crate::host::WasiKeyValue;
 use crate::host::generated::wasi::keyvalue::atomics::CasError;
+use crate::host::generated::wasi::keyvalue::atomics::{
+    Host, HostCas, HostCasWithStore, HostWithStore,
+};
 use crate::host::generated::wasi::keyvalue::store::Error;
 use crate::host::resource::{BucketProxy, Cas};
-use crate::host::{Result, WasiKeyValueImpl};
+use crate::host::store_impl::get_bucket;
+use wasmtime::component::Accessor;
 
-impl<T: WasiKeyValueView> atomics::HostCas for WasiKeyValueImpl<T> {
-    /// Construct a new CAS operation. Implementors can map the underlying functionality
-    /// (transactions, versions, etc) as desired.
-    async fn new(&mut self, bucket: Resource<BucketProxy>, key: String) -> Result<Resource<Cas>> {
-        let keyvalue = self.0.keyvalue();
-        let Ok(bucket) = keyvalue.table.get(&bucket) else {
-            return Err(Error::NoSuchStore);
-        };
-        let current =
-            bucket.get(key.clone()).await.map_err(|e| anyhow!("issue getting key: {e}"))?;
-        let cas = Cas { key, current };
-
-        Ok(keyvalue.table.push(cas)?)
-    }
-
-    /// Get the current value of the CAS handle.
-    async fn current(&mut self, self_: Resource<Cas>) -> Result<Option<Vec<u8>>> {
-        let keyvalue = self.0.keyvalue();
-        let Ok(cas) = keyvalue.table.get(&self_) else {
-            return Err(Error::NoSuchStore);
-        };
-        let value = cas.current.clone();
-        Ok(value)
-    }
-
-    /// Drop the CAS handle.
-    async fn drop(&mut self, rep: Resource<Cas>) -> anyhow::Result<()> {
-        tracing::trace!("atomics::HostCas::drop");
-        let keyvalue = self.0.keyvalue();
-        keyvalue.table.delete(rep).map(|_| Ok(()))?
-    }
-}
-
-impl<T: WasiKeyValueView> atomics::Host for WasiKeyValueImpl<T> {
+impl HostWithStore for WasiKeyValue {
     /// Atomically increment the value associated with the key in the store by
     /// the given delta. It returns the new value.
     ///
@@ -49,13 +21,10 @@ impl<T: WasiKeyValueView> atomics::Host for WasiKeyValueImpl<T> {
     /// with the value set to the given delta.
     ///
     /// If any other error occurs, it returns an `Err(error)`.
-    async fn increment(
-        &mut self, bucket: Resource<BucketProxy>, key: String, delta: i64,
+    async fn increment<T>(
+        accessor: &Accessor<T, Self>, bucket: Resource<BucketProxy>, key: String, delta: i64,
     ) -> Result<i64> {
-        let keyvalue = self.0.keyvalue();
-        let Ok(bucket) = keyvalue.table.get_mut(&bucket) else {
-            return Err(Error::NoSuchStore);
-        };
+        let bucket = get_bucket(accessor, &bucket)?;
 
         let Ok(Some(value)) = bucket.get(key.clone()).await else {
             return Err(anyhow!("no value for {key}").into());
@@ -78,9 +47,43 @@ impl<T: WasiKeyValueView> atomics::Host for WasiKeyValueImpl<T> {
 
     /// Perform the swap on a CAS operation. This consumes the CAS handle and
     /// returns an error if the CAS operation failed.
-    async fn swap(
-        &mut self, _self_: Resource<Cas>, _value: Vec<u8>,
+    async fn swap<T>(
+        _store: &Accessor<T, Self>, _self_: Resource<Cas>, _value: Vec<u8>,
     ) -> anyhow::Result<Result<(), CasError>> {
         Err(anyhow!("not implemented"))
     }
 }
+
+impl HostCasWithStore for WasiKeyValue {
+    /// Construct a new CAS operation. Implementors can map the underlying functionality
+    /// (transactions, versions, etc) as desired.
+    async fn new<T>(
+        accessor: &Accessor<T, Self>, bucket: Resource<BucketProxy>, key: String,
+    ) -> Result<Resource<Cas>> {
+        let bucket = get_bucket(accessor, &bucket)?;
+        let current =
+            bucket.get(key.clone()).await.map_err(|e| anyhow!("issue getting key: {e}"))?;
+        let cas = Cas { key, current };
+        Ok(accessor.with(|mut store| store.get().table.push(cas))?)
+    }
+
+    /// Get the current value of the CAS handle.
+    async fn current<T>(
+        accessor: &Accessor<T, Self>, self_: Resource<Cas>,
+    ) -> Result<Option<Vec<u8>>> {
+        let cas = accessor.with(|mut store| {
+            let cas = store.get().table.get(&self_).map_err(|_| Error::NoSuchStore)?;
+            Ok::<_, Error>(cas.clone())
+        })?;
+        Ok(cas.current)
+    }
+
+    /// Drop the CAS handle.
+    async fn drop<T>(accessor: &Accessor<T, Self>, rep: Resource<Cas>) -> anyhow::Result<()> {
+        tracing::trace!("atomics::HostCas::drop");
+        accessor.with(|mut store| store.get().table.delete(rep).map(|_| Ok(())))?
+    }
+}
+
+impl Host for WasiKeyValueCtxView<'_> {}
+impl HostCas for WasiKeyValueCtxView<'_> {}

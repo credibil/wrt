@@ -54,7 +54,7 @@ pub trait AddResource<T>: Sized {
     fn resource(self, resource: T) -> impl Future<Output = Result<Self>> + Send;
 }
 
-/// WASI hosts implement this trait so that the runtime can link their 
+/// WASI hosts implement this trait so that the runtime can link their
 /// dependencies and, optionally, run them in the context of the runtime.
 pub trait WasiHost: Debug + Sync + Send {
     /// Link the service's dependencies prior to component instantiation.
@@ -77,7 +77,7 @@ pub trait WasiHost: Debug + Sync + Send {
     }
 }
 
-/// WASI hosts implement this trait so that the runtime can link their 
+/// WASI hosts implement this trait so that the runtime can link their
 /// dependencies and, optionally, run them in the context of the runtime.
 pub trait WasiHost2: Debug + Sync + Send {
     /// Link the service's dependencies prior to component instantiation.

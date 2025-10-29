@@ -15,7 +15,7 @@ mod generated {
         world: "keyvalue",
         path: "wit",
         imports: {
-            default: async | tracing | trappable,
+            default: async | store | tracing | trappable,
         },
         with: {
             "wasi:keyvalue/store/bucket": BucketProxy,
@@ -30,7 +30,6 @@ mod generated {
 use std::fmt::Debug;
 use std::sync::Arc;
 
-use runtime::WasiHost2;
 use wasmtime::component::{HasData, Linker, ResourceTableError};
 use wasmtime_wasi::ResourceTable;
 
@@ -48,55 +47,22 @@ pub type Result<T, E = Error> = anyhow::Result<T, E>;
 /// Will return an error if one or more of the interfaces could not be added to
 /// the linker.
 pub fn add_to_linker<T: WasiKeyValueView + 'static>(linker: &mut Linker<T>) -> anyhow::Result<()> {
-    store::add_to_linker::<_, WasiKeyValue<T>>(linker, |x| WasiKeyValueImpl(x))?;
-    atomics::add_to_linker::<_, WasiKeyValue<T>>(linker, |x| WasiKeyValueImpl(x))?;
-    batch::add_to_linker::<_, WasiKeyValue<T>>(linker, |x| WasiKeyValueImpl(x))
+    store::add_to_linker::<_, WasiKeyValue>(linker, T::keyvalue)?;
+    atomics::add_to_linker::<_, WasiKeyValue>(linker, T::keyvalue)?;
+    batch::add_to_linker::<_, WasiKeyValue>(linker, T::keyvalue)
 }
 
-// #[derive(Debug)]
-// pub struct KeyValue;
-
-// impl WasiHost2 for KeyValue {
-//     fn add_to_linker<T: WasiKeyValueView + 'static>(
-//         &self, linker: &mut Linker<T>,
-//     ) -> anyhow::Result<()> {
-//         add_to_linker(linker)
-//     }
-// }
-
-#[repr(transparent)]
-struct WasiKeyValueImpl<T>(pub T);
-
-struct WasiKeyValue<T>(T);
-impl<T: 'static> HasData for WasiKeyValue<T> {
-    type Data<'a> = WasiKeyValueImpl<&'a mut T>;
+struct WasiKeyValue;
+impl HasData for WasiKeyValue {
+    type Data<'a> = WasiKeyValueCtxView<'a>;
 }
 
-impl From<ResourceTableError> for Error {
-    fn from(err: ResourceTableError) -> Self {
-        Self::Other(err.to_string())
-    }
-}
-
-/// A trait which provides internal WASI Key-Value state.
+/// A trait which provides internal WASI Key-Value context.
 ///
-/// This is implemented by the `T` in `Linker<T>` — a single type shared across
-/// all WASI components for the runtime build.
-pub trait WasiKeyValueView: Send {
-    /// Return a [`WasiKeyValueCtxView`] from mutable reference to self.
-    fn keyvalue(&mut self) -> WasiKeyValueCtxView<'_>;
-}
-
-impl<T: WasiKeyValueView> WasiKeyValueView for WasiKeyValueImpl<T> {
-    fn keyvalue(&mut self) -> WasiKeyValueCtxView<'_> {
-        self.0.keyvalue()
-    }
-}
-
-impl<T: ?Sized + WasiKeyValueView> WasiKeyValueView for &mut T {
-    fn keyvalue(&mut self) -> WasiKeyValueCtxView<'_> {
-        T::keyvalue(self)
-    }
+/// This is implemented by the resource-specific provider of Key-Value
+/// functionality. For example, an in-memory store, or a Redis-backed store.
+pub trait WasiKeyValueCtx: Debug + Send + Sync + 'static {
+    fn open_bucket(&self, identifier: String) -> FutureResult<Arc<dyn Bucket>>;
 }
 
 /// View into [`WasiKeyValueCtx`] implementation and [`ResourceTable`].
@@ -108,10 +74,17 @@ pub struct WasiKeyValueCtxView<'a> {
     pub table: &'a mut ResourceTable,
 }
 
-/// A trait which provides internal WASI Key-Value context.
+/// A trait which provides internal WASI Key-Value state.
 ///
-/// This is implemented by the resource-specific provider of Key-Value
-/// functionality. For example, an in-memory store, or a Redis-backed store.
-pub trait WasiKeyValueCtx: Debug + Send + Sync + 'static {
-    fn open_bucket(&self, identifier: String) -> FutureResult<Arc<dyn Bucket>>;
+/// This is implemented by the `T` in `Linker<T>` — a single type shared across
+/// all WASI components for the runtime build.
+pub trait WasiKeyValueView: Send {
+    /// Return a [`WasiKeyValueCtxView`] from mutable reference to self.
+    fn keyvalue(&mut self) -> WasiKeyValueCtxView<'_>;
+}
+
+impl From<ResourceTableError> for Error {
+    fn from(err: ResourceTableError) -> Self {
+        Self::Other(err.to_string())
+    }
 }

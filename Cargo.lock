@@ -3024,6 +3024,7 @@ dependencies = [
  "tracing",
  "wasi-blobstore",
  "wasi-http",
+ "wasi-http-next",
  "wasi-keyvalue",
  "wasi-keyvalue-next",
  "wasi-messaging",
@@ -4268,6 +4269,35 @@ dependencies = [
 
 [[package]]
 name = "wasi-http"
+version = "0.12.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "bincode",
+ "bytes",
+ "credibil-encoding",
+ "futures",
+ "http",
+ "http-body",
+ "http-body-util",
+ "hyper",
+ "percent-encoding",
+ "runtime",
+ "serde",
+ "serde_json",
+ "serde_urlencoded",
+ "tokio",
+ "tower",
+ "tracing",
+ "wasi-keyvalue",
+ "wasip3",
+ "wasmtime",
+ "wasmtime-wasi-http",
+ "wit-bindgen",
+]
+
+[[package]]
+name = "wasi-http-next"
 version = "0.12.0"
 dependencies = [
  "anyhow",

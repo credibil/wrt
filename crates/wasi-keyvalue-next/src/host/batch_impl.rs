@@ -1,26 +1,22 @@
+use crate::WasiKeyValueCtxView;
+use crate::host::Result;
+use crate::host::WasiKeyValue;
+use crate::host::generated::wasi::keyvalue::batch::{Host, HostWithStore};
+use crate::host::resource::BucketProxy;
+use crate::host::store_impl::get_bucket;
 use anyhow::anyhow;
+use wasmtime::component::Accessor;
 use wasmtime::component::Resource;
 
-use crate::WasiKeyValueView;
-use crate::host::generated::wasi::keyvalue::batch;
-use crate::host::generated::wasi::keyvalue::store::Error;
-use crate::host::resource::BucketProxy;
-use crate::host::{Result, WasiKeyValueImpl};
-
-impl<T: WasiKeyValueView> batch::Host for WasiKeyValueImpl<T> {
-    async fn get_many(
-        &mut self, bucket: Resource<BucketProxy>, keys: Vec<String>,
+impl HostWithStore for WasiKeyValue {
+    async fn get_many<T>(
+        accessor: &Accessor<T, Self>, self_: Resource<BucketProxy>, keys: Vec<String>,
     ) -> Result<Vec<Option<(String, Vec<u8>)>>> {
-        let keyvalue = self.0.keyvalue();
-        let Ok(bucket) = keyvalue.table.get(&bucket) else {
-            return Err(Error::NoSuchStore);
-        };
+        let bucket = get_bucket(accessor, &self_)?;
 
         let mut many = Vec::new();
         for key in keys {
-            let value =
-                bucket.get(key.clone()).await.map_err(|e| anyhow!("issue getting value: {e}"))?;
-            if let Some(value) = value {
+            if let Some(value) = bucket.get(key.clone()).await? {
                 many.push(Some((key, value)));
             }
         }
@@ -28,37 +24,28 @@ impl<T: WasiKeyValueView> batch::Host for WasiKeyValueImpl<T> {
         Ok(many)
     }
 
-    async fn set_many(
-        &mut self, bucket: Resource<BucketProxy>, key_values: Vec<(String, Vec<u8>)>,
+    async fn set_many<T>(
+        accessor: &Accessor<T, Self>, self_: Resource<BucketProxy>,
+        key_values: Vec<(String, Vec<u8>)>,
     ) -> Result<()> {
-        let keyvalue = self.0.keyvalue();
-        let Ok(bucket) = keyvalue.table.get_mut(&bucket) else {
-            return Err(Error::NoSuchStore);
-        };
-
+        let bucket = get_bucket(accessor, &self_)?;
         for (key, value) in key_values {
-            if let Err(e) = bucket.set(key, value).await {
-                return Err(anyhow!("issue saving value: {e}").into());
-            }
+            bucket.set(key, value).await?;
         }
-
         Ok(())
     }
 
-    async fn delete_many(
-        &mut self, bucket: Resource<BucketProxy>, keys: Vec<String>,
+    async fn delete_many<T>(
+        accessor: &Accessor<T, Self>, self_: Resource<BucketProxy>, keys: Vec<String>,
     ) -> Result<()> {
-        let keyvalue = self.0.keyvalue();
-        let Ok(bucket) = keyvalue.table.get_mut(&bucket) else {
-            return Err(Error::NoSuchStore);
-        };
-
+        let bucket = get_bucket(accessor, &self_)?;
         for key in keys {
             if let Err(e) = bucket.delete(key).await {
                 return Err(anyhow!("issue deleting value: {e}").into());
             }
         }
-
         Ok(())
     }
 }
+
+impl Host for WasiKeyValueCtxView<'_> {}

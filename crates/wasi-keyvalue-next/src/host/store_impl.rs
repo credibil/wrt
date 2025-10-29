@@ -1,89 +1,92 @@
 use anyhow::Context;
-use wasmtime::component::Resource;
+use wasmtime::component::{Accessor, Resource};
 
-use crate::WasiKeyValueView;
-use crate::host::generated::wasi::keyvalue::store;
-use crate::host::generated::wasi::keyvalue::store::{Bucket, Error, KeyResponse};
+use crate::host::generated::wasi::keyvalue::store::{
+    Error, HostBucketWithStore, HostWithStore, KeyResponse,
+};
+use crate::host::store::{Host, HostBucket};
+
 use crate::host::resource::BucketProxy;
-use crate::host::{Result, WasiKeyValueImpl};
+use crate::host::{Result, WasiKeyValue, WasiKeyValueCtxView};
 
-impl<T: WasiKeyValueView> store::Host for WasiKeyValueImpl<T> {
-    // Open bucket specified by identifier, save to state and return as a resource.
-    async fn open(&mut self, identifier: String) -> Result<Resource<BucketProxy>> {
-        tracing::trace!("store::Host::open: identifier {identifier:?}");
-
-        let keyvalue = self.0.keyvalue();
-        let bucket = keyvalue.ctx.open_bucket(identifier).await.context("failed to open bucket")?;
+impl HostWithStore for WasiKeyValue {
+    async fn open<T>(
+        accessor: &Accessor<T, Self>, identifier: String,
+    ) -> Result<Resource<BucketProxy>> {
+        let bucket = accessor.with(|mut store| store.get().ctx.open_bucket(identifier)).await?;
         let proxy = BucketProxy(bucket);
-
-        Ok(keyvalue.table.push(proxy)?)
-    }
-
-    fn convert_error(&mut self, err: Error) -> anyhow::Result<Error> {
-        tracing::error!("{err}");
-        Ok(err)
+        Ok(accessor.with(|mut store| store.get().table.push(proxy))?)
     }
 }
 
-impl<T: WasiKeyValueView> store::HostBucket for WasiKeyValueImpl<T> {
-    async fn get(&mut self, self_: Resource<Bucket>, key: String) -> Result<Option<Vec<u8>>> {
-        let keyvalue = self.0.keyvalue();
-        let Ok(bucket) = keyvalue.table.get(&self_) else {
-            return Err(Error::NoSuchStore);
-        };
+impl HostBucketWithStore for WasiKeyValue {
+    async fn get<T>(
+        accessor: &Accessor<T, Self>, self_: Resource<BucketProxy>, key: String,
+    ) -> Result<Option<Vec<u8>>> {
+        let bucket = get_bucket(accessor, &self_)?;
         let value = bucket.get(key).await.context("issue getting value")?;
         Ok(value)
     }
 
-    async fn set(
-        &mut self, self_: Resource<BucketProxy>, key: String, value: Vec<u8>,
-    ) -> Result<(), Error> {
-        let keyvalue = self.0.keyvalue();
-        let Ok(bucket) = keyvalue.table.get_mut(&self_) else {
-            return Err(Error::NoSuchStore);
-        };
-        Ok(bucket.set(key, value).await.context("setting value")?)
+    async fn set<T>(
+        accessor: &Accessor<T, Self>, self_: Resource<BucketProxy>, key: String, value: Vec<u8>,
+    ) -> Result<()> {
+        let bucket = get_bucket(accessor, &self_)?;
+        bucket.set(key, value).await.context("issue setting value")?;
+        Ok(())
     }
 
-    async fn delete(&mut self, self_: Resource<BucketProxy>, key: String) -> Result<()> {
-        let keyvalue = self.0.keyvalue();
-        let Ok(bucket) = keyvalue.table.get_mut(&self_) else {
-            return Err(Error::NoSuchStore);
-        };
-        Ok(bucket.delete(key).await.context("deleting value")?)
+    async fn delete<T>(
+        accessor: &Accessor<T, Self>, self_: Resource<BucketProxy>, key: String,
+    ) -> Result<()> {
+        let bucket = get_bucket(accessor, &self_)?;
+        bucket.delete(key).await.context("issue deleting value")?;
+        Ok(())
     }
 
-    async fn exists(&mut self, self_: Resource<BucketProxy>, key: String) -> Result<bool> {
-        let keyvalue = self.0.keyvalue();
-        let Ok(bucket) = keyvalue.table.get(&self_) else {
-            return Err(Error::NoSuchStore);
-        };
-        let value = bucket.get(key).await.context("checking whether entry exists")?;
+    async fn exists<T>(
+        accessor: &Accessor<T, Self>, self_: Resource<BucketProxy>, key: String,
+    ) -> Result<bool> {
+        let bucket = get_bucket(accessor, &self_)?;
+        let value = bucket.get(key).await.context("issue getting value")?;
         Ok(value.is_some())
     }
 
-    async fn list_keys(
-        &mut self, self_: Resource<BucketProxy>, cursor: Option<String>,
+    async fn list_keys<T>(
+        accessor: &Accessor<T, Self>, self_: Resource<BucketProxy>, cursor: Option<String>,
     ) -> Result<KeyResponse> {
         tracing::trace!("store::HostBucket::list_keys {cursor:?}");
-
-        let keyvalue = self.0.keyvalue();
-        let Ok(bucket) = keyvalue.table.get(&self_) else {
-            return Err(Error::NoSuchStore);
-        };
-        let keys = bucket.keys().await.context("listing keys")?;
-
+        let bucket = get_bucket(accessor, &self_)?;
+        let keys = bucket.keys().await.context("issue getting value")?;
         Ok(KeyResponse { keys, cursor })
     }
 
-    async fn drop(&mut self, rep: Resource<BucketProxy>) -> anyhow::Result<()> {
-        let keyvalue = self.0.keyvalue();
-        keyvalue.table.delete(rep).map(|_| Ok(()))?
+    async fn drop<T>(
+        accessor: &Accessor<T, Self>, self_: Resource<BucketProxy>,
+    ) -> anyhow::Result<()> {
+        accessor.with(|mut store| store.get().table.delete(self_).map(|_| Ok(())))?
     }
 }
+
+impl Host for WasiKeyValueCtxView<'_> {
+    fn convert_error(&mut self, err: Error) -> Result<Error, anyhow::Error> {
+        Ok(err)
+    }
+}
+
+impl HostBucket for WasiKeyValueCtxView<'_> {}
 
 impl From<anyhow::Error> for Error {
     fn from(err: anyhow::Error) -> Self {
         Self::Other(err.to_string())
     }
+}
+
+pub fn get_bucket<T>(
+    accessor: &Accessor<T, WasiKeyValue>, self_: &Resource<BucketProxy>,
+) -> Result<BucketProxy> {
+    accessor.with(|mut store| {
+        let bucket = store.get().table.get(self_).map_err(|_| Error::NoSuchStore)?;
+        Ok::<_, Error>(bucket.clone())
+    })
 }

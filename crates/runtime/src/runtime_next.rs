@@ -11,8 +11,6 @@ use tracing::instrument;
 use wasmtime::component::{Component, Linker};
 use wasmtime::{Config, Engine};
 
-
-
 /// Runtime for a wasm component.
 pub struct RuntimeNext {
     wasm: PathBuf,
@@ -31,9 +29,6 @@ impl RuntimeNext {
             telemetry: true,
         }
     }
-
-
-
 
     #[instrument(name = "runtime", skip(self))]
     pub fn init<T: wasmtime_wasi::WasiView>(&self) -> Result<Linker<T>> {
@@ -99,4 +94,3 @@ impl RuntimeNext {
         builder.build().context("initializing telemetry")
     }
 }
-

@@ -23,8 +23,8 @@ name = "minimal"
 path = "src/minimal.rs"
 
 [[bin]]
-name = "keyvalue"
-path = "src/keyvalue.rs"
+name = "next"
+path = "src/next.rs"
 
 [lints]
 workspace = true
@@ -44,6 +44,7 @@ wasi-messaging.workspace = true
 wasi-otel.workspace = true
 wasi-vault.workspace = true
 
+wasi-http-next.workspace = true
 wasi-keyvalue-next.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
@@ -237,6 +238,7 @@ wasi-otel = { path = "crates/wasi-otel", version = "0.12.0", registry = "credibi
 wasi-otel-attr = { path = "crates/wasi-otel-attr", version = "0.12.0", registry = "credibil" }
 wasi-vault = { path = "crates/wasi-vault", version = "0.12.0", registry = "credibil" }
 
+wasi-http-next = { path = "crates/wasi-http-next" }
 wasi-keyvalue-next = { path = "crates/wasi-keyvalue-next" }
 
 # [patch."https://github.com/credibil/core.git"]

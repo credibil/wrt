@@ -4,7 +4,6 @@ use anyhow::{Result, anyhow};
 use res_nats_next::NatsClient;
 use runtime::{Cli, Command, Parser};
 use tokio::io;
-
 use wasi_keyvalue_next::{WasiKeyValueCtxView, WasiKeyValueView};
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 
@@ -14,10 +13,13 @@ async fn main() -> Result<()> {
         return Err(anyhow!("only run command is supported"));
     };
 
-    // let resource = NatsClient::connect().await?;
-    // let runstate = RunState::new().await?;
+    // link all dependencies
     let mut linker = runtime::RuntimeNext::new(wasm).init::<RunState>()?;
     wasi_keyvalue_next::add_to_linker::<RunState>(&mut linker)?;
+    // wasi_http_next::add_to_linker::<RunState>(&mut linker)?;
+
+    // start servers
+    // wasi_http::serve();
 
     Ok(())
 }
