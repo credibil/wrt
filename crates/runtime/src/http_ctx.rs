@@ -1,3 +1,4 @@
+use base64ct::{Base64, Encoding};
 use bytes::Bytes;
 use futures::Future;
 use http_body_util::BodyExt;
@@ -43,11 +44,16 @@ impl WasiHttpCtx for HttpCtx {
             let mut builder = reqwest::Client::builder();
 
             // check for client certificate in headers
-            if let Some(cert) = parts.headers.remove("Client-Cert") {
+            if let Some(encoded_cert) = parts.headers.remove("Client-Cert") {
                 tracing::debug!("using client certificate");
-                let identity = reqwest::Identity::from_pem(cert.as_bytes())
+                let encoded_str = encoded_cert
+                    .to_str()
                     .map_err(|e| ErrorCode::InternalError(Some(e.to_string())))?;
-                builder = builder.identity(identity);
+                let pem_bytes = Base64::decode_vec(encoded_str)
+                    .map_err(|e| ErrorCode::InternalError(Some(e.to_string())))?;
+                let identity = reqwest::Identity::from_pem(&pem_bytes)
+                    .map_err(|e| ErrorCode::InternalError(Some(e.to_string())))?;
+                builder = builder.use_rustls_tls().identity(identity);
             }
 
             let client = builder.build().map_err(into_error)?;
