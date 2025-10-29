@@ -1,8 +1,14 @@
 interface handler {
-    use types.{error};
+    use types.{error, peer};
+
+    /// Retrieves the list of connected websocket peers
+    get-peers: func() -> result<list<peer>, error>;
 
     /// Sends the message to all websocket peers
-    send: func(message: string) -> result<_, error>;
+    send-all: func(message: string) -> result<_, error>;
+
+    /// Sends the message to selected websocket peers
+    send-peers: func(message: string, peers: list<string>) -> result<_, error>;
 
     /// Performs a health check of the websocket service
     health-check: func() -> result<string, error>;

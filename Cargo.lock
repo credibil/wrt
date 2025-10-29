@@ -4411,6 +4411,8 @@ dependencies = [
  "futures-channel",
  "futures-util",
  "runtime",
+ "serde",
+ "serde_json",
  "tokio",
  "tokio-tungstenite",
  "tracing",

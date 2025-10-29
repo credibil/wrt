@@ -7,4 +7,10 @@ interface types {
     record error {
         message: string,
     }
+
+    /// A peer record type representing a connected websocket peer.
+    record peer {
+        address: string,
+        query: string,
+    }
 }

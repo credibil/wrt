@@ -24,6 +24,8 @@ futures.workspace = true
 futures-channel.workspace = true
 futures-util.workspace = true
 runtime.workspace = true
+serde.workspace = true
+serde_json.workspace = true
 tokio = {workspace = true, features=["sync"]}
 tokio-tungstenite.workspace = true
 tracing.workspace = true
