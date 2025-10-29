@@ -1,13 +1,10 @@
 //! Initialise OpenTelemetry
 
-#[cfg(feature = "metrics")]
-mod metrics;
-#[cfg(feature = "tracing")]
-mod tracing;
+use std::sync::OnceLock;
 
-use anyhow::{Context, Result, anyhow};
+use anyhow::{Result, anyhow};
 use cfg_if::cfg_if;
-use opentelemetry::{ContextGuard, KeyValue, Value};
+use opentelemetry::{KeyValue, Value};
 use opentelemetry_sdk::Resource;
 use tracing_subscriber::Registry;
 use tracing_subscriber::layer::SubscriberExt;
@@ -19,6 +16,7 @@ cfg_if! {
     if #[cfg(feature = "metrics" )] {
         use opentelemetry_sdk::metrics::SdkMeterProvider;
         use tracing_opentelemetry::MetricsLayer;
+        use crate::guest::metrics;
     }
 }
 cfg_if! {
@@ -27,19 +25,15 @@ cfg_if! {
         use tracing_opentelemetry::layer as tracing_layer;
         use tracing_subscriber::EnvFilter;
         use opentelemetry::trace::TracerProvider;
+        use crate::guest::tracing;
     }
 }
 
-pub fn init() -> Result<Shutdown> {
+pub static INIT: OnceLock<bool> = OnceLock::new();
+
+pub fn init() -> Result<ExitGuard> {
     // get WASI host telemetry resource
     let resource: Resource = resource::resource().into();
-
-    // initialize providers
-    #[cfg(feature = "tracing")]
-    let tracing_provider =
-        tracing::init(resource.clone()).context("failed to initialize tracing")?;
-    #[cfg(feature = "metrics")]
-    let meter_provider = metrics::init(resource).context("failed to initialize metrics")?;
 
     // create subscriber layers
     let filter_layer = EnvFilter::from_default_env()
@@ -47,40 +41,48 @@ pub fn init() -> Result<Shutdown> {
         .add_directive("h2=off".parse()?)
         .add_directive("tonic=off".parse()?);
     let fmt_layer = tracing_subscriber::fmt::layer();
-    let tracing_layer = tracing_layer().with_tracer(tracing_provider.tracer("global"));
-    let metrics_layer = MetricsLayer::new(meter_provider.clone());
+    let registry = Registry::default().with(filter_layer).with(fmt_layer);
 
-    // set global default subscriber
-    Registry::default()
-        .with(filter_layer)
-        .with(fmt_layer)
-        .with(tracing_layer)
-        .with(metrics_layer)
-        .try_init()
-        .map_err(|e| anyhow!("issue initializing global subscriber: {e}"))?;
+    let mut guard = ExitGuard::default();
 
-    Ok(Shutdown {
-        #[cfg(feature = "tracing")]
-        tracing: tracing_provider,
-        #[cfg(feature = "metrics")]
-        metrics: meter_provider,
-        #[cfg(feature = "tracing")]
-        _context: Some(tracing::context()),
-    })
+    // initialize tracing
+    #[cfg(feature = "tracing")]
+    let registry = {
+        let tracer_provider = tracing::init(resource.clone());
+        let tracing_layer = tracing_layer().with_tracer(tracer_provider.tracer("global"));
+        guard.tracing = tracer_provider;
+        registry.with(tracing_layer)
+    };
+
+    // initialize metrics
+    #[cfg(feature = "metrics")]
+    let registry = {
+        let meter_provider = metrics::init(resource);
+        let metrics_layer = MetricsLayer::new(meter_provider.clone());
+        guard.metrics = meter_provider;
+        registry.with(metrics_layer)
+    };
+
+    registry.try_init().map_err(|e| anyhow!("issue initializing subscriber: {e}"))?;
+
+    // let mut lock = INIT.write().map_err(|e| anyhow!("issue acquiring INIT write lock: {e}"))?;
+    // *lock = true;
+    // drop(lock);
+    INIT.set(true).map_err(|_t| anyhow!("wasi-otel already initialized"))?;
+
+    Ok(guard)
 }
 
-/// [`Shutdown`] provides a guard to export telemetry data on drop
-#[derive(Default)]
-pub struct Shutdown {
+/// [`ExitGuard`] provides a guard to export telemetry data on drop.
+#[derive(Debug, Default)]
+pub struct ExitGuard {
     #[cfg(feature = "tracing")]
     tracing: SdkTracerProvider,
     #[cfg(feature = "metrics")]
     metrics: SdkMeterProvider,
-    #[cfg(feature = "tracing")]
-    _context: Option<ContextGuard>,
 }
 
-impl Drop for Shutdown {
+impl Drop for ExitGuard {
     fn drop(&mut self) {
         #[cfg(feature = "tracing")]
         if let Err(e) = self.tracing.shutdown() {

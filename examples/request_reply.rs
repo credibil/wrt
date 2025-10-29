@@ -6,20 +6,20 @@ use axum::{Json, Router};
 use bytes::Bytes;
 use serde_json::{Value, json};
 use tracing::Level;
-use wasi::exports::http;
-use wasi::http::types::{IncomingRequest, ResponseOutparam};
 use wasi_messaging::incoming_handler::Configuration;
 use wasi_messaging::request_reply;
 use wasi_messaging::types::{Client, Error, Message};
+use wasip3::exports::http::handler::Guest;
+use wasip3::http::types::{ErrorCode, Request, Response};
 
 pub struct Http;
+wasip3::http::proxy::export!(Http);
 
-impl http::incoming_handler::Guest for Http {
+impl Guest for Http {
     #[wasi_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
-    fn handle(request: IncomingRequest, response_out: ResponseOutparam) {
+    async fn handle(request: Request) -> Result<Response, ErrorCode> {
         let router = Router::new().route("/", post(handler));
-        let out = wasi_http::serve(router, request);
-        ResponseOutparam::set(response_out, out);
+        wasi_http::serve(router, request).await
     }
 }
 
@@ -36,9 +36,8 @@ async fn handler(body: Bytes) -> Json<Value> {
     Json(json!({"reply": data_str}))
 }
 
-wasi::http::proxy::export!(Http);
-
 pub struct RequestReply;
+wasi_messaging::export!(RequestReply with_types_in wasi_messaging);
 
 impl wasi_messaging::incoming_handler::Guest for RequestReply {
     #[wasi_otel::instrument(name = "messaging_guest_handle",level = Level::DEBUG)]
@@ -72,5 +71,3 @@ impl wasi_messaging::incoming_handler::Guest for RequestReply {
         })
     }
 }
-
-wasi_messaging::export!(RequestReply with_types_in wasi_messaging);

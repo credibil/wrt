@@ -8,15 +8,16 @@ use opentelemetry::{KeyValue, global};
 use serde_json::{Value, json};
 use tower_http::cors::{Any, CorsLayer};
 use tracing::Level;
-use wasi::exports::http::incoming_handler::Guest;
-use wasi::http::types::{IncomingRequest, ResponseOutparam};
 use wasi_http::Result;
+use wasip3::exports::http::handler::Guest;
+use wasip3::http::types::{ErrorCode, Request, Response};
 
-struct HttpGuest;
+struct Http;
+wasip3::http::proxy::export!(Http);
 
-impl Guest for HttpGuest {
+impl Guest for Http {
     #[wasi_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
-    fn handle(request: IncomingRequest, response: ResponseOutparam) {
+    async fn handle(request: Request) -> Result<Response, ErrorCode> {
         // tracing metrics
         tracing::info!(monotonic_counter.tracing_counter = 1, key1 = "value 1");
         tracing::info!(gauge.tracing_gauge = 1);
@@ -43,21 +44,21 @@ impl Guest for HttpGuest {
             });
         });
 
-        let out = tracing::info_span!("handler span").in_scope(|| {
-            tracing::info!("received request");
-            let router = Router::new()
-                .layer(
-                    CorsLayer::new()
-                        .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
-                        .allow_headers(Any)
-                        .allow_origin(Any),
-                )
-                .route("/", post(handler))
-                .route("/", options(handle_options));
-            wasi_http::serve(router, request)
-        });
-
-        ResponseOutparam::set(response, out);
+        tracing::info_span!("handler span")
+            .in_scope(|| {
+                tracing::info!("received request");
+                let router = Router::new()
+                    .layer(
+                        CorsLayer::new()
+                            .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
+                            .allow_headers(Any)
+                            .allow_origin(Any),
+                    )
+                    .route("/", post(handler))
+                    .route("/", options(handle_options));
+                wasi_http::serve(router, request)
+            })
+            .await
     }
 }
 
@@ -76,5 +77,3 @@ async fn handler(Json(body): Json<Value>) -> Result<Json<Value>> {
 async fn handle_options() -> Result<()> {
     Ok(())
 }
-
-wasi::http::proxy::export!(HttpGuest);

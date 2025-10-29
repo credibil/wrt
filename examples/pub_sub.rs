@@ -9,20 +9,20 @@ use axum::{Json, Router};
 use bytes::Bytes;
 use serde_json::{Value, json};
 use tracing::Level;
-use wasi::exports::http;
-use wasi::http::types::{IncomingRequest, ResponseOutparam};
 use wasi_messaging::incoming_handler::Configuration;
 use wasi_messaging::producer;
 use wasi_messaging::types::{Client, Error, Message};
+use wasip3::exports::http::handler::Guest;
+use wasip3::http::types::{ErrorCode, Request, Response};
 
 pub struct Http;
+wasip3::http::proxy::export!(Http);
 
-impl http::incoming_handler::Guest for Http {
+impl Guest for Http {
     #[wasi_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
-    fn handle(request: IncomingRequest, response_out: ResponseOutparam) {
+    async fn handle(request: Request) -> Result<Response, ErrorCode> {
         let router = Router::new().route("/", post(handler));
-        let out = wasi_http::serve(router, request);
-        ResponseOutparam::set(response_out, out);
+        wasi_http::serve(router, request).await
     }
 }
 
@@ -38,12 +38,11 @@ async fn handler(body: Bytes) -> Json<Value> {
     Json(json!({"message": "message published"}))
 }
 
-wasi::http::proxy::export!(Http);
-
 pub struct Messaging;
+wasi_messaging::export!(Messaging with_types_in wasi_messaging);
 
 impl wasi_messaging::incoming_handler::Guest for Messaging {
-    #[wasi_otel::instrument(name = "messaging_guest_handle",level = Level::DEBUG)]
+    // #[wasi_otel::instrument(name = "messaging_guest_handle",level = Level::DEBUG)]
     async fn handle(message: Message) -> Result<(), Error> {
         let data = message.data();
         let data_str =
@@ -102,12 +101,10 @@ impl wasi_messaging::incoming_handler::Guest for Messaging {
     }
 
     // Subscribe to topics.
-    #[wasi_otel::instrument(name = "messaging_guest_configure",level = Level::DEBUG)]
+    // #[wasi_otel::instrument(name = "messaging_guest_configure",level = Level::DEBUG)]
     async fn configure() -> Result<Configuration, Error> {
         Ok(Configuration {
             topics: vec!["a".to_string(), "b".to_string()],
         })
     }
 }
-
-wasi_messaging::export!(Messaging with_types_in wasi_messaging);
