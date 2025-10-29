@@ -34,7 +34,7 @@ use wasmtime_wasi::ResourceTable;
 use self::generated::wasi::websockets::handler;
 use self::generated::wasi::websockets::types::{Error, Peer};
 
-const DEF_HTTP_ADDR: &str = "0.0.0.0:80";
+const DEF_WEBSOCKETS_ADDR: &str = "0.0.0.0:80";
 
 /// Websockets service
 #[derive(Debug)]
@@ -110,12 +110,7 @@ impl handler::Host for Host<'_> {
     }
 
     async fn health_check(&mut self) -> Result<String, Error> {
-        let ws_client = SERVICE_CLIENT
-            .get_or_init(|| async {
-                let addr = env::var("WEBSOCKETS_ADDR").unwrap_or_else(|_| DEF_HTTP_ADDR.into());
-                connect_service_client(format!("ws://{addr}").as_str()).await.unwrap()
-            })
-            .await;
+        let ws_client = service_client().await;
         ws_client.lock().await.send(Message::Ping(Bytes::new())).await.map_err(|e| Error {
             message: format!("Websocket service is unhealthy: {e}"),
         })?;
@@ -154,6 +149,7 @@ async fn accept_connection(peer_map: PeerMap, peer: SocketAddr, stream: TcpStrea
     let is_service_peer = peer.ip().is_loopback();
 
     let (outgoing, incoming) = ws_stream.split();
+    let mut close_connection = false;
 
     let broadcast_incoming = incoming.try_for_each(|msg| {
         if is_service_peer {
@@ -186,16 +182,18 @@ async fn accept_connection(peer_map: PeerMap, peer: SocketAddr, stream: TcpStrea
         } else if let Message::Text(text) = msg {
             // Handle client filter subscription
             let json_msg: Result<serde_json::Value, _> = serde_json::from_str(&text);
-            match json_msg {
-                Ok(_) => {
-                    if let Some(peer_info) = peer_map.lock().unwrap().get_mut(&peer) {
-                        peer_info.query = text.to_string();
-                    }
+            if json_msg.is_ok() {
+                if let Some(peer_info) = peer_map.lock().unwrap().get_mut(&peer) {
+                    peer_info.query = text.to_string();
                 }
-                Err(_) => {
-                    tracing::warn!("Expected json object, got unknown text instead: {text}");
-                }
+            } else {
+                tracing::error!("Expected filter json object, got unknown text instead: {text}");
+                close_connection = true;
             }
+        }
+
+        if close_connection {
+            return future::err(tokio_tungstenite::tungstenite::Error::ConnectionClosed);
         }
 
         future::ok(())
@@ -216,7 +214,7 @@ impl WebSockets {
         let state = PeerMap::new(StdMutex::new(HashMap::new()));
         let _ = PEER_MAP.set(state);
 
-        let addr = env::var("WEBSOCKETS_ADDR").unwrap_or_else(|_| DEF_HTTP_ADDR.into());
+        let addr = env::var("WEBSOCKETS_ADDR").unwrap_or_else(|_| DEF_WEBSOCKETS_ADDR.into());
         let listener = TcpListener::bind(&addr).await?;
         tracing::info!("websocket server listening on: {}", listener.local_addr()?);
         //connect_service_client(&addr).await?;
@@ -234,16 +232,9 @@ impl WebSockets {
 async fn service_client() -> &'static Mutex<WebSocketStream<MaybeTlsStream<TcpStream>>> {
     SERVICE_CLIENT
         .get_or_init(|| async {
-            let addr = env::var("WEBSOCKETS_ADDR").unwrap_or_else(|_| DEF_HTTP_ADDR.into());
+            let addr = env::var("WEBSOCKETS_ADDR").unwrap_or_else(|_| DEF_WEBSOCKETS_ADDR.into());
             let (client, _) = connect_async(addr).await.unwrap();
             tokio::sync::Mutex::new(client)
         })
         .await
-}
-
-async fn connect_service_client(
-    addr: &str,
-) -> Result<Mutex<WebSocketStream<MaybeTlsStream<TcpStream>>>> {
-    let (client, _) = connect_async(addr).await?;
-    Ok(tokio::sync::Mutex::new(client))
 }
