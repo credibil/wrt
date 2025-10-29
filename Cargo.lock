@@ -4288,6 +4288,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "wasi-keyvalue-next"
+version = "0.12.0"
+dependencies = [
+ "anyhow",
+ "async-nats",
+ "base64ct",
+ "futures",
+ "runtime",
+ "tracing",
+ "wasmtime",
+ "wasmtime-wasi",
+ "wit-bindgen",
+]
+
+[[package]]
 name = "wasi-messaging"
 version = "0.12.0"
 dependencies = [
