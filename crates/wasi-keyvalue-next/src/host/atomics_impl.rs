@@ -1,17 +1,14 @@
 use anyhow::anyhow;
-use wasmtime::component::Resource;
+use wasmtime::component::{Accessor, Resource};
 
 use crate::WasiKeyValueCtxView;
-use crate::host::Result;
-use crate::host::WasiKeyValue;
-use crate::host::generated::wasi::keyvalue::atomics::CasError;
 use crate::host::generated::wasi::keyvalue::atomics::{
-    Host, HostCas, HostCasWithStore, HostWithStore,
+    CasError, Host, HostCas, HostCasWithStore, HostWithStore,
 };
 use crate::host::generated::wasi::keyvalue::store::Error;
 use crate::host::resource::{BucketProxy, Cas};
 use crate::host::store_impl::get_bucket;
-use wasmtime::component::Accessor;
+use crate::host::{Result, WasiKeyValue};
 
 impl HostWithStore for WasiKeyValue {
     /// Atomically increment the value associated with the key in the store by
@@ -72,7 +69,7 @@ impl HostCasWithStore for WasiKeyValue {
         accessor: &Accessor<T, Self>, self_: Resource<Cas>,
     ) -> Result<Option<Vec<u8>>> {
         let cas = accessor.with(|mut store| {
-            let cas = store.get().table.get(&self_).map_err(|_| Error::NoSuchStore)?;
+            let cas = store.get().table.get(&self_).map_err(|_e| Error::NoSuchStore)?;
             Ok::<_, Error>(cas.clone())
         })?;
         Ok(cas.current)

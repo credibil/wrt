@@ -46,7 +46,10 @@ pub type Result<T, E = Error> = anyhow::Result<T, E>;
 ///
 /// Will return an error if one or more of the interfaces could not be added to
 /// the linker.
-pub fn add_to_linker<T: WasiKeyValueView + 'static>(linker: &mut Linker<T>) -> anyhow::Result<()> {
+pub fn add_to_linker<T>(linker: &mut Linker<T>) -> anyhow::Result<()>
+where
+    T: WasiKeyValueView + 'static,
+{
     store::add_to_linker::<_, WasiKeyValue>(linker, T::keyvalue)?;
     atomics::add_to_linker::<_, WasiKeyValue>(linker, T::keyvalue)?;
     batch::add_to_linker::<_, WasiKeyValue>(linker, T::keyvalue)

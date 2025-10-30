@@ -21,7 +21,7 @@ pub struct NatsClient(async_nats::Client);
 
 impl NatsClient {
     #[instrument]
-    pub async fn connect() -> Result<NatsClient> {
+    pub async fn connect() -> Result<Self> {
         let addr = env::var("NATS_ADDR").unwrap_or_else(|_| DEF_NATS_ADDR.into());
 
         let options = connect_options().map_err(|e| {

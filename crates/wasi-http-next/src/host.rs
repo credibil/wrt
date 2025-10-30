@@ -16,6 +16,7 @@ use hyper::body::Incoming;
 use hyper::header::{FORWARDED, HOST};
 use hyper::server::conn::http1;
 use hyper::service::service_fn;
+use runtime::Runner;
 use runtime::{RunState, WasiHost};
 use tokio::net::TcpListener;
 use tokio::sync::oneshot;
@@ -25,31 +26,34 @@ use wasmtime::component::{InstancePre, Linker};
 use wasmtime_wasi_http::io::TokioIo;
 use wasmtime_wasi_http::p3::bindings::ProxyIndices;
 use wasmtime_wasi_http::p3::bindings::http::types::{self as wasi, ErrorCode};
+pub use wasmtime_wasi_http::p3::{WasiHttpCtxView, WasiHttpView};
 
 type OutgoingBody = BoxBody<Bytes, anyhow::Error>;
 
 const DEF_HTTP_ADDR: &str = "0.0.0.0:8080";
 
+pub fn add_to_linker<T>(linker: &mut Linker<T>) -> Result<()>
+where
+    T: WasiHttpView + 'static,
+{
+    wasmtime_wasi_http::p3::add_to_linker(linker)
+}
+
 #[derive(Debug)]
 pub struct WasiHttp;
 
-impl WasiHost for WasiHttp {
-    fn add_to_linker(&self, linker: &mut Linker<RunState>) -> Result<()> {
-        wasmtime_wasi_http::p3::add_to_linker(linker)
-    }
-
-    /// Provide http proxy service the specified wasm component.
-    fn start(&self, pre: InstancePre<RunState>) -> BoxFuture<'static, Result<()>> {
-        Self::serve(pre).boxed()
-    }
-}
-
 impl WasiHttp {
     /// Provide http proxy service the specified wasm component.
-    async fn serve(pre: InstancePre<RunState>) -> Result<()> {
+    pub async fn serve<R>(runner: &R) -> Result<()>
+    where
+        R: Runner + WasiHttpView,
+        <R as runtime::Runner>::StoreData: wasmtime_wasi_http::p3::WasiHttpView,
+    {
         // bail if server is not required
-        let component_type = pre.component().component_type();
-        let mut exports = component_type.imports(pre.engine());
+        let instance_pre = runner.instance_pre();
+
+        let component_type = instance_pre.component().component_type();
+        let mut exports = component_type.imports(instance_pre.engine());
         if !exports.any(|e| e.0.starts_with("wasi:http")) {
             tracing::debug!("http server not required");
             return Ok(());
@@ -59,8 +63,9 @@ impl WasiHttp {
         let listener = TcpListener::bind(&addr).await?;
         tracing::info!("http server listening on: {}", listener.local_addr()?);
 
-        let handler = Handler {
-            instance_pre: pre.clone(),
+        let handler: Handler<R> = Handler {
+            runner: runner.clone(),
+            instance_pre: runner.instance_pre(),
         };
 
         // listen for requests until terminated
@@ -97,14 +102,27 @@ impl WasiHttp {
     }
 }
 
-#[derive(Clone)]
-struct Handler {
-    instance_pre: InstancePre<RunState>,
+// #[derive(Clone)]
+struct Handler<R: WasiHttpView + Runner> {
+    runner: R,
+    instance_pre: InstancePre<R::StoreData>,
+}
+
+impl<R: WasiHttpView + Runner> Clone for Handler<R> {
+    fn clone(&self) -> Self {
+        Self {
+            runner: self.runner.clone(),
+            instance_pre: self.instance_pre.clone(),
+        }
+    }
 }
 
 // use wasmtime_wasi_http::p3::WasiHttpView;
 
-impl Handler {
+impl<R: WasiHttpView + Runner> Handler<R>
+where
+    <R as runtime::Runner>::StoreData: wasmtime_wasi_http::p3::WasiHttpView,
+{
     // Forward request to the wasm Guest.
     async fn handle(
         &self, request: hyper::Request<Incoming>,
@@ -115,7 +133,8 @@ impl Handler {
         let request = fix_request(request).context("preparing request")?;
 
         // instantiate the guest and get the proxy
-        let mut store = Store::new(self.instance_pre.engine(), RunState::new());
+        let store_data = self.runner.new_data();
+        let mut store = Store::new(self.instance_pre.engine(), store_data);
         let indices = ProxyIndices::new(&self.instance_pre)?;
         let instance = self.instance_pre.instantiate_async(&mut store).await?;
         let proxy = indices.load(&mut store, &instance)?;

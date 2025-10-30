@@ -6,7 +6,6 @@ use std::path::PathBuf;
 use anyhow::{Context, Result};
 use cfg_if::cfg_if;
 use credibil_otel::Telemetry;
-use futures::future::{BoxFuture, FutureExt};
 use tracing::instrument;
 use wasmtime::component::{Component, Linker};
 use wasmtime::{Config, Engine};

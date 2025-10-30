@@ -63,6 +63,7 @@ runtime.workspace = true
 tokio = { workspace = true, features = ["signal"] }
 wasmtime-wasi.workspace = true
 wasmtime-wasi-http.workspace = true
+wasmtime.workspace = true
 
 # required for azure_identity, etc.
 openssl = { version = "0.10", features = ["vendored"] }

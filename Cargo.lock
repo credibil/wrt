@@ -3031,6 +3031,7 @@ dependencies = [
  "wasi-otel",
  "wasi-vault",
  "wasip3",
+ "wasmtime",
  "wasmtime-wasi",
  "wasmtime-wasi-http",
  "wit-bindgen",

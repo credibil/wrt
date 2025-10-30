@@ -4,9 +4,8 @@ use wasmtime::component::{Accessor, Resource};
 use crate::host::generated::wasi::keyvalue::store::{
     Error, HostBucketWithStore, HostWithStore, KeyResponse,
 };
-use crate::host::store::{Host, HostBucket};
-
 use crate::host::resource::BucketProxy;
+use crate::host::store::{Host, HostBucket};
 use crate::host::{Result, WasiKeyValue, WasiKeyValueCtxView};
 
 impl HostWithStore for WasiKeyValue {
@@ -62,9 +61,9 @@ impl HostBucketWithStore for WasiKeyValue {
     }
 
     async fn drop<T>(
-        accessor: &Accessor<T, Self>, self_: Resource<BucketProxy>,
+        accessor: &Accessor<T, Self>, rep: Resource<BucketProxy>,
     ) -> anyhow::Result<()> {
-        accessor.with(|mut store| store.get().table.delete(self_).map(|_| Ok(())))?
+        accessor.with(|mut store| store.get().table.delete(rep).map(|_| Ok(())))?
     }
 }
 
@@ -86,7 +85,7 @@ pub fn get_bucket<T>(
     accessor: &Accessor<T, WasiKeyValue>, self_: &Resource<BucketProxy>,
 ) -> Result<BucketProxy> {
     accessor.with(|mut store| {
-        let bucket = store.get().table.get(self_).map_err(|_| Error::NoSuchStore)?;
+        let bucket = store.get().table.get(self_).map_err(|_e| Error::NoSuchStore)?;
         Ok::<_, Error>(bucket.clone())
     })
 }
