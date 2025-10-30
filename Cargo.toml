@@ -49,6 +49,7 @@ wasi-vault.workspace = true
 wasi-blobstore-next.workspace = true
 wasi-http-next.workspace = true
 wasi-keyvalue-next.workspace = true
+wasi-otel-next.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 base64ct.workspace = true
@@ -246,6 +247,7 @@ wasi-vault = { path = "crates/wasi-vault", version = "0.12.0", registry = "credi
 wasi-blobstore-next = { path = "crates/wasi-blobstore-next" }
 wasi-http-next = { path = "crates/wasi-http-next" }
 wasi-keyvalue-next = { path = "crates/wasi-keyvalue-next" }
+wasi-otel-next = { path = "crates/wasi-otel-next" }
 
 # [patch."https://github.com/credibil/core.git"]
 # credibil-otel = { path = "../../credibil/core/crates/otel" }

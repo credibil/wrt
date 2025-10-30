@@ -3046,6 +3046,7 @@ dependencies = [
  "wasi-keyvalue-next",
  "wasi-messaging",
  "wasi-otel",
+ "wasi-otel-next",
  "wasi-vault",
  "wasip3",
  "wasmtime",
@@ -4438,6 +4439,31 @@ dependencies = [
  "quote",
  "syn",
  "tracing",
+]
+
+[[package]]
+name = "wasi-otel-next"
+version = "0.12.0"
+dependencies = [
+ "anyhow",
+ "cfg-if",
+ "credibil-otel",
+ "futures",
+ "hex",
+ "http",
+ "num-traits",
+ "opentelemetry",
+ "opentelemetry-proto",
+ "opentelemetry_sdk",
+ "prost",
+ "reqwest",
+ "runtime",
+ "tracing",
+ "tracing-opentelemetry",
+ "tracing-subscriber",
+ "wasi-otel-attr",
+ "wasmtime",
+ "wit-bindgen",
 ]
 
 [[package]]

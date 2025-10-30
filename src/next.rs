@@ -4,7 +4,7 @@ use anyhow::{Result, anyhow};
 use res_mongodb_next::Client as MongoDb;
 use res_nats_next::Client as Nats;
 use runtime::http_ctx::HttpCtx;
-use runtime::{Cli, Command, Host, Parser, Resource, Server, State};
+use runtime::{Cli, Command, Host, Parser, Resource, RuntimeNext, Server, State};
 use tokio::io;
 use wasi_blobstore_next::{WasiBlobstore, WasiBlobstoreCtxView, WasiBlobstoreView};
 use wasi_http_next::{WasiHttp, WasiHttpCtxView, WasiHttpView};
@@ -19,7 +19,7 @@ async fn main() -> Result<()> {
     };
 
     // link dependencies
-    let (mut linker, component) = runtime::RuntimeNext::new(wasm).init::<RunData>()?;
+    let (mut linker, component) = RuntimeNext::new(wasm).init::<RunData>()?;
     WasiBlobstore::add_to_linker(&mut linker)?;
     WasiKeyValue::add_to_linker(&mut linker)?;
     WasiHttp::add_to_linker(&mut linker)?;
