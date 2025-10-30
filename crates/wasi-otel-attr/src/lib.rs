@@ -1,11 +1,10 @@
 //! # OpenTelemetry Attribute Macros
 
 use proc_macro::TokenStream;
-use quote::{quote, quote_spanned};
+use quote::quote;
 use syn::meta::{self, ParseNestedMeta};
 use syn::parse::Result;
-use syn::spanned::Spanned;
-use syn::{Expr, ItemFn, LitStr, ReturnType, parse_macro_input, parse_quote};
+use syn::{Expr, ItemFn, LitStr, parse_macro_input};
 
 /// Instruments a function using the `[wasi_otel::instrument]` function.
 ///
@@ -19,18 +18,15 @@ pub fn instrument(args: TokenStream, item: TokenStream) -> TokenStream {
     parse_macro_input!(args with arg_parser);
 
     let item_fn = parse_macro_input!(item as ItemFn);
-    let signature = signature(&item_fn);
+    let signature = &item_fn.sig;
     let body = body(attrs, &item_fn);
+
+    // println!("quote!{signature} {{\n {body}\n}}");
 
     // recreate function with the instrument macro wrapping the body
     let new_fn = quote! {
         #signature {
-            let _guard = if ::tracing::Span::current().is_none() {
-                let shutdown = ::wasi_otel::init();
-                Some(shutdown)
-            } else {
-                None
-            };
+            let _guard = ::wasi_otel::init();
             #body
         }
     };
@@ -38,29 +34,6 @@ pub fn instrument(args: TokenStream, item: TokenStream) -> TokenStream {
     TokenStream::from(new_fn)
 }
 
-// Function signature
-fn signature(item_fn: &ItemFn) -> proc_macro2::TokenStream {
-    let ident = item_fn.sig.ident.clone();
-    let inputs = item_fn.sig.inputs.clone();
-    let output = item_fn.sig.output.clone();
-
-    // rewrite async functions to return `Future + Send`
-    if item_fn.sig.asyncness.is_some() {
-        let (return_type, return_span) = if let ReturnType::Type(_, return_type) = &output {
-            (return_type.to_owned(), return_type.span())
-        } else {
-            (parse_quote! { () }, ident.span())
-        };
-        quote_spanned! {return_span=>
-            #[allow(refining_impl_trait, reason="`Future` return type needs to be marked as `Send`")]
-            fn #ident(#inputs) -> impl Future<Output = #return_type> + Send
-        }
-    } else {
-        quote! {fn #ident(#inputs) #output}
-    }
-}
-
-// Function body
 fn body(attrs: Attributes, item_fn: &ItemFn) -> proc_macro2::TokenStream {
     let name = item_fn.sig.ident.clone();
     let block = item_fn.block.clone();
@@ -73,11 +46,9 @@ fn body(attrs: Attributes, item_fn: &ItemFn) -> proc_macro2::TokenStream {
     if item_fn.sig.asyncness.is_some() {
         quote! {
             ::tracing::Instrument::instrument(
-                async move {
-                    #block
-                },
+                async move #block,
                 ::tracing::span!(#level, #span_name)
-            )
+            ).await
         }
     } else {
         quote! {
@@ -99,12 +70,12 @@ impl Attributes {
     fn parse(&mut self, meta: &ParseNestedMeta) -> Result<()> {
         if meta.path.is_ident("name") {
             self.name = Some(meta.value()?.parse()?);
-            Ok(())
         } else if meta.path.is_ident("level") {
             self.level = Some(meta.value()?.parse()?);
-            Ok(())
         } else {
-            Err(meta.error("unsupported property"))
+            return Err(meta.error("unsupported property"));
         }
+
+        Ok(())
     }
 }

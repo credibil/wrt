@@ -5,6 +5,7 @@
 mod cli;
 #[cfg(feature = "jit")]
 mod compiler;
+mod http_ctx;
 mod runtime;
 mod state;
 mod traits;

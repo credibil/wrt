@@ -126,20 +126,8 @@ criteria = "safe-to-deploy"
 version = "2.15.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.bytecount]]
-version = "0.6.9"
-criteria = "safe-to-deploy"
-
-[[exemptions.camino]]
-version = "1.2.1"
-criteria = "safe-to-deploy"
-
-[[exemptions.cargo-platform]]
-version = "0.1.9"
-criteria = "safe-to-deploy"
-
-[[exemptions.cargo_metadata]]
-version = "0.14.2"
+[[exemptions.cc]]
+version = "1.2.43"
 criteria = "safe-to-deploy"
 
 [[exemptions.chrono]]
@@ -235,7 +223,7 @@ version = "0.7.10"
 criteria = "safe-to-deploy"
 
 [[exemptions.deranged]]
-version = "0.5.4"
+version = "0.5.5"
 criteria = "safe-to-deploy"
 
 [[exemptions.derive-syn-parse]]
@@ -367,18 +355,14 @@ version = "0.14.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.js-sys]]
-version = "0.3.81"
-criteria = "safe-to-deploy"
-
-[[exemptions.jsonschema]]
-version = "0.30.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.libz-sys]]
-version = "1.1.22"
+version = "0.3.82"
 criteria = "safe-to-deploy"
 
 [[exemptions.lru-cache]]
+version = "0.1.2"
+criteria = "safe-to-deploy"
+
+[[exemptions.lru-slab]]
 version = "0.1.2"
 criteria = "safe-to-deploy"
 
@@ -563,7 +547,7 @@ version = "3.4.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.proptest]]
-version = "1.8.0"
+version = "1.9.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.prost]]
@@ -575,31 +559,19 @@ version = "0.13.5"
 criteria = "safe-to-deploy"
 
 [[exemptions.prost-derive]]
-version = "0.13.1"
+version = "0.14.1"
 criteria = "safe-to-deploy"
 
-[[exemptions.prost-reflect]]
-version = "0.15.3"
+[[exemptions.quinn]]
+version = "0.11.9"
 criteria = "safe-to-deploy"
 
-[[exemptions.prost-reflect-build]]
-version = "0.15.2"
+[[exemptions.quinn-proto]]
+version = "0.11.13"
 criteria = "safe-to-deploy"
 
-[[exemptions.prost-reflect-derive]]
-version = "0.15.1"
-criteria = "safe-to-deploy"
-
-[[exemptions.prost-types]]
-version = "0.13.1"
-criteria = "safe-to-deploy"
-
-[[exemptions.pulldown-cmark]]
-version = "0.9.6"
-criteria = "safe-to-deploy"
-
-[[exemptions.quad-rand]]
-version = "0.2.3"
+[[exemptions.quinn-udp]]
+version = "0.5.14"
 criteria = "safe-to-deploy"
 
 [[exemptions.quote]]
@@ -659,7 +631,7 @@ version = "0.22.4"
 criteria = "safe-to-deploy"
 
 [[exemptions.rustls]]
-version = "0.23.33"
+version = "0.23.34"
 criteria = "safe-to-deploy"
 
 [[exemptions.rustls-native-certs]]
@@ -671,7 +643,7 @@ version = "2.2.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.rustls-pki-types]]
-version = "1.12.0"
+version = "1.13.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.rustls-webpki]]
@@ -719,15 +691,11 @@ version = "0.7.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.serde_with]]
-version = "3.15.0"
+version = "3.15.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.serde_with_macros]]
-version = "3.15.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.sha-1]]
-version = "0.10.1"
+version = "3.15.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.signal-hook-registry]]
@@ -919,27 +887,23 @@ version = "2.5.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.wasm-bindgen]]
-version = "0.2.104"
-criteria = "safe-to-deploy"
-
-[[exemptions.wasm-bindgen-backend]]
-version = "0.2.104"
+version = "0.2.105"
 criteria = "safe-to-deploy"
 
 [[exemptions.wasm-bindgen-futures]]
-version = "0.4.54"
+version = "0.4.55"
 criteria = "safe-to-deploy"
 
 [[exemptions.wasm-bindgen-macro]]
-version = "0.2.104"
+version = "0.2.105"
 criteria = "safe-to-deploy"
 
 [[exemptions.wasm-bindgen-macro-support]]
-version = "0.2.104"
+version = "0.2.105"
 criteria = "safe-to-deploy"
 
 [[exemptions.wasm-bindgen-shared]]
-version = "0.2.104"
+version = "0.2.105"
 criteria = "safe-to-deploy"
 
 [[exemptions.wasm-streams]]
@@ -947,7 +911,7 @@ version = "0.4.2"
 criteria = "safe-to-deploy"
 
 [[exemptions.web-sys]]
-version = "0.3.81"
+version = "0.3.82"
 criteria = "safe-to-deploy"
 
 [[exemptions.web-time]]

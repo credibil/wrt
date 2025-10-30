@@ -1,36 +1,92 @@
 //! # Tracing
-//!
-//! Convert OpenTelemetry tracing types in `wasi-otel` types.
 
-use anyhow::Result;
-use opentelemetry_sdk::error::OTelSdkError;
-use opentelemetry_sdk::trace::SpanData;
+use std::sync::{Arc, Mutex};
+use std::time::Duration;
+
+use opentelemetry::{Context, global, trace as otel};
+use opentelemetry_sdk::Resource;
+use opentelemetry_sdk::error::{OTelSdkError, OTelSdkResult};
+use opentelemetry_sdk::trace::{SdkTracerProvider, Span, SpanData, SpanProcessor};
 
 use crate::guest::generated::wasi::otel::tracing as wasi;
 
-#[derive(Clone, Debug)]
-pub struct Exporter;
+pub fn init(resource: Resource) -> SdkTracerProvider {
+    let processor = Processor::new();
+    let provider =
+        SdkTracerProvider::builder().with_resource(resource).with_span_processor(processor).build();
+    global::set_tracer_provider(provider.clone());
+    provider
+}
 
-impl Exporter {
-    #[expect(clippy::unnecessary_wraps)]
-    pub const fn new() -> Result<Self> {
-        Ok(Self)
+#[derive(Debug)]
+struct Processor {
+    resource: Resource,
+    spans: Arc<Mutex<Vec<SpanData>>>,
+}
+
+impl Processor {
+    #[must_use]
+    fn new() -> Self {
+        Self {
+            resource: Resource::builder_empty().build(),
+            spans: Arc::new(Mutex::new(Vec::new())),
+        }
     }
 }
 
-impl opentelemetry_sdk::trace::SpanExporter for Exporter {
-    async fn export(&self, batch: Vec<SpanData>) -> Result<(), OTelSdkError> {
+impl SpanProcessor for Processor {
+    fn on_start(&self, _: &mut Span, _cx: &Context) {}
+
+    fn on_end(&self, span: SpanData) {
+        if !span.span_context.is_sampled() {
+            return;
+        }
+        if let Ok(mut guard) = self.spans.lock() {
+            guard.push(span);
+        }
+    }
+
+    fn force_flush(&self) -> OTelSdkResult {
+        Ok(())
+    }
+
+    fn shutdown_with_timeout(&self, _: Duration) -> OTelSdkResult {
+        let spans =
+            self.spans.lock().map_err(|e| OTelSdkError::InternalFailure(e.to_string()))?.to_vec();
+        if spans.is_empty() {
+            return Ok(());
+        }
+
         wit_bindgen::spawn(async move {
-            let spans = batch.into_iter().map(Into::into).collect::<Vec<_>>();
+            let spans = spans.into_iter().map(Into::into).collect::<Vec<_>>();
             if let Err(e) = wasi::export(spans).await {
                 tracing::error!("failed to export spans: {e}");
             }
         });
+
         Ok(())
+    }
+
+    fn set_resource(&mut self, resource: &Resource) {
+        self.resource = resource.clone();
     }
 }
 
-use opentelemetry::trace as otel;
+impl From<wasi::SpanContext> for otel::SpanContext {
+    fn from(value: wasi::SpanContext) -> Self {
+        let trace_id = otel::TraceId::from_hex(&value.trace_id).unwrap_or(otel::TraceId::INVALID);
+        let span_id = otel::SpanId::from_hex(&value.span_id).unwrap_or(otel::SpanId::INVALID);
+        let trace_state = otel::TraceState::from_key_value(value.trace_state)
+            .unwrap_or_else(|_| otel::TraceState::default());
+        Self::new(trace_id, span_id, value.trace_flags.into(), value.is_remote, trace_state)
+    }
+}
+
+impl From<wasi::TraceFlags> for otel::TraceFlags {
+    fn from(value: wasi::TraceFlags) -> Self {
+        if value.contains(wasi::TraceFlags::SAMPLED) { Self::SAMPLED } else { Self::default() }
+    }
+}
 
 impl From<SpanData> for wasi::SpanData {
     fn from(sd: SpanData) -> Self {

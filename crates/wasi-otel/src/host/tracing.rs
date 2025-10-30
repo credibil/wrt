@@ -24,7 +24,7 @@ use crate::host::{DEF_HTTP_ADDR, Data, Host};
 
 impl wasi_otel::tracing::HostWithStore for Data {
     async fn export<T>(
-        accessor: &Accessor<T, Self>, span: Vec<wasi::SpanData>,
+        accessor: &Accessor<T, Self>, span_data: Vec<wasi::SpanData>,
     ) -> Result<(), wasi::Error> {
         // return if opentelemetry is not initialized
         let Some(resource) = credibil_otel::init::resource() else {
@@ -32,19 +32,24 @@ impl wasi_otel::tracing::HostWithStore for Data {
             return Ok(());
         };
 
-        let http_client = accessor.with(move |mut access| {
-            let c = access.get().http_client;
-            c.clone()
-        });
+        // set parent span
+        let ctx = tracing::Span::current().context();
+        let parent_span = ctx.span();
+        let mut span_data = span_data;
+        for sp in &mut span_data {
+            sp.span_context.trace_id = parent_span.span_context().trace_id().to_string();
+            sp.span_context.is_remote = true;
+            sp.parent_span_id = parent_span.span_context().span_id().to_string();
+        }
 
         // convert to opentelemetry export format
-        let resource_spans = resource_spans(span, resource);
+        let resource_spans = resource_spans(span_data, resource);
         let request = ExportTraceServiceRequest { resource_spans };
-
         let body = Message::encode_to_vec(&request);
         let addr = env::var("OTEL_HTTP_ADDR").unwrap_or_else(|_| DEF_HTTP_ADDR.to_string());
 
         // export to collector
+        let http_client = accessor.with(move |mut access| access.get().http_client.clone());
         if let Err(e) = http_client
             .post(format!("{addr}/v1/traces"))
             .header(CONTENT_TYPE, "application/x-protobuf")
@@ -60,13 +65,7 @@ impl wasi_otel::tracing::HostWithStore for Data {
     }
 }
 
-impl wasi_otel::tracing::Host for Host<'_> {
-    async fn context(&mut self) -> wasmtime::Result<wasi::SpanContext> {
-        let ctx = tracing::Span::current().context();
-        let span = ctx.span();
-        Ok(wasi::SpanContext::from(span.span_context()))
-    }
-}
+impl wasi_otel::tracing::Host for Host<'_> {}
 
 pub fn resource_spans(
     spans: Vec<wasi::SpanData>, resource: &opentelemetry_sdk::Resource,

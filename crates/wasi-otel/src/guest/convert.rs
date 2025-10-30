@@ -1,11 +1,6 @@
-//! # Export
+//! # Convert
 //!
 //! Convert OpenTelemetry types in `wasi-otel` types.
-
-#[cfg(feature = "metrics")]
-pub mod metrics;
-#[cfg(feature = "tracing")]
-pub mod tracing;
 
 use std::time::{SystemTime, UNIX_EPOCH};
 

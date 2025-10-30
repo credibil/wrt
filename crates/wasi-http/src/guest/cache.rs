@@ -1,303 +1,322 @@
 //! Cache header parsing and cache get/put
 
-use anyhow::{anyhow, bail};
+use anyhow::{Result, anyhow, bail};
 use bincode::{Decode, Encode, config};
 use bytes::Bytes;
-use http::Response;
-use wasi::http::types::Headers;
+use http::header::{CACHE_CONTROL, IF_NONE_MATCH};
+use http::{Request, Response};
+use http_body::Body;
 use wasi_keyvalue::store;
 
 pub const CACHE_BUCKET: &str = "default-cache";
 
-#[derive(Clone, Debug, Default)]
-struct CacheControl {
-    // If true, make the HTTP request and then update the cache with the
-    // response.
-    pub no_cache: bool,
-
-    // If true, make the HTTP request and do not cache the response.
-    pub no_store: bool,
-
-    // Length of time to cache the response in seconds.
-    pub max_age: u64,
-
-    // ETag to use as the cache key, derived from the `If-None-Match` header.
-    pub etag: String,
-}
-
 #[derive(Debug, Default)]
 pub struct Cache {
+    control: Control,
     bucket: String,
-    control: CacheControl,
+}
+
+/// Request extension used to indicate optional caching behavior.
+#[derive(Clone, Debug)]
+pub struct CacheOptions {
+    /// Name of the key-value store bucket to use for caching.
+    pub bucket_name: String,
+
+    /// Time-to-live for cached responses, in seconds.
+    pub ttl_seconds: u64,
+}
+
+impl Default for CacheOptions {
+    fn default() -> Self {
+        Self {
+            bucket_name: CACHE_BUCKET.to_string(),
+            ttl_seconds: 0,
+        }
+    }
 }
 
 impl Cache {
-    /// Create a new cache manager with the provided bucket name.
-    pub fn new(bucket: &str) -> Self {
-        let bucket = if bucket.is_empty() { "default" } else { bucket };
-        Self {
-            bucket: bucket.to_string(),
-            control: CacheControl::default(),
-        }
-    }
-
-    /// Parse cache-related headers from the provided `Headers`.
-    pub fn headers(&mut self, headers: &Headers) -> anyhow::Result<()> {
-        let mut control = CacheControl::default();
-        let cache_header = headers.get(http::header::CACHE_CONTROL.as_str());
-        if cache_header.is_empty() {
+    /// Create a Cache instance from the request headers, if caching is indicated.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if cache control headers are malformed.
+    pub fn maybe_from(request: &Request<impl Body>) -> Result<Option<Self>> {
+        let headers = request.headers();
+        if headers.get(CACHE_CONTROL).is_none() {
             tracing::debug!("no Cache-Control header present");
-            return Ok(());
+            return Ok(None);
         }
-        // Use only the first Cache-Control header if multiple are present.
-        let Some(cache_header) = cache_header.first() else {
-            return Ok(());
-        };
-        if cache_header.is_empty() {
-            let err = "Cache-Control header is empty";
-            bail!(err);
-        }
+        let control = Control::try_from(headers)
+            .map_err(|e| anyhow!("issue parsing Cache-Control headers: {e}"))?;
+        let cache_opts = request
+            .extensions()
+            .get::<CacheOptions>()
+            .map_or_else(CacheOptions::default, Clone::clone);
 
-        let raw = match String::from_utf8(cache_header.clone()) {
-            Ok(s) => s,
-            Err(e) => {
-                let err = format!("issue parsing Cache-Control header: {e}");
-                return Err(anyhow!(err));
-            }
-        };
-
-        for directive in raw.split(',') {
-            let directive = directive.trim();
-            if directive.is_empty() {
-                continue;
-            }
-
-            let directive_lower = directive.to_ascii_lowercase();
-
-            if directive_lower == "no-store" {
-                if control.no_cache || control.max_age > 0 {
-                    let err = "`no-store` cannot be combined with other cache directives";
-                    bail!(err);
-                }
-                control.no_store = true;
-                continue;
-            }
-
-            if directive_lower == "no-cache" {
-                if control.no_store {
-                    let err = "`no-cache` cannot be combined with `no-store`";
-                    bail!(err);
-                }
-                control.no_cache = true;
-                continue;
-            }
-
-            if directive_lower.starts_with("max-age=") {
-                if control.no_store {
-                    let err = "`max-age` cannot be combined with `no-store`";
-                    bail!(err);
-                }
-
-                let Ok(seconds) = directive[8..].trim().parse() else {
-                    let err = "`max-age` directive is malformed";
-                    bail!(err);
-                };
-                control.max_age = seconds;
-            }
-            // ignore other directives
-        }
-
-        if !control.no_store {
-            let etag = headers.get(http::header::IF_NONE_MATCH.as_str());
-            if etag.is_empty() {
-                let err = "`If-None-Match` header required when using `Cache-Control: max-age` or `no-cache`";
-                bail!(err);
-            }
-            // Use only the first ETag header if multiple are present.
-            let Some(etag) = etag.first() else {
-                let err = "cannot parse first `If-None-Match` header";
-                bail!(err);
-            };
-            if etag.is_empty() {
-                let err = "`If-None-Match` header is empty";
-                bail!(err);
-            }
-            let etag = match String::from_utf8(etag.clone()) {
-                Ok(etag) => etag,
-                Err(e) => {
-                    let err = format!("issue parsing `If-None-Match` header: {e}");
-                    return Err(anyhow!(err));
-                }
-            };
-            if etag.contains(',') {
-                let err = "multiple `etag` values in `If-None-Match` header are not supported";
-                bail!(err);
-            }
-            if etag.starts_with("W/") {
-                let err = "weak `etag` values in `If-None-Match` header are not supported";
-                bail!(err);
-            }
-            control.etag = etag;
-        }
-        self.control = control;
-        Ok(())
+        Ok(Some(Self {
+            bucket: cache_opts.bucket_name,
+            control,
+        }))
     }
 
-    /// Return true if a response should be fetched from cache first.
-    pub const fn should_use_cache(&self) -> bool {
-        !self.control.no_cache && !self.control.no_store && !self.control.etag.is_empty()
-    }
+    /// Get a cached response.
+    ///
+    /// # Errors
+    ///
+    /// * cache retrieval errors
+    /// * deserialization errors
+    pub fn get(&self) -> Result<Option<Response<Bytes>>> {
+        let ctrl = &self.control;
+        if ctrl.no_cache || ctrl.no_store || ctrl.etag.is_empty() {
+            tracing::debug!("cache is disabled");
+            return Ok(None);
+        }
 
-    /// Return true if the response should be cached.
-    pub const fn should_store(&self) -> bool {
-        !self.control.no_store && !self.control.etag.is_empty() && self.control.max_age > 0
+        // get data from keyvalue store
+        let bucket = store::open(&self.bucket)
+            .map_err(|e| anyhow!("opening cache bucket `{}`: {e}", &self.bucket))?;
+        let Some(data) = bucket
+            .get(&self.control.etag)
+            .map_err(|e| anyhow!("retrieving cached response: {e}"))?
+        else {
+            return Ok(None);
+        };
+
+        deserialize(&data).map(Some)
     }
 
     /// Put the response into cache.
     ///
     /// # Errors
+    ///
     /// * serialization errors
     /// * cache storage errors
-    pub fn put(&self, response: &Response<Bytes>) -> anyhow::Result<()> {
-        if !self.should_store() {
+    pub fn put(&self, response: &Response<Bytes>) -> Result<()> {
+        let ctrl = &self.control;
+        if ctrl.no_store || ctrl.etag.is_empty() || ctrl.max_age == 0 {
             return Ok(());
         }
-        tracing::debug!("caching response with etag `{}`", &self.control.etag);
-        let value = serialize_response(response)?;
-        let bucket = store::open(&self.bucket)
-            .map_err(|e| anyhow!("opening cache bucket `{}`: {e}", &self.bucket))?;
-        bucket
-            .set(&self.control.etag, &value)
-            .map_err(|e| anyhow!("storing response in cache: {e}"))
-    }
+        tracing::debug!("caching response with etag `{}`", &ctrl.etag);
 
-    /// Get a cached response.
-    ///
-    /// Returns None if no cached response is found.
-    ///
-    /// # Errors
-    /// * cache retrieval errors
-    /// * deserialization errors
-    pub fn get(&self) -> anyhow::Result<Option<Response<Bytes>>> {
-        tracing::debug!("checking cache for etag `{}`", &self.control.etag);
-        if self.control.etag.is_empty() {
-            bail!("no etag to use as cache key");
-        }
+        let value = serialize(response)?;
         let bucket = store::open(&self.bucket)
             .map_err(|e| anyhow!("opening cache bucket `{}`: {e}", &self.bucket))?;
-        let data = bucket
-            .get(&self.control.etag)
-            .map_err(|e| anyhow!("retrieving cached response: {e}"))?;
-        if let Some(data) = data {
-            let response = deserialize_response(&data)?;
-            Ok(Some(response))
-        } else {
-            Ok(None)
-        }
+        bucket.set(&ctrl.etag, &value).map_err(|e| anyhow!("storing response in cache: {e}"))
     }
 }
 
+#[derive(Clone, Debug, Default)]
+struct Control {
+    // If true, make the HTTP request and then update the cache with the
+    // response.
+    no_cache: bool,
+
+    // If true, make the HTTP request and do not cache the response.
+    no_store: bool,
+
+    // Length of time to cache the response in seconds.
+    max_age: u64,
+
+    // ETag to use as the cache key, derived from the `If-None-Match` header.
+    etag: String,
+}
+
+impl TryFrom<&http::HeaderMap> for Control {
+    type Error = anyhow::Error;
+
+    fn try_from(headers: &http::HeaderMap) -> Result<Self> {
+        let mut control = Self::default();
+
+        let cache_control = headers.get(CACHE_CONTROL);
+        let Some(cache_control) = cache_control else {
+            tracing::debug!("no Cache-Control header present");
+            return Ok(control);
+        };
+
+        if cache_control.is_empty() {
+            bail!("Cache-Control header is empty");
+        }
+
+        for directive in cache_control.to_str()?.split(',') {
+            let directive = directive.trim().to_ascii_lowercase();
+            if directive.is_empty() {
+                continue;
+            }
+
+            if directive == "no-store" {
+                if control.no_cache || control.max_age > 0 {
+                    bail!("`no-store` cannot be combined with other cache directives");
+                }
+                control.no_store = true;
+                continue;
+            }
+
+            if directive == "no-cache" {
+                if control.no_store {
+                    bail!("`no-cache` cannot be combined with `no-store`");
+                }
+                control.no_cache = true;
+                continue;
+            }
+
+            if let Some(value) = directive.strip_prefix("max-age=") {
+                if control.no_store {
+                    bail!("`max-age` cannot be combined with `no-store`");
+                }
+                let Ok(max_age) = value.trim().parse() else {
+                    bail!("`max-age` directive is malformed");
+                };
+                control.max_age = max_age;
+            }
+
+            // ignore other directives
+        }
+
+        if !control.no_store {
+            let Some(etag) = headers.get(IF_NONE_MATCH) else {
+                bail!(
+                    "`If-None-Match` header required when using `Cache-Control: max-age` or `no-cache`"
+                );
+            };
+            if etag.is_empty() {
+                bail!("`If-None-Match` header is empty");
+            }
+
+            let etag_str = etag.to_str()?;
+            if etag_str.contains(',') {
+                bail!("multiple `etag` values in `If-None-Match` header are not supported");
+            }
+            if etag_str.starts_with("W/") {
+                bail!("weak `etag` values in `If-None-Match` header are not supported");
+            }
+            control.etag = etag_str.to_string();
+        }
+
+        Ok(control)
+    }
+}
+
+fn serialize(response: &Response<Bytes>) -> Result<Vec<u8>> {
+    let ser = Serialized::try_from(response)?;
+    bincode::encode_to_vec(&ser, config::standard())
+        .map_err(|e| anyhow!("serializing response: {e}"))
+}
+
+fn deserialize(data: &[u8]) -> Result<Response<Bytes>> {
+    let (ser, _): (Serialized, _) = bincode::decode_from_slice(data, config::standard())
+        .map_err(|e| anyhow!("deserializing cached response: {e}"))?;
+    Response::<Bytes>::try_from(ser)
+}
+
 #[derive(Decode, Encode)]
-struct SerializableResponse {
+struct Serialized {
     status: u16,
     headers: Vec<(String, String)>,
     body: Vec<u8>,
 }
 
-fn serialize_response(response: &Response<Bytes>) -> anyhow::Result<Vec<u8>> {
-    let serializable = SerializableResponse {
-        status: response.status().as_u16(),
-        headers: response
-            .headers()
-            .iter()
-            .map(|(k, v)| (k.as_str().to_string(), v.to_str().unwrap_or_default().to_string()))
-            .collect(),
-        body: response.body().to_vec(),
-    };
-    bincode::encode_to_vec(&serializable, config::standard())
-        .map_err(|e| anyhow!("serializing response for cache: {e}"))
-}
+impl TryFrom<&Response<Bytes>> for Serialized {
+    type Error = anyhow::Error;
 
-fn deserialize_response(data: &[u8]) -> anyhow::Result<Response<Bytes>> {
-    let (serializable, _): (SerializableResponse, _) =
-        bincode::decode_from_slice(data, config::standard())
-            .map_err(|e| anyhow!("deserializing cached response: {e}"))?;
-    let mut response = Response::builder().status(serializable.status);
-    for (k, v) in serializable.headers {
-        response = response.header(&k, &v);
+    fn try_from(response: &Response<Bytes>) -> Result<Self> {
+        Ok(Self {
+            status: response.status().as_u16(),
+            headers: response
+                .headers()
+                .iter()
+                .map(|(k, v)| (k.to_string(), v.to_str().unwrap_or_default().to_string()))
+                .collect(),
+            body: response.body().to_vec(),
+        })
     }
-    response
-        .body(Bytes::from(serializable.body))
-        .map_err(|e| anyhow!("building response from cached data: {e}"))
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use http::header::{CACHE_CONTROL, IF_NONE_MATCH};
+impl TryFrom<Serialized> for Response<Bytes> {
+    type Error = anyhow::Error;
 
-//     use super::*;
+    fn try_from(s: Serialized) -> Result<Self> {
+        let mut response = Response::builder().status(s.status);
+        for (k, v) in s.headers {
+            response = response.header(k, v);
+        }
+        response
+            .body(Bytes::from(s.body))
+            .map_err(|e| anyhow!("building response from cached data: {e}"))
+    }
+}
 
-//     #[test]
-//     fn returns_none_when_header_missing() {
-//         let headers = Headers::new();
-//         let result = cache_headers(&headers).expect("parsing succeeds without header");
-//         assert!(result.is_none());
-//     }
+#[cfg(test)]
+mod tests {
+    use http::HeaderMap;
+    use http::header::{CACHE_CONTROL, IF_NONE_MATCH};
 
-//     #[test]
-//     fn parses_max_age_with_etag() {
-//         let headers = Headers::new();
-//         headers.append(CACHE_CONTROL.as_str(), b"max-age=120").expect("cache control header set");
-//         headers.append(IF_NONE_MATCH.as_str(), b"\"strong-etag\"").expect("if-none-match header set");
+    use super::*;
 
-//         let control =
-//             cache_headers(&headers).expect("parsing succeeds").expect("cache control present");
+    #[test]
+    fn returns_none_when_header_missing() {
+        let headers = HeaderMap::new();
+        let control = Control::try_from(&headers).expect("should parse");
 
-//         assert!(!control.no_store);
-//         assert_eq!(control.max_age, 120);
-//         assert_eq!(control.etag, "\"strong-etag\"");
-//     }
+        assert!(control.no_cache);
+        assert!(!control.no_store);
+        assert_eq!(control.max_age, 0);
+        assert!(control.etag.is_empty());
+    }
 
-//     #[test]
-//     fn requires_etag_when_store_enabled() {
-//         let headers = Headers::new();
-//         headers.append(CACHE_CONTROL.as_str(), b"no-cache").expect("cache control header set");
+    #[test]
+    fn parses_max_age_with_etag() {
+        let mut headers = HeaderMap::new();
+        headers.append(CACHE_CONTROL, "max-age=120".parse().unwrap());
+        headers.append(IF_NONE_MATCH, "\"strong-etag\"".parse().unwrap());
 
-//         let Err(_) = cache_headers(&headers) else {
-//             panic!("expected missing etag error");
-//         };
-//     }
+        let control = Control::try_from(&headers).expect("should parse");
 
-//     #[test]
-//     fn rejects_conflicting_directives() {
-//         let headers = Headers::new();
-//         headers.append(CACHE_CONTROL.as_str(), b"no-cache, max-age=10").expect("cache control header set");
-//         headers.append(IF_NONE_MATCH.as_str(), b"\"etag\"").expect("if-none-match header set");
+        assert!(!control.no_store);
+        assert_eq!(control.max_age, 120);
+        assert_eq!(control.etag, "\"strong-etag\"");
+    }
 
-//         let Err(_) = cache_headers(&headers) else {
-//             panic!("expected conflicting directives error");
-//         };
-//     }
+    #[test]
+    fn requires_etag_when_store_enabled() {
+        let mut headers = HeaderMap::new();
+        headers.append(CACHE_CONTROL, "no-cache".parse().unwrap());
 
-//     #[test]
-//     fn rejects_weak_etag_value() {
-//         let headers = Headers::new();
-//         headers.append(CACHE_CONTROL.as_str(), b"no-cache").expect("cache control header set");
-//         headers.append(IF_NONE_MATCH.as_str(), b"W/\"weak-etag\"").expect("if-none-match header set");
+        let Err(_) = Control::try_from(&headers) else {
+            panic!("expected missing etag error");
+        };
+    }
 
-//         let Err(_) = cache_headers(&headers) else {
-//             panic!("expected weak etag rejection");
-//         };
-//     }
+    #[test]
+    fn rejects_conflicting_directives() {
+        let mut headers = HeaderMap::new();
+        headers.append(CACHE_CONTROL, "no-cache, max-age=10".parse().unwrap());
+        headers.append(IF_NONE_MATCH, "\"etag\"".parse().unwrap());
 
-//     #[test]
-//     fn rejects_multiple_etag_values() {
-//         let headers = Headers::new();
-//         headers.append(CACHE_CONTROL.as_str(), b"no-cache").expect("cache control header set");
-//         headers.append(IF_NONE_MATCH.as_str(), b"\"etag1\", \"etag2\"").expect("if-none-match header set");
+        let Err(_) = Control::try_from(&headers) else {
+            panic!("expected conflicting directives error");
+        };
+    }
 
-//         let Err(_) = cache_headers(&headers) else {
-//             panic!("expected multiple etag values rejection");
-//         };
-//     }
-// }
+    #[test]
+    fn rejects_weak_etag_value() {
+        let mut headers = HeaderMap::new();
+        headers.append(CACHE_CONTROL, "no-cache".parse().unwrap());
+        headers.append(IF_NONE_MATCH, "W/\"weak-etag\"".parse().unwrap());
+
+        let Err(_) = Control::try_from(&headers) else {
+            panic!("expected weak etag rejection");
+        };
+    }
+
+    #[test]
+    fn rejects_multiple_etag_values() {
+        let mut headers = HeaderMap::new();
+        headers.append(CACHE_CONTROL, "no-cache".parse().unwrap());
+        headers.append(IF_NONE_MATCH, "\"etag1\", \"etag2\"".parse().unwrap());
+
+        let Err(_) = Control::try_from(&headers) else {
+            panic!("expected multiple etag values rejection");
+        };
+    }
+}
