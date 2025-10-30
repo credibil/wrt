@@ -22,7 +22,7 @@ impl RuntimeNext {
     /// The file can either be a serialized (pre-compiled) wasmtime `Component`
     /// or a standard `wasm32-wasip2` wasm component.
     #[must_use]
-    pub fn new(wasm: PathBuf) -> Self {
+    pub const fn new(wasm: PathBuf) -> Self {
         Self {
             wasm,
             telemetry: true,
@@ -60,21 +60,6 @@ impl RuntimeNext {
         let mut linker = Linker::new(&engine);
         wasmtime_wasi::p2::add_to_linker_async(&mut linker)?;
         wasmtime_wasi::p3::add_to_linker(&mut linker)?;
-
-        // for service in &self.services {
-        //     service.add_to_linker(&mut linker)?;
-        // }
-
-        // // start services
-        // let instance_pre = linker.instantiate_pre(&component)?;
-        // for service in self.services {
-        //     let instance_pre = instance_pre.clone();
-        //     tokio::spawn(async move {
-        //         if let Err(e) = service.start(instance_pre).await {
-        //             tracing::warn!("issue starting {service:?} service: {e}");
-        //         }
-        //     });
-        // }
 
         tracing::info!("runtime intialized");
 

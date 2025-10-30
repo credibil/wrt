@@ -30,13 +30,10 @@ mod generated {
     });
 }
 
-
 use std::fmt::Debug;
-use std::sync::{Arc};
-
+use std::sync::Arc;
 
 use bytes::Bytes;
-
 pub use resource::*;
 use runtime::Host;
 use wasmtime::component::{HasData, Linker, ResourceTable};

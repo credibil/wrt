@@ -4,7 +4,7 @@ use wasmtime::component::{Accessor, Resource};
 use wasmtime_wasi::p2::pipe::MemoryOutputPipe;
 
 use crate::host::generated::wasi::blobstore::container::{
-     ContainerMetadata, Host, HostContainer, HostContainerWithStore, HostStreamObjectNames,
+    ContainerMetadata, Host, HostContainer, HostContainerWithStore, HostStreamObjectNames,
     HostStreamObjectNamesWithStore, ObjectMetadata,
 };
 use crate::host::resource::ContainerProxy;

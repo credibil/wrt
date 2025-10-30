@@ -1,10 +1,12 @@
 #![cfg(not(target_arch = "wasm32"))]
 
 use anyhow::{Result, anyhow};
+use res_mongodb_next::Client as MongoDb;
 use res_nats_next::Client as Nats;
 use runtime::http_ctx::HttpCtx;
 use runtime::{Cli, Command, Host, Parser, Resource, Server, State};
 use tokio::io;
+use wasi_blobstore_next::{WasiBlobstore, WasiBlobstoreCtxView, WasiBlobstoreView};
 use wasi_http_next::{WasiHttp, WasiHttpCtxView, WasiHttpView};
 use wasi_keyvalue_next::{WasiKeyValue, WasiKeyValueCtxView, WasiKeyValueView};
 use wasmtime::component::InstancePre;
@@ -18,6 +20,7 @@ async fn main() -> Result<()> {
 
     // link dependencies
     let (mut linker, component) = runtime::RuntimeNext::new(wasm).init::<RunData>()?;
+    WasiBlobstore::add_to_linker(&mut linker)?;
     WasiKeyValue::add_to_linker(&mut linker)?;
     WasiHttp::add_to_linker(&mut linker)?;
 
@@ -25,6 +28,7 @@ async fn main() -> Result<()> {
     let run_state = RunState {
         instance_pre: linker.instantiate_pre(&component)?,
         nats_client: Nats::connect().await?,
+        mongodb_client: MongoDb::connect().await?,
     };
 
     // run server(s)
@@ -37,6 +41,7 @@ async fn main() -> Result<()> {
 pub struct RunState {
     instance_pre: InstancePre<RunData>,
     nats_client: Nats,
+    mongodb_client: MongoDb,
 }
 
 impl State for RunState {
@@ -61,6 +66,7 @@ impl State for RunState {
             wasi_ctx,
             http_ctx: HttpCtx,
             keyvalue_ctx: self.nats_client.clone(),
+            blobstore_ctx: self.mongodb_client.clone(),
         }
     }
 }
@@ -72,6 +78,7 @@ pub struct RunData {
     pub wasi_ctx: WasiCtx,
     pub http_ctx: HttpCtx,
     pub keyvalue_ctx: Nats,
+    pub blobstore_ctx: MongoDb,
 }
 
 impl WasiView for RunData {
@@ -96,6 +103,15 @@ impl WasiKeyValueView for RunData {
     fn keyvalue(&mut self) -> WasiKeyValueCtxView<'_> {
         WasiKeyValueCtxView {
             ctx: &mut self.keyvalue_ctx,
+            table: &mut self.table,
+        }
+    }
+}
+
+impl WasiBlobstoreView for RunData {
+    fn blobstore(&mut self) -> WasiBlobstoreCtxView<'_> {
+        WasiBlobstoreCtxView {
+            ctx: &mut self.blobstore_ctx,
             table: &mut self.table,
         }
     }
