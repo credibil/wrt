@@ -47,7 +47,7 @@ impl WasiHttp {
     pub async fn serve<R>(runner: &R) -> Result<()>
     where
         R: Runner + WasiHttpView,
-        <R as runtime::Runner>::StoreData: wasmtime_wasi_http::p3::WasiHttpView,
+        <R as runtime::Runner>::StoreData: WasiHttpView,
     {
         // bail if server is not required
         let instance_pre = runner.instance_pre();
@@ -103,12 +103,20 @@ impl WasiHttp {
 }
 
 // #[derive(Clone)]
-struct Handler<R: WasiHttpView + Runner> {
+struct Handler<R>
+where
+    R: Runner + WasiHttpView,
+    <R as runtime::Runner>::StoreData: WasiHttpView,
+{
     runner: R,
     instance_pre: InstancePre<R::StoreData>,
 }
 
-impl<R: WasiHttpView + Runner> Clone for Handler<R> {
+impl<R> Clone for Handler<R>
+where
+    R: Runner + WasiHttpView,
+    <R as runtime::Runner>::StoreData: WasiHttpView,
+{
     fn clone(&self) -> Self {
         Self {
             runner: self.runner.clone(),
@@ -117,11 +125,10 @@ impl<R: WasiHttpView + Runner> Clone for Handler<R> {
     }
 }
 
-// use wasmtime_wasi_http::p3::WasiHttpView;
-
-impl<R: WasiHttpView + Runner> Handler<R>
+impl<R> Handler<R>
 where
-    <R as runtime::Runner>::StoreData: wasmtime_wasi_http::p3::WasiHttpView,
+    R: Runner + WasiHttpView,
+    <R as runtime::Runner>::StoreData: WasiHttpView,
 {
     // Forward request to the wasm Guest.
     async fn handle(
