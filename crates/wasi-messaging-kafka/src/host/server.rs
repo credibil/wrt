@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 use futures::StreamExt;
 use rdkafka::consumer::{CommitMode, Consumer as _, StreamConsumer};
 use rdkafka::message::{Headers as _, OwnedHeaders};
@@ -131,8 +131,7 @@ async fn call_guest(message: Message, instance_pre: InstancePre<RunState>) -> Re
         .run_concurrent(&mut store, async |accessor| {
             messaging.wasi_messaging_incoming_handler().call_handle(accessor, res_msg).await?
         })
-        .await
-        .context("running instance")?
+        .await?
 }
 
 /// Helper: build a new message based on an existing one, overriding only some fields.
