@@ -1,4 +1,3 @@
-use anyhow::anyhow;
 use rdkafka::Message as _;
 use rdkafka::producer::BaseRecord;
 use wasmtime::component::{Accessor, Resource};
@@ -30,10 +29,6 @@ impl producer::HostWithStore for HostData {
             let producer = kafka_resource.producer.clone();
             Ok::<_, anyhow::Error>((producer, msg.clone(), partitioner, schema_registry))
         })?;
-
-        let Some(producer) = producer else {
-            return Err(anyhow!("producer not initialized").into());
-        };
 
         //schea registry validation if provided
         let payload_bytes = msg.payload().unwrap_or(&[]).to_vec();

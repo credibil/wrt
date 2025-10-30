@@ -49,8 +49,7 @@ pub async fn run(instance_pre: InstancePre<RunState>) -> Result<()> {
 async fn subscribe(topics: Vec<String>, instance_pre: InstancePre<RunState>) -> anyhow::Result<()> {
     tracing::debug!("subscribing to kafka topics: {topics:?}");
 
-    let kafka = crate::kafka()?;
-    let kafka_config = &kafka.config;
+    let kafka_config = crate::kafka()?;
 
     let mut config = ClientConfig::new();
     config.set("bootstrap.servers", kafka_config.brokers.clone());

@@ -19,30 +19,21 @@ use crate::schema_registry::SRClient;
 
 const DEF_KAFKA_BROKERS: &str = "localhost:9094";
 
+/// Kafka producer client
+pub struct KafkaProducer {
+    pub producer: ThreadedProducer<ProduceCallbackLogger>,
+    pub partitioner: Option<Partitioner>,
+    pub sr_client: Option<SRClient>,
+}
+
 /// Kafka resource builder
 pub struct Kafka {
     attributes: HashMap<String, String>,
 }
 
-/// State manager for Kafka messaging
-pub struct KafkaClient {
-    pub config: KafkaConfig,
-    pub producer: Option<ThreadedProducer<ProduceCallbackLogger>>,
-    pub partitioner: Option<Partitioner>,
-    pub sr_client: Option<SRClient>,
-}
-
-impl KafkaClient {
-    /// Get the name of the client
-    #[must_use]
-    pub fn name(&self) -> String {
-        "kafka".to_string()
-    }
-}
-
 /// Kafka configuration
 #[derive(Debug, Clone)]
-pub struct KafkaConfig {
+pub struct KafkaClient {
     /// Comma-separated list of Kafka brokers
     pub brokers: String,
     /// Optional username for SASL authentication
@@ -57,6 +48,14 @@ pub struct KafkaConfig {
     pub partition_count: Option<i32>, // only used for producer
     /// Optional schema registry configuration
     pub schema: Option<SchemaConfig>,
+}
+
+impl KafkaClient {
+    /// Get the name of the client
+    #[must_use]
+    pub fn name(&self) -> String {
+        "kafka".to_string()
+    }
 }
 
 /// Schema registry configuration
@@ -109,7 +108,7 @@ impl ResourceBuilder<KafkaClient> for Kafka {
             })
         });
 
-        let config = KafkaConfig {
+        let config = KafkaClient {
             brokers: brokers.clone(),
             username,
             password,
@@ -119,13 +118,8 @@ impl ResourceBuilder<KafkaClient> for Kafka {
             schema: schema_config,
         };
 
-        tracing::info!("Kafka configuration built for brokers: {}", brokers);
-        Ok(KafkaClient {
-            config,
-            producer: None,
-            partitioner: None,
-            sr_client: None,
-        })
+        tracing::info!("Kafka configuration built for brokers: {brokers}");
+        Ok(config)
     }
 }
 

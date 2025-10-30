@@ -26,7 +26,7 @@ impl http::incoming_handler::Guest for Http {
     }
 }
 
-#[wasi_otel::instrument]
+// #[wasi_otel::instrument]
 #[axum::debug_handler]
 async fn handler(body: Bytes) -> Json<Value> {
     let client = Client::connect("kafka").unwrap();
@@ -49,7 +49,7 @@ wasi::http::proxy::export!(Http);
 pub struct Messaging;
 
 impl wasi_messaging_kafka::incoming_handler::Guest for Messaging {
-    #[wasi_otel::instrument(name = "messaging_guest_handle",level = Level::DEBUG)]
+    // #[wasi_otel::instrument(name = "messaging_guest_handle",level = Level::DEBUG)]
     async fn handle(message: Message) -> anyhow::Result<(), Error> {
         tracing::debug!("start processing msg");
         println!("start processing msg");

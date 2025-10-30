@@ -23,8 +23,7 @@ impl types::HostClient for Host<'_> {
     async fn connect(&mut self, _name: String) -> Result<Resource<Client>> {
         tracing::debug!("HostClient::connect Kafka");
 
-        let kafka = crate::kafka()?;
-        let kafka_config = &kafka.config;
+        let kafka_config = crate::kafka()?;
 
         let mut config = ClientConfig::new();
         config.set("bootstrap.servers", kafka_config.brokers.clone());
@@ -57,8 +56,7 @@ impl types::HostClient for Host<'_> {
             .map_err(|e| anyhow!("invalid producer config: {e}"))?;
 
         Ok(self.table.push(Client {
-            config: kafka_config.clone(),
-            producer: Some(producer),
+            producer,
             partitioner,
             sr_client,
         })?)

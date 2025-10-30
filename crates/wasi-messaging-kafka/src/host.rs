@@ -9,7 +9,7 @@ mod generated {
     pub use rdkafka::message::OwnedMessage;
     pub use wasi::messaging::types::Error;
 
-    pub use crate::host::resource::KafkaClient;
+    pub use crate::host::resource::KafkaProducer;
 
     wasmtime::component::bindgen!({
         world: "messaging",
@@ -21,7 +21,7 @@ mod generated {
             default: async | tracing | trappable,
         },
         with: {
-            "wasi:messaging/types/client": KafkaClient,
+            "wasi:messaging/types/client": KafkaProducer,
             "wasi:messaging/types/message": OwnedMessage,
         },
         trappable_error_type: {
