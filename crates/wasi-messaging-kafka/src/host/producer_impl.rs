@@ -19,7 +19,7 @@ impl producer::HostWithStore for HostData {
     async fn send<T>(
         accessor: &Accessor<T, Self>, c: Resource<Client>, topic: Topic, message: Resource<Message>,
     ) -> Result<()> {
-        tracing::trace!("producer::Host::send: topic {topic:?}");
+        tracing::debug!("producer::Host::send: topic {topic:?}");
 
         let (producer, msg, partitioner, schema_registry) = accessor.with(move |mut access| {
             let table = access.get().table;
@@ -68,7 +68,7 @@ impl producer::HostWithStore for HostData {
         match send_result {
             Ok(()) => Ok(()),
             Err((err, _)) => {
-                tracing::trace!("producer::error {}", err);
+                tracing::error!("producer::error {}", err);
                 Ok(())
             }
         }

@@ -47,7 +47,8 @@ pub async fn run(instance_pre: InstancePre<RunState>) -> Result<()> {
 }
 
 async fn subscribe(topics: Vec<String>, instance_pre: InstancePre<RunState>) -> anyhow::Result<()> {
-    tracing::trace!("subscribing to kafka topics: {topics:?}");
+    tracing::debug!("subscribing to kafka topics: {topics:?}");
+
     let kafka = crate::kafka()?;
     let kafka_config = &kafka.config;
 
@@ -75,6 +76,7 @@ async fn subscribe(topics: Vec<String>, instance_pre: InstancePre<RunState>) -> 
 
     let consumer: StreamConsumer = config.create().unwrap();
     consumer.subscribe(&topics.iter().map(|s| &**s).collect::<Vec<&str>>())?;
+    tracing::debug!("subscribed to topics: {topics:?}");
 
     let mut stream = consumer.stream();
     while let Some(msg) = stream.next().await {

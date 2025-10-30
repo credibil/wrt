@@ -21,7 +21,7 @@ impl types::Host for Host<'_> {
 
 impl types::HostClient for Host<'_> {
     async fn connect(&mut self, _name: String) -> Result<Resource<Client>> {
-        tracing::trace!("HostClient::connect Kafka");
+        tracing::debug!("HostClient::connect Kafka");
 
         let kafka = crate::kafka()?;
         let kafka_config = &kafka.config;
@@ -65,12 +65,12 @@ impl types::HostClient for Host<'_> {
     }
 
     async fn disconnect(&mut self, _rep: Resource<Client>) -> Result<()> {
-        tracing::trace!("HostClient::disconnect (noop for Kafka producer)");
+        tracing::debug!("HostClient::disconnect (noop for Kafka producer)");
         Ok(())
     }
 
     async fn drop(&mut self, rep: Resource<Client>) -> anyhow::Result<()> {
-        tracing::trace!("HostClient::drop");
+        tracing::debug!("HostClient::drop");
         self.table.delete(rep)?;
         Ok(())
     }
@@ -79,7 +79,7 @@ impl types::HostClient for Host<'_> {
 impl types::HostMessage for Host<'_> {
     /// Create a new message with the given payload.
     async fn new(&mut self, data: Vec<u8>) -> anyhow::Result<Resource<Message>> {
-        tracing::trace!("HostMessage::new with {} bytes", data.len());
+        tracing::debug!("HostMessage::new with {} bytes", data.len());
         let now = i64::try_from(
             SystemTime::now().duration_since(UNIX_EPOCH).expect("Time went backwards").as_millis(),
         ); // rdkafka expects i64
@@ -97,7 +97,7 @@ impl types::HostMessage for Host<'_> {
 
     /// The topic/subject/channel this message was received on, if any.
     async fn topic(&mut self, self_: Resource<Message>) -> anyhow::Result<Option<Topic>> {
-        tracing::trace!("HostMessage::topic");
+        tracing::debug!("HostMessage::topic");
         let msg = self.table.get(&self_)?;
         let topic = msg.topic();
         if topic.is_empty() { Ok(None) } else { Ok(Some(topic.to_string())) }
@@ -106,7 +106,7 @@ impl types::HostMessage for Host<'_> {
     /// An optional content-type describing the format of the data in the
     /// message. This is sometimes described as the "format" type".
     async fn content_type(&mut self, self_: Resource<Message>) -> anyhow::Result<Option<String>> {
-        tracing::trace!("HostMessage::content_type");
+        tracing::debug!("HostMessage::content_type");
         let msg = self.table.get(&self_)?;
 
         // Access headers from the message
@@ -129,7 +129,7 @@ impl types::HostMessage for Host<'_> {
     async fn set_content_type(
         &mut self, self_: Resource<Message>, content_type: String,
     ) -> anyhow::Result<()> {
-        tracing::trace!("HostMessage::set_content_type {}", content_type);
+        tracing::debug!("HostMessage::set_content_type {}", content_type);
 
         let msg = self.table.get_mut(&self_)?;
         let new_headers =
@@ -141,7 +141,7 @@ impl types::HostMessage for Host<'_> {
 
     /// An opaque blob of data.
     async fn data(&mut self, self_: Resource<Message>) -> anyhow::Result<Vec<u8>> {
-        tracing::trace!("HostMessage::data");
+        tracing::debug!("HostMessage::data");
         let msg = self.table.get(&self_)?;
         let data: Vec<u8> = msg
             .payload()
@@ -153,7 +153,7 @@ impl types::HostMessage for Host<'_> {
 
     /// Set the opaque blob of data for this message, discarding the old value".
     async fn set_data(&mut self, self_: Resource<Message>, data: Vec<u8>) -> anyhow::Result<()> {
-        tracing::trace!("HostMessage::set_data");
+        tracing::debug!("HostMessage::set_data");
         let msg = self.table.get_mut(&self_)?;
         *msg = rebuild_message(msg, Some(data), None);
 
@@ -161,7 +161,7 @@ impl types::HostMessage for Host<'_> {
     }
 
     async fn metadata(&mut self, self_: Resource<Message>) -> anyhow::Result<Option<Metadata>> {
-        tracing::trace!("HostMessage::metadata");
+        tracing::debug!("HostMessage::metadata");
         let msg = self.table.get(&self_)?;
         let headers = msg.headers().map(|owned| {
             owned
@@ -180,7 +180,7 @@ impl types::HostMessage for Host<'_> {
     async fn add_metadata(
         &mut self, self_: Resource<Message>, key: String, value: String,
     ) -> anyhow::Result<()> {
-        tracing::trace!("HostMessage::add_metadata {key}={value}");
+        tracing::debug!("HostMessage::add_metadata {key}={value}");
         let msg = self.table.get_mut(&self_)?;
         let new_headers = update_headers(msg.headers(), &key, Some(value.as_bytes()));
 
@@ -193,7 +193,7 @@ impl types::HostMessage for Host<'_> {
     async fn set_metadata(
         &mut self, self_: Resource<Message>, meta: Metadata,
     ) -> anyhow::Result<()> {
-        tracing::trace!("HostMessage::set_metadata");
+        tracing::debug!("HostMessage::set_metadata");
 
         let msg = self.table.get_mut(&self_)?;
         let mut new_headers = OwnedHeaders::new();
@@ -215,7 +215,7 @@ impl types::HostMessage for Host<'_> {
     async fn remove_metadata(
         &mut self, self_: Resource<Message>, key: String,
     ) -> anyhow::Result<()> {
-        tracing::trace!("HostMessage::remove_metadata {key}");
+        tracing::debug!("HostMessage::remove_metadata {key}");
         let msg = self.table.get_mut(&self_)?;
         let new_headers = update_headers(msg.headers(), &key, None);
 
@@ -225,7 +225,7 @@ impl types::HostMessage for Host<'_> {
     }
 
     async fn drop(&mut self, rep: Resource<Message>) -> anyhow::Result<()> {
-        tracing::trace!("HostMessage::drop");
+        tracing::debug!("HostMessage::drop");
         self.table.delete(rep)?;
         Ok(())
     }

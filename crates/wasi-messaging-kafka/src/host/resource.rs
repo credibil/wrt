@@ -84,7 +84,7 @@ impl ResourceBuilder<KafkaClient> for Kafka {
         self
     }
 
-    #[instrument(name = "Kafka::conncect", skip(self))]
+    #[instrument(name = "Kafka::connect", skip(self))]
     async fn connect(self) -> Result<KafkaClient> {
         let brokers = env::var("KAFKA_BROKERS").unwrap_or_else(|_| DEF_KAFKA_BROKERS.into());
         let username = env::var("KAFKA_USERNAME").ok();

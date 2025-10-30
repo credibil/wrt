@@ -62,7 +62,7 @@ impl ResourceBuilder<RedisClient> for Redis {
         let conn = client
             .get_connection_manager_with_config(config)
             .await
-            .map_err(|e| anyhow!("issue getting connection: {e}"))?;
+            .map_err(|e| anyhow!("issue getting redis connection: {e}"))?;
         tracing::info!("connected to redis");
         Ok(RedisClient(conn))
     }
