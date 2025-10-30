@@ -11,17 +11,20 @@ use std::sync::Arc;
 
 use anyhow::{Context, Result, anyhow};
 use async_nats::{AuthError, ConnectOptions};
+use runtime::Resource;
 use tracing::instrument;
 
 const DEF_NATS_ADDR: &str = "demo.nats.io";
 const CLIENT_NAME: &str = "nats";
 
 #[derive(Debug, Clone)]
-pub struct NatsClient(async_nats::Client);
+pub struct Client(async_nats::Client);
 
-impl NatsClient {
+impl Resource for Client {
+    // type Connection = Self;
+
     #[instrument]
-    pub async fn connect() -> Result<Self> {
+    async fn connect() -> Result<Self> {
         let addr = env::var("NATS_ADDR").unwrap_or_else(|_| DEF_NATS_ADDR.into());
 
         let options = connect_options().map_err(|e| {

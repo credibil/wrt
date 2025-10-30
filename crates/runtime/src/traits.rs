@@ -109,9 +109,9 @@ pub trait State: Clone + Send + Sync + 'static {
     fn instance_pre(&self) -> &InstancePre<Self::StoreData>;
 }
 
-/// WASI hosts implement this trait in order to allow the runtime to link their
+/// Implemented by all WASI hosts in order to allow the runtime to link their
 /// dependencies.
-pub trait Linkable<T>: Debug + Sync + Send {
+pub trait Host<T>: Debug + Sync + Send {
     /// Link the host's dependencies prior to component instantiation.
     ///
     /// # Errors
@@ -120,9 +120,9 @@ pub trait Linkable<T>: Debug + Sync + Send {
     fn add_to_linker(linker: &mut Linker<T>) -> Result<()>;
 }
 
-/// WASI hosts that can be run implement this trait in order to allow the runtime to
+/// Implemented by WASI hosts that are servers in order to allow the runtime to
 /// start them.
-pub trait Runnable<S: State>: Debug + Sync + Send {
+pub trait Server<S: State>: Debug + Sync + Send {
     /// Start the service.
     ///
     /// This is typically implemented by services that instantiate (or run)
@@ -131,4 +131,13 @@ pub trait Runnable<S: State>: Debug + Sync + Send {
     fn run(&self, state: &S) -> impl Future<Output = Result<()>> {
         async { Ok(()) }
     }
+}
+
+/// WASI hosts that can be run implement this trait in order to allow the runtime to
+/// start them.
+pub trait Resource: Sized + Sync + Send {
+    // type Connection;
+
+    /// Connect to the resource.
+    fn connect() -> impl Future<Output = Result<Self>>;
 }

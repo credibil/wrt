@@ -8,9 +8,9 @@ use futures::TryStreamExt;
 use futures::future::FutureExt;
 use wasi_keyvalue_next::{Bucket, FutureResult, WasiKeyValueCtx};
 
-use crate::NatsClient;
+use crate::Client;
 
-impl WasiKeyValueCtx for NatsClient {
+impl WasiKeyValueCtx for Client {
     fn open_bucket(&self, identifier: String) -> FutureResult<Arc<dyn Bucket>> {
         tracing::trace!("opening bucket: {identifier}");
         let client = self.0.clone();

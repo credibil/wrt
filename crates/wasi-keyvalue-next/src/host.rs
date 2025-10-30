@@ -30,7 +30,7 @@ mod generated {
 use std::fmt::Debug;
 use std::sync::Arc;
 
-use runtime::Linkable;
+use runtime::Host;
 use wasmtime::component::{HasData, Linker, ResourceTableError};
 use wasmtime_wasi::ResourceTable;
 
@@ -40,7 +40,7 @@ pub use self::resource::*;
 
 pub type Result<T, E = Error> = anyhow::Result<T, E>;
 
-impl<T> Linkable<T> for WasiKeyValue
+impl<T> Host<T> for WasiKeyValue
 where
     T: WasiKeyValueView + 'static,
 {

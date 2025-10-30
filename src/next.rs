@@ -1,53 +1,49 @@
 #![cfg(not(target_arch = "wasm32"))]
 
 use anyhow::{Result, anyhow};
-use res_nats_next::NatsClient;
+use res_nats_next::Client as Nats;
 use runtime::http_ctx::HttpCtx;
-use runtime::{Cli, Command, Linkable, Parser, Runnable, State};
+use runtime::{Cli, Command, Host, Parser, Resource, Server, State};
 use tokio::io;
-use wasi_http_next::{WasiHttpCtxView, WasiHttpView};
-use wasi_keyvalue_next::{WasiKeyValueCtxView, WasiKeyValueView};
+use wasi_http_next::{WasiHttp, WasiHttpCtxView, WasiHttpView};
+use wasi_keyvalue_next::{WasiKeyValue, WasiKeyValueCtxView, WasiKeyValueView};
 use wasmtime::component::InstancePre;
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let Command::Run { wasm } = Cli::parse().command else {
+    let Command::Server { wasm } = Cli::parse().command else {
         return Err(anyhow!("only run command is supported"));
     };
 
     // link all dependencies
     let (mut linker, component) = runtime::RuntimeNext::new(wasm).init::<RunData>()?;
-    wasi_keyvalue_next::WasiKeyValue::add_to_linker(&mut linker)?;
-    wasi_http_next::WasiHttp::add_to_linker(&mut linker)?;
+    WasiKeyValue::add_to_linker(&mut linker)?;
+    WasiHttp::add_to_linker(&mut linker)?;
 
-    let instance_pre = linker.instantiate_pre(&component)?;
+    // instantiate state
     let run_state = RunState {
-        pre: instance_pre,
-        nats_client: NatsClient::connect().await?,
+        instance_pre: linker.instantiate_pre(&component)?,
+        nats_client: Nats::connect().await?,
     };
 
-    wasi_http_next::WasiHttp.run(&run_state).await?;
-
-    // start servers
-    // get instance pre
-    // let instance_pre = linker.instantiate_pre_async().await?;
-    // wasi_http_next::WasiHttp::serve();
+    // run server(s)
+    WasiHttp.run(&run_state).await?;
 
     Ok(())
 }
 
 #[derive(Clone)]
 pub struct RunState {
-    pre: InstancePre<RunData>,
-    nats_client: NatsClient,
+    instance_pre: InstancePre<RunData>,
+    nats_client: Nats,
 }
 
 impl State for RunState {
     type StoreData = RunData;
 
     fn instance_pre(&self) -> &InstancePre<Self::StoreData> {
-        &self.pre
+        &self.instance_pre
     }
 
     fn new_store(&self) -> Self::StoreData {
@@ -75,30 +71,7 @@ pub struct RunData {
     pub table: ResourceTable,
     pub wasi_ctx: WasiCtx,
     pub http_ctx: HttpCtx,
-    pub keyvalue_ctx: NatsClient,
-}
-
-impl RunData {
-    /// Create a new [`RunData`] instance.
-    #[must_use]
-    pub async fn new() -> Result<Self> {
-        let mut ctx = WasiCtxBuilder::new();
-        let wasi_ctx = ctx
-            .inherit_args()
-            .inherit_env()
-            .inherit_stdin()
-            .stdout(io::stdout())
-            .stderr(io::stderr())
-            .build();
-
-        // TODO: pass already connected NATS client
-        Ok(Self {
-            table: ResourceTable::new(),
-            wasi_ctx,
-            http_ctx: HttpCtx,
-            keyvalue_ctx: NatsClient::connect().await?,
-        })
-    }
+    pub keyvalue_ctx: Nats,
 }
 
 impl WasiView for RunData {

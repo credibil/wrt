@@ -18,7 +18,7 @@ pub struct Component {
 #[allow(clippy::unnecessary_wraps)]
 pub fn expand(_input: &Config) -> Result<TokenStream> {
     Ok(quote! {
-        let Command::Run { wasm } = Cli::parse().command else {
+        let Command::Server { wasm } = Cli::parse().command else {
             return Err(anyhow!("only run command is supported"));
         };
         let builder = RuntimeBuilder::new(wasm, true);

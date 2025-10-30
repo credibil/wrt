@@ -7,9 +7,9 @@ use wasi_messaging::{
     Client, FutureResult, Message, Metadata, Reply, RequestOptions, Subscriptions,
 };
 
-use crate::{CLIENT_NAME, NatsClient};
+use crate::{CLIENT_NAME, Client as Nats};
 
-impl Client for NatsClient {
+impl Client for Nats {
     fn name(&self) -> &'static str {
         CLIENT_NAME
     }

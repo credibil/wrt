@@ -15,7 +15,7 @@ use hyper::body::Incoming;
 use hyper::header::{FORWARDED, HOST};
 use hyper::server::conn::http1;
 use hyper::service::service_fn;
-use runtime::{Linkable, Runnable, State};
+use runtime::{Host, Server, State};
 use tokio::net::TcpListener;
 use tokio::sync::oneshot;
 use tracing::{Instrument, debug_span};
@@ -33,7 +33,7 @@ const DEF_HTTP_ADDR: &str = "0.0.0.0:8080";
 #[derive(Debug)]
 pub struct WasiHttp;
 
-impl<T> Linkable<T> for WasiHttp
+impl<T> Host<T> for WasiHttp
 where
     T: WasiHttpView + 'static,
 {
@@ -42,7 +42,7 @@ where
     }
 }
 
-impl<S> Runnable<S> for WasiHttp
+impl<S> Server<S> for WasiHttp
 where
     S: State,
     <S as State>::StoreData: WasiHttpView,

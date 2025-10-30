@@ -9,9 +9,9 @@ use futures::{FutureExt, StreamExt};
 use tokio::io::AsyncReadExt;
 use wasi_blobstore::{Client, Container, ContainerMetadata, FutureResult, ObjectMetadata};
 
-use crate::{CLIENT_NAME, NatsClient};
+use crate::{CLIENT_NAME, Client as Nats};
 
-impl Client for NatsClient {
+impl Client for Nats {
     fn name(&self) -> &'static str {
         CLIENT_NAME
     }
