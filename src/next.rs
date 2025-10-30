@@ -65,6 +65,7 @@ impl Runner for Initializer {
 
 /// `RunData` is used to share host state between the Wasm runtime and hosts
 /// each time they are instantiated.
+
 pub struct RunData {
     pub table: ResourceTable,
     pub wasi_ctx: WasiCtx,

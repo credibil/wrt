@@ -8,7 +8,6 @@ use std::env;
 
 use anyhow::{Context, Result, anyhow};
 use bytes::Bytes;
-use futures::future::{BoxFuture, FutureExt};
 use http::uri::{PathAndQuery, Uri};
 use http_body_util::combinators::BoxBody;
 use http_body_util::{BodyExt, Full};
@@ -17,7 +16,6 @@ use hyper::header::{FORWARDED, HOST};
 use hyper::server::conn::http1;
 use hyper::service::service_fn;
 use runtime::Runner;
-use runtime::{RunState, WasiHost};
 use tokio::net::TcpListener;
 use tokio::sync::oneshot;
 use tracing::{Instrument, debug_span};
@@ -32,6 +30,11 @@ type OutgoingBody = BoxBody<Bytes, anyhow::Error>;
 
 const DEF_HTTP_ADDR: &str = "0.0.0.0:8080";
 
+/// Add wasi:http to the provided linker.
+///
+/// # Errors
+///
+/// Returns an error if there is an issue adding wasi:http to the linker.
 pub fn add_to_linker<T>(linker: &mut Linker<T>) -> Result<()>
 where
     T: WasiHttpView + 'static,
@@ -44,10 +47,14 @@ pub struct WasiHttp;
 
 impl WasiHttp {
     /// Provide http proxy service the specified wasm component.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if there is an issue starting the server.
     pub async fn serve<R>(runner: &R) -> Result<()>
     where
         R: Runner,
-        <R as runtime::Runner>::StoreData: WasiHttpView,
+        <R as Runner>::StoreData: WasiHttpView,
     {
         // bail if server is not required
         let instance_pre = runner.instance_pre();
@@ -106,7 +113,7 @@ impl WasiHttp {
 struct Handler<R>
 where
     R: Runner,
-    <R as runtime::Runner>::StoreData: WasiHttpView,
+    <R as Runner>::StoreData: WasiHttpView,
 {
     runner: R,
     instance_pre: InstancePre<R::StoreData>,
@@ -115,7 +122,7 @@ where
 impl<R> Clone for Handler<R>
 where
     R: Runner,
-    <R as runtime::Runner>::StoreData: WasiHttpView,
+    <R as Runner>::StoreData: WasiHttpView,
 {
     fn clone(&self) -> Self {
         Self {
@@ -128,7 +135,7 @@ where
 impl<R> Handler<R>
 where
     R: Runner,
-    <R as runtime::Runner>::StoreData: WasiHttpView,
+    <R as Runner>::StoreData: WasiHttpView,
 {
     // Forward request to the wasm Guest.
     async fn handle(
