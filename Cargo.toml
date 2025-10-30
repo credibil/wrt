@@ -3,7 +3,7 @@ name = "runtime-cli"
 description = "Credibil runtime"
 publish = false
 readme = "README.md"
-default-run = "standard"
+# default-run = "standard"
 authors.workspace = true
 categories.workspace = true
 edition.workspace = true
@@ -13,6 +13,8 @@ license.workspace = true
 repository.workspace = true
 rust-version.workspace = true
 version.workspace = true
+
+default-run = "next"
 
 [[bin]]
 name = "standard"

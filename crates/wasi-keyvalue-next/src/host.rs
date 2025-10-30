@@ -30,6 +30,7 @@ mod generated {
 use std::fmt::Debug;
 use std::sync::Arc;
 
+use runtime::Linkable;
 use wasmtime::component::{HasData, Linker, ResourceTableError};
 use wasmtime_wasi::ResourceTable;
 
@@ -39,23 +40,19 @@ pub use self::resource::*;
 
 pub type Result<T, E = Error> = anyhow::Result<T, E>;
 
-/// Add all of the `wasi:keyvalue` world's interfaces to a
-/// [`wasmtime::component::Linker`].
-///
-/// # Errors
-///
-/// Will return an error if one or more of the interfaces could not be added to
-/// the linker.
-pub fn add_to_linker<T>(linker: &mut Linker<T>) -> anyhow::Result<()>
+impl<T> Linkable<T> for WasiKeyValue
 where
     T: WasiKeyValueView + 'static,
 {
-    store::add_to_linker::<_, WasiKeyValue>(linker, T::keyvalue)?;
-    atomics::add_to_linker::<_, WasiKeyValue>(linker, T::keyvalue)?;
-    batch::add_to_linker::<_, WasiKeyValue>(linker, T::keyvalue)
+    fn add_to_linker(linker: &mut Linker<T>) -> anyhow::Result<()> {
+        store::add_to_linker::<_, Self>(linker, T::keyvalue)?;
+        atomics::add_to_linker::<_, Self>(linker, T::keyvalue)?;
+        batch::add_to_linker::<_, Self>(linker, T::keyvalue)
+    }
 }
 
-struct WasiKeyValue;
+#[derive(Debug)]
+pub struct WasiKeyValue;
 impl HasData for WasiKeyValue {
     type Data<'a> = WasiKeyValueCtxView<'a>;
 }

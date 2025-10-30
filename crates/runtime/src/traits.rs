@@ -79,32 +79,56 @@ pub trait WasiHost: Debug + Sync + Send {
 
 /// WASI hosts implement this trait so that the runtime can link their
 /// dependencies and, optionally, run them in the context of the runtime.
-pub trait WasiHost2: Debug + Sync + Send {
-    // /// Link the service's dependencies prior to component instantiation.
-    // ///
-    // /// This method optionally allows the service to access the runtime
-    // /// linker's context (`Self::State`).
-    // ///
-    // /// # Errors
-    // ///
-    // /// Returns an linking error(s) from the service's generated bindings.
-    // fn add_to_linker<T>(&self, linker: &mut Linker<T>) -> Result<()>;
+pub trait WasiHost2<S: State, T>: Debug + Sync + Send {
+    /// Link the service's dependencies prior to component instantiation.
+    ///
+    /// This method optionally allows the service to access the runtime
+    /// linker's context (`Self::State`).
+    ///
+    /// # Errors
+    ///
+    /// Returns an linking error(s) from the service's generated bindings.
+    fn add_to_linker(linker: &mut Linker<T>) -> Result<()>;
 
     /// Start the service.
     ///
     /// This is typically implemented by services that instantiate (or run)
     /// wasm components.
     #[expect(unused_variables)]
-    fn start<T: Default>(&self, pre: InstancePre<T>) -> BoxFuture<'static, Result<()>> {
-        async { Ok(()) }.boxed()
+    fn run(&self, state: &S) -> impl Future<Output = Result<()>> {
+        async { Ok(()) }
     }
 }
 
-pub trait Runner: Clone + Send + Sync + 'static {
+pub trait State: Clone + Send + Sync + 'static {
     type StoreData: Send + 'static;
 
     #[must_use]
-    fn new_data(&self) -> Self::StoreData;
+    fn new_store(&self) -> Self::StoreData;
 
-    fn instance_pre(&self) -> InstancePre<Self::StoreData>;
+    fn instance_pre(&self) -> &InstancePre<Self::StoreData>;
+}
+
+/// WASI hosts implement this trait in order to allow the runtime to link their
+/// dependencies.
+pub trait Linkable<T>: Debug + Sync + Send {
+    /// Link the host's dependencies prior to component instantiation.
+    ///
+    /// # Errors
+    ///
+    /// Returns an linking error(s) from the service's generated bindings.
+    fn add_to_linker(linker: &mut Linker<T>) -> Result<()>;
+}
+
+/// WASI hosts that can be run implement this trait in order to allow the runtime to
+/// start them.
+pub trait Runnable<S: State>: Debug + Sync + Send {
+    /// Start the service.
+    ///
+    /// This is typically implemented by services that instantiate (or run)
+    /// wasm components.
+    #[allow(unused_variables)]
+    fn run(&self, state: &S) -> impl Future<Output = Result<()>> {
+        async { Ok(()) }
+    }
 }

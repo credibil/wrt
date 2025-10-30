@@ -30,7 +30,7 @@ impl RuntimeNext {
     }
 
     #[instrument(name = "runtime", skip(self))]
-    pub fn init<T: wasmtime_wasi::WasiView>(&self) -> Result<Linker<T>> {
+    pub fn init<T: wasmtime_wasi::WasiView>(&self) -> Result<(Linker<T>, Component)> {
         let mut config = Config::new();
         config.async_support(true);
         config.wasm_component_model_async(true);
@@ -58,7 +58,7 @@ impl RuntimeNext {
 
         // register services with runtime's Linker
         let mut linker = Linker::new(&engine);
-        // wasmtime_wasi::p2::add_to_linker_async(&mut linker)?;
+        wasmtime_wasi::p2::add_to_linker_async(&mut linker)?;
         wasmtime_wasi::p3::add_to_linker(&mut linker)?;
 
         // for service in &self.services {
@@ -78,7 +78,7 @@ impl RuntimeNext {
 
         tracing::info!("runtime intialized");
 
-        Ok(linker)
+        Ok((linker, component))
     }
 
     fn init_tracing(&self) -> Result<()> {

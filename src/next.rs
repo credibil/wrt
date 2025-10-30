@@ -2,10 +2,8 @@
 
 use anyhow::{Result, anyhow};
 use res_nats_next::NatsClient;
-// use wasmtime_wasi_http::p3::DefaultWasiHttpCtx;
-use runtime::Runner;
 use runtime::http_ctx::HttpCtx;
-use runtime::{Cli, Command, Parser};
+use runtime::{Cli, Command, Linkable, Parser, Runnable, State};
 use tokio::io;
 use wasi_http_next::{WasiHttpCtxView, WasiHttpView};
 use wasi_keyvalue_next::{WasiKeyValueCtxView, WasiKeyValueView};
@@ -19,9 +17,17 @@ async fn main() -> Result<()> {
     };
 
     // link all dependencies
-    let mut linker = runtime::RuntimeNext::new(wasm).init::<RunData>()?;
-    wasi_keyvalue_next::add_to_linker::<RunData>(&mut linker)?;
-    wasi_http_next::add_to_linker::<RunData>(&mut linker)?;
+    let (mut linker, component) = runtime::RuntimeNext::new(wasm).init::<RunData>()?;
+    wasi_keyvalue_next::WasiKeyValue::add_to_linker(&mut linker)?;
+    wasi_http_next::WasiHttp::add_to_linker(&mut linker)?;
+
+    let instance_pre = linker.instantiate_pre(&component)?;
+    let run_state = RunState {
+        pre: instance_pre,
+        nats_client: NatsClient::connect().await?,
+    };
+
+    wasi_http_next::WasiHttp.run(&run_state).await?;
 
     // start servers
     // get instance pre
@@ -32,19 +38,19 @@ async fn main() -> Result<()> {
 }
 
 #[derive(Clone)]
-pub struct Initializer {
+pub struct RunState {
     pre: InstancePre<RunData>,
     nats_client: NatsClient,
 }
 
-impl Runner for Initializer {
+impl State for RunState {
     type StoreData = RunData;
 
-    fn instance_pre(&self) -> InstancePre<Self::StoreData> {
-        self.pre.clone()
+    fn instance_pre(&self) -> &InstancePre<Self::StoreData> {
+        &self.pre
     }
 
-    fn new_data(&self) -> Self::StoreData {
+    fn new_store(&self) -> Self::StoreData {
         let mut ctx = WasiCtxBuilder::new();
         let wasi_ctx = ctx
             .inherit_args()
@@ -65,7 +71,6 @@ impl Runner for Initializer {
 
 /// `RunData` is used to share host state between the Wasm runtime and hosts
 /// each time they are instantiated.
-
 pub struct RunData {
     pub table: ResourceTable,
     pub wasi_ctx: WasiCtx,
