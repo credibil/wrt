@@ -8,20 +8,24 @@
 use anyhow::Context;
 use axum::routing::{get, post};
 use axum::{Json, Router};
+use base64ct::{Base64, Encoding};
+use bytes::Bytes;
 use http::Method;
 use http::header::{CACHE_CONTROL, IF_NONE_MATCH};
+use http_body_util::{Empty, Full};
 use serde_json::{Value, json};
 use tower_http::cors::{Any, CorsLayer};
 use tracing::Level;
-use wasi::exports::http::incoming_handler::Guest;
-use wasi::http::types::{IncomingRequest, ResponseOutparam};
-use wasi_http::{Client, Decode, Result};
+use wasip3::exports::http::handler::Guest;
+use wasip3::http::types::{ErrorCode, Request, Response};
+use wasi_http::{CacheOptions, Result};
 
 struct HttpGuest;
+wasip3::http::proxy::export!(HttpGuest);
 
 impl Guest for HttpGuest {
     #[wasi_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
-    fn handle(request: IncomingRequest, response_out: ResponseOutparam) {
+    async fn handle(request: Request) -> Result<Response, ErrorCode> {
         let router = Router::new()
             .route("/", get(get_handler))
             .layer(
@@ -32,25 +36,31 @@ impl Guest for HttpGuest {
             )
             .route("/", post(post_handler));
 
-        let out = wasi_http::serve(router, request);
-        ResponseOutparam::set(response_out, out);
+        wasi_http::serve(router, request).await
     }
 }
 
 // Forward request to external service and return the response
 #[wasi_otel::instrument]
 async fn get_handler() -> Result<Json<Value>> {
-    let body = Client::new()
-        .cache("credibil_bucket")
-        .get("https://jsonplaceholder.cypress.io/posts/1")
+    let request = http::Request::builder()
+        .method(Method::GET)
+        .uri("https://jsonplaceholder.cypress.io/posts/1")
         .header(CACHE_CONTROL, "max-age=300") // enable caching for 5 minutes
         .header(IF_NONE_MATCH, "qf55low9rjsrup46vsiz9r73") // provide cache key
-        .send()?
-        .json::<Value>()
-        .context("issue sending request")?;
+        .extension(CacheOptions {
+            bucket_name: "example-bucket".to_string(),
+            ttl_seconds: 300,
+        })
+        .body(Empty::<Bytes>::new())
+        .expect("failed to build request");
+    let response = wasi_http::handle(request).await?;
+    let body = response.into_body();
+
+    let body_str = Base64::encode_string(&body);
 
     Ok(Json(json!({
-        "response": body
+        "response": body_str
     })))
 }
 
@@ -61,19 +71,20 @@ async fn get_handler() -> Result<Json<Value>> {
 // missing.
 #[wasi_otel::instrument]
 async fn post_handler(Json(body): Json<Value>) -> Result<Json<Value>> {
-    let body = Client::new()
-        .cache("credibil_bucket")
-        .post("https://jsonplaceholder.cypress.io/posts")
+    let body = serde_json::to_vec(&body).context("issue serializing request body")?;
+    let body = Bytes::from(body);
+    let request = http::Request::builder()
+        .method(Method::POST)
+        .uri("https://jsonplaceholder.cypress.io/posts")
         .header(CACHE_CONTROL, "no-cache, max-age=300") // Go to origin for every request, but cache the response for 5 minutes
-        .bearer_auth("some token") // not required, but shown for example
-        .json(&body)
-        .send()?
-        .json::<Value>()
-        .context("issue sending request")?;
+        .body(Full::new(body))
+        .expect("failed to build request");
 
-    Ok(Json(json!({
-        "response": body
-    })))
+    let response = wasi_http::handle(request).await?;
+    let body = response.into_body();
+    let body = serde_json::from_slice::<Value>(&body).context("issue parsing response body")?;
+
+    Ok(Json(body))
 }
 
 // Handle preflight OPTIONS requests for CORS.
@@ -81,5 +92,3 @@ async fn post_handler(Json(body): Json<Value>) -> Result<Json<Value>> {
 async fn handle_options() -> Result<()> {
     Ok(())
 }
-
-wasi::http::proxy::export!(HttpGuest);
