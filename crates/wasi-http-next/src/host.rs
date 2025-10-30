@@ -58,7 +58,7 @@ impl WasiHttp {
     /// # Errors
     ///
     /// Returns an error if there is an issue starting the server.
-    pub async fn serve<S>(state: &S) -> Result<()>
+    async fn serve<S>(state: &S) -> Result<()>
     where
         S: State,
         <S as State>::StoreData: WasiHttpView,

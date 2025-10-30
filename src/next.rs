@@ -12,7 +12,7 @@ use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiVie
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let Command::Server { wasm } = Cli::parse().command else {
+    let Command::Run { wasm } = Cli::parse().command else {
         return Err(anyhow!("only run command is supported"));
     };
 

@@ -18,8 +18,8 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Command {
-    /// Server the specified wasm guest.
-    Server {
+    /// Run the specified wasm guest.
+    Run {
         /// The path to the wasm file to run. The file can either be a
         /// serialized (pre-compiled) wasmtime `Component` or standard
         /// WASI component
