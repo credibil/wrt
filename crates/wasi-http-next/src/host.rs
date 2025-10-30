@@ -46,7 +46,7 @@ impl WasiHttp {
     /// Provide http proxy service the specified wasm component.
     pub async fn serve<R>(runner: &R) -> Result<()>
     where
-        R: Runner + WasiHttpView,
+        R: Runner,
         <R as runtime::Runner>::StoreData: WasiHttpView,
     {
         // bail if server is not required
@@ -105,7 +105,7 @@ impl WasiHttp {
 // #[derive(Clone)]
 struct Handler<R>
 where
-    R: Runner + WasiHttpView,
+    R: Runner,
     <R as runtime::Runner>::StoreData: WasiHttpView,
 {
     runner: R,
@@ -114,7 +114,7 @@ where
 
 impl<R> Clone for Handler<R>
 where
-    R: Runner + WasiHttpView,
+    R: Runner,
     <R as runtime::Runner>::StoreData: WasiHttpView,
 {
     fn clone(&self) -> Self {
@@ -127,7 +127,7 @@ where
 
 impl<R> Handler<R>
 where
-    R: Runner + WasiHttpView,
+    R: Runner,
     <R as runtime::Runner>::StoreData: WasiHttpView,
 {
     // Forward request to the wasm Guest.
