@@ -7,15 +7,13 @@ use async_nats::jetstream::object_store::{Config, ObjectStore};
 use chrono::Utc;
 use futures::{FutureExt, StreamExt};
 use tokio::io::AsyncReadExt;
-use wasi_blobstore::{Client, Container, ContainerMetadata, FutureResult, ObjectMetadata};
+use wasi_blobstore_next::{
+    Container, ContainerMetadata, FutureResult, ObjectMetadata, WasiBlobstoreCtx,
+};
 
-use crate::{CLIENT_NAME, Client as Nats};
+use crate::Client;
 
-impl Client for Nats {
-    fn name(&self) -> &'static str {
-        CLIENT_NAME
-    }
-
+impl WasiBlobstoreCtx for Client {
     fn create_container(&self, name: String) -> FutureResult<Arc<dyn Container>> {
         tracing::trace!("creating container: {name}");
         let client = self.0.clone();

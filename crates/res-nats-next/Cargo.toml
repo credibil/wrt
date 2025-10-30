@@ -22,7 +22,7 @@ chrono.workspace = true
 futures.workspace = true
 nkeys = { version = "0.4.5" }
 tracing.workspace = true
-wasi-blobstore.workspace = true
+wasi-blobstore-next.workspace = true
 wasi-keyvalue-next.workspace = true
 wasi-messaging.workspace = true
 

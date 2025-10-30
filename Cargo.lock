@@ -2952,7 +2952,7 @@ dependencies = [
  "runtime",
  "tokio",
  "tracing",
- "wasi-blobstore",
+ "wasi-blobstore-next",
  "wasi-keyvalue-next",
  "wasi-messaging",
 ]
@@ -3023,6 +3023,7 @@ dependencies = [
  "tower-http",
  "tracing",
  "wasi-blobstore",
+ "wasi-blobstore-next",
  "wasi-http",
  "wasi-http-next",
  "wasi-keyvalue",
@@ -4256,6 +4257,20 @@ checksum = "ccf3ec651a847eb01de73ccad15eb7d99f80485de043efb2f370cd654f4ea44b"
 
 [[package]]
 name = "wasi-blobstore"
+version = "0.12.0"
+dependencies = [
+ "anyhow",
+ "bytes",
+ "futures",
+ "runtime",
+ "tracing",
+ "wasmtime",
+ "wasmtime-wasi",
+ "wit-bindgen",
+]
+
+[[package]]
+name = "wasi-blobstore-next"
 version = "0.12.0"
 dependencies = [
  "anyhow",
