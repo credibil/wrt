@@ -48,94 +48,59 @@ where
     <S as State>::StoreData: WasiHttpView,
 {
     async fn run(&self, state: &S) -> Result<()> {
-        Self::serve(state).await
+        serve(state).await
     }
 }
 
-impl WasiHttp {
-    /// Provide http proxy service the specified wasm component.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if there is an issue starting the server.
-    async fn serve<S>(state: &S) -> Result<()>
-    where
-        S: State,
-        <S as State>::StoreData: WasiHttpView,
-    {
-        // bail if server is not required
-        let instance_pre = state.instance_pre();
-        let component_type = instance_pre.component().component_type();
-        let mut exports = component_type.imports(instance_pre.engine());
-        if !exports.any(|e| e.0.starts_with("wasi:http")) {
-            tracing::debug!("http server not required");
-            return Ok(());
-        }
+async fn serve<S>(state: &S) -> Result<()>
+where
+    S: State,
+    <S as State>::StoreData: WasiHttpView,
+{
+    let addr = env::var("HTTP_ADDR").unwrap_or_else(|_| DEF_HTTP_ADDR.into());
+    let listener = TcpListener::bind(&addr).await?;
+    tracing::info!("http server listening on: {}", listener.local_addr()?);
 
-        let addr = env::var("HTTP_ADDR").unwrap_or_else(|_| DEF_HTTP_ADDR.into());
-        let listener = TcpListener::bind(&addr).await?;
-        tracing::info!("http server listening on: {}", listener.local_addr()?);
+    let handler: Handler<S> = Handler { state: state.clone() };
 
-        let handler: Handler<S> = Handler {
-            state: state.clone(),
-            // instance_pre: instance_pre.clone(),
-        };
+    // listen for requests until terminated
+    loop {
+        let (stream, _) = listener.accept().await?;
+        stream.set_nodelay(true)?;
+        let stream = TokioIo::new(stream);
+        let handler = handler.clone();
 
-        // listen for requests until terminated
-        loop {
-            let (stream, _) = listener.accept().await?;
-            stream.set_nodelay(true)?;
-            let stream = TokioIo::new(stream);
-            let handler = handler.clone();
+        tokio::spawn(async move {
+            let mut http1 = http1::Builder::new();
+            http1.keep_alive(true);
 
-            tokio::spawn(async move {
-                let mut http1 = http1::Builder::new();
-                http1.keep_alive(true);
-
-                if let Err(e) = http1
-                    .serve_connection(
-                        stream,
-                        service_fn(move |request| {
-                            let handler = handler.clone();
-                            async move {
-                                let response = handler
-                                    .handle(request)
-                                    .await
-                                    .unwrap_or_else(|_e| internal_error());
-                                Ok::<_, Infallible>(response)
-                            }
-                        }),
-                    )
-                    .await
-                {
-                    tracing::error!("connection error: {e:?}");
-                }
-            });
-        }
+            if let Err(e) = http1
+                .serve_connection(
+                    stream,
+                    service_fn(move |request| {
+                        let handler = handler.clone();
+                        async move {
+                            let response =
+                                handler.handle(request).await.unwrap_or_else(|_e| internal_error());
+                            Ok::<_, Infallible>(response)
+                        }
+                    }),
+                )
+                .await
+            {
+                tracing::error!("connection error: {e:?}");
+            }
+        });
     }
 }
 
-// #[derive(Clone)]
+#[derive(Clone)]
 struct Handler<S>
 where
     S: State,
     <S as State>::StoreData: WasiHttpView,
 {
     state: S,
-    // instance_pre: InstancePre<S::StoreData>,
-}
-
-impl<S> Clone for Handler<S>
-where
-    S: State,
-    <S as State>::StoreData: WasiHttpView,
-{
-    fn clone(&self) -> Self {
-        Self {
-            state: self.state.clone(),
-            // instance_pre: self.instance_pre.clone(),
-        }
-    }
 }
 
 impl<S> Handler<S>

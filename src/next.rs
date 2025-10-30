@@ -16,12 +16,12 @@ async fn main() -> Result<()> {
         return Err(anyhow!("only run command is supported"));
     };
 
-    // link all dependencies
+    // link dependencies
     let (mut linker, component) = runtime::RuntimeNext::new(wasm).init::<RunData>()?;
     WasiKeyValue::add_to_linker(&mut linker)?;
     WasiHttp::add_to_linker(&mut linker)?;
 
-    // instantiate state
+    // prepare state
     let run_state = RunState {
         instance_pre: linker.instantiate_pre(&component)?,
         nats_client: Nats::connect().await?,
