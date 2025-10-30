@@ -37,6 +37,7 @@ jit = ["runtime/jit"]
 [dependencies]
 anyhow.workspace = true
 tracing.workspace = true
+wasip3.workspace = true
 wasi-blobstore.workspace = true
 wasi-http.workspace = true
 wasi-keyvalue.workspace = true

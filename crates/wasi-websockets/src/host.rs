@@ -26,7 +26,7 @@ use futures_util::{SinkExt, StreamExt, future, pin_mut};
 use runtime::RunState;
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::{Mutex, OnceCell};
-use tokio_tungstenite::tungstenite::{Bytes, Message};
+use tokio_tungstenite::tungstenite::{Bytes, Message, Utf8Bytes};
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, accept_async, connect_async};
 use wasmtime::component::{HasData, InstancePre, Linker};
 use wasmtime_wasi::ResourceTable;
@@ -153,7 +153,11 @@ async fn accept_connection(peer_map: PeerMap, peer: SocketAddr, stream: TcpStrea
 
     let broadcast_incoming = incoming.try_for_each(|msg| {
         if is_service_peer {
-            tracing::info!("Received a message from {}: {}", peer, msg.to_text().unwrap());
+            tracing::info!(
+                "Received a message from service peer {}: {}",
+                peer,
+                msg.to_text().unwrap()
+            );
             let message: PublishMessage = match serde_json::from_str(msg.to_text().unwrap()) {
                 Ok(m) => m,
                 Err(e) => {
@@ -177,12 +181,15 @@ async fn accept_connection(peer_map: PeerMap, peer: SocketAddr, stream: TcpStrea
             };
 
             for recp in recipents {
-                recp.sender.unbounded_send(msg.clone()).unwrap();
+                recp.sender
+                    .unbounded_send(Message::Text(Utf8Bytes::from(message.content.clone())))
+                    .unwrap();
             }
         } else if let Message::Text(text) = msg {
             // Handle client filter subscription
             let json_msg: Result<serde_json::Value, _> = serde_json::from_str(&text);
             if json_msg.is_ok() {
+                tracing::info!("Setting filter for peer {}: {}", peer, text);
                 if let Some(peer_info) = peer_map.lock().unwrap().get_mut(&peer) {
                     peer_info.query = text.to_string();
                 }
@@ -233,7 +240,7 @@ async fn service_client() -> &'static Mutex<WebSocketStream<MaybeTlsStream<TcpSt
     SERVICE_CLIENT
         .get_or_init(|| async {
             let addr = env::var("WEBSOCKETS_ADDR").unwrap_or_else(|_| DEF_WEBSOCKETS_ADDR.into());
-            let (client, _) = connect_async(addr).await.unwrap();
+            let (client, _) = connect_async(format!("ws://{addr}")).await.unwrap();
             tokio::sync::Mutex::new(client)
         })
         .await
