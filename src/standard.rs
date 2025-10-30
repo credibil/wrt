@@ -21,7 +21,7 @@ async fn main() -> Result<()> {
     //     vault: [AzKeyVault],
     // });
 
-    let Command::Run { wasm } = Cli::parse().command else {
+    let Command::Server { wasm } = Cli::parse().command else {
         return Err(anyhow!("only run command is supported"));
     };
     let builder = RuntimeBuilder::new(wasm, true);
