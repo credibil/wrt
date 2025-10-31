@@ -3654,6 +3654,23 @@ dependencies = [
  "runtime",
  "tokio",
  "tracing",
+ "wasi-blobstore",
+ "wasi-keyvalue-next",
+ "wasi-messaging",
+]
+
+[[package]]
+name = "res-nats-next"
+version = "0.12.0"
+dependencies = [
+ "anyhow",
+ "async-nats",
+ "chrono",
+ "futures",
+ "nkeys",
+ "runtime",
+ "tokio",
+ "tracing",
  "wasi-blobstore-next",
  "wasi-keyvalue-next",
  "wasi-messaging",
