@@ -3657,6 +3657,9 @@ dependencies = [
  "wasi-blobstore-next",
  "wasi-keyvalue-next",
  "wasi-messaging",
+]
+
+[[package]]
 name = "res-redis"
 version = "0.12.0"
 dependencies = [
@@ -5396,7 +5399,7 @@ dependencies = [
  "opentelemetry",
  "opentelemetry-proto",
  "opentelemetry_sdk",
- "prost",
+ "prost 0.14.1",
  "reqwest",
  "runtime",
  "tracing",
