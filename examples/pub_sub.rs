@@ -3,12 +3,12 @@
 use std::thread::sleep;
 use std::time::{Duration, Instant};
 
-use anyhow::Result;
 use axum::routing::post;
 use axum::{Json, Router};
 use bytes::Bytes;
 use serde_json::{Value, json};
 use tracing::Level;
+use wasi_http::Result;
 use wasi_messaging::incoming_handler::Configuration;
 use wasi_messaging::producer;
 use wasi_messaging::types::{Client, Error, Message};
@@ -28,14 +28,21 @@ impl Guest for Http {
 
 // #[wasi_otel::instrument]
 #[axum::debug_handler]
-async fn handler(body: Bytes) -> Json<Value> {
+async fn handler(Json(body): Json<Value>) -> Result<Json<Value>> {
+    let body_bytes = Bytes::from(body.to_string());
     let client = Client::connect("nats").unwrap();
-    let message = Message::new(&body);
-    wit_bindgen::spawn(async move {
-        producer::send(&client, "a".to_string(), message).await.expect("should send message");
+    let message = Message::new(&body_bytes);
+    // TODO: really want spawn here but handler returns and the guest is
+    // dropped before the async task completes. Needs investigation.
+    wit_bindgen::block_on(async move {
+        if let Err(e) = producer::send(&client, "a".to_string(), message).await {
+            tracing::error!("error sending message to topic 'a': {e}");
+            println!("error sending message to topic 'a': {e}");
+        }
+        println!("handler: message published to topic 'a'");
     });
 
-    Json(json!({"message": "message published"}))
+    Ok(Json(json!({"message": "message published"})))
 }
 
 pub struct Messaging;
