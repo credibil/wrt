@@ -1,9 +1,3 @@
-use crate::WasiKeyValueCtxView;
-use crate::host::Result;
-use crate::host::WasiKeyValue;
-use crate::host::generated::wasi::keyvalue::batch::{Host, HostWithStore};
-use crate::host::resource::BucketProxy;
-use crate::host::store_impl::get_bucket;
 use anyhow::anyhow;
 use wasmtime::component::{Accessor, Resource};
 
