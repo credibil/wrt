@@ -32,10 +32,6 @@ path = "src/next.rs"
 name = "realtime"
 path = "src/realtime.rs"
 
-[[bin]]
-name = "keyvalue"
-path = "src/keyvalue.rs"
-
 [lints]
 workspace = true
 

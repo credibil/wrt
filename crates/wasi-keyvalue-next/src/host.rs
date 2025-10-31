@@ -33,7 +33,6 @@ use std::sync::Arc;
 use runtime::Host;
 use wasmtime::component::{HasData, Linker, ResourceTableError};
 use wasmtime_wasi::ResourceTable;
-use runtime::{ WasiHost};
 
 use self::generated::wasi::keyvalue::store::Error;
 use self::generated::wasi::keyvalue::{atomics, batch, store};
