@@ -1,8 +1,9 @@
 #![cfg(not(target_arch = "wasm32"))]
 
 use anyhow::{Result, anyhow};
-use res_mongodb_next::Client as MongoDb;
-use res_nats_next::Client as Nats;
+use res_azkeyvault_next::Client as AzKeyVaultCtx;
+use res_mongodb_next::Client as MongoDbCtx;
+use res_nats_next::Client as NatsCtx;
 use runtime::http_ctx::HttpCtx;
 use runtime::{Cli, Command, Parser, Resource, RuntimeNext, Server, State};
 use tokio::io;
@@ -10,6 +11,7 @@ use wasi_blobstore_next::{WasiBlobstore, WasiBlobstoreCtxView, WasiBlobstoreView
 use wasi_http_next::{WasiHttp, WasiHttpCtxView, WasiHttpView};
 use wasi_keyvalue_next::{WasiKeyValue, WasiKeyValueCtxView, WasiKeyValueView};
 use wasi_otel_next::{DefaultOtelCtx, WasiOtel, WasiOtelCtxView, WasiOtelView};
+use wasi_vault_next::{WasiVault, WasiVaultCtxView, WasiVaultView};
 use wasmtime::component::InstancePre;
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 
@@ -21,17 +23,20 @@ async fn main() -> Result<()> {
 
     // link dependencies
     let mut rt = RuntimeNext::<RunData>::new(wasm).compile()?;
+    rt.link(WasiHttp)?;
     rt.link(WasiOtel)?;
     rt.link(WasiBlobstore)?;
     rt.link(WasiKeyValue)?;
-    rt.link(WasiHttp)?;
+    rt.link(WasiVault)?;
+
     let instance_pre = rt.pre_instantiate()?;
 
     // prepare state
     let run_state = RunState {
         instance_pre,
-        nats_client: Nats::connect().await?,
-        mongodb_client: MongoDb::connect().await?,
+        nats_client: NatsCtx::connect().await?,
+        mongodb_client: MongoDbCtx::connect().await?,
+        vault_client: AzKeyVaultCtx::connect().await?,
     };
 
     // run server(s)
@@ -43,8 +48,9 @@ async fn main() -> Result<()> {
 #[derive(Clone)]
 pub struct RunState {
     instance_pre: InstancePre<RunData>,
-    nats_client: Nats,
-    mongodb_client: MongoDb,
+    nats_client: NatsCtx,
+    mongodb_client: MongoDbCtx,
+    vault_client: AzKeyVaultCtx,
 }
 
 impl State for RunState {
@@ -71,6 +77,7 @@ impl State for RunState {
             otel_ctx: DefaultOtelCtx,
             keyvalue_ctx: self.nats_client.clone(),
             blobstore_ctx: self.mongodb_client.clone(),
+            vault_ctx: self.vault_client.clone(),
         }
     }
 }
@@ -82,8 +89,9 @@ pub struct RunData {
     pub wasi_ctx: WasiCtx,
     pub http_ctx: HttpCtx,
     pub otel_ctx: DefaultOtelCtx,
-    pub keyvalue_ctx: Nats,
-    pub blobstore_ctx: MongoDb,
+    pub keyvalue_ctx: NatsCtx,
+    pub blobstore_ctx: MongoDbCtx,
+    pub vault_ctx: AzKeyVaultCtx,
 }
 
 impl WasiView for RunData {
@@ -126,6 +134,15 @@ impl WasiBlobstoreView for RunData {
     fn blobstore(&mut self) -> WasiBlobstoreCtxView<'_> {
         WasiBlobstoreCtxView {
             ctx: &mut self.blobstore_ctx,
+            table: &mut self.table,
+        }
+    }
+}
+
+impl WasiVaultView for RunData {
+    fn vault(&mut self) -> WasiVaultCtxView<'_> {
+        WasiVaultCtxView {
+            ctx: &mut self.vault_ctx,
             table: &mut self.table,
         }
     }

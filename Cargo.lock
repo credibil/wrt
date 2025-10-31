@@ -2909,6 +2909,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "res-azkeyvault-next"
+version = "0.12.0"
+dependencies = [
+ "anyhow",
+ "azure_core",
+ "azure_identity",
+ "azure_security_keyvault_secrets",
+ "base64ct",
+ "futures",
+ "http",
+ "runtime",
+ "tracing",
+ "wasi-vault-next",
+]
+
+[[package]]
 name = "res-mongodb"
 version = "0.12.0"
 dependencies = [
@@ -3029,6 +3045,7 @@ dependencies = [
  "opentelemetry",
  "reqwest",
  "res-azkeyvault",
+ "res-azkeyvault-next",
  "res-mongodb",
  "res-mongodb-next",
  "res-nats",
@@ -3048,6 +3065,7 @@ dependencies = [
  "wasi-otel",
  "wasi-otel-next",
  "wasi-vault",
+ "wasi-vault-next",
  "wasip3",
  "wasmtime",
  "wasmtime-wasi",
@@ -4481,6 +4499,19 @@ dependencies = [
 
 [[package]]
 name = "wasi-vault"
+version = "0.12.0"
+dependencies = [
+ "anyhow",
+ "futures",
+ "runtime",
+ "tracing",
+ "wasmtime",
+ "wasmtime-wasi",
+ "wit-bindgen",
+]
+
+[[package]]
+name = "wasi-vault-next"
 version = "0.12.0"
 dependencies = [
  "anyhow",

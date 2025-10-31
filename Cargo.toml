@@ -50,6 +50,7 @@ wasi-blobstore-next.workspace = true
 wasi-http-next.workspace = true
 wasi-keyvalue-next.workspace = true
 wasi-otel-next.workspace = true
+wasi-vault-next.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 base64ct.workspace = true
@@ -64,6 +65,7 @@ res-mongodb.workspace = true
 res-mongodb-next = { path = "crates/res-mongodb-next" }
 res-nats.workspace = true
 res-nats-next = { path = "crates/res-nats-next" }
+res-azkeyvault-next = { path = "crates/res-azkeyvault-next" }
 runtime.workspace = true
 tokio = { workspace = true, features = ["signal"] }
 wasmtime-wasi.workspace = true
@@ -248,6 +250,7 @@ wasi-blobstore-next = { path = "crates/wasi-blobstore-next" }
 wasi-http-next = { path = "crates/wasi-http-next" }
 wasi-keyvalue-next = { path = "crates/wasi-keyvalue-next" }
 wasi-otel-next = { path = "crates/wasi-otel-next" }
+wasi-vault-next = { path = "crates/wasi-vault-next" }
 
 # [patch."https://github.com/credibil/core.git"]
 # credibil-otel = { path = "../../credibil/core/crates/otel" }

@@ -75,12 +75,6 @@ impl Host for WasiKeyValueCtxView<'_> {
 
 impl HostBucket for WasiKeyValueCtxView<'_> {}
 
-impl From<anyhow::Error> for Error {
-    fn from(err: anyhow::Error) -> Self {
-        Self::Other(err.to_string())
-    }
-}
-
 pub fn get_bucket<T>(
     accessor: &Accessor<T, WasiKeyValue>, self_: &Resource<BucketProxy>,
 ) -> Result<BucketProxy> {
@@ -88,4 +82,10 @@ pub fn get_bucket<T>(
         let bucket = store.get().table.get(self_).map_err(|_e| Error::NoSuchStore)?;
         Ok::<_, Error>(bucket.clone())
     })
+}
+
+impl From<anyhow::Error> for Error {
+    fn from(err: anyhow::Error) -> Self {
+        Self::Other(err.to_string())
+    }
 }
