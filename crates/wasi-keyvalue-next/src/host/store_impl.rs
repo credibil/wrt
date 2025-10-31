@@ -98,3 +98,9 @@ pub fn get_bucket<T>(
         Ok::<_, Error>(bucket.clone())
     })
 }
+
+impl From<anyhow::Error> for Error {
+    fn from(err: anyhow::Error) -> Self {
+        Self::Other(err.to_string())
+    }
+}
