@@ -1,4 +1,0 @@
-[sql]
-url = "https://github.com/credibil/wasi-sql/archive/main.tar.gz"
-sha256 = "3bde1d592792fa0eea50a2ed3ba25255e63b47f60a86cf7dfb462b69d5a7316b"
-sha512 = "40510d9d4ac90543332854b257e5b88c0bf17fc7fcafb447ea82adf114f8c542b2052f7e8a88bf8dfdc037e741f0ad0b788af67e3b36a6dca62681b77bc89952"

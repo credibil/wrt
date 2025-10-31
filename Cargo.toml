@@ -51,12 +51,6 @@ wasi-messaging-kafka.workspace = true
 wasi-otel.workspace = true
 wasi-vault.workspace = true
 
-wasi-blobstore-next.workspace = true
-wasi-http-next.workspace = true
-wasi-keyvalue-next.workspace = true
-wasi-otel-next.workspace = true
-wasi-vault-next.workspace = true
-
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 base64ct.workspace = true
 build-macro = { path = "crates/build-macro", version = "0.12.0", registry = "credibil" }
@@ -67,10 +61,7 @@ http-body-util.workspace = true
 reqwest.workspace = true
 res-azkeyvault.workspace = true
 res-mongodb.workspace = true
-res-mongodb-next = { path = "crates/res-mongodb-next" }
 res-nats.workspace = true
-res-nats-next = { path = "crates/res-nats-next" }
-res-azkeyvault-next = { path = "crates/res-azkeyvault-next" }
 res-redis.workspace = true
 runtime.workspace = true
 tokio = { workspace = true, features = ["signal"] }
@@ -163,7 +154,7 @@ homepage = "https://credibil.io"
 keywords = ["decentralized", "identity"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/credibil/wrt"
-rust-version = "1.90"
+rust-version = "1.91"
 version = "0.12.0"
 
 [workspace.lints.rust]
@@ -264,12 +255,6 @@ wasi-messaging-kafka = { path = "crates/wasi-messaging-kafka", version = "0.12.0
 wasi-otel = { path = "crates/wasi-otel", version = "0.12.0", registry = "credibil" }
 wasi-otel-attr = { path = "crates/wasi-otel-attr", version = "0.12.0", registry = "credibil" }
 wasi-vault = { path = "crates/wasi-vault", version = "0.12.0", registry = "credibil" }
-
-wasi-blobstore-next = { path = "crates/wasi-blobstore-next" }
-wasi-http-next = { path = "crates/wasi-http-next" }
-wasi-keyvalue-next = { path = "crates/wasi-keyvalue-next" }
-wasi-otel-next = { path = "crates/wasi-otel-next" }
-wasi-vault-next = { path = "crates/wasi-vault-next" }
 
 # [patch."https://github.com/credibil/core.git"]
 # credibil-otel = { path = "../../credibil/core/crates/otel" }

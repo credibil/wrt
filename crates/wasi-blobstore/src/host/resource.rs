@@ -9,39 +9,6 @@ use crate::host::generated::wasi::blobstore::container::{ContainerMetadata, Obje
 
 pub type FutureResult<T> = BoxFuture<'static, Result<T>>;
 
-/// Blobstore providers implement the [`Client`] trait to allow the host to
-/// connect to a backend (Azure Storage, NATS object store, etc) and open
-/// containers.
-pub trait Client: Debug + Send + Sync + 'static {
-    /// The name of the backend this client is implemented for.
-    fn name(&self) -> &'static str;
-
-    /// Open a container.
-    fn create_container(&self, name: String) -> FutureResult<Arc<dyn Container>>;
-
-    /// Get a container.
-    fn get_container(&self, name: String) -> FutureResult<Arc<dyn Container>>;
-
-    /// Delete a container.
-    fn delete_container(&self, name: String) -> FutureResult<()>;
-
-    /// Check if a container exists.
-    fn container_exists(&self, name: String) -> FutureResult<bool>;
-}
-
-/// [`ClientProxy`] provides a concrete wrapper around a `dyn Client` object.
-/// It is used to store client resources in the resource table.
-#[derive(Clone, Debug)]
-pub struct ClientProxy(pub Arc<dyn Client>);
-
-impl Deref for ClientProxy {
-    type Target = Arc<dyn Client>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
 /// Providers implement the [`Container`] trait to allow the host to
 /// interact with different backend containers.
 pub trait Container: Debug + Send + Sync + 'static {

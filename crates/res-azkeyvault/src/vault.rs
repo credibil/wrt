@@ -8,16 +8,12 @@ use base64ct::{Base64UrlUnpadded, Encoding};
 use futures::TryStreamExt;
 use futures::future::FutureExt;
 use http::StatusCode;
-use wasi_vault::{Client, FutureResult, Locker};
+use wasi_vault::{FutureResult, Locker, WasiVaultCtx};
 
-use crate::{AzClient, CLIENT_NAME};
+use crate::Client;
 
-impl Client for AzClient {
-    fn name(&self) -> &'static str {
-        CLIENT_NAME
-    }
-
-    fn open(&self, identifier: String) -> FutureResult<Arc<dyn Locker>> {
+impl WasiVaultCtx for Client {
+    fn open_locker(&self, identifier: String) -> FutureResult<Arc<dyn Locker>> {
         tracing::trace!("opening locker: {identifier}");
         let client = Arc::clone(&self.0);
 

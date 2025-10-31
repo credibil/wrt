@@ -1,4 +1,0 @@
-[otel]
-url = "https://github.com/credibil/wasi-otel/archive/main.tar.gz"
-sha256 = "5c0d008ad220601455750bcba8995b8e0a4866d2bf917124f84876a1cbcfcb1c"
-sha512 = "9300749b14969292edeefdc695e83c67da0095a566bd60dc65c73107e25a400ebc269aec713a3c50cf6dd400e59e8ed46d557141a98e7179697fdcc8d3d797b0"

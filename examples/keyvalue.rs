@@ -6,8 +6,8 @@ use axum::{Json, Router};
 use bytes::Bytes;
 use serde_json::{Value, json};
 use tracing::Level;
-use wasi_http_next::Result;
-use wasi_keyvalue_next::store;
+use wasi_http::Result;
+use wasi_keyvalue::store;
 use wasip3::exports::http::handler::Guest;
 use wasip3::http::types::{ErrorCode, Request, Response};
 
@@ -18,7 +18,7 @@ impl Guest for Http {
     #[wasi_otel::instrument(name = "http_guest_handle",level = Level::INFO)]
     async fn handle(request: Request) -> Result<Response, ErrorCode> {
         let router = Router::new().route("/", post(handler));
-        wasi_http_next::serve(router, request).await
+        wasi_http::serve(router, request).await
     }
 }
 

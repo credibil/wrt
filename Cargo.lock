@@ -686,9 +686,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.2.43"
+version = "1.2.44"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "739eb0f94557554b3ca9a86d2d37bebd49c5e6d0c1d2bda35ba5bdac830befc2"
+checksum = "37521ac7aabe3d13122dc382493e20c9416f299d2ccd5b3a5340a2570cdeb0f3"
 dependencies = [
  "find-msvc-tools",
  "shlex",
@@ -3580,22 +3580,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "res-azkeyvault-next"
-version = "0.12.0"
-dependencies = [
- "anyhow",
- "azure_core",
- "azure_identity",
- "azure_security_keyvault_secrets",
- "base64ct",
- "futures",
- "http",
- "runtime",
- "tracing",
- "wasi-vault-next",
-]
-
-[[package]]
 name = "res-mongodb"
 version = "0.12.0"
 dependencies = [
@@ -3608,21 +3592,6 @@ dependencies = [
  "serde_json",
  "tracing",
  "wasi-blobstore",
-]
-
-[[package]]
-name = "res-mongodb-next"
-version = "0.12.0"
-dependencies = [
- "anyhow",
- "chrono",
- "futures",
- "mongodb",
- "runtime",
- "serde",
- "serde_json",
- "tracing",
- "wasi-blobstore-next",
 ]
 
 [[package]]
@@ -3639,23 +3608,6 @@ dependencies = [
  "tracing",
  "wasi-blobstore",
  "wasi-keyvalue",
- "wasi-messaging",
-]
-
-[[package]]
-name = "res-nats-next"
-version = "0.12.0"
-dependencies = [
- "anyhow",
- "async-nats",
- "chrono",
- "futures",
- "nkeys",
- "runtime",
- "tokio",
- "tracing",
- "wasi-blobstore-next",
- "wasi-keyvalue-next",
  "wasi-messaging",
 ]
 
@@ -3728,11 +3680,8 @@ dependencies = [
  "opentelemetry",
  "reqwest",
  "res-azkeyvault",
- "res-azkeyvault-next",
  "res-mongodb",
- "res-mongodb-next",
  "res-nats",
- "res-nats-next",
  "res-redis",
  "runtime",
  "serde_json",
@@ -3740,17 +3689,12 @@ dependencies = [
  "tower-http",
  "tracing",
  "wasi-blobstore",
- "wasi-blobstore-next",
  "wasi-http",
- "wasi-http-next",
  "wasi-keyvalue",
- "wasi-keyvalue-next",
  "wasi-messaging",
  "wasi-messaging-kafka",
  "wasi-otel",
- "wasi-otel-next",
  "wasi-vault",
- "wasi-vault-next",
  "wasip3",
  "wasmtime",
  "wasmtime-wasi",
@@ -5209,20 +5153,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "wasi-blobstore-next"
-version = "0.12.0"
-dependencies = [
- "anyhow",
- "bytes",
- "futures",
- "runtime",
- "tracing",
- "wasmtime",
- "wasmtime-wasi",
- "wit-bindgen",
-]
-
-[[package]]
 name = "wasi-http"
 version = "0.12.0"
 dependencies = [
@@ -5231,36 +5161,6 @@ dependencies = [
  "bincode",
  "bytes",
  "credibil-encoding",
- "futures",
- "http",
- "http-body",
- "http-body-util",
- "hyper",
- "percent-encoding",
- "runtime",
- "serde",
- "serde_json",
- "serde_urlencoded",
- "tokio",
- "tower",
- "tracing",
- "wasi-keyvalue",
- "wasip3",
- "wasmtime",
- "wasmtime-wasi-http",
- "wit-bindgen",
-]
-
-[[package]]
-name = "wasi-http-next"
-version = "0.12.0"
-dependencies = [
- "anyhow",
- "axum",
- "bincode",
- "bytes",
- "credibil-encoding",
- "futures",
  "http",
  "http-body",
  "http-body-util",
@@ -5282,21 +5182,6 @@ dependencies = [
 
 [[package]]
 name = "wasi-keyvalue"
-version = "0.12.0"
-dependencies = [
- "anyhow",
- "async-nats",
- "base64ct",
- "futures",
- "runtime",
- "tracing",
- "wasmtime",
- "wasmtime-wasi",
- "wit-bindgen",
-]
-
-[[package]]
-name = "wasi-keyvalue-next"
 version = "0.12.0"
 dependencies = [
  "anyhow",
@@ -5386,31 +5271,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "wasi-otel-next"
-version = "0.12.0"
-dependencies = [
- "anyhow",
- "cfg-if",
- "credibil-otel",
- "futures",
- "hex",
- "http",
- "num-traits",
- "opentelemetry",
- "opentelemetry-proto",
- "opentelemetry_sdk",
- "prost 0.14.1",
- "reqwest",
- "runtime",
- "tracing",
- "tracing-opentelemetry",
- "tracing-subscriber",
- "wasi-otel-attr",
- "wasmtime",
- "wit-bindgen",
-]
-
-[[package]]
 name = "wasi-sql"
 version = "0.12.0"
 dependencies = [
@@ -5424,33 +5284,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "wasi-sql-next"
-version = "0.12.0"
-dependencies = [
- "anyhow",
- "futures",
- "runtime",
- "tracing",
- "wasmtime",
- "wasmtime-wasi",
- "wit-bindgen",
-]
-
-[[package]]
 name = "wasi-vault"
-version = "0.12.0"
-dependencies = [
- "anyhow",
- "futures",
- "runtime",
- "tracing",
- "wasmtime",
- "wasmtime-wasi",
- "wit-bindgen",
-]
-
-[[package]]
-name = "wasi-vault-next"
 version = "0.12.0"
 dependencies = [
  "anyhow",

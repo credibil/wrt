@@ -1,17 +1,17 @@
 #![cfg(not(target_arch = "wasm32"))]
 
 use anyhow::{Result, anyhow};
-use res_azkeyvault_next::Client as AzKeyVaultCtx;
-use res_mongodb_next::Client as MongoDbCtx;
-use res_nats_next::Client as NatsCtx;
+use res_azkeyvault::Client as AzKeyVaultCtx;
+use res_mongodb::Client as MongoDbCtx;
+use res_nats::Client as NatsCtx;
 use runtime::http_ctx::HttpCtx;
 use runtime::{Cli, Command, Parser, Resource, RuntimeNext, Server, State};
 use tokio::io;
-use wasi_blobstore_next::{WasiBlobstore, WasiBlobstoreCtxView, WasiBlobstoreView};
-use wasi_http_next::{WasiHttp, WasiHttpCtxView, WasiHttpView};
-use wasi_keyvalue_next::{WasiKeyValue, WasiKeyValueCtxView, WasiKeyValueView};
-use wasi_otel_next::{DefaultOtelCtx, WasiOtel, WasiOtelCtxView, WasiOtelView};
-use wasi_vault_next::{WasiVault, WasiVaultCtxView, WasiVaultView};
+use wasi_blobstore::{WasiBlobstore, WasiBlobstoreCtxView, WasiBlobstoreView};
+use wasi_http::{WasiHttp, WasiHttpCtxView, WasiHttpView};
+use wasi_keyvalue::{WasiKeyValue, WasiKeyValueCtxView, WasiKeyValueView};
+use wasi_otel::{DefaultOtelCtx, WasiOtel, WasiOtelCtxView, WasiOtelView};
+use wasi_vault::{WasiVault, WasiVaultCtxView, WasiVaultView};
 use wasmtime::component::InstancePre;
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 

@@ -4,49 +4,33 @@
 
 mod vault;
 
-use std::collections::HashMap;
 use std::env;
 use std::fmt::Debug;
-use std::pin::Pin;
 use std::sync::Arc;
 
 use anyhow::{Result, anyhow};
 use azure_core::credentials::{Secret, TokenCredential};
 use azure_identity::{ClientSecretCredential, DeveloperToolsCredential};
 use azure_security_keyvault_secrets::SecretClient;
-use runtime::ResourceBuilder;
+use runtime::Resource;
 use tracing::instrument;
 
 const DEF_KV_ADDR: &str = "https://kv-credibil-demo.vault.azure.net";
-const CLIENT_NAME: &str = "azure-key-vault";
-
-pub struct AzKeyVault {
-    attributes: HashMap<String, String>,
-}
 
 #[derive(Clone)]
-pub struct AzClient(Arc<SecretClient>);
+pub struct Client(Arc<SecretClient>);
 
-impl Debug for AzClient {
+impl Debug for Client {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("AzClient").finish()
     }
 }
 
-impl ResourceBuilder<AzClient> for AzKeyVault {
-    fn new() -> Self {
-        Self {
-            attributes: HashMap::new(),
-        }
-    }
+impl Resource for Client {
+    // type Connection = Self;
 
-    fn attribute(mut self, key: &str, value: &str) -> Self {
-        self.attributes.insert(key.to_string(), value.to_string());
-        self
-    }
-
-    #[instrument(name = "AzKeyVault::connect", skip(self))]
-    async fn connect(self) -> Result<AzClient> {
+    #[instrument]
+    async fn connect() -> Result<Self> {
         let addr = env::var("KV_ADDR").unwrap_or_else(|_| DEF_KV_ADDR.into());
 
         let credential: Arc<dyn TokenCredential> = if cfg!(debug_assertions) {
@@ -64,15 +48,15 @@ impl ResourceBuilder<AzClient> for AzKeyVault {
             .map_err(|e| anyhow!("failed to connect to azure keyvault: {e}"))?;
         tracing::info!("connected to azure keyvault");
 
-        Ok(AzClient(Arc::new(client)))
+        Ok(Self(Arc::new(client)))
     }
 }
 
-impl IntoFuture for AzKeyVault {
-    type IntoFuture = Pin<Box<dyn Future<Output = Self::Output> + Send + 'static>>;
-    type Output = Result<AzClient>;
+// impl IntoFuture for AzKeyVault {
+//     type IntoFuture = Pin<Box<dyn Future<Output = Self::Output> + Send + 'static>>;
+//     type Output = Result<Client>;
 
-    fn into_future(self) -> Self::IntoFuture {
-        Box::pin(self.connect())
-    }
-}
+//     fn into_future(self) -> Self::IntoFuture {
+//         Box::pin(self.connect())
+//     }
+// }
