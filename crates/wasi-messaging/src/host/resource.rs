@@ -136,7 +136,7 @@ impl From<&Metadata> for types::Metadata {
     fn from(meta: &Metadata) -> Self {
         let mut metadata = Self::new();
         for (k, v) in &meta.inner {
-            metadata.push((k.clone(), v.clone()));
+            metadata.push((k.to_string(), v.to_string()));
         }
         metadata
     }
