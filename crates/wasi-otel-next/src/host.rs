@@ -21,15 +21,13 @@ mod generated {
 
 use std::fmt::Debug;
 
-use runtime::Host;
-use wasmtime::component::ResourceTable;
-use wasmtime::component::{HasData, Linker};
-
-use self::generated::wasi::otel as wasi;
-
 use anyhow::Result;
 use futures::FutureExt;
 use futures::future::BoxFuture;
+use runtime::Host;
+use wasmtime::component::{HasData, Linker, ResourceTable};
+
+use self::generated::wasi::otel as wasi;
 
 pub type FutureResult<T> = BoxFuture<'static, Result<T>>;
 
@@ -95,3 +93,7 @@ pub trait WasiOtelView: Send {
     /// Return a [`WasiOtelCtxView`] from mutable reference to self.
     fn otel(&mut self) -> WasiOtelCtxView<'_>;
 }
+
+#[derive(Debug)]
+pub struct DefaultOtelCtx;
+impl WasiOtelCtx for DefaultOtelCtx {}

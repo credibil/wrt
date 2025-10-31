@@ -1,11 +1,8 @@
-
-
-use crate::host::generated::wasi::otel::resource;
-use crate::host::generated::wasi::otel::types;
-use crate::host::{WasiOtel, WasiOtelCtxView};
 use anyhow::Result;
-
 use wasmtime::component::Accessor;
+
+use crate::host::generated::wasi::otel::{resource, types};
+use crate::host::{WasiOtel, WasiOtelCtxView};
 
 impl resource::Host for WasiOtelCtxView<'_> {}
 

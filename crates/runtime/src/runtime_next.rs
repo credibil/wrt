@@ -1,22 +1,29 @@
 //! # WebAssembly Runtime
 
 use std::env;
+use std::marker::PhantomData;
 use std::path::PathBuf;
 
 use anyhow::{Context, Result};
 use cfg_if::cfg_if;
 use credibil_otel::Telemetry;
 use tracing::instrument;
-use wasmtime::component::{Component, Linker};
+use wasmtime::component::{Component, InstancePre, Linker};
 use wasmtime::{Config, Engine};
+use wasmtime_wasi::WasiView;
+
+use crate::traits::Host;
 
 /// Runtime for a wasm component.
-pub struct RuntimeNext {
+pub struct RuntimeNext<T: WasiView + 'static> {
     wasm: PathBuf,
-    telemetry: bool,
+    tracing: bool,
+    linker: Option<Linker<T>>,
+    component: Option<Component>,
+    _marker: PhantomData<T>,
 }
 
-impl RuntimeNext {
+impl<T: WasiView> RuntimeNext<T> {
     /// Create a new Runtime instance from the provided file reference.
     ///
     /// The file can either be a serialized (pre-compiled) wasmtime `Component`
@@ -25,12 +32,34 @@ impl RuntimeNext {
     pub const fn new(wasm: PathBuf) -> Self {
         Self {
             wasm,
-            telemetry: true,
+            tracing: true,
+            linker: None,
+            component: None,
+            _marker: PhantomData,
         }
     }
 
-    #[instrument(name = "runtime", skip(self))]
-    pub fn init<T: wasmtime_wasi::WasiView>(&self) -> Result<(Linker<T>, Component)> {
+    /// Enable or disable OpenTelemetry tracing support.
+    #[must_use]
+    pub const fn tracing(mut self, tracing: bool) -> Self {
+        self.tracing = tracing;
+        self
+    }
+
+    /// Build the Wasmtime `Engine` and `Linker` for this runtime.
+    ///
+    /// # Errors
+    ///
+    /// Will fail if the provided `wasm` file cannot be compiled/deserialized
+    /// as a `Component` or the `Linker` cannot be initialized with WASI
+    /// support.
+    #[instrument(skip(self))]
+    pub fn compile(self) -> Result<Self> {
+        if self.tracing {
+            self.init_tracing()?;
+        }
+        tracing::info!("initializing runtime");
+
         let mut config = Config::new();
         config.async_support(true);
         config.wasm_component_model_async(true);
@@ -63,7 +92,25 @@ impl RuntimeNext {
 
         tracing::info!("runtime intialized");
 
-        Ok((linker, component))
+        Ok(Self {
+            wasm: self.wasm,
+            tracing: self.tracing,
+            linker: Some(linker),
+            component: Some(component),
+            _marker: PhantomData,
+        })
+    }
+
+    /// Link a WASI host to the runtime.
+    pub fn link<H: Host<T>>(&mut self, _: H) -> Result<()> {
+        H::add_to_linker(self.linker.as_mut().unwrap())?;
+        Ok(())
+    }
+
+    /// Ppre-instantiate component.
+    pub fn pre_instantiate(&mut self) -> Result<InstancePre<T>> {
+        let component = self.component.as_ref().unwrap();
+        self.linker.as_ref().unwrap().instantiate_pre(component)
     }
 
     fn init_tracing(&self) -> Result<()> {

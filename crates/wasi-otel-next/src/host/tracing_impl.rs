@@ -3,7 +3,6 @@
 use std::collections::HashMap;
 use std::env;
 
-use crate::{WasiOtel, WasiOtelCtxView};
 use anyhow::Result;
 use http::header::CONTENT_TYPE;
 use opentelemetry::trace::{self as otel, TraceContextExt};
@@ -18,6 +17,7 @@ use wasmtime::component::Accessor;
 
 use crate::host::DEF_HTTP_ADDR;
 use crate::host::generated::wasi::otel::tracing::{self as wasi, HostWithStore};
+use crate::{WasiOtel, WasiOtelCtxView};
 
 // *** WASIP3 ***
 // use `HostWithStore` to add async support`

@@ -4,11 +4,12 @@ use anyhow::{Result, anyhow};
 use res_mongodb_next::Client as MongoDb;
 use res_nats_next::Client as Nats;
 use runtime::http_ctx::HttpCtx;
-use runtime::{Cli, Command, Host, Parser, Resource, RuntimeNext, Server, State};
+use runtime::{Cli, Command, Parser, Resource, RuntimeNext, Server, State};
 use tokio::io;
 use wasi_blobstore_next::{WasiBlobstore, WasiBlobstoreCtxView, WasiBlobstoreView};
 use wasi_http_next::{WasiHttp, WasiHttpCtxView, WasiHttpView};
 use wasi_keyvalue_next::{WasiKeyValue, WasiKeyValueCtxView, WasiKeyValueView};
+use wasi_otel_next::{DefaultOtelCtx, WasiOtel, WasiOtelCtxView, WasiOtelView};
 use wasmtime::component::InstancePre;
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 
@@ -19,14 +20,16 @@ async fn main() -> Result<()> {
     };
 
     // link dependencies
-    let (mut linker, component) = RuntimeNext::new(wasm).init::<RunData>()?;
-    WasiBlobstore::add_to_linker(&mut linker)?;
-    WasiKeyValue::add_to_linker(&mut linker)?;
-    WasiHttp::add_to_linker(&mut linker)?;
+    let mut rt = RuntimeNext::<RunData>::new(wasm).compile()?;
+    rt.link(WasiOtel)?;
+    rt.link(WasiBlobstore)?;
+    rt.link(WasiKeyValue)?;
+    rt.link(WasiHttp)?;
+    let instance_pre = rt.pre_instantiate()?;
 
     // prepare state
     let run_state = RunState {
-        instance_pre: linker.instantiate_pre(&component)?,
+        instance_pre,
         nats_client: Nats::connect().await?,
         mongodb_client: MongoDb::connect().await?,
     };
@@ -65,6 +68,7 @@ impl State for RunState {
             table: ResourceTable::new(),
             wasi_ctx,
             http_ctx: HttpCtx,
+            otel_ctx: DefaultOtelCtx,
             keyvalue_ctx: self.nats_client.clone(),
             blobstore_ctx: self.mongodb_client.clone(),
         }
@@ -77,6 +81,7 @@ pub struct RunData {
     pub table: ResourceTable,
     pub wasi_ctx: WasiCtx,
     pub http_ctx: HttpCtx,
+    pub otel_ctx: DefaultOtelCtx,
     pub keyvalue_ctx: Nats,
     pub blobstore_ctx: MongoDb,
 }
@@ -94,6 +99,15 @@ impl WasiHttpView for RunData {
     fn http(&mut self) -> WasiHttpCtxView<'_> {
         WasiHttpCtxView {
             ctx: &mut self.http_ctx,
+            table: &mut self.table,
+        }
+    }
+}
+
+impl WasiOtelView for RunData {
+    fn otel(&mut self) -> WasiOtelCtxView<'_> {
+        WasiOtelCtxView {
+            ctx: &mut self.otel_ctx,
             table: &mut self.table,
         }
     }
