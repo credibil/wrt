@@ -15,14 +15,14 @@ struct Http;
 wasip3::http::proxy::export!(Http);
 
 impl Guest for Http {
-    // #[wasi_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
+    #[wasi_otel::instrument(name = "http_guest_handle",level = Level::INFO)]
     async fn handle(request: Request) -> Result<Response, ErrorCode> {
         let router = Router::new().route("/", post(handler));
         wasi_http_next::serve(router, request).await
     }
 }
 
-// #[wasi_otel::instrument]
+#[wasi_otel::instrument]
 async fn handler(body: Bytes) -> Result<Json<Value>> {
     let bucket = store::open("credibil_bucket").context("opening bucket")?;
     bucket.set("my_key", &body).context("storing data")?;
