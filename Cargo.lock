@@ -5424,6 +5424,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "wasi-sql-next"
+version = "0.12.0"
+dependencies = [
+ "anyhow",
+ "futures",
+ "runtime",
+ "tracing",
+ "wasmtime",
+ "wasmtime-wasi",
+ "wit-bindgen",
+]
+
+[[package]]
 name = "wasi-vault"
 version = "0.12.0"
 dependencies = [

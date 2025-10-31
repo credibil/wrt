@@ -1,0 +1,31 @@
+[package]
+name = "wasi-sql-next"
+description = "WASI SQL WIT implementation"
+readme = "README.md"
+authors.workspace = true
+categories.workspace = true
+edition.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[lints]
+workspace = true
+
+[features]
+
+# host dependencies
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+anyhow.workspace = true
+futures.workspace = true
+runtime.workspace = true
+tracing.workspace = true
+wasmtime.workspace = true
+wasmtime-wasi.workspace = true
+
+# guest dependencies
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wit-bindgen.workspace = true

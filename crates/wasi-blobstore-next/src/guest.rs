@@ -6,7 +6,6 @@ wit_bindgen::generate!({
     world: "blobstore",
     path: "wit",
     generate_all,
-    // pub_export_macro: true
 });
 
 pub use self::wasi::blobstore::*;
