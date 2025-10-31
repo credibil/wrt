@@ -3,7 +3,7 @@
 FROM rust:alpine AS build
 ARG BIN
 
-RUN apk add --no-cache perl make clang lld
+RUN apk add --no-cache build-base cmake perl
 RUN adduser --disabled-password --gecos "" --home "/nonexistent" \
     --shell "/sbin/nologin" --no-create-home --uid 10001 appuser
 

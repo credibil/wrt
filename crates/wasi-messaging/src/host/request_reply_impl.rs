@@ -113,9 +113,9 @@ impl HostMessage for Host<'_> {
         content_type.map_or_else(
             || {
                 let content_type = msg.metadata.as_ref().and_then(|h| h.get("Content-Type"));
-                content_type.map_or_else(|| Ok(None), |ct| Ok(Some(ct.to_string())))
+                content_type.map_or_else(|| Ok(None), |ct| Ok(Some(ct.clone())))
             },
-            |ct| Ok(Some(ct.to_string())),
+            |ct| Ok(Some(ct.clone())),
         )
     }
 

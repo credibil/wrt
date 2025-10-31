@@ -28,6 +28,10 @@ path = "src/minimal.rs"
 name = "next"
 path = "src/next.rs"
 
+[[bin]]
+name = "realtime"
+path = "src/realtime.rs"
+
 [lints]
 workspace = true
 
@@ -43,6 +47,7 @@ wasi-blobstore.workspace = true
 wasi-http.workspace = true
 wasi-keyvalue.workspace = true
 wasi-messaging.workspace = true
+wasi-messaging-kafka.workspace = true
 wasi-otel.workspace = true
 wasi-vault.workspace = true
 
@@ -64,6 +69,7 @@ res-azkeyvault.workspace = true
 res-mongodb.workspace = true
 res-mongodb-next = { path = "crates/res-mongodb-next" }
 res-nats.workspace = true
+res-redis.workspace = true
 res-nats-next = { path = "crates/res-nats-next" }
 res-azkeyvault-next = { path = "crates/res-azkeyvault-next" }
 runtime.workspace = true
@@ -125,6 +131,16 @@ crate-type = ["cdylib"]
 [[example]]
 name = "vault"
 path = "examples/vault.rs"
+crate-type = ["cdylib"]
+
+[[example]]
+name = "http-redis-cache"
+path = "examples/http-redis-cache/lib.rs"
+crate-type = ["cdylib"]
+
+[[example]]
+name = "pub-sub-kafka"
+path = "examples/pub-sub-kafka/lib.rs"
 crate-type = ["cdylib"]
 
 [profile.release]
@@ -210,6 +226,7 @@ opentelemetry = "0.31.0"
 opentelemetry_sdk = { version = "0.31.0", features = ["experimental_metrics_custom_reader"] }
 proc-macro2 = "1.0.101"
 quote = "1.0.40"
+redis = { version = "0.32.6", features = ["aio", "connection-manager", "tokio-comp"] }
 reqwest = "0.12.24"
 serde = { version = "1.0.225", features = ["derive"] }
 serde_json = "1.0.145"
@@ -237,11 +254,13 @@ credibil-otel = { version = "0.4.0", registry = "credibil" }
 res-azkeyvault = { path = "crates/res-azkeyvault", version = "0.12.0", registry = "credibil" }
 res-mongodb = { path = "crates/res-mongodb", version = "0.12.0", registry = "credibil" }
 res-nats = { path = "crates/res-nats", version = "0.12.0", registry = "credibil" }
+res-redis = { path = "crates/res-redis", version = "0.12.0", registry = "credibil" }
 runtime = { path = "crates/runtime", version = "0.12.0", registry = "credibil" }
 wasi-blobstore = { path = "crates/wasi-blobstore", version = "0.12.0", registry = "credibil" }
 wasi-http = { path = "crates/wasi-http", version = "0.12.0", registry = "credibil" }
 wasi-keyvalue = { path = "crates/wasi-keyvalue", version = "0.12.0", registry = "credibil" }
 wasi-messaging = { path = "crates/wasi-messaging", version = "0.12.0", registry = "credibil" }
+wasi-messaging-kafka = { path = "crates/wasi-messaging-kafka", version = "0.12.0", registry = "credibil" }
 wasi-otel = { path = "crates/wasi-otel", version = "0.12.0", registry = "credibil" }
 wasi-otel-attr = { path = "crates/wasi-otel-attr", version = "0.12.0", registry = "credibil" }
 wasi-vault = { path = "crates/wasi-vault", version = "0.12.0", registry = "credibil" }
