@@ -72,12 +72,13 @@ impl producer::HostWithStore for HostData {
 
 #[cfg(test)]
 mod tests {
-    use rdkafka::{Timestamp, message::{Header, Headers as _, OwnedHeaders}};
+    use rdkafka::Timestamp;
+    use rdkafka::message::{Header, Headers as _, OwnedHeaders};
     use wasmtime::component::ResourceTable;
 
-    use crate::host::{server::rebuild_message, types_impl::update_headers};
-
     use super::*;
+    use crate::host::server::rebuild_message;
+    use crate::host::types_impl::update_headers;
 
     struct DummyHost {
         table: ResourceTable,

@@ -16,9 +16,9 @@ use http_body_util::{Empty, Full};
 use serde_json::{Value, json};
 use tower_http::cors::{Any, CorsLayer};
 use tracing::Level;
+use wasi_http::{CacheOptions, Result};
 use wasip3::exports::http::handler::Guest;
 use wasip3::http::types::{ErrorCode, Request, Response};
-use wasi_http::{CacheOptions, Result};
 
 struct HttpGuest;
 wasip3::http::proxy::export!(HttpGuest);

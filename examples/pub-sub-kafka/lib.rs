@@ -9,11 +9,11 @@ use axum::{Json, Router};
 use bytes::Bytes;
 use serde_json::{Value, json};
 use tracing::Level;
+use wasi_messaging_kafka::incoming_handler::Configuration;
+use wasi_messaging_kafka::producer;
+use wasi_messaging_kafka::types::{Client, Error, Message};
 use wasip3::exports::http::handler::Guest;
 use wasip3::http::types::{ErrorCode, Request, Response};
-use wasi_messaging_kafka::incoming_handler::Configuration;
-use wasi_messaging_kafka::types::{Client, Error, Message};
-use wasi_messaging_kafka::producer;
 
 pub struct Http;
 wasip3::http::proxy::export!(Http);
