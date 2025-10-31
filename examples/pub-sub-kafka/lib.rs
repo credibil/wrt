@@ -3,12 +3,12 @@
 use std::thread::sleep;
 use std::time::{Duration, Instant};
 
-use anyhow::Result;
 use axum::routing::post;
 use axum::{Json, Router};
 use bytes::Bytes;
 use serde_json::{Value, json};
 use tracing::Level;
+use wasi_http::Result;
 use wasi_messaging_kafka::incoming_handler::Configuration;
 use wasi_messaging_kafka::producer;
 use wasi_messaging_kafka::types::{Client, Error, Message};
@@ -28,20 +28,23 @@ impl Guest for Http {
 
 // #[wasi_otel::instrument]
 #[axum::debug_handler]
-async fn handler(body: Bytes) -> Json<Value> {
+async fn handler(Json(body): Json<Value>) -> Result<Json<Value>> {
+    let body_bytes = Bytes::from(body.to_string());
     let client = Client::connect("kafka").unwrap();
-    let message = Message::new(&body);
+    let message = Message::new(&body_bytes);
     message.set_content_type("application/json");
     message.add_metadata("key", "example_key");
     println!("handler: sending message to topic 'a.v1'");
-    wit_bindgen::spawn(async move {
+    // TODO: really want spawn here but handler returns and the guest is
+    // dropped before the async task completes. Needs investigation.
+    wit_bindgen::block_on(async move {
         if let Err(e) = producer::send(&client, "a.v1".to_string(), message).await {
             tracing::error!("error sending message to topic 'a.v1': {e}");
         }
         println!("handler: message published to topic 'a.v1'");
     });
 
-    Json(json!({"message": "message published"}))
+    Ok(Json(json!({"message": "message published"})))
 }
 
 pub struct Messaging;

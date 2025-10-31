@@ -30,3 +30,9 @@ services:
       - --web.enable-remote-write-receiver
       # - --log.level=debug
 
+  nats:
+    image: nats:latest
+    platform: linux/arm64
+    ports:
+      - 4222:4222
+    command: ["-js"]
