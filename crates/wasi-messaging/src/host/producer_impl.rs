@@ -1,33 +1,22 @@
 use wasmtime::component::{Accessor, Resource};
 
-use crate::host::generated::wasi::messaging::producer;
-pub use crate::host::generated::wasi::messaging::types::Error;
+use crate::host::generated::wasi::messaging::producer::{Host, HostWithStore};
 use crate::host::generated::wasi::messaging::types::Topic;
 use crate::host::resource::{ClientProxy, Message};
-use crate::host::{Host, HostData, Result};
+use crate::host::types_impl::{get_client, get_message};
+use crate::host::{Result, WasiMessaging, WasiMessagingCtxView};
 
-// *** WASIP3 ***
-// use `HostWithStore` to add async support`
-
-impl producer::Host for Host<'_> {}
-
-/// The producer interface is used to send messages to a channel/topic.
-impl producer::HostWithStore for HostData {
-    /// Sends the message using the given client.
+impl HostWithStore for WasiMessaging {
     async fn send<T>(
         accessor: &Accessor<T, Self>, c: Resource<ClientProxy>, topic: Topic,
         message: Resource<Message>,
     ) -> Result<()> {
-        tracing::trace!("producer::Host::send: topic {topic:?}");
-
-        let (client, msg) = accessor.with(|mut access| {
-            let table = access.get().table;
-            let client = table.get(&c)?;
-            let msg = table.get(&message)?;
-            Ok::<_, Error>((client.clone(), msg.clone()))
-        })?;
-
+        let client = get_client(accessor, &c)?;
+        let msg = get_message(accessor, &message)?;
         client.send(topic, msg).await?;
+
         Ok(())
     }
 }
+
+impl Host for WasiMessagingCtxView<'_> {}

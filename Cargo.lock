@@ -3648,20 +3648,12 @@ name = "runtime"
 version = "0.12.0"
 dependencies = [
  "anyhow",
- "base64ct",
- "bytes",
  "cfg-if",
  "clap",
  "credibil-otel",
- "futures",
- "http",
- "http-body-util",
- "reqwest",
- "tokio",
  "tracing",
  "wasmtime",
  "wasmtime-wasi",
- "wasmtime-wasi-http",
 ]
 
 [[package]]
@@ -5158,14 +5150,17 @@ version = "0.12.0"
 dependencies = [
  "anyhow",
  "axum",
+ "base64ct",
  "bincode",
  "bytes",
  "credibil-encoding",
+ "futures",
  "http",
  "http-body",
  "http-body-util",
  "hyper",
  "percent-encoding",
+ "reqwest",
  "runtime",
  "serde",
  "serde_json",
@@ -5176,6 +5171,7 @@ dependencies = [
  "wasi-keyvalue",
  "wasip3",
  "wasmtime",
+ "wasmtime-wasi",
  "wasmtime-wasi-http",
  "wit-bindgen",
 ]

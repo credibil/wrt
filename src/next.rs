@@ -5,10 +5,10 @@ use res_azkeyvault::Client as AzKeyVaultCtx;
 use res_mongodb::Client as MongoDbCtx;
 use res_nats::Client as NatsCtx;
 use runtime::http_ctx::HttpCtx;
-use runtime::{Cli, Command, Parser, Resource, RuntimeNext, Server, State};
+use runtime::{Cli, Command, Parser, Resource, Runtime, Server, State};
 use tokio::io;
 use wasi_blobstore::{WasiBlobstore, WasiBlobstoreCtxView, WasiBlobstoreView};
-use wasi_http::{WasiHttp, WasiHttpCtxView, WasiHttpView};
+use wasi_http::{DefaultWasiHttpCtx, WasiHttp, WasiHttpCtxView, WasiHttpView};
 use wasi_keyvalue::{WasiKeyValue, WasiKeyValueCtxView, WasiKeyValueView};
 use wasi_otel::{DefaultOtelCtx, WasiOtel, WasiOtelCtxView, WasiOtelView};
 use wasi_vault::{WasiVault, WasiVaultCtxView, WasiVaultView};
@@ -22,7 +22,7 @@ async fn main() -> Result<()> {
     };
 
     // link dependencies
-    let mut rt = RuntimeNext::<RunData>::new(wasm).compile()?;
+    let mut rt = Runtime::<RunData>::new(wasm).compile()?;
     rt.link(WasiHttp)?;
     rt.link(WasiOtel)?;
     rt.link(WasiBlobstore)?;
@@ -73,7 +73,7 @@ impl State for RunState {
         RunData {
             table: ResourceTable::new(),
             wasi_ctx,
-            http_ctx: HttpCtx,
+            http_ctx: DefaultWasiHttpCtx,
             otel_ctx: DefaultOtelCtx,
             keyvalue_ctx: self.nats_client.clone(),
             blobstore_ctx: self.mongodb_client.clone(),
@@ -84,6 +84,7 @@ impl State for RunState {
 
 /// `RunData` is used to share host state between the Wasm runtime and hosts
 /// each time they are instantiated.
+#[derive(Clone, Debug)]
 pub struct RunData {
     pub table: ResourceTable,
     pub wasi_ctx: WasiCtx,

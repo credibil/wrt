@@ -2,6 +2,8 @@
 //!
 //! This module implements a host-side service for `wasi:http`
 
+mod default_ctx;
+
 use std::clone::Clone;
 use std::convert::Infallible;
 use std::env;
@@ -25,6 +27,7 @@ use wasmtime_wasi_http::io::TokioIo;
 use wasmtime_wasi_http::p3::bindings::ProxyIndices;
 use wasmtime_wasi_http::p3::bindings::http::types::{self as wasi, ErrorCode};
 pub use wasmtime_wasi_http::p3::{WasiHttpCtxView, WasiHttpView};
+pub use default_ctx::DefaultWasiHttpCtx;
 
 type OutgoingBody = BoxBody<Bytes, anyhow::Error>;
 
@@ -120,7 +123,6 @@ where
         // instantiate the guest and get the proxy
         let instance_pre = self.state.instance_pre();
         let store_data = self.state.new_store();
-
         let mut store = Store::new(instance_pre.engine(), store_data);
         let indices = ProxyIndices::new(instance_pre)?;
         let instance = instance_pre.instantiate_async(&mut store).await?;

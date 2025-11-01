@@ -1,104 +1,65 @@
 //! # WebAssembly Runtime
 
+use std::env;
+use std::marker::PhantomData;
 use std::path::PathBuf;
-use std::{env, vec};
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use cfg_if::cfg_if;
 use credibil_otel::Telemetry;
-use futures::future::{BoxFuture, FutureExt};
 use tracing::instrument;
-use wasmtime::component::{Component, Linker};
+use wasmtime::component::{Component, InstancePre, Linker};
 use wasmtime::{Config, Engine};
+use wasmtime_wasi::WasiView;
 
-use crate::traits::WasiHost;
+use crate::traits::Host;
 
-pub struct RuntimeBuilder {
+/// Runtime for a wasm component.
+pub struct Runtime<T: WasiView + 'static> {
     wasm: PathBuf,
-    services: Vec<Box<dyn WasiHost>>,
+    tracing: bool,
+    linker: Option<Linker<T>>,
+    component: Option<Component>,
+    _marker: PhantomData<T>,
 }
 
-impl RuntimeBuilder {
+impl<T: WasiView> Runtime<T> {
     /// Create a new Runtime instance from the provided file reference.
     ///
     /// The file can either be a serialized (pre-compiled) wasmtime `Component`
     /// or a standard `wasm32-wasip2` wasm component.
-    ///
-    /// Set telemetry to true to enable OpenTelemetry tracing.
     #[must_use]
-    pub fn new(wasm: PathBuf, telemetry: bool) -> Self {
-        let res = Self {
+    pub const fn new(wasm: PathBuf) -> Self {
+        Self {
             wasm,
-            services: vec![],
-        };
-        res.init(telemetry)
-    }
-
-    /// Register a service with the runtime.
-    ///
-    /// The service must have implemented the [`WasiHost`] trait in order to
-    /// register.
-    #[must_use]
-    pub fn register<S: WasiHost + 'static>(mut self, service: S) -> Self {
-        self.services.push(Box::new(service));
-        self
-    }
-
-    /// Return the runtime instance
-    #[must_use]
-    pub fn build(self) -> Runtime {
-        Runtime {
-            wasm: self.wasm,
-            services: self.services,
+            tracing: true,
+            linker: None,
+            component: None,
+            _marker: PhantomData,
         }
     }
 
-    /// Initialise telemetry for the runtime.
-    fn init(self, telemetry: bool) -> Self {
-        if telemetry {
-            let file_name = self.wasm.file_name().and_then(|s| s.to_str()).unwrap_or("unknown");
-            let (prefix, _) = file_name.rsplit_once('.').unwrap_or((file_name, ""));
-
-            // initialize telemetry
-            let mut builder = Telemetry::new(prefix);
-            if let Ok(endpoint) = env::var("OTEL_GRPC_ADDR") {
-                builder = builder.endpoint(endpoint);
-            }
-            builder.build().unwrap_or_else(|e| {
-                tracing::warn!(
-                    "Failed to initialize telemetry: {e}. \
-                     To disable error reporting, use `RUST_LOG=opentelemetry_sdk=off`"
-                );
-            });
-        }
+    /// Enable or disable OpenTelemetry tracing support.
+    #[must_use]
+    pub const fn tracing(mut self, tracing: bool) -> Self {
+        self.tracing = tracing;
         self
     }
-}
 
-/// Runtime for a wasm component.
-pub struct Runtime {
-    wasm: PathBuf,
-    services: Vec<Box<dyn WasiHost>>,
-}
-
-impl Runtime {
-    /// Start the runtime, instantiating each registered service on its own
-    /// thread.
-    ///
-    /// This function will block until a shutdown signal is received from the OS.
+    /// Build the Wasmtime `Engine` and `Linker` for this runtime.
     ///
     /// # Errors
     ///
-    /// Returns an error if there is an issue processing the shutdown signal.
-    pub async fn serve(self) -> Result<()> {
-        self.init_runtime()?;
+    /// Will fail if the provided `wasm` file cannot be compiled/deserialized
+    /// as a `Component` or the `Linker` cannot be initialized with WASI
+    /// support.
+    #[instrument(skip(self))]
+    pub fn compile(self) -> Result<Self> {
+        if self.tracing {
+            self.init_tracing()?;
+        }
+        tracing::info!("initializing runtime");
 
-        // wait for shutdown signal
-        Ok(tokio::signal::ctrl_c().await?)
-    }
-
-    #[instrument(name = "runtime", skip(self))]
-    fn init_runtime(self) -> Result<()> {
         let mut config = Config::new();
         config.async_support(true);
         config.wasm_component_model_async(true);
@@ -129,32 +90,38 @@ impl Runtime {
         wasmtime_wasi::p2::add_to_linker_async(&mut linker)?;
         wasmtime_wasi::p3::add_to_linker(&mut linker)?;
 
-        for service in &self.services {
-            service.add_to_linker(&mut linker)?;
-        }
-
-        // start services
-        let instance_pre = linker.instantiate_pre(&component)?;
-        for service in self.services {
-            let instance_pre = instance_pre.clone();
-            tokio::spawn(async move {
-                if let Err(e) = service.start(instance_pre).await {
-                    tracing::warn!("issue starting {service:?} service: {e}");
-                }
-            });
-        }
-
         tracing::info!("runtime intialized");
 
+        Ok(Self {
+            wasm: self.wasm,
+            tracing: self.tracing,
+            linker: Some(linker),
+            component: Some(component),
+            _marker: PhantomData,
+        })
+    }
+
+    /// Link a WASI host to the runtime.
+    pub fn link<H: Host<T>>(&mut self, _: H) -> Result<()> {
+        H::add_to_linker(self.linker.as_mut().unwrap())?;
         Ok(())
     }
-}
 
-impl IntoFuture for Runtime {
-    type IntoFuture = BoxFuture<'static, Result<()>>;
-    type Output = Result<()>;
+    /// Ppre-instantiate component.
+    pub fn pre_instantiate(&mut self) -> Result<InstancePre<T>> {
+        let component = self.component.as_ref().unwrap();
+        self.linker.as_ref().unwrap().instantiate_pre(component)
+    }
 
-    fn into_future(self) -> Self::IntoFuture {
-        self.serve().boxed()
+    fn init_tracing(&self) -> Result<()> {
+        let file_name = self.wasm.file_name().and_then(|s| s.to_str()).unwrap_or("unknown");
+        let (prefix, _) = file_name.rsplit_once('.').unwrap_or((file_name, ""));
+
+        // initialize telemetry
+        let mut builder = Telemetry::new(prefix);
+        if let Ok(endpoint) = env::var("OTEL_GRPC_ADDR") {
+            builder = builder.endpoint(endpoint);
+        }
+        builder.build().context("initializing telemetry")
     }
 }

@@ -7,13 +7,9 @@ use wasi_messaging::{
     Client, FutureResult, Message, Metadata, Reply, RequestOptions, Subscriptions,
 };
 
-use crate::{CLIENT_NAME, Client as Nats};
+use crate::Client as Nats;
 
 impl Client for Nats {
-    fn name(&self) -> &'static str {
-        CLIENT_NAME
-    }
-
     fn subscribe(&self, topics: Vec<String>) -> FutureResult<Subscriptions> {
         let client = self.0.clone();
 
@@ -113,7 +109,7 @@ fn into_message(nats_msg: async_nats::Message) -> Message {
     });
 
     let reply = nats_msg.reply.map(|reply| Reply {
-        client_name: CLIENT_NAME.to_string(),
+        client_name: String::new(),
         topic: reply.to_string(),
     });
 

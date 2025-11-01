@@ -15,7 +15,6 @@ use runtime::Resource;
 use tracing::instrument;
 
 const DEF_NATS_ADDR: &str = "demo.nats.io";
-const CLIENT_NAME: &str = "nats";
 
 #[derive(Debug, Clone)]
 pub struct Client(async_nats::Client);
