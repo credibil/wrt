@@ -3,15 +3,13 @@ pub mod partitioner;
 ///Schema registry module for Kafka
 pub mod schema_registry;
 
-use std::collections::HashMap;
 use std::env;
 use std::fmt::Debug;
-use std::pin::Pin;
 
 use anyhow::Result;
 use rdkafka::producer::{ProducerContext, ThreadedProducer};
 use rdkafka::{ClientContext, Message as _};
-use runtime::ResourceBuilder;
+use runtime::Resource;
 use tracing::instrument;
 
 use crate::partitioner::Partitioner;
@@ -24,11 +22,6 @@ pub struct KafkaProducer {
     pub producer: ThreadedProducer<ProduceCallbackLogger>,
     pub partitioner: Option<Partitioner>,
     pub sr_client: Option<RegistryClient>,
-}
-
-/// Kafka resource builder
-pub struct Kafka {
-    attributes: HashMap<String, String>,
 }
 
 /// Kafka configuration
@@ -50,14 +43,6 @@ pub struct KafkaClient {
     pub schema: Option<SchemaConfig>,
 }
 
-impl KafkaClient {
-    /// Get the name of the client
-    #[must_use]
-    pub fn name(&self) -> String {
-        "kafka".to_string()
-    }
-}
-
 /// Schema registry configuration
 #[derive(Debug, Clone)]
 pub struct SchemaConfig {
@@ -71,20 +56,9 @@ pub struct SchemaConfig {
     pub cache_ttl_secs: Option<u64>,
 }
 
-impl ResourceBuilder<KafkaClient> for Kafka {
-    fn new() -> Self {
-        Self {
-            attributes: HashMap::new(),
-        }
-    }
-
-    fn attribute(mut self, key: &str, value: &str) -> Self {
-        self.attributes.insert(key.to_string(), value.to_string());
-        self
-    }
-
-    #[instrument(name = "Kafka::connect", skip(self))]
-    async fn connect(self) -> Result<KafkaClient> {
+impl Resource for KafkaClient {
+    #[instrument(name = "Kafka::connect")]
+    async fn connect() -> Result<Self> {
         let brokers = env::var("KAFKA_BROKERS").unwrap_or_else(|_| DEF_KAFKA_BROKERS.into());
         let username = env::var("KAFKA_USERNAME").ok();
         let password = env::var("KAFKA_PASSWORD").ok();
@@ -155,14 +129,5 @@ impl ProducerContext for ProduceCallbackLogger {
                 tracing::error!("Failed to produce message with key '{}': {}", key, producer_err);
             }
         }
-    }
-}
-
-impl IntoFuture for Kafka {
-    type IntoFuture = Pin<Box<dyn Future<Output = Self::Output> + Send + 'static>>;
-    type Output = Result<KafkaClient>;
-
-    fn into_future(self) -> Self::IntoFuture {
-        Box::pin(self.connect())
     }
 }

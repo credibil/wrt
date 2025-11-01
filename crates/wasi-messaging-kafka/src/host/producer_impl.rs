@@ -2,18 +2,16 @@ use rdkafka::Message as _;
 use rdkafka::producer::BaseRecord;
 use wasmtime::component::{Accessor, Resource};
 
-use crate::host::generated::wasi::messaging::producer;
+use crate::host::Result;
 use crate::host::generated::wasi::messaging::producer::{Client, Message};
+use crate::host::generated::wasi::messaging::producer::{Host, HostWithStore};
 use crate::host::generated::wasi::messaging::types::Topic;
-use crate::host::{Host, HostData, Result};
+use crate::host::{WasiMessaging, WasiMessagingCtxView};
 
-// *** WASIP3 ***
-// use `HostWithStore` to add async support`
-
-impl producer::Host for Host<'_> {}
+impl Host for WasiMessagingCtxView<'_> {}
 
 /// The producer interface is used to send messages to a channel/topic.
-impl producer::HostWithStore for HostData {
+impl HostWithStore for WasiMessaging {
     /// Sends the message using the given client.
     async fn send<T>(
         accessor: &Accessor<T, Self>, c: Resource<Client>, topic: Topic, message: Resource<Message>,

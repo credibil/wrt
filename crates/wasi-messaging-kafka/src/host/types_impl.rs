@@ -1,29 +1,30 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use anyhow::anyhow;
-use rdkafka::message::{Header, Headers as _, OwnedHeaders};
-use rdkafka::{ClientConfig, Message as _, Timestamp};
-use wasmtime::component::Resource;
-
-use crate::ProduceCallbackLogger;
-pub use crate::host::generated::wasi::messaging::types::Error;
-use crate::host::generated::wasi::messaging::types::{self, Client, Message, Metadata, Topic};
+use crate::host::Result;
+pub use crate::host::generated::wasi::messaging::types::{
+    Error, Host, HostClient, HostClientWithStore, HostMessage, HostMessageWithStore, Metadata,
+    Topic,
+};
+use crate::host::resource::KafkaProducer;
 use crate::host::server::rebuild_message;
-use crate::host::{Host, Result};
+use crate::host::{WasiMessaging, WasiMessagingCtxView};
 use crate::partitioner::Partitioner;
 use crate::schema_registry::RegistryClient;
+use crate::{KafkaClient, ProduceCallbackLogger};
+use anyhow::anyhow;
+use rdkafka::message::OwnedMessage;
+use rdkafka::message::{Header, Headers as _, OwnedHeaders};
+use rdkafka::{ClientConfig, Message as _, Timestamp};
+use runtime::Resource as _;
+use wasmtime::component::{Accessor, Resource};
 
-impl types::Host for Host<'_> {
-    fn convert_error(&mut self, err: Error) -> anyhow::Result<Error> {
-        Ok(err)
-    }
-}
-
-impl types::HostClient for Host<'_> {
-    async fn connect(&mut self, _name: String) -> Result<Resource<Client>> {
+impl HostClientWithStore for WasiMessaging {
+    async fn connect<T>(
+        accessor: &Accessor<T, Self>, _name: String,
+    ) -> Result<Resource<KafkaProducer>> {
         tracing::debug!("HostClient::connect Kafka");
 
-        let kafka_config = crate::kafka()?;
+        let kafka_config = KafkaClient::connect().await?;
 
         let mut config = ClientConfig::new();
         config.set("bootstrap.servers", kafka_config.brokers.clone());
@@ -55,33 +56,38 @@ impl types::HostClient for Host<'_> {
             .create_with_context(ProduceCallbackLogger {})
             .map_err(|e| anyhow!("invalid producer config: {e}"))?;
 
-        Ok(self.table.push(Client {
+        let client = KafkaProducer {
             producer,
             partitioner,
             sr_client,
-        })?)
+        };
+
+        Ok(accessor.with(|mut store| store.get().table.push(client))?)
     }
 
-    async fn disconnect(&mut self, _rep: Resource<Client>) -> Result<()> {
+    async fn disconnect<T>(_: &Accessor<T, Self>, _rep: Resource<KafkaProducer>) -> Result<()> {
         tracing::debug!("HostClient::disconnect (noop for Kafka producer)");
         Ok(())
     }
 
-    async fn drop(&mut self, rep: Resource<Client>) -> anyhow::Result<()> {
+    async fn drop<T>(
+        accessor: &Accessor<T, Self>, rep: Resource<KafkaProducer>,
+    ) -> anyhow::Result<()> {
         tracing::debug!("HostClient::drop");
-        self.table.delete(rep)?;
-        Ok(())
+        accessor.with(|mut store| store.get().table.delete(rep).map(|_| Ok(())))?
     }
 }
 
-impl types::HostMessage for Host<'_> {
+impl HostMessageWithStore for WasiMessaging {
     /// Create a new message with the given payload.
-    async fn new(&mut self, data: Vec<u8>) -> anyhow::Result<Resource<Message>> {
+    async fn new<T>(
+        accessor: &Accessor<T, Self>, data: Vec<u8>,
+    ) -> anyhow::Result<Resource<OwnedMessage>> {
         tracing::debug!("HostMessage::new with {} bytes", data.len());
         let now = i64::try_from(
             SystemTime::now().duration_since(UNIX_EPOCH).expect("Time went backwards").as_millis(),
         ); // rdkafka expects i64
-        let msg = Message::new(
+        let msg = OwnedMessage::new(
             data.into(),                 //payload
             None,                        //key
             String::new(),               //topic
@@ -90,22 +96,26 @@ impl types::HostMessage for Host<'_> {
             -1,                          //offset
             None,                        //headers
         );
-        Ok(self.table.push(msg)?)
+        Ok(accessor.with(|mut store| store.get().table.push(msg))?)
     }
 
     /// The topic/subject/channel this message was received on, if any.
-    async fn topic(&mut self, self_: Resource<Message>) -> anyhow::Result<Option<Topic>> {
+    async fn topic<T>(
+        accessor: &Accessor<T, Self>, self_: Resource<OwnedMessage>,
+    ) -> anyhow::Result<Option<Topic>> {
         tracing::debug!("HostMessage::topic");
-        let msg = self.table.get(&self_)?;
+        let msg = get_message(accessor, &self_)?;
         let topic = msg.topic();
         if topic.is_empty() { Ok(None) } else { Ok(Some(topic.to_string())) }
     }
 
     /// An optional content-type describing the format of the data in the
     /// message. This is sometimes described as the "format" type".
-    async fn content_type(&mut self, self_: Resource<Message>) -> anyhow::Result<Option<String>> {
+    async fn content_type<T>(
+        accessor: &Accessor<T, Self>, self_: Resource<OwnedMessage>,
+    ) -> anyhow::Result<Option<String>> {
         tracing::debug!("HostMessage::content_type");
-        let msg = self.table.get(&self_)?;
+        let msg = get_message(accessor, &self_)?;
 
         // Access headers from the message
         if let Some(headers) = msg.headers() {
@@ -124,23 +134,25 @@ impl types::HostMessage for Host<'_> {
 
     /// Set the content-type describing the format of the data in the message.
     /// This is sometimes described as the "format" type.
-    async fn set_content_type(
-        &mut self, self_: Resource<Message>, content_type: String,
+    async fn set_content_type<T>(
+        accessor: &Accessor<T, Self>, self_: Resource<OwnedMessage>, content_type: String,
     ) -> anyhow::Result<()> {
         tracing::debug!("HostMessage::set_content_type {}", content_type);
-
-        let msg = self.table.get_mut(&self_)?;
-        let new_headers =
-            update_headers(msg.headers(), "content-type", Some(content_type.as_bytes()));
-        *msg = rebuild_message(msg, None, Some(new_headers));
-
-        Ok(())
+        accessor.with(|mut store| {
+            let msg = store.get().table.get_mut(&self_)?;
+            let new_headers =
+                update_headers(msg.headers(), "content-type", Some(content_type.as_bytes()));
+            *msg = rebuild_message(msg, None, Some(new_headers));
+            Ok(())
+        })
     }
 
     /// An opaque blob of data.
-    async fn data(&mut self, self_: Resource<Message>) -> anyhow::Result<Vec<u8>> {
+    async fn data<T>(
+        accessor: &Accessor<T, Self>, self_: Resource<OwnedMessage>,
+    ) -> anyhow::Result<Vec<u8>> {
         tracing::debug!("HostMessage::data");
-        let msg = self.table.get(&self_)?;
+        let msg = get_message(accessor, &self_)?;
         let data: Vec<u8> = msg
             .payload()
             .map(<[u8]>::to_vec) // convert &[u8] to Vec<u8>
@@ -150,17 +162,23 @@ impl types::HostMessage for Host<'_> {
     }
 
     /// Set the opaque blob of data for this message, discarding the old value".
-    async fn set_data(&mut self, self_: Resource<Message>, data: Vec<u8>) -> anyhow::Result<()> {
+    async fn set_data<T>(
+        accessor: &Accessor<T, Self>, self_: Resource<OwnedMessage>, data: Vec<u8>,
+    ) -> anyhow::Result<()> {
         tracing::debug!("HostMessage::set_data");
-        let msg = self.table.get_mut(&self_)?;
-        *msg = rebuild_message(msg, Some(data), None);
 
-        Ok(())
+        accessor.with(|mut store| {
+            let msg = store.get().table.get_mut(&self_)?;
+            *msg = rebuild_message(msg, Some(data), None);
+            Ok(())
+        })
     }
 
-    async fn metadata(&mut self, self_: Resource<Message>) -> anyhow::Result<Option<Metadata>> {
+    async fn metadata<T>(
+        accessor: &Accessor<T, Self>, self_: Resource<OwnedMessage>,
+    ) -> anyhow::Result<Option<Metadata>> {
         tracing::debug!("HostMessage::metadata");
-        let msg = self.table.get(&self_)?;
+        let msg = get_message(accessor, &self_)?;
         let headers = msg.headers().map(|owned| {
             owned
                 .iter()
@@ -175,57 +193,59 @@ impl types::HostMessage for Host<'_> {
         Ok(headers)
     }
 
-    async fn add_metadata(
-        &mut self, self_: Resource<Message>, key: String, value: String,
+    async fn add_metadata<T>(
+        accessor: &Accessor<T, Self>, self_: Resource<OwnedMessage>, key: String, value: String,
     ) -> anyhow::Result<()> {
         tracing::debug!("HostMessage::add_metadata {key}={value}");
-        let msg = self.table.get_mut(&self_)?;
-        let new_headers = update_headers(msg.headers(), &key, Some(value.as_bytes()));
 
-        *msg = rebuild_message(msg, None, Some(new_headers));
-
-        Ok(())
+        accessor.with(|mut store| {
+            let msg = store.get().table.get_mut(&self_)?;
+            let new_headers = update_headers(msg.headers(), &key, Some(value.as_bytes()));
+            *msg = rebuild_message(msg, None, Some(new_headers));
+            Ok(())
+        })
     }
 
     //Replace all headers with the provided metadata
-    async fn set_metadata(
-        &mut self, self_: Resource<Message>, meta: Metadata,
+    async fn set_metadata<T>(
+        accessor: &Accessor<T, Self>, self_: Resource<OwnedMessage>, meta: Metadata,
     ) -> anyhow::Result<()> {
         tracing::debug!("HostMessage::set_metadata");
 
-        let msg = self.table.get_mut(&self_)?;
-        let mut new_headers = OwnedHeaders::new();
+        accessor.with(|mut store| {
+            let msg = store.get().table.get_mut(&self_)?;
+            let mut new_headers = OwnedHeaders::new();
 
-        // Insert all metadata key/value pairs into headers
-        for (key, value) in meta {
-            new_headers = new_headers.insert(Header {
-                key: &key,
-                value: Some(value.as_bytes()),
-            });
-        }
-
-        // Replace the message headers with the new headers
-        *msg = rebuild_message(msg, None, Some(new_headers));
-
-        Ok(())
+            // Insert all metadata key/value pairs into headers
+            for (key, value) in meta {
+                new_headers = new_headers.insert(Header {
+                    key: &key,
+                    value: Some(value.as_bytes()),
+                });
+            }
+            *msg = rebuild_message(msg, None, Some(new_headers));
+            Ok(())
+        })
     }
 
-    async fn remove_metadata(
-        &mut self, self_: Resource<Message>, key: String,
+    async fn remove_metadata<T>(
+        accessor: &Accessor<T, Self>, self_: Resource<OwnedMessage>, key: String,
     ) -> anyhow::Result<()> {
         tracing::debug!("HostMessage::remove_metadata {key}");
-        let msg = self.table.get_mut(&self_)?;
-        let new_headers = update_headers(msg.headers(), &key, None);
 
-        *msg = rebuild_message(msg, None, Some(new_headers));
-
-        Ok(())
+        accessor.with(|mut store| {
+            let msg = store.get().table.get_mut(&self_)?;
+            let new_headers = update_headers(msg.headers(), &key, None);
+            *msg = rebuild_message(msg, None, Some(new_headers));
+            Ok(())
+        })
     }
 
-    async fn drop(&mut self, rep: Resource<Message>) -> anyhow::Result<()> {
+    async fn drop<T>(
+        accessor: &Accessor<T, Self>, rep: Resource<OwnedMessage>,
+    ) -> anyhow::Result<()> {
         tracing::debug!("HostMessage::drop");
-        self.table.delete(rep)?;
-        Ok(())
+        accessor.with(|mut store| store.get().table.delete(rep).map(|_| Ok(())))?
     }
 }
 
@@ -248,4 +268,30 @@ pub fn update_headers(
         });
     }
     new_headers
+}
+
+impl Host for WasiMessagingCtxView<'_> {
+    fn convert_error(&mut self, err: Error) -> anyhow::Result<Error> {
+        Ok(err)
+    }
+}
+impl HostClient for WasiMessagingCtxView<'_> {}
+impl HostMessage for WasiMessagingCtxView<'_> {}
+use std::sync::Arc;
+pub fn get_client<T>(
+    accessor: &Accessor<T, WasiMessaging>, self_: Resource<KafkaProducer>,
+) -> Result<KafkaProducer> {
+    accessor.with(|mut store| {
+        let client = store.get().table.get(self_)?;
+        Ok::<_, Error>(Arc::new(client.clone()))
+    })
+}
+
+pub fn get_message<T>(
+    accessor: &Accessor<T, WasiMessaging>, self_: &Resource<OwnedMessage>,
+) -> Result<OwnedMessage> {
+    accessor.with(|mut store| {
+        let message = store.get().table.get(self_)?;
+        Ok::<_, Error>(message.clone())
+    })
 }

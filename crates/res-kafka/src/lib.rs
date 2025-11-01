@@ -5,7 +5,6 @@
 mod messaging;
 mod partitioner;
 mod registry;
-mod subscriber;
 
 use std::env;
 use std::fmt::{self, Debug};

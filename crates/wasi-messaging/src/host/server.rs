@@ -77,10 +77,11 @@ where
             .run_concurrent(&mut store, async |accessor| {
                 // let client =
                 //     accessor.with(|mut store| store.get().messaging().ctx.connect()).await?;
-
                 // client.pre_send(&message).await?;
+
                 let guest = messaging.wasi_messaging_incoming_handler();
                 guest.call_handle(accessor, res_msg).await??;
+
                 // client.post_send(&message).await?;
 
                 Ok::<(), anyhow::Error>(())
