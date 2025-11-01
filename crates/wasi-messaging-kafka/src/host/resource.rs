@@ -82,7 +82,7 @@ impl Resource for KafkaClient {
             })
         });
 
-        let config = KafkaClient {
+        let config = Self {
             brokers: brokers.clone(),
             username,
             password,

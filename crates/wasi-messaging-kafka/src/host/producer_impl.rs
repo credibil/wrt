@@ -2,11 +2,9 @@ use rdkafka::Message as _;
 use rdkafka::producer::BaseRecord;
 use wasmtime::component::{Accessor, Resource};
 
-use crate::host::Result;
-use crate::host::generated::wasi::messaging::producer::{Client, Message};
-use crate::host::generated::wasi::messaging::producer::{Host, HostWithStore};
+use crate::host::generated::wasi::messaging::producer::{Client, Host, HostWithStore, Message};
 use crate::host::generated::wasi::messaging::types::Topic;
-use crate::host::{WasiMessaging, WasiMessagingCtxView};
+use crate::host::{Result, WasiMessaging, WasiMessagingCtxView};
 
 impl Host for WasiMessagingCtxView<'_> {}
 

@@ -14,7 +14,7 @@ repository.workspace = true
 rust-version.workspace = true
 version.workspace = true
 
-default-run = "next"
+default-run = "standard"
 
 [[bin]]
 name = "standard"
@@ -23,10 +23,6 @@ path = "src/standard.rs"
 [[bin]]
 name = "minimal"
 path = "src/minimal.rs"
-
-[[bin]]
-name = "next"
-path = "src/next.rs"
 
 [[bin]]
 name = "realtime"
@@ -61,6 +57,7 @@ http-body-util.workspace = true
 reqwest.workspace = true
 res-azkeyvault.workspace = true
 res-mongodb.workspace = true
+res-kafka.workspace = true
 res-nats.workspace = true
 res-redis.workspace = true
 runtime.workspace = true
@@ -243,6 +240,7 @@ credibil-otel = { version = "0.4.0", registry = "credibil" }
 
 # interally referenced crates
 res-azkeyvault = { path = "crates/res-azkeyvault", version = "0.12.0", registry = "credibil" }
+res-kafka = { path = "crates/res-kafka", version = "0.12.0", registry = "credibil" }
 res-mongodb = { path = "crates/res-mongodb", version = "0.12.0", registry = "credibil" }
 res-nats = { path = "crates/res-nats", version = "0.12.0", registry = "credibil" }
 res-redis = { path = "crates/res-redis", version = "0.12.0", registry = "credibil" }

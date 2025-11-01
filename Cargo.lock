@@ -3689,6 +3689,7 @@ dependencies = [
  "opentelemetry",
  "reqwest",
  "res-azkeyvault",
+ "res-kafka",
  "res-mongodb",
  "res-nats",
  "res-redis",

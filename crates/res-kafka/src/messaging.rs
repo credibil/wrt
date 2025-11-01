@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::pin::Pin;
+use std::sync::Arc;
 
 use futures::Stream;
 use futures::future::FutureExt;
@@ -10,14 +11,22 @@ use rdkafka::consumer::Consumer;
 use rdkafka::message::{BorrowedMessage, Headers};
 use rdkafka::producer::BaseRecord;
 use tokio::sync::mpsc;
-use wasi_messaging::{Client, FutureResult, Message, Metadata, RequestOptions, Subscriptions};
+use wasi_messaging::{
+    Client, FutureResult, Message, Metadata, RequestOptions, Subscriptions, WasiMessagingCtx,
+};
 
-use crate::Client as Kafka;
 use crate::registry::Registry;
 
 const CAPACITY: usize = 1024;
 
-impl Client for Kafka {
+impl WasiMessagingCtx for crate::Client {
+    fn connect(&self) -> FutureResult<Arc<dyn Client>> {
+        let client = self.clone();
+        async move { Ok(Arc::new(client) as Arc<dyn Client>) }.boxed()
+    }
+}
+
+impl Client for crate::Client {
     fn subscribe(&self, topics: Vec<String>) -> FutureResult<Subscriptions> {
         let client = self.clone();
 

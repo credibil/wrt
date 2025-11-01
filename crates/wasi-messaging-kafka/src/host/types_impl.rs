@@ -1,22 +1,21 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use crate::host::Result;
+use anyhow::anyhow;
+use rdkafka::message::{Header, Headers as _, OwnedHeaders, OwnedMessage};
+use rdkafka::{ClientConfig, Message as _, Timestamp};
+use runtime::Resource as _;
+use wasmtime::component::{Accessor, Resource};
+
 pub use crate::host::generated::wasi::messaging::types::{
     Error, Host, HostClient, HostClientWithStore, HostMessage, HostMessageWithStore, Metadata,
     Topic,
 };
 use crate::host::resource::KafkaProducer;
 use crate::host::server::rebuild_message;
-use crate::host::{WasiMessaging, WasiMessagingCtxView};
+use crate::host::{Result, WasiMessaging, WasiMessagingCtxView};
 use crate::partitioner::Partitioner;
 use crate::schema_registry::RegistryClient;
 use crate::{KafkaClient, ProduceCallbackLogger};
-use anyhow::anyhow;
-use rdkafka::message::OwnedMessage;
-use rdkafka::message::{Header, Headers as _, OwnedHeaders};
-use rdkafka::{ClientConfig, Message as _, Timestamp};
-use runtime::Resource as _;
-use wasmtime::component::{Accessor, Resource};
 
 impl HostClientWithStore for WasiMessaging {
     async fn connect<T>(
@@ -277,15 +276,6 @@ impl Host for WasiMessagingCtxView<'_> {
 }
 impl HostClient for WasiMessagingCtxView<'_> {}
 impl HostMessage for WasiMessagingCtxView<'_> {}
-use std::sync::Arc;
-pub fn get_client<T>(
-    accessor: &Accessor<T, WasiMessaging>, self_: Resource<KafkaProducer>,
-) -> Result<KafkaProducer> {
-    accessor.with(|mut store| {
-        let client = store.get().table.get(self_)?;
-        Ok::<_, Error>(Arc::new(client.clone()))
-    })
-}
 
 pub fn get_message<T>(
     accessor: &Accessor<T, WasiMessaging>, self_: &Resource<OwnedMessage>,
