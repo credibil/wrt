@@ -7,15 +7,15 @@ mod compiler;
 mod runtime;
 mod traits;
 
-use std::path::PathBuf;
-
-pub use clap::Parser;
-use clap::Subcommand;
-
 #[cfg(feature = "jit")]
 pub use self::compiler::*;
 pub use self::runtime::*;
 pub use self::traits::*;
+
+use std::path::PathBuf;
+
+pub use clap::Parser;
+use clap::Subcommand;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]

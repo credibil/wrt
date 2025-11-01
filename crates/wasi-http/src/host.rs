@@ -10,7 +10,6 @@ use std::env;
 
 use anyhow::{Context, Result, anyhow};
 use bytes::Bytes;
-pub use default_ctx::DefaultWasiHttpCtx;
 use http::uri::{PathAndQuery, Uri};
 use http_body_util::combinators::BoxBody;
 use http_body_util::{BodyExt, Full};
@@ -28,6 +27,7 @@ use wasmtime_wasi_http::io::TokioIo;
 use wasmtime_wasi_http::p3::bindings::ProxyIndices;
 use wasmtime_wasi_http::p3::bindings::http::types::{self as wasi, ErrorCode};
 pub use wasmtime_wasi_http::p3::{WasiHttpCtxView, WasiHttpView};
+pub use default_ctx::DefaultWasiHttpCtx;
 
 type OutgoingBody = BoxBody<Bytes, anyhow::Error>;
 

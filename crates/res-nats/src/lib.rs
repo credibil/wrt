@@ -20,6 +20,8 @@ const DEF_NATS_ADDR: &str = "demo.nats.io";
 pub struct Client(async_nats::Client);
 
 impl Resource for Client {
+    // type Connection = Self;
+
     #[instrument]
     async fn connect() -> Result<Self> {
         let addr = env::var("NATS_ADDR").unwrap_or_else(|_| DEF_NATS_ADDR.into());

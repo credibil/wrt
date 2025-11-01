@@ -8,6 +8,7 @@
 use std::fmt::Debug;
 
 use anyhow::Result;
+
 use wasmtime::component::{InstancePre, Linker};
 
 pub trait State: Clone + Send + Sync + 'static {
