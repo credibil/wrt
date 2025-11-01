@@ -34,45 +34,9 @@ impl SchemaConfig {
     }
 }
 
-pub struct DecodedPayload<'a> {
-    magic_byte: u8,
-    registry_id: i32,
-    payload: &'a [u8],
-}
-
-impl DecodedPayload<'_> {
-    /// Encode payload with schema registry ID repeats JS code
-    #[must_use]
-    pub fn encode(registry_id: i32, payload: Vec<u8>) -> Vec<u8> {
-        let mut buf = Vec::with_capacity(1 + 4 + payload.len());
-        buf.push(MAGIC_BYTE);
-        buf.extend(&registry_id.to_be_bytes());
-        buf.extend(payload);
-        buf
-    }
-
-    /// Decode payload
-    pub fn decode(buffer: &[u8]) -> Option<DecodedPayload<'_>> {
-        if buffer.len() < 5 {
-            tracing::error!("Buffer too short to decode");
-            return None;
-        }
-
-        let magic_byte = buffer[0];
-        let registry_id = i32::from_be_bytes([buffer[1], buffer[2], buffer[3], buffer[4]]);
-        let payload = &buffer[5..];
-
-        Some(DecodedPayload {
-            magic_byte,
-            registry_id,
-            payload,
-        })
-    }
-}
-
 /// Schema Registry client with caching
 #[derive(Clone)]
-pub struct RegistryClient {
+pub struct Registry {
     client: Option<SchemaRegistryClient>,
     schemas: Arc<Mutex<HashMap<String, (i32, Value)>>>,
 }
@@ -80,7 +44,7 @@ pub struct RegistryClient {
 /// Constants for encoding/decoding
 const MAGIC_BYTE: u8 = 0; // single byte
 
-impl RegistryClient {
+impl Registry {
     /// Create a new Schema Registry client
     #[must_use]
     pub fn new(schema_cfg: &SchemaConfig) -> Self {
@@ -134,7 +98,7 @@ impl RegistryClient {
                         return buffer;
                     }
 
-                    DecodedPayload::encode(id, buffer)
+                    Payload::encode(id, buffer)
                 }
                 Err(e) => {
                     tracing::error!("Failed to fetch schema for topic {}: {:?}", topic, e);
@@ -149,7 +113,7 @@ impl RegistryClient {
     /// Deserialize payload to JSON with optional schema registry
     pub async fn validate_and_decode_json(&self, topic: &str, buffer: &[u8]) -> Vec<u8> {
         if let Some(_sr_client) = &self.client {
-            let Some(message) = DecodedPayload::decode(buffer) else { return buffer.to_vec() };
+            let Some(message) = Payload::decode(buffer) else { return buffer.to_vec() };
 
             let (_id, schema) = match self.get_or_fetch_schema(topic).await {
                 Ok(s) => s,
@@ -235,9 +199,45 @@ impl RegistryClient {
     }
 }
 
+pub struct Payload<'a> {
+    magic_byte: u8,
+    registry_id: i32,
+    payload: &'a [u8],
+}
+
+impl Payload<'_> {
+    /// Encode payload with schema registry ID repeats JS code
+    #[must_use]
+    pub fn encode(registry_id: i32, payload: Vec<u8>) -> Vec<u8> {
+        let mut buf = Vec::with_capacity(1 + 4 + payload.len());
+        buf.push(MAGIC_BYTE);
+        buf.extend(&registry_id.to_be_bytes());
+        buf.extend(payload);
+        buf
+    }
+
+    /// Decode payload
+    pub fn decode(buffer: &[u8]) -> Option<Payload<'_>> {
+        if buffer.len() < 5 {
+            tracing::error!("Buffer too short to decode");
+            return None;
+        }
+
+        let magic_byte = buffer[0];
+        let registry_id = i32::from_be_bytes([buffer[1], buffer[2], buffer[3], buffer[4]]);
+        let payload = &buffer[5..];
+
+        Some(Payload {
+            magic_byte,
+            registry_id,
+            payload,
+        })
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::*; // brings DecodedPayload, MAGIC_BYTE, MessagingError into scope
+    use super::*; // brings Payload, MAGIC_BYTE, MessagingError into scope
 
     #[test]
     fn encode_then_decode_roundtrip() {
@@ -246,7 +246,7 @@ mod tests {
         let payload = b"hello world".to_vec();
 
         // Encode
-        let encoded = DecodedPayload::encode(registry_id, payload.clone());
+        let encoded = Payload::encode(registry_id, payload.clone());
 
         // Expected layout:
         // [ magic_byte ][ registry_id (4 bytes BE) ][ payload... ]
@@ -257,7 +257,7 @@ mod tests {
         assert_eq!(&encoded[5..], &payload, "payload mismatch");
 
         // Decode
-        let decoded = DecodedPayload::decode(&encoded).expect("decode failed");
+        let decoded = Payload::decode(&encoded).expect("decode failed");
 
         assert_eq!(decoded.magic_byte, MAGIC_BYTE);
         assert_eq!(decoded.registry_id, registry_id);

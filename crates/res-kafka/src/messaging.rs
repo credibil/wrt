@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::pin::Pin;
 
-use crate::{RegistryClient, registry};
 use futures::Stream;
 use futures::future::FutureExt;
 use futures::stream::StreamExt;
@@ -14,6 +13,7 @@ use tokio::sync::mpsc;
 use wasi_messaging::{Client, FutureResult, Message, Metadata, RequestOptions, Subscriptions};
 
 use crate::Client as Kafka;
+use crate::registry::Registry;
 
 const CAPACITY: usize = 1024;
 
@@ -48,7 +48,7 @@ impl Client for Kafka {
                         let registry = registry.clone();
 
                         async move {
-                            let message = into_message(&msg, &registry).await;
+                            let message = into_message(&msg, registry.as_ref()).await;
                             if let Err(e) = sender.send(message).await {
                                 tracing::error!("failed to send message to subscriber: {e}");
                             }
@@ -65,7 +65,7 @@ impl Client for Kafka {
     fn send(&self, topic: String, message: Message) -> FutureResult<()> {
         let client = self.clone();
 
-        // TODO: offset??
+        // TODO: add offset to header??
         // TODO: pre-/post- send hooks??
 
         async move {
@@ -130,9 +130,7 @@ impl Stream for Subscriber {
     }
 }
 
-async fn into_message(
-    kafka_msg: &BorrowedMessage<'_>, registry: &Option<RegistryClient>,
-) -> Message {
+async fn into_message(kafka_msg: &BorrowedMessage<'_>, registry: Option<&Registry>) -> Message {
     let metadata = kafka_msg.headers().map(|headers| {
         let mut md = HashMap::new();
         for h in headers.iter() {
@@ -146,6 +144,7 @@ async fn into_message(
     let topic = kafka_msg.topic();
     let payload_bytes = kafka_msg.payload().unwrap_or_default().to_vec();
 
+    // TODO: when do we use 'validate_and_decode_json'??
     let payload = if let Some(sr) = &registry {
         sr.validate_and_encode_json(topic, payload_bytes).await
     } else {

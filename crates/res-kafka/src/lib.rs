@@ -19,7 +19,7 @@ use runtime::Resource;
 use tracing::instrument;
 
 use crate::partitioner::Partitioner;
-use crate::registry::{RegistryClient, SchemaConfig};
+use crate::registry::{Registry, SchemaConfig};
 
 const KAFKA_BROKERS: &str = "localhost:9094";
 
@@ -28,7 +28,7 @@ pub struct Client {
     producer: ThreadedProducer<Tracer>,
     consumer: Arc<StreamConsumer>,
     partitioner: Option<Partitioner>,
-    registry: Option<RegistryClient>,
+    registry: Option<Registry>,
 }
 
 impl Debug for Client {
@@ -54,7 +54,7 @@ impl Resource for Client {
         let registry = if let Some(cfg) = kafka_config.schema.as_ref()
             && !cfg.url.is_empty()
         {
-            Some(RegistryClient::new(cfg))
+            Some(Registry::new(cfg))
         } else {
             None
         };
