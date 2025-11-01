@@ -16,7 +16,7 @@ where
     tracing::info!("starting messaging server");
 
     let handler = Handler { state: state.clone() };
-    let mut stream = handler.subscriptions().await?;
+    let mut stream = handler.subscribe().await?;
 
     while let Some(message) = stream.next().await {
         let handler = handler.clone();
@@ -45,7 +45,7 @@ where
     <S as State>::StoreData: WasiMessagingView,
 {
     // Get subscriptions for the topics configured in the wasm component.
-    async fn subscriptions(&self) -> Result<Subscriptions> {
+    async fn subscribe(&self) -> Result<Subscriptions> {
         let instance_pre = self.state.instance_pre();
         let store_data = self.state.new_store();
         let mut store = Store::new(instance_pre.engine(), store_data);

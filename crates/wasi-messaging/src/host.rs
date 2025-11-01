@@ -34,14 +34,13 @@ mod generated {
 use std::fmt::Debug;
 use std::sync::Arc;
 
-pub use resource::*;
 use runtime::{Host, Server, State};
 use wasmtime::component::{HasData, Linker};
 use wasmtime_wasi::{ResourceTable, ResourceTableError};
 
-pub use self::generated::Messaging;
-pub use self::generated::wasi::messaging::types::Error;
+use self::generated::wasi::messaging::types::Error;
 use self::generated::wasi::messaging::{producer, request_reply, types};
+pub use self::resource::*;
 
 pub type Result<T, E = Error> = anyhow::Result<T, E>;
 

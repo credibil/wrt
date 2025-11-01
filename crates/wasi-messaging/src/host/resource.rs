@@ -13,10 +13,13 @@ use crate::host::generated::wasi::messaging::types;
 
 pub type FutureResult<T> = BoxFuture<'static, Result<T>>;
 pub type Subscriptions = Pin<Box<dyn Stream<Item = Message> + Send>>;
+pub type Subscription<'a> = Arc<dyn Stream<Item = Message> + Send + 'a>;
 
 #[allow(unused_variables)]
 pub trait Client: Debug + Send + Sync + 'static {
     fn subscribe(&self, topics: Vec<String>) -> FutureResult<Subscriptions>;
+
+    fn subscribe2(&self, topics: Vec<String>) -> Result<Subscription>;
 
     fn pre_send(&self, message: &Message) -> FutureResult<()> {
         Box::pin(async move { Ok(()) })
