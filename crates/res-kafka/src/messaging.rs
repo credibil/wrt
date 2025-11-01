@@ -1,10 +1,11 @@
 use std::collections::HashMap;
 use std::pin::Pin;
 
+use crate::{RegistryClient, registry};
+use futures::Stream;
 use futures::future::FutureExt;
 use futures::stream::StreamExt;
 use futures::task::{Context, Poll};
-use futures::{Stream, TryStreamExt};
 use rdkafka::Message as _;
 use rdkafka::consumer::Consumer;
 use rdkafka::message::{BorrowedMessage, Headers};
@@ -22,6 +23,7 @@ impl Client for Kafka {
 
         async move {
             let consumer = client.consumer;
+            let registry = client.registry;
 
             // subscribe
             let topics = topics.iter().map(String::as_str).collect::<Vec<_>>();
@@ -43,8 +45,10 @@ impl Client for Kafka {
                     })
                     .for_each(|msg| {
                         let sender = sender.clone();
+                        let registry = registry.clone();
+
                         async move {
-                            let message = into_message(&msg);
+                            let message = into_message(&msg, &registry).await;
                             if let Err(e) = sender.send(message).await {
                                 tracing::error!("failed to send message to subscriber: {e}");
                             }
@@ -61,6 +65,9 @@ impl Client for Kafka {
     fn send(&self, topic: String, message: Message) -> FutureResult<()> {
         let client = self.clone();
 
+        // TODO: offset??
+        // TODO: pre-/post- send hooks??
+
         async move {
             // schema registry validation when available
             let payload = if let Some(sr) = &client.registry {
@@ -76,10 +83,9 @@ impl Client for Kafka {
             let mut record =
                 BaseRecord::to(&topic).payload(&payload).key(key.as_bytes()).timestamp(now);
 
-            // custom partitioning when available AND message doesn't specify partition
+            // partitioning
             let partition = metadata.get("partition").cloned().unwrap_or_default();
             let partition = partition.parse().unwrap_or(-1);
-
             if partition >= 0 {
                 record = record.partition(partition);
             } else if let Some(partitioner) = &client.partitioner
@@ -124,7 +130,9 @@ impl Stream for Subscriber {
     }
 }
 
-fn into_message(kafka_msg: &BorrowedMessage<'_>) -> Message {
+async fn into_message(
+    kafka_msg: &BorrowedMessage<'_>, registry: &Option<RegistryClient>,
+) -> Message {
     let metadata = kafka_msg.headers().map(|headers| {
         let mut md = HashMap::new();
         for h in headers.iter() {
@@ -135,12 +143,19 @@ fn into_message(kafka_msg: &BorrowedMessage<'_>) -> Message {
         Metadata { inner: md }
     });
 
-    let topic = kafka_msg.topic().to_string();
-    let payload = kafka_msg.payload().unwrap_or_default().to_vec();
+    let topic = kafka_msg.topic();
+    let payload_bytes = kafka_msg.payload().unwrap_or_default().to_vec();
+
+    let payload = if let Some(sr) = &registry {
+        sr.validate_and_encode_json(topic, payload_bytes).await
+    } else {
+        payload_bytes
+    };
+
     let length = payload.len();
 
     Message {
-        topic,
+        topic: topic.to_string(),
         payload,
         metadata,
         length,

@@ -124,8 +124,6 @@ async fn call_guest(message: Message, instance_pre: InstancePre<RunState>) -> Re
     let instance = instance_pre.instantiate_async(&mut store).await?;
     let messaging = Messaging::new(&mut store, &instance)?;
 
-    // *** WASIP3 ***
-    // use `run_concurrent` for non-blocking execution
     instance
         .run_concurrent(&mut store, async |accessor| {
             messaging.wasi_messaging_incoming_handler().call_handle(accessor, res_msg).await?
