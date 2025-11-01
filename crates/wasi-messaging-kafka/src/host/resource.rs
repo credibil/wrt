@@ -15,7 +15,7 @@ use runtime::ResourceBuilder;
 use tracing::instrument;
 
 use crate::partitioner::Partitioner;
-use crate::schema_registry::SRClient;
+use crate::schema_registry::RegistryClient;
 
 const DEF_KAFKA_BROKERS: &str = "localhost:9094";
 
@@ -23,7 +23,7 @@ const DEF_KAFKA_BROKERS: &str = "localhost:9094";
 pub struct KafkaProducer {
     pub producer: ThreadedProducer<ProduceCallbackLogger>,
     pub partitioner: Option<Partitioner>,
-    pub sr_client: Option<SRClient>,
+    pub sr_client: Option<RegistryClient>,
 }
 
 /// Kafka resource builder

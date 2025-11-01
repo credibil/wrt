@@ -60,7 +60,7 @@ impl DecodedPayload<'_> {
 
 /// Schema Registry client with caching
 #[derive(Clone)]
-pub struct SRClient {
+pub struct RegistryClient {
     client: Option<SchemaRegistryClient>,
     schemas: Arc<Mutex<HashMap<String, (i32, Value)>>>,
 }
@@ -68,7 +68,7 @@ pub struct SRClient {
 /// Constants for encoding/decoding
 const MAGIC_BYTE: u8 = 0; // single byte
 
-impl SRClient {
+impl RegistryClient {
     /// Create a new Schema Registry client
     #[must_use]
     pub fn new(schema_cfg: &SchemaConfig) -> Self {

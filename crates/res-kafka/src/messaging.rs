@@ -1,58 +1,62 @@
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::pin::Pin;
 
-use anyhow::anyhow;
-use futures::Stream;
 use futures::future::FutureExt;
-use futures::stream::{self, StreamExt};
-use rdkafka::consumer::{Consumer, DefaultConsumerContext, MessageStream, StreamConsumer};
-use rdkafka::message::OwnedMessage;
-use rdkafka::producer::{BaseRecord, ProducerContext, ThreadedProducer};
-use rdkafka::{ClientContext, Message as _};
-use wasi_messaging::{
-    Client, FutureResult, Message, Metadata, Reply, RequestOptions, Subscriptions,
-};
+use futures::stream::StreamExt;
+use futures::task::{Context, Poll};
+use futures::{Stream, TryStreamExt};
+use rdkafka::Message as _;
+use rdkafka::consumer::Consumer;
+use rdkafka::message::{BorrowedMessage, Headers};
+use rdkafka::producer::BaseRecord;
+use tokio::sync::mpsc;
+use wasi_messaging::{Client, FutureResult, Message, Metadata, RequestOptions, Subscriptions};
 
 use crate::Client as Kafka;
-use crate::partitioner::Partitioner;
-use crate::registry::SRClient;
+
+const CAPACITY: usize = 1024;
 
 impl Client for Kafka {
     fn subscribe(&self, topics: Vec<String>) -> FutureResult<Subscriptions> {
         let client = self.clone();
-        // async move {
-        //     let topics = topics.iter().map(|s| s.as_str()).collect::<Vec<_>>();
-        //     client.consumer.subscribe(&topics)?;
-        //     let stream: MessageStream<'_, DefaultConsumerContext> = client.consumer.stream();
 
-        //     let stream = stream.map(|msg| {
-        //         let msg = msg.unwrap();
-        //         let mut owned_msg = msg.detach();
-        //         Message::new()
-        //     });
+        async move {
+            let consumer = client.consumer;
 
-        //     Ok(Box::pin(stream) as Subscriptions)
-        // }
-        // .boxed()
+            // subscribe
+            let topics = topics.iter().map(String::as_str).collect::<Vec<_>>();
+            consumer.subscribe(&topics)?;
 
-        todo!()
+            // spawn a task to read messages and forward subscriber
+            let (sender, receiver) = mpsc::channel::<Message>(CAPACITY);
+            tokio::spawn(async move {
+                consumer
+                    .stream()
+                    .filter_map(|res| async {
+                        res.map_or_else(
+                            |e| {
+                                tracing::error!("kafka consumer error: {e}");
+                                None
+                            },
+                            Some,
+                        )
+                    })
+                    .for_each(|msg| {
+                        let sender = sender.clone();
+                        async move {
+                            let message = into_message(&msg);
+                            if let Err(e) = sender.send(message).await {
+                                tracing::error!("failed to send message to subscriber: {e}");
+                            }
+                        }
+                    })
+                    .await;
+            });
+
+            Ok(Box::pin(Subscriber { receiver }) as Subscriptions)
+        }
+        .boxed()
     }
-
-    // fn subscribe2(&self, topics: Vec<String>) -> anyhow::Result<Subscription> {
-    //     let client = self.clone();
-
-    //     let topics = topics.iter().map(|s| s.as_str()).collect::<Vec<_>>();
-    //     client.consumer.subscribe(&topics)?;
-    //     let stream: MessageStream<'_, DefaultConsumerContext> = client.consumer.stream();
-
-    //     let stream = stream.map(|msg| {
-    //         let msg = msg.unwrap();
-    //         let mut owned_msg = msg.detach();
-    //         Message::new()
-    //     });
-
-    //     Ok(Arc::new(stream))
-    // }
 
     fn send(&self, topic: String, message: Message) -> FutureResult<()> {
         let client = self.clone();
@@ -66,13 +70,15 @@ impl Client for Kafka {
             };
 
             let metadata = message.metadata.unwrap_or_default();
+            let now = chrono::Utc::now().timestamp_millis();
 
             let key = metadata.get("key").cloned().unwrap_or_default();
-            let mut record = BaseRecord::to(&topic).payload(&payload).key(key.as_bytes());
+            let mut record =
+                BaseRecord::to(&topic).payload(&payload).key(key.as_bytes()).timestamp(now);
 
             // custom partitioning when available AND message doesn't specify partition
             let partition = metadata.get("partition").cloned().unwrap_or_default();
-            let partition: i32 = partition.parse().unwrap_or(-1);
+            let partition = partition.parse().unwrap_or(-1);
 
             if partition >= 0 {
                 record = record.partition(partition);
@@ -105,104 +111,39 @@ impl Client for Kafka {
     }
 }
 
-// let now = i64::try_from(
-//     SystemTime::now().duration_since(UNIX_EPOCH).expect("Time went backwards").as_millis(),
-// ); // rdkafka expects i64
-//
-// let msg = Message::new(
-//     data.into(),                 //payload
-//     None,                        //key
-//     String::new(),               //topic
-//     Timestamp::CreateTime(now?), //timestamp
-//     -1,                          //partition
-//     -1,                          //offset
-//     None,                        //headers
-// );
-
-// /// Helper: build a new message based on an existing one, overriding only some fields.
-// pub fn build_message(
-//     base: &Message, payload: Option<Vec<u8>>, headers: Option<OwnedHeaders>,
-// ) -> Message {
-//     let new_headers = headers.or_else(|| base.headers().cloned());
-//     let new_key = new_headers
-//         .as_ref()
-//         .and_then(|hs| hs.iter().find(|h| h.key == "key"))
-//         .and_then(|h| h.value)
-//         .map(<[u8]>::to_vec);
-//     Message::new(
-//         payload.or_else(|| base.payload().map(<[u8]>::to_vec)),
-//         new_key,
-//         base.topic().to_string(),
-//         base.timestamp(),
-//         base.partition(),
-//         base.offset(),
-//         new_headers,
-//     )
-// }
-
-// fn into_message(kafka_msg: OwnedMessage) -> Message {
-//     let metadata = kafka_msg.headers().map(|headers| {
-//         let mut header_map = HashMap::new();
-//         for (k, v) in headers.iter() {
-//             let v = v.iter().map(ToString::to_string).collect::<Vec<_>>().join(",");
-//             header_map.insert(k.to_string(), v);
-//         }
-//         Metadata { inner: header_map }
-//     });
-
-//     let reply = kafka_msg.reply.map(|reply| Reply {
-//         client_name: String::new(),
-//         topic: reply.to_string(),
-//     });
-
-//     Message {
-//         topic: kafka_msg.subject.to_string(),
-//         payload: nats_msg.payload.to_vec(),
-//         metadata,
-//         description: None,
-//         length: nats_msg.payload.len(),
-//         reply,
-//     }
-// }
-
-/// Kafka producer client
-pub struct KafkaProducer {
-    pub producer: ThreadedProducer<ProduceCallbackLogger>,
-    pub partitioner: Option<Partitioner>,
-    pub sr_client: Option<SRClient>,
+#[derive(Debug)]
+pub struct Subscriber {
+    receiver: mpsc::Receiver<Message>,
 }
 
-/// Logger for Kafka produce callbacks
-pub struct ProduceCallbackLogger;
+impl Stream for Subscriber {
+    type Item = Message;
 
-impl ClientContext for ProduceCallbackLogger {}
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+        self.receiver.poll_recv(cx)
+    }
+}
 
-impl ProducerContext for ProduceCallbackLogger {
-    type DeliveryOpaque = ();
-
-    fn delivery(
-        &self, delivery_result: &rdkafka::producer::DeliveryResult<'_>,
-        _delivery_opaque: Self::DeliveryOpaque,
-    ) {
-        let dr = delivery_result.as_ref();
-        //let msg = dr.unwrap();
-
-        match dr {
-            Ok(msg) => {
-                let key: &str = msg.key_view().unwrap().unwrap();
-                tracing::debug!(
-                    "produced message with key {} in offset {} of partition {}",
-                    key,
-                    msg.offset(),
-                    msg.partition()
-                );
-            }
-            Err((producer_err, message)) => {
-                let key: &str = message.key_view().unwrap().unwrap();
-
-                // Log or forward the structured error
-                tracing::error!("Failed to produce message with key '{}': {}", key, producer_err);
-            }
+fn into_message(kafka_msg: &BorrowedMessage<'_>) -> Message {
+    let metadata = kafka_msg.headers().map(|headers| {
+        let mut md = HashMap::new();
+        for h in headers.iter() {
+            let bytes = h.value.unwrap_or_default();
+            let v = String::from_utf8_lossy(bytes).to_string();
+            md.insert(h.key.to_string(), v);
         }
+        Metadata { inner: md }
+    });
+
+    let topic = kafka_msg.topic().to_string();
+    let payload = kafka_msg.payload().unwrap_or_default().to_vec();
+    let length = payload.len();
+
+    Message {
+        topic,
+        payload,
+        metadata,
+        length,
+        ..Message::default()
     }
 }

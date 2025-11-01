@@ -18,15 +18,15 @@ pub type Subscriptions = Pin<Box<dyn Stream<Item = Message> + Send>>;
 pub trait Client: Debug + Send + Sync + 'static {
     fn subscribe(&self, topics: Vec<String>) -> FutureResult<Subscriptions>;
 
-    fn pre_send(&self, message: &Message) -> FutureResult<()> {
-        Box::pin(async move { Ok(()) })
-    }
+    // fn pre_send(&self, message: &Message) -> FutureResult<()> {
+    //     Box::pin(async move { Ok(()) })
+    // }
 
     fn send(&self, topic: String, message: Message) -> FutureResult<()>;
 
-    fn post_send(&self, message: &Message) -> FutureResult<()> {
-        Box::pin(async move { Ok(()) })
-    }
+    // fn post_send(&self, message: &Message) -> FutureResult<()> {
+    //     Box::pin(async move { Ok(()) })
+    // }
 
     fn request(
         &self, topic: String, message: Message, options: Option<RequestOptions>,

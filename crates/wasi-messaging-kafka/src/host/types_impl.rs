@@ -11,7 +11,7 @@ use crate::host::generated::wasi::messaging::types::{self, Client, Message, Meta
 use crate::host::server::rebuild_message;
 use crate::host::{Host, Result};
 use crate::partitioner::Partitioner;
-use crate::schema_registry::SRClient;
+use crate::schema_registry::RegistryClient;
 
 impl types::Host for Host<'_> {
     fn convert_error(&mut self, err: Error) -> anyhow::Result<Error> {
@@ -48,7 +48,7 @@ impl types::HostClient for Host<'_> {
         // Initialize schema registry client if config is provided
         let sr_client = kafka_config.schema.as_ref().map_or_else(
             || None,
-            |cfg| if cfg.url.is_empty() { None } else { Some(SRClient::new(&cfg.clone())) },
+            |cfg| if cfg.url.is_empty() { None } else { Some(RegistryClient::new(&cfg.clone())) },
         );
 
         let producer = config

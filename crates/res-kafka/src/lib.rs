@@ -5,31 +5,30 @@
 mod messaging;
 mod partitioner;
 mod registry;
+mod subscriber;
 
 use std::env;
 use std::fmt::{self, Debug};
 use std::sync::Arc;
 
 use anyhow::{Result, anyhow};
-use rdkafka::ClientConfig;
 use rdkafka::consumer::StreamConsumer;
-use rdkafka::producer::ThreadedProducer;
+use rdkafka::producer::{DeliveryResult, ProducerContext, ThreadedProducer};
+use rdkafka::{ClientConfig, ClientContext, Message as _};
 use runtime::Resource;
 use tracing::instrument;
 
-use crate::messaging::ProduceCallbackLogger;
 use crate::partitioner::Partitioner;
-use crate::registry::SRClient;
+use crate::registry::{RegistryClient, SchemaConfig};
 
-const DEF_KAFKA_BROKERS: &str = "localhost:9094";
+const KAFKA_BROKERS: &str = "localhost:9094";
 
 #[derive(Clone)]
 pub struct Client {
-    producer: ThreadedProducer<ProduceCallbackLogger>,
+    producer: ThreadedProducer<Tracer>,
     consumer: Arc<StreamConsumer>,
     partitioner: Option<Partitioner>,
-    registry: Option<SRClient>,
-    // client_config: ClientConfig,
+    registry: Option<RegistryClient>,
 }
 
 impl Debug for Client {
@@ -55,48 +54,41 @@ impl Resource for Client {
         let registry = if let Some(cfg) = kafka_config.schema.as_ref()
             && !cfg.url.is_empty()
         {
-            Some(SRClient::new(cfg))
+            Some(RegistryClient::new(cfg))
         } else {
             None
         };
 
         // producer and consumer
         let producer = client_config
-            .create_with_context(ProduceCallbackLogger {})
+            .create_with_context(Tracer {})
             .map_err(|e| anyhow!("issue creating producer: {e}"))?;
-        let consumer = Arc::new(client_config.create().unwrap());
+        let consumer =
+            client_config.create().map_err(|e| anyhow!("issue creating consumer: {e}"))?;
 
         Ok(Self {
             producer,
-            consumer,
+            consumer: Arc::new(consumer),
             partitioner,
             registry,
         })
     }
 }
 
-/// Kafka configuration
 #[derive(Debug, Clone)]
 struct KafkaConfig {
-    /// Comma-separated list of Kafka brokers
     brokers: String,
-    /// Optional username for SASL authentication
     username: Option<String>,
-    /// Optional password for SASL authentication
     password: Option<String>,
-    /// Consumer group ID
-    group_id: Option<String>, // only used for consumer
-    /// Enable custom JS partitioner for producer
     js_partitioner: Option<bool>,
-    /// Number of partitions for custom partitioner
-    partition_count: Option<i32>, // only used for producer
-    /// Optional schema registry configuration
+    partition_count: Option<i32>, // producer
     schema: Option<SchemaConfig>,
+    group_id: Option<String>, // consumer
 }
 
 impl KafkaConfig {
     fn from_env() -> Self {
-        let brokers = env::var("KAFKA_BROKERS").unwrap_or_else(|_| DEF_KAFKA_BROKERS.into());
+        let brokers = env::var("KAFKA_BROKERS").unwrap_or_else(|_| KAFKA_BROKERS.into());
         let username = env::var("KAFKA_USERNAME").ok();
         let password = env::var("KAFKA_PASSWORD").ok();
         let consumer_group = env::var("KAFKA_CONSUMER_GROUP").ok();
@@ -137,31 +129,25 @@ impl From<&KafkaConfig> for ClientConfig {
     }
 }
 
-/// Schema registry configuration
-#[derive(Debug, Clone)]
-struct SchemaConfig {
-    /// Schema registry URL
-    url: String,
-    /// Optional API key for schema registry
-    api_key: Option<String>,
-    /// Optional API secret for schema registry
-    api_secret: Option<String>,
-    /// Optional cache TTL in seconds for schema registry
-    cache_ttl_secs: Option<u64>,
-}
+pub struct Tracer;
+impl ClientContext for Tracer {}
+impl ProducerContext for Tracer {
+    type DeliveryOpaque = ();
 
-impl SchemaConfig {
-    fn from_env() -> Option<Self> {
-        let url = env::var("SCHEMA_REGISTRY_URL").ok()?;
-        let api_key = env::var("SCHEMA_REGISTRY_API_KEY").ok();
-        let api_secret = env::var("SCHEMA_REGISTRY_API_SECRET").ok();
-        let cache_ttl_secs = env::var("SCHEMA_CACHE_TTL_SECS").ok().and_then(|v| v.parse().ok());
-
-        Some(Self {
-            url,
-            api_key,
-            api_secret,
-            cache_ttl_secs,
-        })
+    fn delivery(&self, delivery_result: &DeliveryResult<'_>, (): Self::DeliveryOpaque) {
+        match delivery_result {
+            Ok(msg) => {
+                let key: &str = msg.key_view().unwrap().unwrap();
+                tracing::debug!(
+                    "sent message {key} in offset {offset} of partition {partition}",
+                    offset = msg.offset(),
+                    partition = msg.partition()
+                );
+            }
+            Err((err, message)) => {
+                let key: &str = message.key_view().unwrap().unwrap();
+                tracing::error!("Failed to send message {key}: {err}");
+            }
+        }
     }
 }

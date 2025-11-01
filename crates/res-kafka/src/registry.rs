@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::env;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -9,16 +10,34 @@ use serde_json::Value;
 use tokio::sync::Mutex;
 use tokio::time;
 
-use crate::SchemaConfig;
+#[derive(Debug, Clone)]
+pub struct SchemaConfig {
+    pub url: String,
+    api_key: Option<String>,
+    api_secret: Option<String>,
+    cache_ttl_secs: Option<u64>,
+}
 
-/// Decoded Kafka message
+impl SchemaConfig {
+    pub fn from_env() -> Option<Self> {
+        let url = env::var("SCHEMA_REGISTRY_URL").ok()?;
+        let api_key = env::var("SCHEMA_REGISTRY_API_KEY").ok();
+        let api_secret = env::var("SCHEMA_REGISTRY_API_SECRET").ok();
+        let cache_ttl_secs = env::var("SCHEMA_CACHE_TTL_SECS").ok().and_then(|s| s.parse().ok());
+
+        Some(Self {
+            url,
+            api_key,
+            api_secret,
+            cache_ttl_secs,
+        })
+    }
+}
+
 pub struct DecodedPayload<'a> {
-    /// Magic byte (should be 0)
-    pub magic_byte: u8,
-    /// Schema registry ID
-    pub registry_id: i32,
-    /// Actual payload
-    pub payload: &'a [u8],
+    magic_byte: u8,
+    registry_id: i32,
+    payload: &'a [u8],
 }
 
 impl DecodedPayload<'_> {
@@ -26,16 +45,9 @@ impl DecodedPayload<'_> {
     #[must_use]
     pub fn encode(registry_id: i32, payload: Vec<u8>) -> Vec<u8> {
         let mut buf = Vec::with_capacity(1 + 4 + payload.len());
-
-        // Magic byte
         buf.push(MAGIC_BYTE);
-
-        // Registry ID in big-endian
         buf.extend(&registry_id.to_be_bytes());
-
-        // Payload
         buf.extend(payload);
-
         buf
     }
 
@@ -60,7 +72,7 @@ impl DecodedPayload<'_> {
 
 /// Schema Registry client with caching
 #[derive(Clone)]
-pub struct SRClient {
+pub struct RegistryClient {
     client: Option<SchemaRegistryClient>,
     schemas: Arc<Mutex<HashMap<String, (i32, Value)>>>,
 }
@@ -68,7 +80,7 @@ pub struct SRClient {
 /// Constants for encoding/decoding
 const MAGIC_BYTE: u8 = 0; // single byte
 
-impl SRClient {
+impl RegistryClient {
     /// Create a new Schema Registry client
     #[must_use]
     pub fn new(schema_cfg: &SchemaConfig) -> Self {

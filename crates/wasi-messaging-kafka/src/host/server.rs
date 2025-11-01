@@ -11,7 +11,7 @@ use wasmtime::component::InstancePre;
 use crate::host::generated::Messaging;
 use crate::host::generated::wasi::messaging::types::Message;
 use crate::host::{CLIENT, Error};
-use crate::schema_registry::SRClient;
+use crate::schema_registry::RegistryClient;
 
 pub async fn run(instance_pre: InstancePre<RunState>) -> Result<()> {
     // short-circuit when messaging not required
@@ -70,7 +70,7 @@ async fn subscribe(topics: Vec<String>, instance_pre: InstancePre<RunState>) -> 
     // Initialize schema registry client if config is provided
     let sr_client = kafka_config.schema.as_ref().map_or_else(
         || None,
-        |cfg| if cfg.url.is_empty() { None } else { Some(SRClient::new(&cfg.clone())) },
+        |cfg| if cfg.url.is_empty() { None } else { Some(RegistryClient::new(&cfg.clone())) },
     );
 
     let consumer: StreamConsumer = config.create().unwrap();
