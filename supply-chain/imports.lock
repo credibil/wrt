@@ -1892,6 +1892,16 @@ criteria = "safe-to-deploy"
 delta = "0.4.0 -> 0.6.1"
 notes = "Major updates, but almost all safe code. Lots of pruning/deletions, nothing out of the ordrinary."
 
+[[audits.bytecode-alliance.audits.fallible-iterator]]
+who = "Alex Crichton <alex@alexcrichton.com>"
+criteria = "safe-to-deploy"
+delta = "0.2.0 -> 0.3.0"
+notes = """
+This major version update has a few minor breaking changes but everything
+this crate has to do with iterators and `Result` and such. No `unsafe` or
+anything like that, all looks good.
+"""
+
 [[audits.bytecode-alliance.audits.fastrand]]
 who = "Alex Crichton <alex@alexcrichton.com>"
 criteria = "safe-to-deploy"
@@ -2008,6 +2018,12 @@ who = "Alex Crichton <alex@alexcrichton.com>"
 criteria = "safe-to-deploy"
 delta = "0.4.1 -> 0.5.0"
 notes = "Minor changes for a `no_std` upgrade but otherwise everything looks as expected."
+
+[[audits.bytecode-alliance.audits.hermit-abi]]
+who = "Alex Crichton <alex@alexcrichton.com>"
+criteria = "safe-to-deploy"
+delta = "0.3.9 -> 0.5.2"
+notes = "API updates and looks like libc, nothing new here."
 
 [[audits.bytecode-alliance.audits.http-body]]
 who = "Pat Hickey <phickey@fastly.com>"
@@ -2151,6 +2167,12 @@ who = "Andrew Brown <andrew.brown@intel.com>"
 criteria = "safe-to-deploy"
 version = "0.2.19"
 notes = "As advertised: a numeric library. The only `unsafe` is from some float-to-int conversions, which seems expected."
+
+[[audits.bytecode-alliance.audits.num_cpus]]
+who = "Alex Crichton <alex@alexcrichton.com>"
+criteria = "safe-to-deploy"
+delta = "1.15.0 -> 1.16.0"
+notes = "Some minor platform updates but no major change to any code."
 
 [[audits.bytecode-alliance.audits.openssl-macros]]
 who = "Pat Hickey <phickey@fastly.com>"
@@ -3760,6 +3782,18 @@ side-effectful std functions, etc.
 """
 aggregated-from = "https://hg.mozilla.org/mozilla-central/raw-file/tip/supply-chain/audits.toml"
 
+[[audits.mozilla.audits.num_cpus]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "1.13.1 -> 1.14.0"
+aggregated-from = "https://hg.mozilla.org/mozilla-central/raw-file/tip/supply-chain/audits.toml"
+
+[[audits.mozilla.audits.num_cpus]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "1.14.0 -> 1.15.0"
+aggregated-from = "https://hg.mozilla.org/mozilla-central/raw-file/tip/supply-chain/audits.toml"
+
 [[audits.mozilla.audits.percent-encoding]]
 who = "Valentin Gosu <valentin.gosu@gmail.com>"
 criteria = "safe-to-deploy"
@@ -3923,6 +3957,19 @@ aggregated-from = "https://hg.mozilla.org/mozilla-central/raw-file/tip/supply-ch
 who = "Max Inden <mail@max-inden.de>"
 criteria = "safe-to-deploy"
 delta = "1.1.0 -> 1.3.0"
+aggregated-from = "https://hg.mozilla.org/mozilla-central/raw-file/tip/supply-chain/audits.toml"
+
+[[audits.mozilla.audits.siphasher]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.3.10 -> 0.3.11"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
+
+[[audits.mozilla.audits.siphasher]]
+who = "Emilio Cobos Álvarez <emilio@crisal.io>"
+criteria = "safe-to-deploy"
+delta = "0.3.11 -> 1.0.1"
+notes = "Only change to the crate source is adding documentation."
 aggregated-from = "https://hg.mozilla.org/mozilla-central/raw-file/tip/supply-chain/audits.toml"
 
 [[audits.mozilla.audits.strsim]]
@@ -4098,6 +4145,12 @@ for deleting data. This is expected and documented behavior.
 """
 aggregated-from = "https://hg.mozilla.org/mozilla-central/raw-file/tip/supply-chain/audits.toml"
 
+[[audits.mozilla.audits.zeroize_derive]]
+who = "Benjamin Beurdouche <beurdouche@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "1.4.2"
+aggregated-from = "https://hg.mozilla.org/mozilla-central/raw-file/tip/supply-chain/audits.toml"
+
 [[audits.mozilla.audits.zerovec-derive]]
 who = "Makoto Kato <m_kato@ga2.so-net.ne.jp>"
 criteria = "safe-to-deploy"
@@ -4171,6 +4224,12 @@ delta = "0.14.2 -> 0.14.5"
 notes = "I did not thoroughly check the safety argument for fold_impl, but it at least seems to be well documented."
 aggregated-from = "https://raw.githubusercontent.com/zcash/librustzcash/main/supply-chain/audits.toml"
 
+[[audits.zcash.audits.hermit-abi]]
+who = "Daira-Emma Hopwood <daira@jacaranda.org>"
+criteria = "safe-to-deploy"
+delta = "0.3.3 -> 0.3.9"
+aggregated-from = "https://raw.githubusercontent.com/zcash/zcash/master/qa/supply-chain/audits.toml"
+
 [[audits.zcash.audits.http-body]]
 who = "Jack Grigg <jack@electriccoin.co>"
 criteria = "safe-to-deploy"
@@ -4182,6 +4241,82 @@ who = "Jack Grigg <jack@electriccoin.co>"
 criteria = "safe-to-deploy"
 delta = "0.8.0 -> 0.8.1"
 aggregated-from = "https://raw.githubusercontent.com/zcash/wallet/main/supply-chain/audits.toml"
+
+[[audits.zcash.audits.num_cpus]]
+who = "Jack Grigg <jack@electriccoin.co>"
+criteria = "safe-to-deploy"
+delta = "1.16.0 -> 1.17.0"
+aggregated-from = "https://raw.githubusercontent.com/zcash/zcash/master/qa/supply-chain/audits.toml"
+
+[[audits.zcash.audits.phf]]
+who = "Jack Grigg <jack@z.cash>"
+criteria = "safe-to-deploy"
+delta = "0.8.0 -> 0.11.1"
+notes = """
+Mostly modernisation, migrating to `PhfBorrow`, and making more things `&'static`.
+No unsafe code in the new `OrderedMap` and `OrderedSet` types.
+"""
+aggregated-from = "https://raw.githubusercontent.com/zcash/zcash/master/qa/supply-chain/audits.toml"
+
+[[audits.zcash.audits.phf]]
+who = "Jack Grigg <thestr4d@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.11.1 -> 0.11.2"
+aggregated-from = "https://raw.githubusercontent.com/zcash/zcash/master/qa/supply-chain/audits.toml"
+
+[[audits.zcash.audits.phf]]
+who = "Jack Grigg <jack@electriccoin.co>"
+criteria = "safe-to-deploy"
+delta = "0.11.2 -> 0.11.3"
+aggregated-from = "https://raw.githubusercontent.com/zcash/zcash/master/qa/supply-chain/audits.toml"
+
+[[audits.zcash.audits.phf]]
+who = "Jack Grigg <jack@electriccoin.co>"
+criteria = "safe-to-deploy"
+delta = "0.11.3 -> 0.12.1"
+aggregated-from = "https://raw.githubusercontent.com/zcash/librustzcash/main/supply-chain/audits.toml"
+
+[[audits.zcash.audits.phf]]
+who = "Jack Grigg <jack@electriccoin.co>"
+criteria = "safe-to-deploy"
+delta = "0.12.1 -> 0.13.1"
+aggregated-from = "https://raw.githubusercontent.com/zcash/librustzcash/main/supply-chain/audits.toml"
+
+[[audits.zcash.audits.phf_shared]]
+who = "Jack Grigg <jack@z.cash>"
+criteria = "safe-to-deploy"
+delta = "0.8.0 -> 0.11.1"
+notes = """
+Adds `uncased` dependency, and newly generates unsafe code to transmute `&'static str`
+into `&'static UncasedStr`. I verified that `UncasedStr` is a `#[repr(transparent)]`
+newtype around `str`.
+"""
+aggregated-from = "https://raw.githubusercontent.com/zcash/zcash/master/qa/supply-chain/audits.toml"
+
+[[audits.zcash.audits.phf_shared]]
+who = "Jack Grigg <thestr4d@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.11.1 -> 0.11.2"
+aggregated-from = "https://raw.githubusercontent.com/zcash/zcash/master/qa/supply-chain/audits.toml"
+
+[[audits.zcash.audits.phf_shared]]
+who = "Jack Grigg <jack@electriccoin.co>"
+criteria = "safe-to-deploy"
+delta = "0.11.2 -> 0.11.3"
+notes = "Bumped MSRV and dependency versions to remove an `unsafe` block."
+aggregated-from = "https://raw.githubusercontent.com/zcash/zcash/master/qa/supply-chain/audits.toml"
+
+[[audits.zcash.audits.phf_shared]]
+who = "Jack Grigg <jack@electriccoin.co>"
+criteria = "safe-to-deploy"
+delta = "0.11.3 -> 0.12.1"
+aggregated-from = "https://raw.githubusercontent.com/zcash/librustzcash/main/supply-chain/audits.toml"
+
+[[audits.zcash.audits.phf_shared]]
+who = "Jack Grigg <jack@electriccoin.co>"
+criteria = "safe-to-deploy"
+delta = "0.12.1 -> 0.13.1"
+aggregated-from = "https://raw.githubusercontent.com/zcash/librustzcash/main/supply-chain/audits.toml"
 
 [[audits.zcash.audits.prost]]
 who = "Jack Grigg <jack@electriccoin.co>"
@@ -4370,6 +4505,16 @@ delta = "0.2.100 -> 0.2.105"
 notes = """
 Change to generated code is to replace a feature flag with a cfg flag for controlling
 debug output.
+"""
+aggregated-from = "https://raw.githubusercontent.com/zcash/wallet/main/supply-chain/audits.toml"
+
+[[audits.zcash.audits.whoami]]
+who = "Jack Grigg <jack@electriccoin.co>"
+criteria = "safe-to-deploy"
+delta = "1.6.0 -> 1.6.1"
+notes = """
+Switched dependencies from `redox_syscall` to `libredox`, which didn't involve
+any changes to `unsafe` code.
 """
 aggregated-from = "https://raw.githubusercontent.com/zcash/wallet/main/supply-chain/audits.toml"
 

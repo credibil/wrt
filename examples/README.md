@@ -22,13 +22,13 @@ cargo run -- run ./target/wasm32-wasip2/release/examples/http.wasm
 In a separate console, call the guest:
 
 ```bash
-curl -d '{"text":"hello"}' http://localhost:8080
+curl -H "Content-Type: application/json" -d '{"text":"hello"}' http://localhost:8080
 ```
 
 ## OpenTelemetry Collector
 
 ```bash
-docker compose --file ./examples/compose.yaml up
+docker compose --file ./examples/opentelemetry/compose.yaml up
 ```
 
 This will start a wasm runtime running a simple HTTP server instrumented with logging and metrics.

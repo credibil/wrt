@@ -3877,7 +3877,6 @@ dependencies = [
  "wasi-http",
  "wasi-keyvalue",
  "wasi-messaging",
- "wasi-messaging-kafka",
  "wasi-otel",
  "wasi-vault",
  "wasip3",
@@ -5462,29 +5461,6 @@ dependencies = [
  "http",
  "runtime",
  "serde",
- "time",
- "tokio",
- "tracing",
- "wasmtime",
- "wasmtime-wasi",
- "wit-bindgen",
-]
-
-[[package]]
-name = "wasi-messaging-kafka"
-version = "0.12.0"
-dependencies = [
- "anyhow",
- "async-nats",
- "csv",
- "futures",
- "http",
- "jsonschema",
- "rdkafka",
- "runtime",
- "schema-registry-client",
- "serde",
- "serde_json",
  "time",
  "tokio",
  "tracing",

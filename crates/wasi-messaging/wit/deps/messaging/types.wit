@@ -1,22 +1,16 @@
 interface types {
+    /// A type alias for list<tuple<string, string>> to represent metadata attached to a message
+    type metadata = list<tuple<string, string>>;
+
     /// A type alias for string to represent a message topic
     type topic = string;
-
-    /// Server configuration.
-    ///
-    /// This can be extended to include other configuration options in the
-    /// future.
-    record configuration {
-        /// Subscription topics
-        topics: list<topic>,
-    }
 
     /// A connection to a message-exchange service (e.g., buffer, broker, etc.).
     resource client {
         connect: static func(name: string) -> result<client, error>;
         disconnect: func() -> result<_, error>;
     }
-
+    
     /// Errors that can occur when using the messaging interface.
     variant error {
         /// The request or operation timed out.
@@ -28,18 +22,13 @@ interface types {
         /// A catch all for other types of errors
         other(string),
     }
-
-    /// A type alias for list<tuple<string, string>> to represent metadata attached to a message
-    type metadata = list<tuple<string, string>>;
-
+  
     /// A message with a binary payload and additional information
     resource message {
         constructor(data: list<u8>);
-        // new: static func(data: stream<u8>) -> message;
-
         /// The topic/subject/channel this message was received on, if any
         topic: func() -> option<topic>;
-        /// An optional content-type describing the format of the data in the message. This is
+        /// An optional content-type describing the format of the data in the message. This is 
         /// sometimes described as the "format" type
         content-type: func() -> option<string>;
         /// Set the content-type describing the format of the data in the message. This is

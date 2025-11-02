@@ -16,7 +16,7 @@ pub type Subscriptions = Pin<Box<dyn Stream<Item = Message> + Send>>;
 
 #[allow(unused_variables)]
 pub trait Client: Debug + Send + Sync + 'static {
-    fn subscribe(&self, topics: Vec<String>) -> FutureResult<Subscriptions>;
+    fn subscribe(&self) -> FutureResult<Subscriptions>;
 
     fn send(&self, topic: String, message: Message) -> FutureResult<()>;
 

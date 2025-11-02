@@ -43,7 +43,6 @@ wasi-blobstore.workspace = true
 wasi-http.workspace = true
 wasi-keyvalue.workspace = true
 wasi-messaging.workspace = true
-wasi-messaging-kafka.workspace = true
 wasi-otel.workspace = true
 wasi-vault.workspace = true
 
@@ -122,13 +121,13 @@ path = "examples/vault.rs"
 crate-type = ["cdylib"]
 
 [[example]]
-name = "http-redis-cache"
-path = "examples/http-redis-cache/lib.rs"
+name = "redis"
+path = "examples/redis/lib.rs"
 crate-type = ["cdylib"]
 
 [[example]]
-name = "pub-sub-kafka"
-path = "examples/pub-sub-kafka/lib.rs"
+name = "kafka"
+path = "examples/kafka/lib.rs"
 crate-type = ["cdylib"]
 
 [profile.release]
@@ -236,7 +235,7 @@ wit-bindgen = { version = "0.46.0" }
 # wit-bindgen = { version = "0.47.0", features = ["async-spawn"] }
 
 jsonschema = "0.30.0"
-rdkafka = { version = "0.38", features = ["ssl-vendored", "cmake-build", "tokio"] }
+rdkafka = { version = "0.38", features = ["cmake-build", "ssl-vendored", "tokio"] }
 schema-registry-client = "0.4.1"
 
 # credibil registry
@@ -254,7 +253,6 @@ wasi-blobstore = { path = "crates/wasi-blobstore", version = "0.12.0", registry 
 wasi-http = { path = "crates/wasi-http", version = "0.12.0", registry = "credibil" }
 wasi-keyvalue = { path = "crates/wasi-keyvalue", version = "0.12.0", registry = "credibil" }
 wasi-messaging = { path = "crates/wasi-messaging", version = "0.12.0", registry = "credibil" }
-wasi-messaging-kafka = { path = "crates/wasi-messaging-kafka", version = "0.12.0", registry = "credibil" }
 wasi-otel = { path = "crates/wasi-otel", version = "0.12.0", registry = "credibil" }
 wasi-otel-attr = { path = "crates/wasi-otel-attr", version = "0.12.0", registry = "credibil" }
 wasi-sql = { path = "crates/wasi-sql", version = "0.12.0", registry = "credibil" }

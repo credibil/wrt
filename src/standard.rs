@@ -5,7 +5,7 @@ use res_azkeyvault::Client as AzKeyVaultCtx;
 use res_mongodb::Client as MongoDbCtx;
 use res_nats::Client as NatsCtx;
 use runtime::{Cli, Command, Parser, Resource, Runtime, Server, State};
-use tokio::io;
+use tokio::{io, try_join};
 use wasi_blobstore::{WasiBlobstore, WasiBlobstoreCtxView, WasiBlobstoreView};
 use wasi_http::{DefaultWasiHttpCtx, WasiHttp, WasiHttpCtxView, WasiHttpView};
 use wasi_keyvalue::{WasiKeyValue, WasiKeyValueCtxView, WasiKeyValueView};
@@ -46,8 +46,7 @@ async fn main() -> Result<()> {
     };
 
     // run server(s)
-    WasiHttp.run(&run_state).await?;
-    WasiMessaging.run(&run_state).await?;
+    try_join!(WasiHttp.run(&run_state), WasiMessaging.run(&run_state))?;
 
     Ok(())
 }
