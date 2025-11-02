@@ -28,7 +28,7 @@ curl -d '{"text":"hello"}' http://localhost:8080
 ## OpenTelemetry Collector
 
 ```bash
-docker compose --file ./examples/compose.yaml up
+docker compose --file ./examples/opentelemetry/compose.yaml up
 ```
 
 This will start a wasm runtime running a simple HTTP server instrumented with logging and metrics.
