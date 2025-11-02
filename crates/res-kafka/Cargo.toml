@@ -20,11 +20,15 @@ workspace = true
 anyhow.workspace = true
 chrono.workspace = true
 futures.workspace = true
-jsonschema = "0.30.0"
-rdkafka = { version = "0.38", features = ["ssl-vendored", "cmake-build", "tokio"] }
+jsonschema.workspace = true
+rdkafka.workspace = true
 runtime.workspace = true
-schema-registry-client = "0.4.1"
+schema-registry-client.workspace = true
 serde_json.workspace = true
 tokio.workspace = true
 tracing.workspace = true
 wasi-messaging.workspace = true
+
+[dev-dependencies]
+csv.workspace = true
+serde.workspace = true

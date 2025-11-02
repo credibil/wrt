@@ -82,6 +82,7 @@ struct KafkaConfig {
     js_partitioner: Option<bool>,
     partition_count: Option<i32>, // producer
     schema: Option<SchemaConfig>,
+    #[allow(unused)]
     group_id: Option<String>, // consumer
 }
 

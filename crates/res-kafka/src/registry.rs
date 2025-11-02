@@ -111,23 +111,24 @@ impl Registry {
     }
 
     /// Deserialize payload to JSON with optional schema registry
+    #[allow(unused)]
     pub async fn validate_and_decode_json(&self, topic: &str, buffer: &[u8]) -> Vec<u8> {
         if let Some(_sr_client) = &self.client {
-            let Some(message) = Payload::decode(buffer) else { return buffer.to_vec() };
+            let Some(decoded) = Payload::decode(buffer) else { return buffer.to_vec() };
 
             let (_id, schema) = match self.get_or_fetch_schema(topic).await {
                 Ok(s) => s,
                 Err(e) => {
                     tracing::error!("Failed to fetch schema: {:?}", e);
-                    return message.payload.to_vec();
+                    return decoded.data.to_vec();
                 }
             };
 
-            let payload: Value = match serde_json::from_slice(message.payload) {
+            let payload: Value = match serde_json::from_slice(decoded.data) {
                 Ok(v) => v,
                 Err(e) => {
                     tracing::error!("Invalid JSON: {:?}", e);
-                    return message.payload.to_vec();
+                    return decoded.data.to_vec();
                 }
             };
 
@@ -135,7 +136,7 @@ impl Registry {
                 tracing::error!("JSON validation failed: {}", e);
             }
 
-            message.payload.to_vec()
+            decoded.data.to_vec()
         } else {
             buffer.to_vec()
         }
@@ -144,6 +145,7 @@ impl Registry {
     /// # Errors`RegisteredSchema`
     ///
     /// Validate a JSON payload against a provided `RegisteredSchema`
+    #[allow(clippy::unused_self)]
     pub fn validate_payload_with_schema(
         &self, schema: &Value, payload: &Value,
     ) -> Result<(), String> {
@@ -199,10 +201,11 @@ impl Registry {
     }
 }
 
+#[allow(unused)]
 pub struct Payload<'a> {
     magic_byte: u8,
     registry_id: i32,
-    payload: &'a [u8],
+    data: &'a [u8],
 }
 
 impl Payload<'_> {
@@ -225,12 +228,12 @@ impl Payload<'_> {
 
         let magic_byte = buffer[0];
         let registry_id = i32::from_be_bytes([buffer[1], buffer[2], buffer[3], buffer[4]]);
-        let payload = &buffer[5..];
+        let data = &buffer[5..];
 
         Some(Payload {
             magic_byte,
             registry_id,
-            payload,
+            data,
         })
     }
 }
@@ -261,6 +264,6 @@ mod tests {
 
         assert_eq!(decoded.magic_byte, MAGIC_BYTE);
         assert_eq!(decoded.registry_id, registry_id);
-        assert_eq!(decoded.payload, payload.as_slice());
+        assert_eq!(decoded.data, payload.as_slice());
     }
 }

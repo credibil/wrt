@@ -21,20 +21,18 @@ async fn main() -> Result<()> {
         return Err(anyhow!("only run command is supported"));
     };
 
-    // link dependencies
-    let mut rt = Runtime::<RunData>::new(wasm).compile()?;
-    rt.link(WasiHttp)?;
-    rt.link(WasiOtel)?;
-    rt.link(WasiMessaging)?;
-    rt.link(WasiBlobstore)?;
-    rt.link(WasiKeyValue)?;
-    rt.link(WasiVault)?;
-
-    let instance_pre = rt.pre_instantiate()?;
+    // compile and link dependencies
+    let mut compiled = Runtime::<RunData>::new(wasm).compile()?;
+    compiled.link(WasiHttp)?;
+    compiled.link(WasiOtel)?;
+    compiled.link(WasiMessaging)?;
+    compiled.link(WasiBlobstore)?;
+    compiled.link(WasiKeyValue)?;
+    compiled.link(WasiVault)?;
 
     // prepare state
     let run_state = RunState {
-        instance_pre,
+        instance_pre: compiled.pre_instantiate()?,
         nats_client: NatsCtx::connect().await?,
         mongodb_client: MongoDbCtx::connect().await?,
         vault_client: AzKeyVaultCtx::connect().await?,
@@ -42,6 +40,7 @@ async fn main() -> Result<()> {
 
     // run server(s)
     WasiHttp.run(&run_state).await?;
+    WasiMessaging.run(&run_state).await?;
 
     Ok(())
 }

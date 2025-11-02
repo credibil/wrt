@@ -18,9 +18,12 @@ use crate::traits::Host;
 pub struct Runtime<T: WasiView + 'static> {
     wasm: PathBuf,
     tracing: bool,
-    linker: Option<Linker<T>>,
-    component: Option<Component>,
     _marker: PhantomData<T>,
+}
+
+pub struct Compiled<T: WasiView + 'static> {
+    pub component: Component,
+    pub linker: Linker<T>,
 }
 
 impl<T: WasiView> Runtime<T> {
@@ -33,8 +36,6 @@ impl<T: WasiView> Runtime<T> {
         Self {
             wasm,
             tracing: true,
-            linker: None,
-            component: None,
             _marker: PhantomData,
         }
     }
@@ -54,7 +55,7 @@ impl<T: WasiView> Runtime<T> {
     /// as a `Component` or the `Linker` cannot be initialized with WASI
     /// support.
     #[instrument(skip(self))]
-    pub fn compile(self) -> Result<Self> {
+    pub fn compile(self) -> Result<Compiled<T>> {
         if self.tracing {
             self.init_tracing()?;
         }
@@ -92,25 +93,7 @@ impl<T: WasiView> Runtime<T> {
 
         tracing::info!("runtime intialized");
 
-        Ok(Self {
-            wasm: self.wasm,
-            tracing: self.tracing,
-            linker: Some(linker),
-            component: Some(component),
-            _marker: PhantomData,
-        })
-    }
-
-    /// Link a WASI host to the runtime.
-    pub fn link<H: Host<T>>(&mut self, _: H) -> Result<()> {
-        H::add_to_linker(self.linker.as_mut().unwrap())?;
-        Ok(())
-    }
-
-    /// Ppre-instantiate component.
-    pub fn pre_instantiate(&mut self) -> Result<InstancePre<T>> {
-        let component = self.component.as_ref().unwrap();
-        self.linker.as_ref().unwrap().instantiate_pre(component)
+        Ok(Compiled { component, linker })
     }
 
     fn init_tracing(&self) -> Result<()> {
@@ -123,5 +106,25 @@ impl<T: WasiView> Runtime<T> {
             builder = builder.endpoint(endpoint);
         }
         builder.build().context("initializing telemetry")
+    }
+}
+
+impl<T: WasiView> Compiled<T> {
+    /// Link a WASI host to the runtime.
+    ///
+    /// # Errors
+    ///
+    /// Will fail if the host cannot be added to the Linker.
+    pub fn link<H: Host<T>>(&mut self, _: H) -> Result<()> {
+        H::add_to_linker(&mut self.linker)
+    }
+
+    /// Pre-instantiate component.
+    ///
+    /// # Errors
+    ///
+    /// Will fail if the component cannot be pre-instantiated.
+    pub fn pre_instantiate(&mut self) -> Result<InstancePre<T>> {
+        self.linker.instantiate_pre(&self.component)
     }
 }

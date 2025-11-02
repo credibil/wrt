@@ -141,6 +141,9 @@ fn js_xor(a: f64, b: f64) -> f64 {
 
 #[cfg(test)]
 mod tests {
+
+    use serde::Deserialize;
+
     use super::*;
 
     struct TestCase {
@@ -293,31 +296,23 @@ mod tests {
         }
     }
 
+    #[derive(Deserialize, Debug)]
+    struct Partition {
+        key: String,
+        partition: i32,
+    }
+
     #[test]
-    fn test_fixtures() {
-        use std::fs::File;
-        use std::io::{BufRead, BufReader};
-
+    fn test_partitions() {
         let partitioner = Partitioner::new(12);
+        let data = include_bytes!("../../../data/partitions.csv");
+        let mut reader = csv::ReaderBuilder::new().from_reader(data.as_slice());
 
-        let file =
-            File::open("fixtures/partitions.csv").expect("cannot open fixtures/partitions.csv");
-        let reader = BufReader::new(file);
+        for result in reader.deserialize() {
+            let record: Partition = result.expect("should deserialize");
 
-        for line in reader.lines() {
-            let line = line.expect("read line");
-            if line.is_empty() {
-                continue;
-            }
-            let mut parts = line.splitn(2, ',');
-            let key = parts.next().unwrap();
-            let expected_partition =
-                parts.next().unwrap().parse::<i32>().expect("invalid partition");
-            let got_partition = partitioner.partition(key.as_bytes());
-            assert_eq!(
-                got_partition, expected_partition,
-                "partition({key}) = {got_partition}, expected {expected_partition}"
-            );
+            let found = partitioner.partition(record.key.as_bytes());
+            assert_eq!(found, record.partition);
         }
     }
 }

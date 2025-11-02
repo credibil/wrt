@@ -32,10 +32,13 @@ tokio.workspace = true
 tracing.workspace = true
 wasmtime.workspace = true
 wasmtime-wasi.workspace = true
+jsonschema.workspace = true
+rdkafka.workspace = true
+schema-registry-client.workspace = true
 
-jsonschema = "0.30.0"
-rdkafka = { version = "0.38", features = ["ssl-vendored", "cmake-build", "tokio"] }
-schema-registry-client = "0.4.1"
+[dev-dependencies]
+csv.workspace = true
+serde.workspace = true
 
 # guest dependencies
 [target.'cfg(target_arch = "wasm32")'.dependencies]
