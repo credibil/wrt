@@ -22,7 +22,7 @@ cargo run -- run ./target/wasm32-wasip2/release/examples/http.wasm
 In a separate console, call the guest:
 
 ```bash
-curl -d '{"text":"hello"}' http://localhost:8080
+curl -H "Content-Type: application/json" -d '{"text":"hello"}' http://localhost:8080
 ```
 
 ## OpenTelemetry Collector

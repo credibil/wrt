@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::env;
 use std::pin::Pin;
 use std::sync::Arc;
 
@@ -27,8 +28,10 @@ impl WasiMessagingCtx for crate::Client {
 }
 
 impl Client for crate::Client {
-    fn subscribe(&self, topics: Vec<String>) -> FutureResult<Subscriptions> {
+    fn subscribe(&self) -> FutureResult<Subscriptions> {
         let client = self.clone();
+        let topics_env = env::var("KAFKA_TOPICS").unwrap_or_default();
+        let topics = topics_env.split(',').map(ToString::to_string).collect::<Vec<_>>();
 
         async move {
             let consumer = client.consumer;
@@ -75,7 +78,6 @@ impl Client for crate::Client {
         let client = self.clone();
 
         // TODO: add offset to header??
-        // TODO: pre-/post- send hooks??
 
         async move {
             // schema registry validation when available
@@ -103,12 +105,6 @@ impl Client for crate::Client {
                 let partition = partitioner.partition(key.as_bytes());
                 record = record.partition(partition);
             }
-
-            // TODO: this looks redundant??
-            // let p: i32 = msg.partition();
-            // if p >= 0 {
-            //     record = record.partition(p);
-            // }
 
             if let Err((e, _)) = client.producer.send(record) {
                 tracing::error!("producer::error {e}");
