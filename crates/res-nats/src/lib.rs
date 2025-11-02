@@ -6,41 +6,24 @@ mod blobstore;
 mod keyvalue;
 mod messaging;
 
-use std::collections::HashMap;
 use std::env;
-use std::pin::Pin;
 use std::sync::Arc;
 
 use anyhow::{Context, Result, anyhow};
 use async_nats::{AuthError, ConnectOptions};
-use runtime::ResourceBuilder;
+use runtime::Resource;
 use tracing::instrument;
 
 const DEF_NATS_ADDR: &str = "demo.nats.io";
-const CLIENT_NAME: &str = "nats";
 
 #[derive(Debug, Clone)]
-pub struct Nats {
-    attributes: HashMap<String, String>,
-}
+pub struct Client(async_nats::Client);
 
-#[derive(Debug, Clone)]
-pub struct NatsClient(async_nats::Client);
+impl Resource for Client {
+    // type Connection = Self;
 
-impl ResourceBuilder<NatsClient> for Nats {
-    fn new() -> Self {
-        Self {
-            attributes: HashMap::new(),
-        }
-    }
-
-    fn attribute(mut self, key: &str, value: &str) -> Self {
-        self.attributes.insert(key.to_string(), value.to_string());
-        self
-    }
-
-    #[instrument(name = "Nats::connect", skip(self))]
-    async fn connect(self) -> Result<NatsClient> {
+    #[instrument]
+    async fn connect() -> Result<Self> {
         let addr = env::var("NATS_ADDR").unwrap_or_else(|_| DEF_NATS_ADDR.into());
 
         let options = connect_options().map_err(|e| {
@@ -52,18 +35,18 @@ impl ResourceBuilder<NatsClient> for Nats {
         let client = options.connect(addr).await.map_err(|e| anyhow!("{e}"))?;
         tracing::info!("connected to nats");
 
-        Ok(NatsClient(client))
+        Ok(Self(client))
     }
 }
 
-impl IntoFuture for Nats {
-    type IntoFuture = Pin<Box<dyn Future<Output = Self::Output> + Send + 'static>>;
-    type Output = Result<NatsClient>;
+// impl IntoFuture for NatsClient {
+//     type IntoFuture = Pin<Box<dyn Future<Output = Self::Output> + Send + 'static>>;
+//     type Output = Result<Self>;
 
-    fn into_future(self) -> Self::IntoFuture {
-        Box::pin(self.connect())
-    }
-}
+//     fn into_future(self) -> Self::IntoFuture {
+//         Box::pin(self.connect())
+//     }
+// }
 
 fn connect_options() -> Result<ConnectOptions> {
     let mut opts = ConnectOptions::new();

@@ -1,0 +1,34 @@
+[package]
+name = "res-kafka"
+description = "Kafka messaging resource"
+publish = false
+readme = "README.md"
+authors.workspace = true
+categories.workspace = true
+edition.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[lints]
+workspace = true
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+anyhow.workspace = true
+chrono.workspace = true
+futures.workspace = true
+jsonschema.workspace = true
+rdkafka.workspace = true
+runtime.workspace = true
+schema-registry-client.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+wasi-messaging.workspace = true
+
+[dev-dependencies]
+csv.workspace = true
+serde.workspace = true

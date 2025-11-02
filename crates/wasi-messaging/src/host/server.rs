@@ -1,61 +1,27 @@
 use anyhow::{Context, Result};
 use futures::StreamExt;
-use runtime::RunState;
+use runtime::State;
 use tracing::{Instrument, debug_span};
 use wasmtime::Store;
-use wasmtime::component::InstancePre;
 
+use crate::host::WasiMessagingView;
 use crate::host::generated::Messaging;
-use crate::host::resource::Message;
-use crate::host::{CLIENT, Error};
+use crate::host::resource::{Message, Subscriptions};
 
-pub async fn run(instance_pre: InstancePre<RunState>) -> Result<()> {
-    // short-circuit when messaging not required
-    let component_type = instance_pre.component().component_type();
-    let engine = instance_pre.engine();
-    if !component_type.exports(engine).any(|e| e.0.starts_with("wasi:messaging")) {
-        tracing::debug!("messaging server not required");
-        return Ok(());
-    }
+pub async fn run<S>(state: &S) -> Result<()>
+where
+    S: State,
+    <S as State>::StoreData: WasiMessagingView,
+{
+    tracing::info!("starting messaging server");
 
-    // get guest configuration
-    let mut store = Store::new(engine, RunState::new());
-    let instance = instance_pre.instantiate_async(&mut store).await?;
-    let messaging = Messaging::new(&mut store, &instance)?;
-
-    // *** WASIP3 ***
-    // use `run_concurrent` for non-blocking execution
-    let config = instance
-        .run_concurrent(&mut store, async |accessor| {
-            messaging.wasi_messaging_incoming_handler().call_configure(accessor).await?
-        })
-        .await??;
-
-    let Some(client) = CLIENT.get() else {
-        return Err(anyhow::anyhow!("no messaging client registered"))?;
-    };
-
-    // process requests
-    tracing::info!("starting messaging server for client: {}", client.name());
-
-    let topics = config.topics.clone();
-    let mut stream = client.subscribe(topics).await.map_err(|e| {
-        tracing::error!("failed to start messaging server: {e}");
-        e
-    })?;
+    let handler = Handler { state: state.clone() };
+    let mut stream = handler.subscriptions().await?;
 
     while let Some(message) = stream.next().await {
-        let instance_pre = instance_pre.clone();
-
+        let handler = handler.clone();
         tokio::spawn(async move {
-            if let Err(e) = client.pre_send(&message).await {
-                tracing::error!("error processing message {e}");
-                return;
-            }
-            if let Err(e) = call_guest(message.clone(), instance_pre).await {
-                tracing::error!("error processing message {e}");
-            }
-            if let Err(e) = client.post_send(&message).await {
+            if let Err(e) = handler.send(message.clone()).await {
                 tracing::error!("error processing message {e}");
             }
         });
@@ -64,22 +30,64 @@ pub async fn run(instance_pre: InstancePre<RunState>) -> Result<()> {
     Ok(())
 }
 
-// Forward message to the wasm component.
-async fn call_guest(message: Message, instance_pre: InstancePre<RunState>) -> Result<(), Error> {
-    let mut state = RunState::new();
-    let res_msg = state.table.push(message)?;
+#[derive(Clone)]
+struct Handler<S>
+where
+    S: State,
+    <S as State>::StoreData: WasiMessagingView,
+{
+    state: S,
+}
 
-    let mut store = Store::new(instance_pre.engine(), state);
-    let instance = instance_pre.instantiate_async(&mut store).await?;
-    let messaging = Messaging::new(&mut store, &instance)?;
+impl<S> Handler<S>
+where
+    S: State,
+    <S as State>::StoreData: WasiMessagingView,
+{
+    // Get subscriptions for the topics configured in the wasm component.
+    async fn subscriptions(&self) -> Result<Subscriptions> {
+        let instance_pre = self.state.instance_pre();
+        let store_data = self.state.new_store();
+        let mut store = Store::new(instance_pre.engine(), store_data);
+        let instance = instance_pre.instantiate_async(&mut store).await?;
+        let messaging = Messaging::new(&mut store, &instance)?;
 
-    // *** WASIP3 ***
-    // use `run_concurrent` for non-blocking execution
-    instance
-        .run_concurrent(&mut store, async |accessor| {
-            messaging.wasi_messaging_incoming_handler().call_handle(accessor, res_msg).await?
-        })
-        .instrument(debug_span!("messaging-handle"))
-        .await
-        .context("running instance")?
+        instance
+            .run_concurrent(&mut store, async |accessor| {
+                let guest = messaging.wasi_messaging_incoming_handler();
+                let config = guest.call_configure(accessor).await??;
+                let client =
+                    accessor.with(|mut store| store.get().messaging().ctx.connect()).await?;
+                client.subscribe(config.topics.clone()).await
+            })
+            .await?
+    }
+
+    // Forward message to the wasm component.
+    async fn send(&self, message: Message) -> Result<()> {
+        let mut store_data = self.state.new_store();
+        let res_msg = store_data.messaging().table.push(message.clone())?;
+
+        let instance_pre = self.state.instance_pre();
+        let mut store = Store::new(instance_pre.engine(), store_data);
+        let instance = instance_pre.instantiate_async(&mut store).await?;
+        let messaging = Messaging::new(&mut store, &instance)?;
+
+        instance
+            .run_concurrent(&mut store, async |accessor| {
+                // let client =
+                //     accessor.with(|mut store| store.get().messaging().ctx.connect()).await?;
+                // client.pre_send(&message).await?;
+
+                let guest = messaging.wasi_messaging_incoming_handler();
+                guest.call_handle(accessor, res_msg).await??;
+
+                // client.post_send(&message).await?;
+
+                Ok::<(), anyhow::Error>(())
+            })
+            .instrument(debug_span!("messaging-handle"))
+            .await
+            .context("running instance")?
+    }
 }

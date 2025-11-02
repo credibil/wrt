@@ -14,7 +14,7 @@ mod generated {
         world: "blobstore",
         path: "wit",
         imports: {
-            default: async | tracing | trappable,
+            default: async | store | tracing | trappable,
         },
         with: {
             "wasi:io": wasmtime_wasi::p2::bindings::io,
@@ -30,14 +30,12 @@ mod generated {
     });
 }
 
-use std::collections::HashMap;
-use std::sync::{Arc, LazyLock};
+use std::fmt::Debug;
+use std::sync::Arc;
 
-use anyhow::Result;
 use bytes::Bytes;
-use futures::lock::Mutex;
 pub use resource::*;
-use runtime::{AddResource, RunState, Service};
+use runtime::Host;
 use wasmtime::component::{HasData, Linker, ResourceTable};
 use wasmtime_wasi::p2::pipe::MemoryOutputPipe;
 
@@ -48,39 +46,55 @@ pub type IncomingValue = Bytes;
 pub type OutgoingValue = MemoryOutputPipe;
 pub type StreamObjectNames = Vec<String>;
 
-static CLIENTS: LazyLock<Mutex<HashMap<&str, Arc<dyn Client>>>> =
-    LazyLock::new(|| Mutex::new(HashMap::new()));
+impl<T> Host<T> for WasiBlobstore
+where
+    T: WasiBlobstoreView + 'static,
+{
+    fn add_to_linker(linker: &mut Linker<T>) -> anyhow::Result<()> {
+        blobstore::add_to_linker::<_, Self>(linker, T::blobstore)?;
+        container::add_to_linker::<_, Self>(linker, T::blobstore)?;
+        types::add_to_linker::<_, Self>(linker, T::blobstore)
+    }
+}
 
 #[derive(Debug)]
 pub struct WasiBlobstore;
-
-impl<T: Client + 'static> AddResource<T> for WasiBlobstore {
-    async fn resource(self, resource: T) -> Result<Self> {
-        CLIENTS.lock().await.insert(resource.name(), Arc::new(resource));
-        Ok(self)
-    }
+impl HasData for WasiBlobstore {
+    type Data<'a> = WasiBlobstoreCtxView<'a>;
 }
 
-impl Service for WasiBlobstore {
-    fn add_to_linker(&self, linker: &mut Linker<RunState>) -> Result<()> {
-        blobstore::add_to_linker::<_, Data>(linker, Host::new)?;
-        container::add_to_linker::<_, Data>(linker, Host::new)?;
-        types::add_to_linker::<_, Data>(linker, Host::new)?;
-        Ok(())
-    }
+/// A trait which provides internal WASI Blobstore context.
+///
+/// This is implemented by the resource-specific provider of Blobstore
+/// functionality. For example, an in-memory store, or a Redis-backed store.
+pub trait WasiBlobstoreCtx: Debug + Send + Sync + 'static {
+    /// Open a container.
+    fn create_container(&self, name: String) -> FutureResult<Arc<dyn Container>>;
+
+    /// Get a container.
+    fn get_container(&self, name: String) -> FutureResult<Arc<dyn Container>>;
+
+    /// Delete a container.
+    fn delete_container(&self, name: String) -> FutureResult<()>;
+
+    /// Check if a container exists.
+    fn container_exists(&self, name: String) -> FutureResult<bool>;
 }
 
-struct Data;
-impl HasData for Data {
-    type Data<'a> = Host<'a>;
+/// View into [`WasiBlobstoreCtx`] implementation and [`ResourceTable`].
+pub struct WasiBlobstoreCtxView<'a> {
+    /// Mutable reference to the WASI Blobstore context.
+    pub ctx: &'a mut dyn WasiBlobstoreCtx,
+
+    /// Mutable reference to table used to manage resources.
+    pub table: &'a mut ResourceTable,
 }
 
-pub struct Host<'a> {
-    table: &'a mut ResourceTable,
-}
-
-impl Host<'_> {
-    const fn new(c: &mut RunState) -> Host<'_> {
-        Host { table: &mut c.table }
-    }
+/// A trait which provides internal WASI Blobstore state.
+///
+/// This is implemented by the `T` in `Linker<T>` — a single type shared across
+/// all WASI components for the runtime build.
+pub trait WasiBlobstoreView: Send {
+    /// Return a [`WasiBlobstoreCtxView`] from mutable reference to self.
+    fn blobstore(&mut self) -> WasiBlobstoreCtxView<'_>;
 }

@@ -1,40 +1,66 @@
-use anyhow::{Context, Result};
-use wasmtime::component::Resource;
+use anyhow::Result;
+use wasmtime::component::{Accessor, Resource};
 
-use crate::host::Host;
-use crate::host::generated::wasi::sql::readwrite;
-use crate::host::generated::wasi::sql::readwrite::{Connection, Error, Row, Statement};
+use crate::ConnectionProxy;
+use crate::host::generated::wasi::sql::readwrite::{
+    Connection, Error, Host, HostWithStore, Row, Statement,
+};
+use crate::host::{WasiSql, WasiSqlCtxView};
 
-impl readwrite::Host for Host<'_> {
-    async fn query(
-        &mut self, c: Resource<Connection>, q: Resource<Statement>,
+impl HostWithStore for WasiSql {
+    async fn query<T>(
+        accessor: &Accessor<T, Self>, c: Resource<Connection>, q: Resource<Statement>,
     ) -> Result<Result<Vec<Row>, Resource<Error>>> {
-        let connection = self.table.get(&c).context("getting connection")?;
-        let statement = self.table.get(&q).context("getting statement")?;
+        let connection = get_connection(accessor, &c)?;
+        let statement = get_statement(accessor, &q)?;
 
         // get statement from resource table
         let (query, params) = (statement.query.clone(), statement.params.clone());
 
         // execute query
-        match connection.query(query, params).await.context("executing query") {
-            Ok(rows) => Ok(Ok(rows)),
-            Err(err) => Ok(Err(self.table.push(err)?)),
-        }
+        let result = match connection.query(query, params).await {
+            Ok(rows) => Ok(rows),
+            Err(err) => Err(accessor.with(|mut store| store.get().table.push(err))?),
+        };
+
+        Ok(result)
     }
 
-    async fn exec(
-        &mut self, c: Resource<Connection>, q: Resource<Statement>,
+    async fn exec<T>(
+        accessor: &Accessor<T, Self>, c: Resource<Connection>, q: Resource<Statement>,
     ) -> Result<Result<u32, Resource<Error>>> {
-        let connection = self.table.get(&c).context("getting connection")?;
-        let statement = self.table.get(&q).context("getting statement")?;
+        let connection = get_connection(accessor, &c)?;
+        let statement = get_statement(accessor, &q)?;
 
         // get statement from resource table
         let (query, params) = (statement.query.clone(), statement.params.clone());
 
         // execute query
-        match connection.exec(query, params).await.context("executing query") {
-            Ok(rows) => Ok(Ok(rows)),
-            Err(err) => Ok(Err(self.table.push(err)?)),
-        }
+        let result = match connection.exec(query, params).await {
+            Ok(rows) => Ok(rows),
+            Err(err) => Err(accessor.with(|mut store| store.get().table.push(err))?),
+        };
+
+        Ok(result)
     }
+}
+
+impl Host for WasiSqlCtxView<'_> {}
+
+pub fn get_connection<T>(
+    accessor: &Accessor<T, WasiSql>, self_: &Resource<ConnectionProxy>,
+) -> Result<ConnectionProxy> {
+    accessor.with(|mut store| {
+        let connection = store.get().table.get(self_)?;
+        Ok::<_, Error>(connection.clone())
+    })
+}
+
+pub fn get_statement<T>(
+    accessor: &Accessor<T, WasiSql>, self_: &Resource<Statement>,
+) -> Result<Statement> {
+    accessor.with(|mut store| {
+        let statement = store.get().table.get(self_)?;
+        Ok::<_, Error>(statement.clone())
+    })
 }

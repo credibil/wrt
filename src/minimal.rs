@@ -1,23 +1,98 @@
 #![cfg(not(target_arch = "wasm32"))]
 
 use anyhow::{Result, anyhow};
-use res_mongodb::MongoDb;
-use runtime::{AddResource, Cli, Command, Parser, ResourceBuilder, RuntimeBuilder};
-use wasi_blobstore::WasiBlobstore;
-use wasi_http::WasiHttp;
-use wasi_otel::WasiOtel;
+use runtime::{Cli, Command, Parser, Runtime, Server, State};
+use tokio::io;
+use wasi_http::{DefaultWasiHttpCtx, WasiHttp, WasiHttpCtxView, WasiHttpView};
+use wasi_otel::{DefaultOtelCtx, WasiOtel, WasiOtelCtxView, WasiOtelView};
+use wasmtime::component::InstancePre;
+use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let Command::Run { wasm } = Cli::parse().command else {
         return Err(anyhow!("only run command is supported"));
     };
-    let builder = RuntimeBuilder::new(wasm, true);
-    tracing::info!("Tracing initialised, logging available");
 
-    let mongodb = MongoDb::new().await?;
-    let blobstore = WasiBlobstore.resource(mongodb).await?;
+    // link dependencies
+    let mut rt = Runtime::<RunData>::new(wasm).compile()?;
+    rt.link(WasiHttp)?;
+    rt.link(WasiOtel)?;
 
-    let runtime = builder.register(WasiOtel).register(WasiHttp).register(blobstore).build();
-    runtime.await
+    let instance_pre = rt.pre_instantiate()?;
+
+    // prepare state
+    let run_state = RunState { instance_pre };
+
+    // run server(s)
+    WasiHttp.run(&run_state).await?;
+
+    Ok(())
+}
+
+#[derive(Clone)]
+pub struct RunState {
+    instance_pre: InstancePre<RunData>,
+}
+
+impl State for RunState {
+    type StoreData = RunData;
+
+    fn instance_pre(&self) -> &InstancePre<Self::StoreData> {
+        &self.instance_pre
+    }
+
+    fn new_store(&self) -> Self::StoreData {
+        let mut ctx = WasiCtxBuilder::new();
+        let wasi_ctx = ctx
+            .inherit_args()
+            .inherit_env()
+            .inherit_stdin()
+            .stdout(io::stdout())
+            .stderr(io::stderr())
+            .build();
+
+        RunData {
+            table: ResourceTable::new(),
+            wasi_ctx,
+            http_ctx: DefaultWasiHttpCtx,
+            otel_ctx: DefaultOtelCtx,
+        }
+    }
+}
+
+/// `RunData` is used to share host state between the Wasm runtime and hosts
+/// each time they are instantiated.
+pub struct RunData {
+    pub table: ResourceTable,
+    pub wasi_ctx: WasiCtx,
+    pub http_ctx: DefaultWasiHttpCtx,
+    pub otel_ctx: DefaultOtelCtx,
+}
+
+impl WasiView for RunData {
+    fn ctx(&mut self) -> WasiCtxView<'_> {
+        WasiCtxView {
+            ctx: &mut self.wasi_ctx,
+            table: &mut self.table,
+        }
+    }
+}
+
+impl WasiHttpView for RunData {
+    fn http(&mut self) -> WasiHttpCtxView<'_> {
+        WasiHttpCtxView {
+            ctx: &mut self.http_ctx,
+            table: &mut self.table,
+        }
+    }
+}
+
+impl WasiOtelView for RunData {
+    fn otel(&mut self) -> WasiOtelCtxView<'_> {
+        WasiOtelCtxView {
+            ctx: &mut self.otel_ctx,
+            table: &mut self.table,
+        }
+    }
 }

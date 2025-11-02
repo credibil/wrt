@@ -6,16 +6,12 @@ use async_nats::jetstream::kv::Config;
 use async_nats::jetstream::{self, kv};
 use futures::TryStreamExt;
 use futures::future::FutureExt;
-use wasi_keyvalue::{Bucket, Client, FutureResult};
+use wasi_keyvalue::{Bucket, FutureResult, WasiKeyValueCtx};
 
-use crate::{CLIENT_NAME, NatsClient};
+use crate::Client;
 
-impl Client for NatsClient {
-    fn name(&self) -> &'static str {
-        CLIENT_NAME
-    }
-
-    fn open(&self, identifier: String) -> FutureResult<Arc<dyn Bucket>> {
+impl WasiKeyValueCtx for Client {
+    fn open_bucket(&self, identifier: String) -> FutureResult<Arc<dyn Bucket>> {
         tracing::trace!("opening bucket: {identifier}");
         let client = self.0.clone();
 

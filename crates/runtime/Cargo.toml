@@ -20,22 +20,11 @@ default = ["jit"]
 # Enables just-in-time wasm to machine code compilation.
 jit = ["wasmtime/cranelift"]
 
-[dependencies]
-
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 anyhow.workspace = true
-base64ct.workspace = true
 cfg-if.workspace = true
-futures.workspace = true
 tracing.workspace = true
-tokio = { workspace = true, features = ["signal"] }
 clap = { version = "4.5.48", features = ["derive"] }
 credibil-otel.workspace = true
 wasmtime = { workspace = true, features = ["runtime"] }
 wasmtime-wasi.workspace = true
-wasmtime-wasi-http.workspace = true
-
-bytes.workspace = true
-http.workspace = true
-http-body-util.workspace = true
-reqwest = { workspace = true, features = ["rustls-tls"] }

@@ -16,19 +16,9 @@ pub type Subscriptions = Pin<Box<dyn Stream<Item = Message> + Send>>;
 
 #[allow(unused_variables)]
 pub trait Client: Debug + Send + Sync + 'static {
-    fn name(&self) -> &'static str;
-
     fn subscribe(&self, topics: Vec<String>) -> FutureResult<Subscriptions>;
 
-    fn pre_send(&self, message: &Message) -> FutureResult<()> {
-        Box::pin(async move { Ok(()) })
-    }
-
     fn send(&self, topic: String, message: Message) -> FutureResult<()>;
-
-    fn post_send(&self, message: &Message) -> FutureResult<()> {
-        Box::pin(async move { Ok(()) })
-    }
 
     fn request(
         &self, topic: String, message: Message, options: Option<RequestOptions>,
@@ -85,12 +75,6 @@ impl Message {
         self
     }
 
-    // #[must_use]
-    // pub const fn timeout(mut self, timeout: Option<Duration>) -> Self {
-    //     self.timeout = Some(timeout);
-    //     self
-    // }
-
     #[must_use]
     pub fn description(mut self, description: String) -> Self {
         self.description = Some(description);
@@ -132,11 +116,11 @@ impl DerefMut for Metadata {
     }
 }
 
-impl From<&Metadata> for types::Metadata {
-    fn from(meta: &Metadata) -> Self {
+impl From<Metadata> for types::Metadata {
+    fn from(meta: Metadata) -> Self {
         let mut metadata = Self::new();
-        for (k, v) in &meta.inner {
-            metadata.push((k.to_string(), v.to_string()));
+        for (k, v) in meta.inner {
+            metadata.push((k, v));
         }
         metadata
     }

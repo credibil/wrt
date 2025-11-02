@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 use std::env;
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use http::header::CONTENT_TYPE;
 use opentelemetry::trace::{self as otel, TraceContextExt};
 use opentelemetry_proto::tonic::collector::trace::v1::ExportTraceServiceRequest;
@@ -15,14 +15,14 @@ use prost::Message;
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 use wasmtime::component::Accessor;
 
-use crate::host::generated::wasi::otel as wasi_otel;
-use crate::host::generated::wasi::otel::tracing::{self as wasi};
-use crate::host::{DEF_HTTP_ADDR, Data, Host};
+use crate::host::DEF_HTTP_ADDR;
+use crate::host::generated::wasi::otel::tracing::{self as wasi, HostWithStore};
+use crate::{WasiOtel, WasiOtelCtxView};
 
 // *** WASIP3 ***
 // use `HostWithStore` to add async support`
 
-impl wasi_otel::tracing::HostWithStore for Data {
+impl HostWithStore for WasiOtel {
     async fn export<T>(
         accessor: &Accessor<T, Self>, span_data: Vec<wasi::SpanData>,
     ) -> Result<(), wasi::Error> {
@@ -44,28 +44,27 @@ impl wasi_otel::tracing::HostWithStore for Data {
 
         // convert to opentelemetry export format
         let resource_spans = resource_spans(span_data, resource);
-        let request = ExportTraceServiceRequest { resource_spans };
-        let body = Message::encode_to_vec(&request);
-        let addr = env::var("OTEL_HTTP_ADDR").unwrap_or_else(|_| DEF_HTTP_ADDR.to_string());
+        let export = ExportTraceServiceRequest { resource_spans };
+        let body = Message::encode_to_vec(&export);
 
-        // export to collector
-        let http_client = accessor.with(move |mut access| access.get().http_client.clone());
-        if let Err(e) = http_client
-            .post(format!("{addr}/v1/traces"))
+        // build request to send to collector
+        let addr = env::var("OTEL_HTTP_ADDR").unwrap_or_else(|_| DEF_HTTP_ADDR.to_string());
+        let request = http::Request::builder()
+            .method("POST")
+            .uri(format!("{addr}/v1/traces"))
             .header(CONTENT_TYPE, "application/x-protobuf")
             .body(body)
-            .send()
-            .await
-            .context("sending traces")
-        {
-            tracing::error!("failed to send traces: {e}");
-        }
+            .map_err(|e| {
+                tracing::error!("failed to build metrics export request: {e}");
+                wasi::Error::InternalFailure(e.to_string())
+            })?;
+        accessor.with(|mut store| store.get().ctx.export(request)).await?;
 
         Ok(())
     }
 }
 
-impl wasi_otel::tracing::Host for Host<'_> {}
+impl wasi::Host for WasiOtelCtxView<'_> {}
 
 pub fn resource_spans(
     spans: Vec<wasi::SpanData>, resource: &opentelemetry_sdk::Resource,

@@ -2,13 +2,15 @@
 //!
 //! This module implements a host-side service for `wasi:http`
 
+mod default_ctx;
+
 use std::clone::Clone;
 use std::convert::Infallible;
 use std::env;
 
 use anyhow::{Context, Result, anyhow};
 use bytes::Bytes;
-use futures::future::{BoxFuture, FutureExt};
+pub use default_ctx::DefaultWasiHttpCtx;
 use http::uri::{PathAndQuery, Uri};
 use http_body_util::combinators::BoxBody;
 use http_body_util::{BodyExt, Full};
@@ -16,15 +18,16 @@ use hyper::body::Incoming;
 use hyper::header::{FORWARDED, HOST};
 use hyper::server::conn::http1;
 use hyper::service::service_fn;
-use runtime::{RunState, Service};
+use runtime::{Host, Server, State};
 use tokio::net::TcpListener;
 use tokio::sync::oneshot;
 use tracing::{Instrument, debug_span};
 use wasmtime::Store;
-use wasmtime::component::{InstancePre, Linker};
+use wasmtime::component::Linker;
 use wasmtime_wasi_http::io::TokioIo;
 use wasmtime_wasi_http::p3::bindings::ProxyIndices;
 use wasmtime_wasi_http::p3::bindings::http::types::{self as wasi, ErrorCode};
+pub use wasmtime_wasi_http::p3::{WasiHttpCtxView, WasiHttpView};
 
 type OutgoingBody = BoxBody<Bytes, anyhow::Error>;
 
@@ -33,78 +36,81 @@ const DEF_HTTP_ADDR: &str = "0.0.0.0:8080";
 #[derive(Debug)]
 pub struct WasiHttp;
 
-impl Service for WasiHttp {
-    fn add_to_linker(&self, linker: &mut Linker<RunState>) -> Result<()> {
+impl<T> Host<T> for WasiHttp
+where
+    T: WasiHttpView + 'static,
+{
+    fn add_to_linker(linker: &mut Linker<T>) -> Result<()> {
         wasmtime_wasi_http::p3::add_to_linker(linker)
-    }
-
-    /// Provide http proxy service the specified wasm component.
-    fn start(&self, pre: InstancePre<RunState>) -> BoxFuture<'static, Result<()>> {
-        Self::serve(pre).boxed()
     }
 }
 
-impl WasiHttp {
-    /// Provide http proxy service the specified wasm component.
-    async fn serve(pre: InstancePre<RunState>) -> Result<()> {
-        // bail if server is not required
-        let component_type = pre.component().component_type();
-        let mut exports = component_type.imports(pre.engine());
-        if !exports.any(|e| e.0.starts_with("wasi:http")) {
-            tracing::debug!("http server not required");
-            return Ok(());
-        }
+impl<S> Server<S> for WasiHttp
+where
+    S: State,
+    <S as State>::StoreData: WasiHttpView,
+{
+    async fn run(&self, state: &S) -> Result<()> {
+        serve(state).await
+    }
+}
 
-        let addr = env::var("HTTP_ADDR").unwrap_or_else(|_| DEF_HTTP_ADDR.into());
-        let listener = TcpListener::bind(&addr).await?;
-        tracing::info!("http server listening on: {}", listener.local_addr()?);
+async fn serve<S>(state: &S) -> Result<()>
+where
+    S: State,
+    <S as State>::StoreData: WasiHttpView,
+{
+    let addr = env::var("HTTP_ADDR").unwrap_or_else(|_| DEF_HTTP_ADDR.into());
+    let listener = TcpListener::bind(&addr).await?;
+    tracing::info!("http server listening on: {}", listener.local_addr()?);
 
-        let handler = Handler {
-            instance_pre: pre.clone(),
-        };
+    let handler: Handler<S> = Handler { state: state.clone() };
 
-        // listen for requests until terminated
-        loop {
-            let (stream, _) = listener.accept().await?;
-            stream.set_nodelay(true)?;
-            let stream = TokioIo::new(stream);
-            let handler = handler.clone();
+    // listen for requests until terminated
+    loop {
+        let (stream, _) = listener.accept().await?;
+        stream.set_nodelay(true)?;
+        let stream = TokioIo::new(stream);
+        let handler = handler.clone();
 
-            tokio::spawn(async move {
-                let mut http1 = http1::Builder::new();
-                http1.keep_alive(true);
+        tokio::spawn(async move {
+            let mut http1 = http1::Builder::new();
+            http1.keep_alive(true);
 
-                if let Err(e) = http1
-                    .serve_connection(
-                        stream,
-                        service_fn(move |request| {
-                            let handler = handler.clone();
-                            async move {
-                                let response = handler
-                                    .handle(request)
-                                    .await
-                                    .unwrap_or_else(|_e| internal_error());
-                                Ok::<_, Infallible>(response)
-                            }
-                        }),
-                    )
-                    .await
-                {
-                    tracing::error!("connection error: {e:?}");
-                }
-            });
-        }
+            if let Err(e) = http1
+                .serve_connection(
+                    stream,
+                    service_fn(move |request| {
+                        let handler = handler.clone();
+                        async move {
+                            let response =
+                                handler.handle(request).await.unwrap_or_else(|_e| internal_error());
+                            Ok::<_, Infallible>(response)
+                        }
+                    }),
+                )
+                .await
+            {
+                tracing::error!("connection error: {e:?}");
+            }
+        });
     }
 }
 
 #[derive(Clone)]
-struct Handler {
-    instance_pre: InstancePre<RunState>,
+struct Handler<S>
+where
+    S: State,
+    <S as State>::StoreData: WasiHttpView,
+{
+    state: S,
 }
 
-// use wasmtime_wasi_http::p3::WasiHttpView;
-
-impl Handler {
+impl<S> Handler<S>
+where
+    S: State,
+    <S as State>::StoreData: WasiHttpView,
+{
     // Forward request to the wasm Guest.
     async fn handle(
         &self, request: hyper::Request<Incoming>,
@@ -115,9 +121,11 @@ impl Handler {
         let request = fix_request(request).context("preparing request")?;
 
         // instantiate the guest and get the proxy
-        let mut store = Store::new(self.instance_pre.engine(), RunState::new());
-        let indices = ProxyIndices::new(&self.instance_pre)?;
-        let instance = self.instance_pre.instantiate_async(&mut store).await?;
+        let instance_pre = self.state.instance_pre();
+        let store_data = self.state.new_store();
+        let mut store = Store::new(instance_pre.engine(), store_data);
+        let indices = ProxyIndices::new(instance_pre)?;
+        let instance = instance_pre.instantiate_async(&mut store).await?;
         let proxy = indices.load(&mut store, &instance)?;
 
         let (sender, receiver) = oneshot::channel();
