@@ -122,13 +122,13 @@ path = "examples/vault.rs"
 crate-type = ["cdylib"]
 
 [[example]]
-name = "http-redis-cache"
-path = "examples/http-redis-cache/lib.rs"
+name = "redis"
+path = "examples/redis/lib.rs"
 crate-type = ["cdylib"]
 
 [[example]]
-name = "pub-sub-kafka"
-path = "examples/pub-sub-kafka/lib.rs"
+name = "kafka"
+path = "examples/kafka/lib.rs"
 crate-type = ["cdylib"]
 
 [profile.release]
