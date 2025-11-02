@@ -27,7 +27,7 @@ impl WasiSqlCtx for Client {
 }
 
 #[derive(Debug)]
-pub struct PostgresConnection(Arc<Object>);
+struct PostgresConnection(Arc<Object>);
 
 impl Connection for PostgresConnection {
     fn query(&self, query: String, params: Vec<String>) -> FutureResult<Vec<Row>> {

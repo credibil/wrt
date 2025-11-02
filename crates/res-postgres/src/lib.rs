@@ -4,9 +4,12 @@ mod sql;
 
 use std::env;
 
+use anyhow::anyhow;
 use anyhow::{Context as _, Result};
 use deadpool_postgres::{Config, Pool, PoolConfig};
 use runtime::Resource;
+
+use tokio_postgres::config::Host;
 use tokio_postgres::config::SslMode;
 use tracing::{instrument, warn};
 
@@ -14,7 +17,7 @@ use tracing::{instrument, warn};
 const DEF_URI: &str = "postgres://postgres:pass@localhost:5432/postgres?sslmode=disable";
 const DEF_POOL_SIZE: usize = 10;
 
-/// Postgres resource
+/// Postgres client
 #[derive(Debug)]
 pub struct Client(Pool);
 
@@ -31,19 +34,14 @@ impl Resource for Client {
             .get_hosts()
             .first()
             .map(|h| match h {
-                tokio_postgres::config::Host::Tcp(name) => name.clone(),
-                tokio_postgres::config::Host::Unix(path) => path.to_string_lossy().into_owned(),
+                Host::Tcp(name) => name.to_owned(),
+                Host::Unix(path) => path.to_string_lossy().to_string(),
             })
             .unwrap_or_default();
-        let port = pg_cfg
-            .get_ports()
-            .first()
-            .copied()
-            .ok_or_else(|| anyhow::anyhow!("Port is missing"))?;
-        let username = pg_cfg.get_user().ok_or_else(|| anyhow::anyhow!("Username is missing"))?;
-        let password =
-            pg_cfg.get_password().ok_or_else(|| anyhow::anyhow!("Password is missing"))?;
-        let database = pg_cfg.get_dbname().ok_or_else(|| anyhow::anyhow!("Database is missing"))?;
+        let port = pg_cfg.get_ports().first().copied().ok_or_else(|| anyhow!("Port is missing"))?;
+        let username = pg_cfg.get_user().ok_or_else(|| anyhow!("Username is missing"))?;
+        let password = pg_cfg.get_password().ok_or_else(|| anyhow!("Password is missing"))?;
+        let database = pg_cfg.get_dbname().ok_or_else(|| anyhow!("Database is missing"))?;
 
         let tls_required = matches!(pg_cfg.get_ssl_mode(), SslMode::Require);
 
@@ -80,20 +78,13 @@ impl Resource for Client {
 /// Creation options for a Postgres connection
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct ConnectOptions {
-    /// Hostname of the Postgres cluster to connect to
-    pub host: String,
-    /// Port on which to connect to the Postgres cluster
-    pub port: u16,
-    /// Username used when accessing the Postgres cluster
-    pub username: String,
-    /// Password used when accessing the Postgres cluster
-    pub password: String,
-    /// Database to connect to
-    pub database: String,
-    /// Whether TLS is required for the connection
-    pub tls_required: bool,
-    /// Optional connection pool size
-    pub pool_size: Option<usize>,
+    host: String,
+    port: u16,
+    username: String,
+    password: String,
+    database: String,
+    tls_required: bool,
+    pool_size: Option<usize>,
 }
 
 impl From<ConnectOptions> for Config {
@@ -114,12 +105,8 @@ impl From<ConnectOptions> for Config {
     }
 }
 
-/// Method creates connection pool with enabled or disabled TLS
-///
-/// # Errors
-///
-/// Will return `Err` if not possible to create pool
-pub fn create_connection_pool(cfg: &Config, tls_required: bool) -> Result<Pool> {
+// Creates connection pool with enabled or disabled TLS
+ fn create_connection_pool(cfg: &Config, tls_required: bool) -> Result<Pool> {
     let runtime = Some(deadpool_postgres::Runtime::Tokio1);
     if tls_required {
         create_tls_pool(cfg, runtime)
@@ -129,7 +116,7 @@ pub fn create_connection_pool(cfg: &Config, tls_required: bool) -> Result<Pool> 
     }
 }
 
-/// Method creates connection pool with enabled TLS
+// Creates connection pool with enabled TLS
 fn create_tls_pool(
     cfg: &deadpool_postgres::Config, runtime: Option<deadpool_postgres::Runtime>,
 ) -> Result<Pool> {
