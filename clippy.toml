@@ -9,6 +9,7 @@ allowed-duplicate-crates = [
   "core-foundation",
   "dashmap",
   "embedded-io",
+  "fallible-iterator",
   "getrandom",
   "hashbrown",
   "gimli",

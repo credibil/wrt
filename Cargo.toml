@@ -257,6 +257,7 @@ wasi-messaging = { path = "crates/wasi-messaging", version = "0.12.0", registry 
 wasi-messaging-kafka = { path = "crates/wasi-messaging-kafka", version = "0.12.0", registry = "credibil" }
 wasi-otel = { path = "crates/wasi-otel", version = "0.12.0", registry = "credibil" }
 wasi-otel-attr = { path = "crates/wasi-otel-attr", version = "0.12.0", registry = "credibil" }
+wasi-sql = { path = "crates/wasi-sql", version = "0.12.0", registry = "credibil" }
 wasi-vault = { path = "crates/wasi-vault", version = "0.12.0", registry = "credibil" }
 
 # [patch."https://github.com/credibil/core.git"]

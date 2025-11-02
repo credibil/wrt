@@ -5,7 +5,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use futures::future::BoxFuture;
 
-pub use crate::host::generated::wasi::sql::readwrite::Row;
+use crate::host::Row;
 
 pub type FutureResult<T> = BoxFuture<'static, Result<T>>;
 
@@ -13,11 +13,10 @@ pub type FutureResult<T> = BoxFuture<'static, Result<T>>;
 /// connect to a backend (Azure Table Storage, Postgres, etc) and execute SQL
 /// statements.
 pub trait Connection: Debug + Send + Sync + 'static {
-    /// The name of the backend this client is implemented for.
-    fn name(&self) -> &'static str;
-
+    /// Execute a query and return the resulting rows.
     fn query(&self, query: String, params: Vec<String>) -> FutureResult<Vec<Row>>;
 
+    /// Execute a query that does not return rows (e.g., an `INSERT`, `UPDATE`, or `DELETE`).
     fn exec(&self, query: String, params: Vec<String>) -> FutureResult<u32>;
 }
 

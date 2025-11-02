@@ -38,6 +38,7 @@ use wasmtime::component::{HasData, Linker};
 use wasmtime_wasi::ResourceTable;
 
 use self::generated::wasi::sql::{readwrite, types};
+pub use crate::host::generated::wasi::sql::types::{DataType, Row};
 pub use crate::host::resource::*;
 
 impl<T> Host<T> for WasiSql
@@ -61,7 +62,7 @@ impl HasData for WasiSql {
 /// This is implemented by the resource-specific provider of Key-Value
 /// functionality. For example, an in-memory store, or a Redis-backed store.
 pub trait WasiSqlCtx: Debug + Send + Sync + 'static {
-    fn open_connection(&self, identifier: String) -> FutureResult<Arc<dyn Connection>>;
+    fn open(&self, name: String) -> FutureResult<Arc<dyn Connection>>;
 }
 
 /// View into [`WasiSqlCtx`] implementation and [`ResourceTable`].
