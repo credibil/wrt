@@ -686,9 +686,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.2.43"
+version = "1.2.44"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "739eb0f94557554b3ca9a86d2d37bebd49c5e6d0c1d2bda35ba5bdac830befc2"
+checksum = "37521ac7aabe3d13122dc382493e20c9416f299d2ccd5b3a5340a2570cdeb0f3"
 dependencies = [
  "find-msvc-tools",
  "shlex",
@@ -1099,6 +1099,27 @@ checksum = "1bfb12502f3fc46cca1bb51ac28df9d618d813cdc3d2f25b9fe775a34af26bb3"
 dependencies = [
  "generic-array",
  "typenum",
+]
+
+[[package]]
+name = "csv"
+version = "1.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "52cd9d68cf7efc6ddfaaee42e7288d3a99d613d4b50f76ce9827ae0c6e14f938"
+dependencies = [
+ "csv-core",
+ "itoa",
+ "ryu",
+ "serde_core",
+]
+
+[[package]]
+name = "csv-core"
+version = "0.1.13"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "704a3c26996a80471189265814dbc2c257598b96b8a7feae2d31ace646bb9782"
+dependencies = [
+ "memchr",
 ]
 
 [[package]]
@@ -1879,7 +1900,7 @@ dependencies = [
  "tokio",
  "tokio-rustls 0.26.4",
  "tower-service",
- "webpki-roots 1.0.3",
+ "webpki-roots 1.0.4",
 ]
 
 [[package]]
@@ -3560,7 +3581,7 @@ dependencies = [
  "wasm-bindgen-futures",
  "wasm-streams",
  "web-sys",
- "webpki-roots 1.0.3",
+ "webpki-roots 1.0.4",
 ]
 
 [[package]]
@@ -3577,6 +3598,25 @@ dependencies = [
  "runtime",
  "tracing",
  "wasi-vault",
+]
+
+[[package]]
+name = "res-kafka"
+version = "0.12.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "csv",
+ "futures",
+ "jsonschema",
+ "rdkafka",
+ "runtime",
+ "schema-registry-client",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tracing",
+ "wasi-messaging",
 ]
 
 [[package]]
@@ -3648,20 +3688,12 @@ name = "runtime"
 version = "0.12.0"
 dependencies = [
  "anyhow",
- "base64ct",
- "bytes",
  "cfg-if",
  "clap",
  "credibil-otel",
- "futures",
- "http",
- "http-body-util",
- "reqwest",
- "tokio",
  "tracing",
  "wasmtime",
  "wasmtime-wasi",
- "wasmtime-wasi-http",
 ]
 
 [[package]]
@@ -3673,11 +3705,14 @@ dependencies = [
  "base64ct",
  "build-macro",
  "bytes",
+ "futures",
  "http",
  "http-body-util",
  "openssl",
  "opentelemetry",
+ "reqwest",
  "res-azkeyvault",
+ "res-kafka",
  "res-mongodb",
  "res-nats",
  "res-redis",
@@ -3694,6 +3729,9 @@ dependencies = [
  "wasi-otel",
  "wasi-vault",
  "wasip3",
+ "wasmtime",
+ "wasmtime-wasi",
+ "wasmtime-wasi-http",
  "wit-bindgen",
 ]
 
@@ -5153,6 +5191,7 @@ version = "0.12.0"
 dependencies = [
  "anyhow",
  "axum",
+ "base64ct",
  "bincode",
  "bytes",
  "credibil-encoding",
@@ -5162,6 +5201,7 @@ dependencies = [
  "http-body-util",
  "hyper",
  "percent-encoding",
+ "reqwest",
  "runtime",
  "serde",
  "serde_json",
@@ -5172,6 +5212,7 @@ dependencies = [
  "wasi-keyvalue",
  "wasip3",
  "wasmtime",
+ "wasmtime-wasi",
  "wasmtime-wasi-http",
  "wit-bindgen",
 ]
@@ -5215,6 +5256,7 @@ version = "0.12.0"
 dependencies = [
  "anyhow",
  "async-nats",
+ "csv",
  "futures",
  "http",
  "jsonschema",
@@ -5764,14 +5806,14 @@ version = "0.26.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "521bc38abb08001b01866da9f51eb7c5d647a19260e00054a8c7fd5f9e57f7a9"
 dependencies = [
- "webpki-roots 1.0.3",
+ "webpki-roots 1.0.4",
 ]
 
 [[package]]
 name = "webpki-roots"
-version = "1.0.3"
+version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "32b130c0d2d49f8b6889abc456e795e82525204f27c42cf767cf0d7734e089b8"
+checksum = "b2878ef029c47c6e8cf779119f20fcf52bde7ad42a731b2a304bc221df17571e"
 dependencies = [
  "rustls-pki-types",
 ]

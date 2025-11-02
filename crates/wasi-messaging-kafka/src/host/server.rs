@@ -3,53 +3,48 @@ use futures::StreamExt;
 use rdkafka::consumer::{CommitMode, Consumer as _, StreamConsumer};
 use rdkafka::message::{Headers as _, OwnedHeaders};
 use rdkafka::{ClientConfig, Message as _};
-use runtime::RunState;
+use runtime::{Resource, State};
 use tracing::{Instrument, info_span};
 use wasmtime::Store;
-use wasmtime::component::InstancePre;
 
 use crate::host::generated::Messaging;
 use crate::host::generated::wasi::messaging::types::Message;
-use crate::host::{CLIENT, Error};
-use crate::schema_registry::SRClient;
+use crate::host::resource::KafkaClient;
+use crate::host::{Error, WasiMessagingView};
+use crate::schema_registry::RegistryClient;
 
-pub async fn run(instance_pre: InstancePre<RunState>) -> Result<()> {
-    // short-circuit when messaging not required
-    let component_type = instance_pre.component().component_type();
-    let engine = instance_pre.engine();
-    if !component_type.exports(engine).any(|e| e.0.starts_with("wasi:messaging")) {
-        tracing::debug!("messaging server not required");
-        return Ok(());
-    }
-
-    // get guest configuration
-    let mut store = Store::new(engine, RunState::new());
+pub async fn run<S>(state: &S) -> Result<()>
+where
+    S: State,
+    <S as State>::StoreData: WasiMessagingView,
+{
+    let instance_pre = state.instance_pre();
+    let store_data = state.new_store();
+    let mut store = Store::new(instance_pre.engine(), store_data);
     let instance = instance_pre.instantiate_async(&mut store).await?;
     let messaging = Messaging::new(&mut store, &instance)?;
 
-    // *** WASIP3 ***
-    // use `run_concurrent` for non-blocking execution
     let config = instance
         .run_concurrent(&mut store, async |accessor| {
             messaging.wasi_messaging_incoming_handler().call_configure(accessor).await?
         })
         .await??;
 
-    let Some(client) = CLIENT.get() else {
-        return Err(anyhow::anyhow!("no messaging client registered"))?;
-    };
+    // process requests
+    tracing::info!("starting messaging server");
 
     // process requests
-    tracing::info!("starting messaging server for client: {}", client.name());
-
-    // process requests
-    subscribe(config.topics, instance_pre).await
+    subscribe(config.topics, state).await
 }
 
-async fn subscribe(topics: Vec<String>, instance_pre: InstancePre<RunState>) -> anyhow::Result<()> {
+async fn subscribe<S>(topics: Vec<String>, state: &S) -> anyhow::Result<()>
+where
+    S: State,
+    <S as State>::StoreData: WasiMessagingView,
+{
     tracing::debug!("subscribing to kafka topics: {topics:?}");
 
-    let kafka_config = crate::kafka()?;
+    let kafka_config = KafkaClient::connect().await?;
 
     let mut config = ClientConfig::new();
     config.set("bootstrap.servers", kafka_config.brokers.clone());
@@ -70,7 +65,7 @@ async fn subscribe(topics: Vec<String>, instance_pre: InstancePre<RunState>) -> 
     // Initialize schema registry client if config is provided
     let sr_client = kafka_config.schema.as_ref().map_or_else(
         || None,
-        |cfg| if cfg.url.is_empty() { None } else { Some(SRClient::new(&cfg.clone())) },
+        |cfg| if cfg.url.is_empty() { None } else { Some(RegistryClient::new(&cfg.clone())) },
     );
 
     let consumer: StreamConsumer = config.create().unwrap();
@@ -78,10 +73,11 @@ async fn subscribe(topics: Vec<String>, instance_pre: InstancePre<RunState>) -> 
     tracing::debug!("subscribed to topics: {topics:?}");
 
     let mut stream = consumer.stream();
+
     while let Some(msg) = stream.next().await {
         match msg {
             Ok(msg) => {
-                let instance_pre = instance_pre.clone();
+                let state = state.clone();
                 let mut owned_msg = msg.detach();
 
                 //validate payload if schema registry provided
@@ -97,7 +93,7 @@ async fn subscribe(topics: Vec<String>, instance_pre: InstancePre<RunState>) -> 
                 tokio::spawn(
                     async move {
                         // Process the message.
-                        if let Err(e) = call_guest(owned_msg, instance_pre).await {
+                        if let Err(e) = call_guest(owned_msg, &state).await {
                             tracing::error!("error processing message {e}");
                         }
                     }
@@ -116,16 +112,20 @@ async fn subscribe(topics: Vec<String>, instance_pre: InstancePre<RunState>) -> 
 }
 
 // Forward message to the wasm component.
-async fn call_guest(message: Message, instance_pre: InstancePre<RunState>) -> Result<(), Error> {
-    let mut state = RunState::new();
-    let res_msg = state.table.push(message)?;
+async fn call_guest<S>(message: Message, state: &S) -> Result<(), Error>
+where
+    S: State,
+    <S as State>::StoreData: WasiMessagingView,
+{
+    let instance_pre = state.instance_pre();
+    let mut store_data = state.new_store();
 
-    let mut store = Store::new(instance_pre.engine(), state);
+    let res_msg = store_data.messaging().table.push(message.clone())?;
+
+    let mut store = Store::new(instance_pre.engine(), store_data);
     let instance = instance_pre.instantiate_async(&mut store).await?;
     let messaging = Messaging::new(&mut store, &instance)?;
 
-    // *** WASIP3 ***
-    // use `run_concurrent` for non-blocking execution
     instance
         .run_concurrent(&mut store, async |accessor| {
             messaging.wasi_messaging_incoming_handler().call_handle(accessor, res_msg).await?

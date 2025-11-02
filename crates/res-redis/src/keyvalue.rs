@@ -6,16 +6,12 @@ use anyhow::anyhow;
 use futures::FutureExt;
 use redis::AsyncCommands;
 use redis::aio::ConnectionManager;
-use wasi_keyvalue::{Bucket, Client, FutureResult};
+use wasi_keyvalue::{Bucket, FutureResult, WasiKeyValueCtx};
 
-use crate::{CLIENT_NAME, RedisClient};
+use crate::Client;
 
-impl Client for RedisClient {
-    fn name(&self) -> &'static str {
-        CLIENT_NAME
-    }
-
-    fn open(&self, identifier: String) -> FutureResult<Arc<dyn Bucket>> {
+impl WasiKeyValueCtx for Client {
+    fn open_bucket(&self, identifier: String) -> FutureResult<Arc<dyn Bucket>> {
         tracing::trace!("opening redis bucket: {}", identifier);
         let conn = self.0.clone();
 

@@ -6,7 +6,6 @@ wit_bindgen::generate!({
     world: "sql",
     path: "wit",
     generate_all,
-    pub_export_macro: true
 });
 
 pub use self::wasi::sql::*;

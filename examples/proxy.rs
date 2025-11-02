@@ -31,12 +31,14 @@ async fn handle_cache() -> Result<Json<Value>> {
     let max_age = "max-age=300";
     let cache_key = "qf34lofge4rstep95tsiz9r75";
     // PEM-encoded private key and certificate
-    let auth_cert = "-----BEGIN CERTIFICATE-----
-...Your Certificate Here...
------END CERTIFICATE----- 
------BEGIN PRIVATE KEY-----
-...Your Private Key Here...
------END PRIVATE KEY-----";
+    let auth_cert = "
+        -----BEGIN CERTIFICATE-----
+        ...Your Certificate Here...
+        -----END CERTIFICATE----- 
+        -----BEGIN PRIVATE KEY-----
+        ...Your Private Key Here...
+        -----END PRIVATE KEY-----";
+
     let encoded_cert = Base64::encode_string(auth_cert.as_bytes());
     let request = http::Request::builder()
         .method(Method::GET)

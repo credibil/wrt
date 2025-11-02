@@ -1,19 +1,21 @@
 use std::collections::HashMap;
+use std::sync::Arc;
 
 use anyhow::anyhow;
 use futures::future::FutureExt;
 use futures::stream::{self, StreamExt};
 use wasi_messaging::{
-    Client, FutureResult, Message, Metadata, Reply, RequestOptions, Subscriptions,
+    Client, FutureResult, Message, Metadata, Reply, RequestOptions, Subscriptions, WasiMessagingCtx,
 };
 
-use crate::{CLIENT_NAME, NatsClient};
-
-impl Client for NatsClient {
-    fn name(&self) -> &'static str {
-        CLIENT_NAME
+impl WasiMessagingCtx for crate::Client {
+    fn connect(&self) -> FutureResult<Arc<dyn Client>> {
+        let client = self.clone();
+        async move { Ok(Arc::new(client) as Arc<dyn Client>) }.boxed()
     }
+}
 
+impl Client for crate::Client {
     fn subscribe(&self, topics: Vec<String>) -> FutureResult<Subscriptions> {
         let client = self.0.clone();
 
@@ -113,7 +115,7 @@ fn into_message(nats_msg: async_nats::Message) -> Message {
     });
 
     let reply = nats_msg.reply.map(|reply| Reply {
-        client_name: CLIENT_NAME.to_string(),
+        client_name: String::new(),
         topic: reply.to_string(),
     });
 

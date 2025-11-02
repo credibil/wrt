@@ -7,9 +7,11 @@ use chrono::Utc;
 use futures::{FutureExt, StreamExt};
 use mongodb::{Collection, bson};
 use serde::{Deserialize, Serialize};
-use wasi_blobstore::{Client, Container, ContainerMetadata, FutureResult, ObjectMetadata};
+use wasi_blobstore::{
+    Container, ContainerMetadata, FutureResult, ObjectMetadata, WasiBlobstoreCtx,
+};
 
-use crate::{CLIENT_NAME, MongoDbClient};
+use crate::Client;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Blob {
@@ -19,11 +21,7 @@ pub struct Blob {
     created_at: u64,
 }
 
-impl Client for MongoDbClient {
-    fn name(&self) -> &'static str {
-        CLIENT_NAME
-    }
-
+impl WasiBlobstoreCtx for Client {
     fn create_container(&self, name: String) -> FutureResult<Arc<dyn Container>> {
         tracing::trace!("creating container: {name}");
         let client = self.0.clone();

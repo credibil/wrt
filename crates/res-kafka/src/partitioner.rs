@@ -305,7 +305,7 @@ mod tests {
     #[test]
     fn test_partitions() {
         let partitioner = Partitioner::new(12);
-        let data = include_bytes!("../../../data/partitions.csv");
+        let data = include_bytes!("../data/partitions.csv");
         let mut reader = csv::ReaderBuilder::new().from_reader(data.as_slice());
 
         for result in reader.deserialize() {

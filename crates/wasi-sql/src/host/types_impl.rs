@@ -1,66 +1,71 @@
-use std::sync::Arc;
+use anyhow::Result;
+use wasmtime::component::{Accessor, Resource};
 
-use anyhow::{Result, anyhow};
-use wasmtime::component::Resource;
+use crate::host::generated::wasi::sql::types::{
+    Connection, Error, Host, HostConnection, HostConnectionWithStore, HostError,
+    HostErrorWithStore, HostStatement, HostStatementWithStore, Statement,
+};
+use crate::host::resource::ConnectionProxy;
+use crate::host::{WasiSql, WasiSqlCtxView};
 
-use crate::host::generated::wasi::sql::types::{self, Connection, Error, Statement};
-use crate::host::resource::{ClientProxy, ConnectionProxy};
-use crate::host::{CLIENTS, Host};
+impl HostConnectionWithStore for WasiSql {
+    async fn open<T>(
+        accessor: &Accessor<T, Self>, name: String,
+    ) -> Result<Result<Resource<Connection>, Resource<Error>>> {
+        let open_conn = accessor.with(|mut store| store.get().ctx.open_connection(name)).await;
 
-impl ClientProxy {
-    async fn try_from(_name: &str) -> anyhow::Result<Self> {
-        let clients = CLIENTS.lock().await;
-        let Some((_, client)) = clients.iter().next() else {
-            return Err(anyhow!("no client registered"));
+        let result = match open_conn {
+            Ok(conn) => {
+                let proxy = ConnectionProxy(conn);
+                Ok(accessor.with(|mut store| store.get().table.push(proxy))?)
+            }
+            Err(err) => Err(accessor.with(|mut store| store.get().table.push(err))?),
         };
-        Ok(Self(Arc::clone(client)))
+
+        Ok(result)
+    }
+
+    async fn drop<T>(
+        accessor: &Accessor<T, Self>, rep: Resource<ConnectionProxy>,
+    ) -> anyhow::Result<()> {
+        accessor.with(|mut store| store.get().table.delete(rep).map(|_| Ok(())))?
     }
 }
 
-impl types::Host for Host<'_> {
-    fn convert_error(&mut self, err: anyhow::Error) -> Result<Error> {
+impl HostStatementWithStore for WasiSql {
+    async fn prepare<T>(
+        accessor: &Accessor<T, Self>, query: String, params: Vec<String>,
+    ) -> Result<Result<Resource<Statement>, Resource<Error>>> {
+        let statement = Statement { query, params };
+        Ok(Ok(accessor.with(|mut store| store.get().table.push(statement))?))
+    }
+
+    async fn drop<T>(accessor: &Accessor<T, Self>, rep: Resource<Statement>) -> Result<()> {
+        Ok(accessor.with(|mut store| store.get().table.delete(rep).map(|_| ()))?)
+    }
+}
+
+impl HostErrorWithStore for WasiSql {
+    async fn trace<T>(accessor: &Accessor<T, Self>, self_: Resource<Error>) -> Result<String> {
+        let err = accessor.with(|mut store| {
+            let err = store.get().table.get(&self_)?;
+            Ok::<String, anyhow::Error>(err.to_string())
+        })?;
+        tracing::error!("Guest error: {err}",);
+        Ok(err)
+    }
+
+    async fn drop<T>(accessor: &Accessor<T, Self>, rep: Resource<Error>) -> anyhow::Result<()> {
+        accessor.with(|mut store| store.get().table.delete(rep).map(|_| Ok(())))?
+    }
+}
+
+impl Host for WasiSqlCtxView<'_> {
+    fn convert_error(&mut self, err: Error) -> Result<Error, anyhow::Error> {
         Ok(err)
     }
 }
 
-impl types::HostConnection for Host<'_> {
-    async fn open(
-        &mut self, name: String,
-    ) -> Result<Result<Resource<Connection>, Resource<Error>>> {
-        let proxy = ClientProxy::try_from(&name).await?;
-        match proxy.open(name).await {
-            Ok(conn) => Ok(Ok(self.table.push(ConnectionProxy(conn))?)),
-            Err(err) => Ok(Err(self.table.push(err)?)),
-        }
-    }
-
-    async fn drop(&mut self, rep: Resource<Connection>) -> Result<()> {
-        Ok(self.table.delete(rep).map(|_| ())?)
-    }
-}
-
-impl types::HostStatement for Host<'_> {
-    async fn prepare(
-        &mut self, query: String, params: Vec<String>,
-    ) -> Result<Result<Resource<Statement>, Resource<Error>>> {
-        let statement = Statement { query, params };
-        let res = self.table.push(statement)?;
-        Ok(Ok(res))
-    }
-
-    async fn drop(&mut self, rep: Resource<Statement>) -> Result<()> {
-        Ok(self.table.delete(rep).map(|_| ())?)
-    }
-}
-
-impl types::HostError for Host<'_> {
-    async fn trace(&mut self, self_: Resource<Error>) -> Result<String> {
-        let err = self.table.get(&self_)?;
-        tracing::error!("Guest error: {err}",);
-        Ok(err.to_string())
-    }
-
-    async fn drop(&mut self, rep: Resource<Error>) -> Result<()> {
-        Ok(self.table.delete(rep).map(|_| ())?)
-    }
-}
+impl HostConnection for WasiSqlCtxView<'_> {}
+impl HostStatement for WasiSqlCtxView<'_> {}
+impl HostError for WasiSqlCtxView<'_> {}

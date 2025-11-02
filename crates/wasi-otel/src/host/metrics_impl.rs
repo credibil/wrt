@@ -22,13 +22,13 @@ use opentelemetry_sdk::error::OTelSdkError;
 use prost::Message;
 use wasmtime::component::Accessor;
 
-use crate::host::generated::wasi::otel::{metrics as wasi, metrics, types};
-use crate::host::{DEF_HTTP_ADDR, Data, Host};
+use crate::host::generated::wasi::otel::metrics::{self as wasi, HostWithStore};
+use crate::host::{DEF_HTTP_ADDR, WasiOtel, WasiOtelCtxView};
 
 // *** WASIP3 ***
 // use `HostWithStore` to add async support`
 
-impl metrics::HostWithStore for Data {
+impl HostWithStore for WasiOtel {
     async fn export<T>(
         accessor: &Accessor<T, Self>, rm: wasi::ResourceMetrics,
     ) -> Result<(), wasi::Error> {
@@ -38,39 +38,28 @@ impl metrics::HostWithStore for Data {
             return Ok(());
         }
 
-        let http_client = accessor.with(move |mut access| {
-            let c = access.get().http_client;
-            c.clone()
-        });
-
         // convert to opentelemetry export format
         let request = ExportMetricsServiceRequest::from(rm);
         let body = Message::encode_to_vec(&request);
-        let addr = env::var("OTEL_HTTP_ADDR").unwrap_or_else(|_| DEF_HTTP_ADDR.to_string());
 
-        // export to collector
-        if let Err(e) = http_client
-            .post(format!("{addr}/v1/metrics"))
+        // build request to send to collector
+        let addr = env::var("OTEL_HTTP_ADDR").unwrap_or_else(|_| DEF_HTTP_ADDR.to_string());
+        let request = http::Request::builder()
+            .method("POST")
+            .uri(format!("{addr}/v1/metrics"))
             .header(CONTENT_TYPE, "application/x-protobuf")
             .body(body)
-            .send()
-            .await
-        {
-            tracing::error!("failed to send metrics: {e}");
-        }
+            .map_err(|e| {
+                tracing::error!("failed to build metrics export request: {e}");
+                wasi::Error::InternalFailure(e.to_string())
+            })?;
+        accessor.with(|mut store| store.get().ctx.export(request)).await?;
 
         Ok(())
     }
 }
 
-impl metrics::Host for Host<'_> {}
-
-impl types::Host for Host<'_> {
-    fn convert_error(&mut self, err: wasi::Error) -> anyhow::Result<wasi::Error> {
-        tracing::error!("{err}");
-        Ok(err)
-    }
-}
+impl wasi::Host for WasiOtelCtxView<'_> {}
 
 impl From<OTelSdkError> for wasi::Error {
     fn from(err: OTelSdkError) -> Self {

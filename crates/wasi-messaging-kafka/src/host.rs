@@ -15,7 +15,7 @@ mod generated {
         world: "messaging",
         path: "../wasi-messaging/wit",
         imports: {
-            default: async | tracing | trappable,
+            default: async | store | tracing | trappable,
         },
         exports: {
             default: async | tracing | trappable,
@@ -30,68 +30,70 @@ mod generated {
     });
 }
 
-use std::sync::OnceLock;
+use std::fmt::Debug;
 
-use anyhow::anyhow;
-use futures::future::{BoxFuture, FutureExt};
 pub use resource::*;
-use runtime::{AddResource, RunState, Service};
-use wasmtime::component::{HasData, InstancePre, Linker};
+use runtime::{Host, Server, State};
+use wasmtime::component::{HasData, Linker};
 use wasmtime_wasi::{ResourceTable, ResourceTableError};
 
 pub use self::generated::Messaging;
-use self::generated::wasi::messaging;
 pub use self::generated::wasi::messaging::types::Error;
+use self::generated::wasi::messaging::{producer, types};
 
 pub type Result<T, E = Error> = anyhow::Result<T, E>;
 
-static CLIENT: OnceLock<KafkaClient> = OnceLock::new();
+impl<T> Host<T> for WasiMessaging
+where
+    T: WasiMessagingView + 'static,
+{
+    fn add_to_linker(linker: &mut Linker<T>) -> anyhow::Result<()> {
+        producer::add_to_linker::<_, Self>(linker, T::messaging)?;
+        types::add_to_linker::<_, Self>(linker, T::messaging)
+    }
+}
 
-/// Access the registered Kafka client
-///
-/// # Errors
-/// * no Kafka client registered
-pub fn kafka() -> Result<&'static KafkaClient> {
-    CLIENT.get().ok_or_else(|| anyhow!("no Kafka client registered").into())
+impl<S> Server<S> for WasiMessaging
+where
+    S: State,
+    <S as State>::StoreData: WasiMessagingView,
+{
+    async fn run(&self, state: &S) -> anyhow::Result<()> {
+        server::run(state).await
+    }
 }
 
 #[derive(Debug)]
 pub struct WasiMessaging;
-
-impl AddResource<KafkaClient> for WasiMessaging {
-    async fn resource(self, resource: KafkaClient) -> anyhow::Result<Self> {
-        if CLIENT.set(resource).is_err() {
-            return Err(anyhow!("messaging client already registered"));
-        }
-        Ok(self)
-    }
+impl HasData for WasiMessaging {
+    type Data<'a> = WasiMessagingCtxView<'a>;
 }
 
-impl Service for WasiMessaging {
-    fn add_to_linker(&self, linker: &mut Linker<RunState>) -> anyhow::Result<()> {
-        messaging::producer::add_to_linker::<_, HostData>(linker, Host::new)?;
-        messaging::types::add_to_linker::<_, HostData>(linker, Host::new)?;
-        Ok(())
-    }
-
-    fn start(&self, pre: InstancePre<RunState>) -> BoxFuture<'static, anyhow::Result<()>> {
-        server::run(pre).boxed()
-    }
+/// A trait which provides internal WASI Key-Value context.
+///
+/// This is implemented by the resource-specific provider of Key-Value
+/// functionality. For example, an in-memory store, or a Redis-backed store.
+#[allow(unused)]
+pub trait WasiMessagingCtx: Debug + Send + Sync + 'static {
+    fn connect(&self) -> KafkaClient;
 }
 
-pub struct Host<'a> {
-    table: &'a mut ResourceTable,
+/// View into [`WasiMessagingCtx`] implementation and [`ResourceTable`].
+pub struct WasiMessagingCtxView<'a> {
+    /// Mutable reference to the WASI Key-Value context.
+    pub ctx: &'a mut dyn WasiMessagingCtx,
+
+    /// Mutable reference to table used to manage resources.
+    pub table: &'a mut ResourceTable,
 }
 
-impl Host<'_> {
-    pub const fn new(c: &mut RunState) -> Host<'_> {
-        Host { table: &mut c.table }
-    }
-}
-
-pub struct HostData;
-impl HasData for HostData {
-    type Data<'a> = Host<'a>;
+/// A trait which provides internal WASI Key-Value state.
+///
+/// This is implemented by the `T` in `Linker<T>` — a single type shared across
+/// all WASI components for the runtime build.
+pub trait WasiMessagingView: Send {
+    /// Return a [`WasiMessagingCtxView`] from mutable reference to self.
+    fn messaging(&mut self) -> WasiMessagingCtxView<'_>;
 }
 
 impl From<ResourceTableError> for Error {

@@ -5,6 +5,7 @@ use tokio::time;
 // Send messages to each of the subjects a, b, and c.
 #[tokio::test]
 #[cfg_attr(miri, ignore)]
+#[ignore = "used for manual testing"]
 async fn publish() {
     const COUNT: usize = 2;
 
@@ -17,11 +18,9 @@ async fn publish() {
     for i in 0..COUNT {
         client.publish("a", format!("car number {i}").into()).await.unwrap();
     }
-
     for i in 0..COUNT {
         client.publish("b", format!("ship number {i}").into()).await.unwrap();
     }
-
     for i in 0..COUNT {
         client.publish("c", format!("plane number {i}").into()).await.unwrap();
     }

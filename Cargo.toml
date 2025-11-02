@@ -3,7 +3,7 @@ name = "runtime-cli"
 description = "Credibil runtime"
 publish = false
 readme = "README.md"
-default-run = "standard"
+# default-run = "standard"
 authors.workspace = true
 categories.workspace = true
 edition.workspace = true
@@ -13,6 +13,8 @@ license.workspace = true
 repository.workspace = true
 rust-version.workspace = true
 version.workspace = true
+
+default-run = "standard"
 
 [[bin]]
 name = "standard"
@@ -46,13 +48,23 @@ wasi-otel.workspace = true
 wasi-vault.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+base64ct.workspace = true
 build-macro = { path = "crates/build-macro", version = "0.12.0", registry = "credibil" }
+bytes.workspace = true
+futures.workspace = true
+http.workspace = true
+http-body-util.workspace = true
+reqwest.workspace = true
 res-azkeyvault.workspace = true
 res-mongodb.workspace = true
+res-kafka.workspace = true
 res-nats.workspace = true
 res-redis.workspace = true
 runtime.workspace = true
 tokio = { workspace = true, features = ["signal"] }
+wasmtime-wasi.workspace = true
+wasmtime-wasi-http.workspace = true
+wasmtime.workspace = true
 
 # required for azure_identity, etc.
 openssl = { version = "0.10", features = ["vendored"] }
@@ -139,7 +151,7 @@ homepage = "https://credibil.io"
 keywords = ["decentralized", "identity"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/credibil/wrt"
-rust-version = "1.90"
+rust-version = "1.91"
 version = "0.12.0"
 
 [workspace.lints.rust]
@@ -192,6 +204,7 @@ base64ct = { version = "1.8.0", features = ["std"] }
 bytes = "1.10.1"
 cfg-if = "1.0.3"
 chrono = "0.4.42"
+csv = "1.4.0"
 futures = "0.3.31"
 http = "1.3.1"
 http-body-util = "0.1.3"
@@ -222,12 +235,17 @@ wasmtime-wasi-io = "38.0.3"
 wit-bindgen = { version = "0.46.0" }
 # wit-bindgen = { version = "0.47.0", features = ["async-spawn"] }
 
+jsonschema = "0.30.0"
+rdkafka = { version = "0.38", features = ["ssl-vendored", "cmake-build", "tokio"] }
+schema-registry-client = "0.4.1"
+
 # credibil registry
 credibil-encoding = { version = "0.4.0", registry = "credibil" }
 credibil-otel = { version = "0.4.0", registry = "credibil" }
 
 # interally referenced crates
 res-azkeyvault = { path = "crates/res-azkeyvault", version = "0.12.0", registry = "credibil" }
+res-kafka = { path = "crates/res-kafka", version = "0.12.0", registry = "credibil" }
 res-mongodb = { path = "crates/res-mongodb", version = "0.12.0", registry = "credibil" }
 res-nats = { path = "crates/res-nats", version = "0.12.0", registry = "credibil" }
 res-redis = { path = "crates/res-redis", version = "0.12.0", registry = "credibil" }

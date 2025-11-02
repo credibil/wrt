@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::env;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -9,58 +10,33 @@ use serde_json::Value;
 use tokio::sync::Mutex;
 use tokio::time;
 
-use crate::SchemaConfig;
-
-/// Decoded Kafka message
-pub struct DecodedPayload<'a> {
-    /// Magic byte (should be 0)
-    pub magic_byte: u8,
-    /// Schema registry ID
-    pub registry_id: i32,
-    /// Actual payload
-    pub payload: &'a [u8],
+#[derive(Debug, Clone)]
+pub struct SchemaConfig {
+    pub url: String,
+    api_key: Option<String>,
+    api_secret: Option<String>,
+    cache_ttl_secs: Option<u64>,
 }
 
-impl DecodedPayload<'_> {
-    /// Encode payload with schema registry ID repeats JS code
-    #[must_use]
-    pub fn encode(registry_id: i32, payload: Vec<u8>) -> Vec<u8> {
-        let mut buf = Vec::with_capacity(1 + 4 + payload.len());
+impl SchemaConfig {
+    pub fn from_env() -> Option<Self> {
+        let url = env::var("SCHEMA_REGISTRY_URL").ok()?;
+        let api_key = env::var("SCHEMA_REGISTRY_API_KEY").ok();
+        let api_secret = env::var("SCHEMA_REGISTRY_API_SECRET").ok();
+        let cache_ttl_secs = env::var("SCHEMA_CACHE_TTL_SECS").ok().and_then(|s| s.parse().ok());
 
-        // Magic byte
-        buf.push(MAGIC_BYTE);
-
-        // Registry ID in big-endian
-        buf.extend(&registry_id.to_be_bytes());
-
-        // Payload
-        buf.extend(payload);
-
-        buf
-    }
-
-    /// Decode payload
-    pub fn decode(buffer: &[u8]) -> Option<DecodedPayload<'_>> {
-        if buffer.len() < 5 {
-            tracing::error!("Buffer too short to decode");
-            return None;
-        }
-
-        let magic_byte = buffer[0];
-        let registry_id = i32::from_be_bytes([buffer[1], buffer[2], buffer[3], buffer[4]]);
-        let payload = &buffer[5..];
-
-        Some(DecodedPayload {
-            magic_byte,
-            registry_id,
-            payload,
+        Some(Self {
+            url,
+            api_key,
+            api_secret,
+            cache_ttl_secs,
         })
     }
 }
 
 /// Schema Registry client with caching
 #[derive(Clone)]
-pub struct RegistryClient {
+pub struct Registry {
     client: Option<SchemaRegistryClient>,
     schemas: Arc<Mutex<HashMap<String, (i32, Value)>>>,
 }
@@ -68,7 +44,7 @@ pub struct RegistryClient {
 /// Constants for encoding/decoding
 const MAGIC_BYTE: u8 = 0; // single byte
 
-impl RegistryClient {
+impl Registry {
     /// Create a new Schema Registry client
     #[must_use]
     pub fn new(schema_cfg: &SchemaConfig) -> Self {
@@ -122,7 +98,7 @@ impl RegistryClient {
                         return buffer;
                     }
 
-                    DecodedPayload::encode(id, buffer)
+                    Payload::encode(id, buffer)
                 }
                 Err(e) => {
                     tracing::error!("Failed to fetch schema for topic {}: {:?}", topic, e);
@@ -135,23 +111,24 @@ impl RegistryClient {
     }
 
     /// Deserialize payload to JSON with optional schema registry
+    #[allow(unused)]
     pub async fn validate_and_decode_json(&self, topic: &str, buffer: &[u8]) -> Vec<u8> {
         if let Some(_sr_client) = &self.client {
-            let Some(message) = DecodedPayload::decode(buffer) else { return buffer.to_vec() };
+            let Some(decoded) = Payload::decode(buffer) else { return buffer.to_vec() };
 
             let (_id, schema) = match self.get_or_fetch_schema(topic).await {
                 Ok(s) => s,
                 Err(e) => {
                     tracing::error!("Failed to fetch schema: {:?}", e);
-                    return message.payload.to_vec();
+                    return decoded.data.to_vec();
                 }
             };
 
-            let payload: Value = match serde_json::from_slice(message.payload) {
+            let payload: Value = match serde_json::from_slice(decoded.data) {
                 Ok(v) => v,
                 Err(e) => {
                     tracing::error!("Invalid JSON: {:?}", e);
-                    return message.payload.to_vec();
+                    return decoded.data.to_vec();
                 }
             };
 
@@ -159,7 +136,7 @@ impl RegistryClient {
                 tracing::error!("JSON validation failed: {}", e);
             }
 
-            message.payload.to_vec()
+            decoded.data.to_vec()
         } else {
             buffer.to_vec()
         }
@@ -168,6 +145,7 @@ impl RegistryClient {
     /// # Errors`RegisteredSchema`
     ///
     /// Validate a JSON payload against a provided `RegisteredSchema`
+    #[allow(clippy::unused_self)]
     pub fn validate_payload_with_schema(
         &self, schema: &Value, payload: &Value,
     ) -> Result<(), String> {
@@ -223,9 +201,46 @@ impl RegistryClient {
     }
 }
 
+#[allow(unused)]
+pub struct Payload<'a> {
+    magic_byte: u8,
+    registry_id: i32,
+    data: &'a [u8],
+}
+
+impl Payload<'_> {
+    /// Encode payload with schema registry ID repeats JS code
+    #[must_use]
+    pub fn encode(registry_id: i32, payload: Vec<u8>) -> Vec<u8> {
+        let mut buf = Vec::with_capacity(1 + 4 + payload.len());
+        buf.push(MAGIC_BYTE);
+        buf.extend(&registry_id.to_be_bytes());
+        buf.extend(payload);
+        buf
+    }
+
+    /// Decode payload
+    pub fn decode(buffer: &[u8]) -> Option<Payload<'_>> {
+        if buffer.len() < 5 {
+            tracing::error!("Buffer too short to decode");
+            return None;
+        }
+
+        let magic_byte = buffer[0];
+        let registry_id = i32::from_be_bytes([buffer[1], buffer[2], buffer[3], buffer[4]]);
+        let data = &buffer[5..];
+
+        Some(Payload {
+            magic_byte,
+            registry_id,
+            data,
+        })
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::*; // brings DecodedPayload, MAGIC_BYTE, MessagingError into scope
+    use super::*; // brings Payload, MAGIC_BYTE, MessagingError into scope
 
     #[test]
     fn encode_then_decode_roundtrip() {
@@ -234,7 +249,7 @@ mod tests {
         let payload = b"hello world".to_vec();
 
         // Encode
-        let encoded = DecodedPayload::encode(registry_id, payload.clone());
+        let encoded = Payload::encode(registry_id, payload.clone());
 
         // Expected layout:
         // [ magic_byte ][ registry_id (4 bytes BE) ][ payload... ]
@@ -245,10 +260,10 @@ mod tests {
         assert_eq!(&encoded[5..], &payload, "payload mismatch");
 
         // Decode
-        let decoded = DecodedPayload::decode(&encoded).expect("decode failed");
+        let decoded = Payload::decode(&encoded).expect("decode failed");
 
         assert_eq!(decoded.magic_byte, MAGIC_BYTE);
         assert_eq!(decoded.registry_id, registry_id);
-        assert_eq!(decoded.payload, payload.as_slice());
+        assert_eq!(decoded.data, payload.as_slice());
     }
 }
