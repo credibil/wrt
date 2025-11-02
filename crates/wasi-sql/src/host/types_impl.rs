@@ -12,7 +12,7 @@ impl HostConnectionWithStore for WasiSql {
     async fn open<T>(
         accessor: &Accessor<T, Self>, name: String,
     ) -> Result<Result<Resource<Connection>, Resource<Error>>> {
-        let open_conn = accessor.with(|mut store| store.get().ctx.open_connection(name)).await;
+        let open_conn = accessor.with(|mut store| store.get().ctx.open(name)).await;
 
         let result = match open_conn {
             Ok(conn) => {
