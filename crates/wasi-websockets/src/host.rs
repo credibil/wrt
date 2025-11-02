@@ -215,6 +215,13 @@ async fn accept_connection(peer_map: PeerMap, peer: SocketAddr, stream: TcpStrea
     peer_map.lock().unwrap().remove(&peer);
 }
 
+use http_body_util::Full;
+use hyper::body::{Bytes as HyperBytes, Incoming};
+use hyper::server::conn::http1;
+use hyper::service::service_fn;
+use hyper::{Request, Response};
+use hyper_tungstenite::{is_upgrade_request, upgrade};
+
 impl WebSockets {
     /// Provide http proxy service the specified wasm component.
     async fn run() -> Result<()> {
