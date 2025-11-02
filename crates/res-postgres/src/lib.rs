@@ -4,13 +4,10 @@ mod sql;
 
 use std::env;
 
-use anyhow::anyhow;
-use anyhow::{Context as _, Result};
+use anyhow::{Context as _, Result, anyhow};
 use deadpool_postgres::{Config, Pool, PoolConfig};
 use runtime::Resource;
-
-use tokio_postgres::config::Host;
-use tokio_postgres::config::SslMode;
+use tokio_postgres::config::{Host, SslMode};
 use tracing::{instrument, warn};
 
 /// Default Postgres connection parameters
@@ -106,7 +103,7 @@ impl From<ConnectOptions> for Config {
 }
 
 // Creates connection pool with enabled or disabled TLS
- fn create_connection_pool(cfg: &Config, tls_required: bool) -> Result<Pool> {
+fn create_connection_pool(cfg: &Config, tls_required: bool) -> Result<Pool> {
     let runtime = Some(deadpool_postgres::Runtime::Tokio1);
     if tls_required {
         create_tls_pool(cfg, runtime)
