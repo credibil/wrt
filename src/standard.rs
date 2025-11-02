@@ -23,7 +23,7 @@ async fn main() -> Result<()> {
     //     blobstore: [MongoDb],
     //     vault: [AzKeyVault],
     // });
-    
+
     let Command::Run { wasm } = Cli::parse().command else {
         return Err(anyhow!("only run command is supported"));
     };
