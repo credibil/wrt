@@ -18,7 +18,7 @@ mod generated {
             default: async | store | tracing | trappable,
         },
         exports: {
-            default: async | store |tracing | trappable,
+            default: async | store | tracing | trappable,
         },
         with: {
             "wasi:messaging/request-reply/request-options": RequestOptions,

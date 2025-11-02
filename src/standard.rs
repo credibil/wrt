@@ -17,6 +17,13 @@ use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiVie
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // build_macro::buildgen! ({
+    //     messaging: [Nats],
+    //     keyvalue: [Nats],
+    //     blobstore: [MongoDb],
+    //     vault: [AzKeyVault],
+    // });
+    
     let Command::Run { wasm } = Cli::parse().command else {
         return Err(anyhow!("only run command is supported"));
     };
