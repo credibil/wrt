@@ -3878,6 +3878,7 @@ dependencies = [
  "wasi-keyvalue",
  "wasi-messaging",
  "wasi-otel",
+ "wasi-sql",
  "wasi-vault",
  "wasip3",
  "wasmtime",
