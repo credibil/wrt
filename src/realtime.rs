@@ -4,7 +4,7 @@ use anyhow::{Result, anyhow};
 use res_kafka::Client as KafkaCtx;
 use res_redis::Client as RedisCtx;
 use runtime::{Cli, Command, Parser, Resource, Runtime, Server, State};
-use tokio::io;
+use tokio::{io, try_join};
 use wasi_http::{DefaultWasiHttpCtx, WasiHttp, WasiHttpCtxView, WasiHttpView};
 use wasi_keyvalue::{WasiKeyValue, WasiKeyValueCtxView, WasiKeyValueView};
 use wasi_messaging::{WasiMessaging, WasiMessagingCtxView, WasiMessagingView};
@@ -35,7 +35,7 @@ async fn main() -> Result<()> {
     };
 
     // run server(s)
-    WasiHttp.run(&run_state).await?;
+    try_join!(WasiHttp.run(&run_state), WasiMessaging.run(&run_state))?;
 
     Ok(())
 }

@@ -125,6 +125,10 @@ impl From<&KafkaConfig> for ClientConfig {
             config.set("sasl.password", pass);
         }
 
+        if let Some(group_id) = kafka.group_id.clone() {
+            config.set("group.id", &group_id);
+        }
+
         config
     }
 }

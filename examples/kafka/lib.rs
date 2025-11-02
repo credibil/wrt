@@ -9,9 +9,8 @@ use bytes::Bytes;
 use serde_json::{Value, json};
 use tracing::Level;
 use wasi_http::Result;
-use wasi_messaging_kafka::incoming_handler::Configuration;
-use wasi_messaging_kafka::producer;
-use wasi_messaging_kafka::types::{Client, Error, Message};
+use wasi_messaging::producer;
+use wasi_messaging::types::{Client, Error, Message};
 use wasip3::exports::http::handler::Guest;
 use wasip3::http::types::{ErrorCode, Request, Response};
 
@@ -48,9 +47,9 @@ async fn handler(Json(body): Json<Value>) -> Result<Json<Value>> {
 }
 
 pub struct Messaging;
-wasi_messaging_kafka::export!(Messaging with_types_in wasi_messaging_kafka);
+wasi_messaging::export!(Messaging with_types_in wasi_messaging);
 
-impl wasi_messaging_kafka::incoming_handler::Guest for Messaging {
+impl wasi_messaging::incoming_handler::Guest for Messaging {
     async fn handle(message: Message) -> anyhow::Result<(), Error> {
         tracing::debug!("start processing msg");
         println!("start processing msg");
@@ -120,13 +119,5 @@ impl wasi_messaging_kafka::incoming_handler::Guest for Messaging {
         tracing::debug!("finished processing msg");
         println!("finished processing msg");
         Ok(())
-    }
-
-    async fn configure() -> Result<Configuration, Error> {
-        tracing::debug!("configuring messaging guest");
-        println!("configuring messaging guest");
-        Ok(Configuration {
-            topics: vec!["a.v1".to_string(), "b.v1".to_string()],
-        })
     }
 }
