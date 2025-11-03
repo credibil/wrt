@@ -136,6 +136,11 @@ name = "kafka"
 path = "examples/kafka/lib.rs"
 crate-type = ["cdylib"]
 
+[[example]]
+name = "postgres"
+path = "examples/postgres/lib.rs"
+crate-type = ["cdylib"]
+
 [profile.release]
 lto = true
 opt-level = "s"

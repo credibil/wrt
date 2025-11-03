@@ -1,9 +1,9 @@
- #![cfg(not(target_arch = "wasm32"))]
+#![cfg(not(target_arch = "wasm32"))]
 
 use anyhow::{Result, anyhow};
 use res_kafka::{Client as KafkaCtx, KafkaConfig};
-use res_redis::{Client as RedisCtx, RedisConfig};
 use res_postgres::{Client as PostgresCtx, ConnectOptions as PostgresConfig};
+use res_redis::{Client as RedisCtx, RedisConfig};
 use runtime::{Cli, Command, Parser, Resource, Runtime, Server, State};
 use tokio::{io, try_join};
 use wasi_http::{DefaultWasiHttpCtx, WasiHttp, WasiHttpCtxView, WasiHttpView};
