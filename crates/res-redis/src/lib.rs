@@ -25,6 +25,8 @@ impl Debug for Client {
 }
 
 impl Resource for Client {
+    type ConnectOptions = ();
+
     #[instrument(name = "Redis::connect")]
     async fn connect() -> Result<Self> {
         let addr = env::var("REDIS_ADDR").unwrap_or_else(|_| DEF_REDIS_ADDR.into());

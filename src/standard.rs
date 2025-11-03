@@ -3,7 +3,7 @@
 use anyhow::{Result, anyhow};
 use res_azkeyvault::Client as AzKeyVaultCtx;
 use res_mongodb::Client as MongoDbCtx;
-use res_nats::Client as NatsCtx;
+use res_nats::{Client as NatsCtx, ConnectOptions};
 use runtime::{Cli, Command, Parser, Resource, Runtime, Server, State};
 use tokio::{io, try_join};
 use wasi_blobstore::{WasiBlobstore, WasiBlobstoreCtxView, WasiBlobstoreView};
@@ -28,6 +28,8 @@ async fn main() -> Result<()> {
         return Err(anyhow!("only run command is supported"));
     };
 
+    let nats_options = ConnectOptions::from_env()?;
+
     // compile and link dependencies
     let mut compiled = Runtime::<RunData>::new(wasm).compile()?;
     compiled.link(WasiHttp)?;
@@ -40,7 +42,7 @@ async fn main() -> Result<()> {
     // prepare state
     let run_state = RunState {
         instance_pre: compiled.pre_instantiate()?,
-        nats_client: NatsCtx::connect().await?,
+        nats_client: NatsCtx::connect_with(&nats_options).await?,
         mongodb_client: MongoDbCtx::connect().await?,
         vault_client: AzKeyVaultCtx::connect().await?,
     };
