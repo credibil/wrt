@@ -1,7 +1,7 @@
 #![cfg(not(target_arch = "wasm32"))]
 
 use anyhow::{Result, anyhow};
-use res_redis::Client as RedisCtx;
+use res_redis::{Client as RedisCtx, RedisConfig};
 use runtime::{Cli, Command, Parser, Resource, Runtime, Server, State};
 use tokio::io;
 use wasi_http::{DefaultWasiHttpCtx, WasiHttp, WasiHttpCtxView, WasiHttpView};
@@ -16,6 +16,9 @@ async fn main() -> Result<()> {
         return Err(anyhow!("only run command is supported"));
     };
 
+    // environment variables
+    let redis_options = RedisConfig::from_env()?;
+
     // link dependencies
     let mut rt = Runtime::<RunData>::new(wasm).compile()?;
     rt.link(WasiHttp)?;
@@ -27,7 +30,7 @@ async fn main() -> Result<()> {
     // prepare state
     let run_state = RunState {
         instance_pre,
-        redis_client: RedisCtx::connect().await?,
+        redis_client: RedisCtx::connect_with(&redis_options).await?,
     };
 
     // run server(s)
