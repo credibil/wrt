@@ -1,6 +1,6 @@
 [package]
 name = "wasi-otel"
-description = "Wasm Opentelemetry WIT implementation"
+description = "WASI Opentelemetry implementation"
 readme = "README.md"
 authors.workspace = true
 categories.workspace = true
