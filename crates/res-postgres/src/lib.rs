@@ -2,8 +2,7 @@
 
 mod sql;
 
-use std::env;
-use std::str;
+use std::{env, str};
 
 use anyhow::{Context as _, Result, anyhow};
 use deadpool_postgres::{Config, Pool, PoolConfig, Runtime};
