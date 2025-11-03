@@ -18,9 +18,14 @@ workspace = true
 
 [features]
 
+# dependencies shared across host and guest
+[dependencies]
+anyhow.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
 # host dependencies
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-anyhow.workspace = true
 async-nats.workspace = true
 base64ct.workspace = true
 futures.workspace = true

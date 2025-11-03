@@ -5,7 +5,7 @@ secrets:
     environment: CARGO_REGISTRIES_CREDIBIL_TOKEN
 
 services:
-  proxy:
+  http-redis-cache:
     image: http-redis-cache:latest
     container_name: http-redis-cache
     env_file: ../../.env
@@ -15,9 +15,9 @@ services:
       secrets:
         - credibil
       args:
-        BIN: realtime
+        BIN: rt_minimal
     volumes:
-       - ../../target/wasm32-wasip2/release/examples/http_redis_cache.wasm:/app.wasm
+       - ../../target/wasm32-wasip2/release/examples/redis.wasm:/app.wasm
     ports:
       - 8080:8080
     depends_on:
