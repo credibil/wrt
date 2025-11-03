@@ -58,7 +58,6 @@ where
         tracing::debug!("response cached");
     }
 
-
     tracing::debug!("proxy response: {response:?}");
 
     Ok(response)
