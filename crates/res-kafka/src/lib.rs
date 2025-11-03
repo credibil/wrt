@@ -20,7 +20,7 @@ use tracing::instrument;
 use crate::partitioner::Partitioner;
 use crate::registry::{Registry, SchemaConfig};
 
-const KAFKA_BROKERS: &str = "localhost:9094";
+const DEF_KAFKA_BROKERS: &str = "localhost:9094";
 
 #[derive(Clone)]
 pub struct Client {
@@ -37,12 +37,16 @@ impl Debug for Client {
 }
 
 impl Resource for Client {
-    type ConnectOptions = ();
+    type ConnectOptions = KafkaConfig;
 
     #[instrument]
     async fn connect() -> Result<Self> {
-        let kafka_config = KafkaConfig::from_env();
-        let client_config = ClientConfig::from(&kafka_config);
+        let kafka_config = KafkaConfig::from_env()?;
+        Self::connect_with(&kafka_config).await
+    }
+
+    async fn connect_with(kafka_config: &Self::ConnectOptions) -> Result<Self> {
+        let client_config = ClientConfig::from(kafka_config);
 
         // maybe custom partitioner
         let partitioner = if kafka_config.js_partitioner.unwrap_or_default() {
@@ -77,7 +81,7 @@ impl Resource for Client {
 }
 
 #[derive(Debug, Clone)]
-struct KafkaConfig {
+pub struct KafkaConfig {
     brokers: String,
     username: Option<String>,
     password: Option<String>,
@@ -89,8 +93,14 @@ struct KafkaConfig {
 }
 
 impl KafkaConfig {
-    fn from_env() -> Self {
-        let brokers = env::var("KAFKA_BROKERS").unwrap_or_else(|_| KAFKA_BROKERS.into());
+    /// Create connection options from environment variables.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if required environment variables are missing or
+    /// invalid.
+    pub fn from_env() -> Result<Self> {
+        let brokers = env::var("KAFKA_BROKERS").unwrap_or_else(|_| DEF_KAFKA_BROKERS.into());
         let username = env::var("KAFKA_USERNAME").ok();
         let password = env::var("KAFKA_PASSWORD").ok();
         let consumer_group = env::var("KAFKA_CONSUMER_GROUP").ok();
@@ -100,7 +110,7 @@ impl KafkaConfig {
 
         tracing::info!("Kafka configuration built for brokers: {brokers}");
 
-        Self {
+        Ok(Self {
             brokers,
             username,
             password,
@@ -108,7 +118,7 @@ impl KafkaConfig {
             js_partitioner,
             partition_count,
             schema,
-        }
+        })
     }
 }
 
