@@ -6,7 +6,8 @@ use bytes::Bytes;
 use http::header::{CACHE_CONTROL, IF_NONE_MATCH};
 use http::{Request, Response};
 use http_body::Body;
-use wasi_keyvalue::store;
+use wasi_keyvalue::{TtlValue, store};
+use wasip3::clocks::wall_clock;
 
 pub const CACHE_BUCKET: &str = "default-cache";
 
@@ -79,6 +80,13 @@ impl Cache {
             return Ok(None);
         };
 
+        // the data may be wrapped in a TtlValue
+        let data = if let Ok(ttl_value) = TtlValue::try_from(data.clone()) {
+            ttl_value.value
+        } else {
+            data
+        };
+
         deserialize(&data).map(Some)
     }
 
@@ -95,13 +103,25 @@ impl Cache {
         }
         tracing::debug!("caching response with etag `{}`", &ctrl.etag);
 
-        let value = serialize(response)?;
+        let mut value = serialize(response)?;
+        if ctrl.max_age > 0 {
+            let current_time = wall_clock::now();
+            let ttl_value = TtlValue {
+                value,
+                ttl_seconds: Some(ctrl.max_age),
+                timestamp_seconds: Some(current_time.seconds),
+            };
+            value = serde_json::to_vec(&ttl_value)
+                .map_err(|e| anyhow!("serializing TtlValue for cache storage: {e}"))?;
+        }
+
         let bucket = store::open(&self.bucket)
             .map_err(|e| anyhow!("opening cache bucket `{}`: {e}", &self.bucket))?;
         bucket.set(&ctrl.etag, &value).map_err(|e| anyhow!("storing response in cache: {e}"))
     }
 
     /// Getter for etag
+    #[must_use]
     pub fn etag(&self) -> String {
         self.control.etag.clone()
     }
