@@ -43,7 +43,7 @@ impl Resource for Client {
             // Non-TLS mode
             let pool = pool_config
                 .create_pool(runtime, tokio_postgres::NoTls)
-                .context("failed to create non-TLS postgres pool")?;
+                .context("failed to create postgres pool")?;
             tracing::info!("connected to Postgres without TLS");
             return Ok(Self(pool));
         }
@@ -60,7 +60,7 @@ impl Resource for Client {
             ClientConfig::builder().with_root_certificates(store).with_no_client_auth();
         let pool = pool_config
             .create_pool(runtime, MakeRustlsConnect::new(client_config))
-            .context("failed to create non-TLS postgres pool")?;
+            .context("failed to create postgres pool")?;
 
         tracing::info!("connected to Postgres");
 

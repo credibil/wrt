@@ -9,7 +9,11 @@ use std::fmt::Debug;
 use std::sync::Arc;
 
 use anyhow::{Result, anyhow};
+#[cfg(not(debug_assertions))]
+use azure_core::credentials::Secret;
 use azure_core::credentials::TokenCredential;
+#[cfg(not(debug_assertions))]
+use azure_identity::ClientSecretCredential;
 use azure_identity::DeveloperToolsCredential;
 use azure_security_keyvault_secrets::SecretClient;
 use runtime::Resource;
@@ -42,8 +46,13 @@ impl Resource for Client {
 
         #[cfg(not(debug_assertions))]
         let credential: Arc<dyn TokenCredential> = {
-            let secret = Secret::new(options.client_secret);
-            ClientSecretCredential::new(&options.tenant_id, &options.client_id, secret, None)?
+            let secret = Secret::new(options.client_secret.clone());
+            ClientSecretCredential::new(
+                &options.tenant_id,
+                options.client_id.clone(),
+                secret,
+                None,
+            )?
         };
 
         let client = SecretClient::new(&options.address, credential, None)
@@ -69,9 +78,9 @@ pub struct ConnectOptions {
 
 impl ConnectOptions {
     /// Create connection options from environment variables.
-    ////
+    ///
     /// # Errors
-    ////
+    ///
     /// Returns an error if required environment variables are missing or invalid.
     pub fn from_env() -> Result<Self> {
         let address = env::var("KV_ADDR")?;
