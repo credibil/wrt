@@ -6,7 +6,7 @@ use anyhow::anyhow;
 use futures::FutureExt;
 use redis::AsyncCommands;
 use redis::aio::ConnectionManager;
-use wasi_keyvalue::{Bucket, FutureResult, WasiKeyValueCtx};
+use wasi_keyvalue::{Bucket, FutureResult, TtlValue, WasiKeyValueCtx};
 
 use crate::Client;
 
@@ -58,9 +58,19 @@ impl Bucket for RedisBucket {
         let key = format!("{}:{}", self.identifier, key);
         let mut conn = self.conn.0.clone();
         async move {
-            conn.set(key.clone(), value)
-                .await
-                .map_err(|e| anyhow!("failed to set value for {key}: {e}"))
+            let ttl =
+                TtlValue::try_from(value.clone()).ok().and_then(|ttl_value| ttl_value.ttl_seconds);
+
+            if let Some(ttl) = ttl {
+                tracing::trace!("setting key with TTL: {key}, {} seconds", ttl);
+                conn.set_ex(key.clone(), value, ttl)
+                    .await
+                    .map_err(|e| anyhow!("failed to set value for {key}: {e}"))
+            } else {
+                conn.set(key.clone(), value)
+                    .await
+                    .map_err(|e| anyhow!("failed to set value for {key}: {e}"))
+            }
         }
         .boxed()
     }

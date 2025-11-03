@@ -5446,6 +5446,8 @@ dependencies = [
  "base64ct",
  "futures",
  "runtime",
+ "serde",
+ "serde_json",
  "tracing",
  "wasmtime",
  "wasmtime-wasi",
