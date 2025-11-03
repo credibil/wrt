@@ -1,8 +1,8 @@
 #![cfg(not(target_arch = "wasm32"))]
 
 use anyhow::{Result, anyhow};
-use res_kafka::Client as KafkaCtx;
-use res_redis::Client as RedisCtx;
+use res_kafka::{Client as KafkaCtx, KafkaConfig};
+use res_redis::{Client as RedisCtx, RedisConfig};
 use runtime::{Cli, Command, Parser, Resource, Runtime, Server, State};
 use tokio::{io, try_join};
 use wasi_http::{DefaultWasiHttpCtx, WasiHttp, WasiHttpCtxView, WasiHttpView};
@@ -18,6 +18,10 @@ async fn main() -> Result<()> {
         return Err(anyhow!("only run command is supported"));
     };
 
+    // environment variables
+    let kafka_options = KafkaConfig::from_env()?;
+    let redis_options = RedisConfig::from_env()?;
+
     // link dependencies
     let mut rt = Runtime::<RunData>::new(wasm).compile()?;
     rt.link(WasiHttp)?;
@@ -30,8 +34,8 @@ async fn main() -> Result<()> {
     // prepare state
     let run_state = RunState {
         instance_pre,
-        kafka_client: KafkaCtx::connect().await?,
-        redis_client: RedisCtx::connect().await?,
+        kafka_client: KafkaCtx::connect_with(&kafka_options).await?,
+        redis_client: RedisCtx::connect_with(&redis_options).await?,
     };
 
     // run server(s)
