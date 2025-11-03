@@ -45,20 +45,19 @@ where
     let collected = body.collect().await.context("failed to collect body")?;
     let bytes = collected.to_bytes();
     let mut response = http::Response::from_parts(parts, bytes);
-
-    // add ETag header and cache response when indicated by request
-    if let Some(cache) = maybe_cache {
-        let headers = response.headers_mut();
-        headers.insert(http::header::ETAG, http::HeaderValue::from_str(&cache.etag())?);
-        cache.put(&response)?;
-        tracing::debug!("response cached");
-    }
-
     // filter out bad headers not allowed by wasi-http
     let headers = response.headers_mut();
     for forbidden in &DEFAULT_FORBIDDEN_HEADERS {
         headers.remove(forbidden);
     }
+
+    // add ETag header and cache response when indicated by request
+    if let Some(cache) = maybe_cache {
+        headers.insert(http::header::ETAG, http::HeaderValue::from_str(&cache.etag())?);
+        cache.put(&response)?;
+        tracing::debug!("response cached");
+    }
+
 
     tracing::debug!("proxy response: {response:?}");
 
