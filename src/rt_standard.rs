@@ -1,14 +1,16 @@
-#![cfg(not(target_arch = "wasm32"))]
+ #![cfg(not(target_arch = "wasm32"))]
 
 use anyhow::{Result, anyhow};
 use res_kafka::{Client as KafkaCtx, KafkaConfig};
 use res_redis::{Client as RedisCtx, RedisConfig};
+use res_postgres::{Client as PostgresCtx, ConnectOptions as PostgresConfig};
 use runtime::{Cli, Command, Parser, Resource, Runtime, Server, State};
 use tokio::{io, try_join};
 use wasi_http::{DefaultWasiHttpCtx, WasiHttp, WasiHttpCtxView, WasiHttpView};
 use wasi_keyvalue::{WasiKeyValue, WasiKeyValueCtxView, WasiKeyValueView};
 use wasi_messaging::{WasiMessaging, WasiMessagingCtxView, WasiMessagingView};
 use wasi_otel::{DefaultOtelCtx, WasiOtel, WasiOtelCtxView, WasiOtelView};
+use wasi_sql::{WasiSql, WasiSqlCtxView, WasiSqlView};
 use wasmtime::component::InstancePre;
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 
@@ -21,6 +23,7 @@ async fn main() -> Result<()> {
     // environment variables
     let kafka_options = KafkaConfig::from_env()?;
     let redis_options = RedisConfig::from_env()?;
+    let postgres_options = PostgresConfig::from_env()?;
 
     // link dependencies
     let mut rt = Runtime::<RunData>::new(wasm).compile()?;
@@ -28,6 +31,7 @@ async fn main() -> Result<()> {
     rt.link(WasiOtel)?;
     rt.link(WasiMessaging)?;
     rt.link(WasiKeyValue)?;
+    rt.link(WasiSql)?;
 
     let instance_pre = rt.pre_instantiate()?;
 
@@ -36,6 +40,7 @@ async fn main() -> Result<()> {
         instance_pre,
         kafka_client: KafkaCtx::connect_with(&kafka_options).await?,
         redis_client: RedisCtx::connect_with(&redis_options).await?,
+        postgres_client: PostgresCtx::connect_with(&postgres_options).await?,
     };
 
     // run server(s)
@@ -49,6 +54,7 @@ pub struct RunState {
     instance_pre: InstancePre<RunData>,
     kafka_client: KafkaCtx,
     redis_client: RedisCtx,
+    postgres_client: PostgresCtx,
 }
 
 impl State for RunState {
@@ -75,6 +81,7 @@ impl State for RunState {
             otel_ctx: DefaultOtelCtx,
             messaging_ctx: self.kafka_client.clone(),
             keyvalue_ctx: self.redis_client.clone(),
+            sql_ctx: self.postgres_client.clone(),
         }
     }
 }
@@ -88,6 +95,7 @@ pub struct RunData {
     pub otel_ctx: DefaultOtelCtx,
     pub messaging_ctx: KafkaCtx,
     pub keyvalue_ctx: RedisCtx,
+    pub sql_ctx: PostgresCtx,
 }
 
 impl WasiView for RunData {
@@ -130,6 +138,15 @@ impl WasiKeyValueView for RunData {
     fn keyvalue(&mut self) -> WasiKeyValueCtxView<'_> {
         WasiKeyValueCtxView {
             ctx: &mut self.keyvalue_ctx,
+            table: &mut self.table,
+        }
+    }
+}
+
+impl WasiSqlView for RunData {
+    fn sql(&mut self) -> WasiSqlCtxView<'_> {
+        WasiSqlCtxView {
+            ctx: &mut self.sql_ctx,
             table: &mut self.table,
         }
     }

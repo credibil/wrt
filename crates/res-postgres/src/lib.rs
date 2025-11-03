@@ -15,11 +15,10 @@ use tracing::instrument;
 use webpki_roots::TLS_SERVER_ROOTS;
 
 /// Default Postgres connection parameters
-const DEF_URI: &str = "postgres://postgres:pass@localhost:5432/postgres?sslmode=disable";
 const DEF_POOL_SIZE: &str = "10";
 
 /// Postgres client
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Client(Pool);
 
 /// Postgres resource builder
@@ -80,7 +79,7 @@ impl ConnectOptions {
     ///
     /// Returns an error if required environment variables are missing or invalid.
     pub fn from_env() -> Result<Self> {
-        let uri = env::var("POSTGRES_URI").unwrap_or_else(|_| DEF_URI.into());
+        let uri = env::var("POSTGRES_URI")?;
         let pool_size = env::var("POSTGRES_POOL_SIZE")
             .unwrap_or_else(|_| DEF_POOL_SIZE.into())
             .parse::<usize>()?;
