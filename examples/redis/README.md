@@ -12,12 +12,12 @@ In a console, build and run the `proxy` example:
 
 ```bash
 # build the guest.
-cargo build --example http-redis-cache --target wasm32-wasip2 --release
+cargo build --example redis --target wasm32-wasip2 --release
 
 Run the services in Docker containers using docker compose.
 
 ```bash
-docker compose --file ./examples/http-redis-cache/compose.yaml up
+docker compose --file ./examples/redis/compose.yaml up
 ```
 
 Use Postman or in a separate console, call the guest:
@@ -27,6 +27,8 @@ curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://loca
 ```
 
 This will start a wasm runtime running a simple HTTP server instrumented with logging and metrics.
+
+Using POST should cause an error: the If-None-Match header is omitted to demonstrate that the caching implementation requires the guest to set this header alongside the Cache-Control header.
 
 <a name="invoking-a-cache"></a>
 ## Invoking a Cache

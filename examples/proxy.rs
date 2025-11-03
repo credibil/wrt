@@ -48,7 +48,6 @@ async fn handle_cache() -> Result<Json<Value>> {
         .header("Client-Cert", &encoded_cert)
         .extension(CacheOptions {
             bucket_name: "example-bucket".to_string(),
-            ttl_seconds: 300,
         })
         .body(Empty::<Bytes>::new())
         .expect("Failed to build request");

@@ -7,6 +7,7 @@ use http_body_util::BodyExt;
 use wasip3::http::handler;
 use wasip3::http_compat::{http_from_wasi_response, http_into_wasi_request};
 
+use crate::DEFAULT_FORBIDDEN_HEADERS;
 pub use crate::guest::cache::{Cache, CacheOptions};
 
 /// Send an HTTP request using the WASI HTTP proxy handler.
@@ -43,15 +44,23 @@ where
     let (parts, body) = http_resp.into_parts();
     let collected = body.collect().await.context("failed to collect body")?;
     let bytes = collected.to_bytes();
-    let response = http::Response::from_parts(parts, bytes);
+    let mut response = http::Response::from_parts(parts, bytes);
 
-    tracing::debug!("proxy response: {response:?}");
-
-    // cache response when indicated by request
+    // add ETag header and cache response when indicated by request
     if let Some(cache) = maybe_cache {
+        let headers = response.headers_mut();
+        headers.insert(http::header::ETAG, http::HeaderValue::from_str(&cache.etag())?);
         cache.put(&response)?;
         tracing::debug!("response cached");
     }
+
+    // filter out bad headers not allowed by wasi-http
+    let headers = response.headers_mut();
+    for forbidden in &DEFAULT_FORBIDDEN_HEADERS {
+        headers.remove(forbidden);
+    }
+
+    tracing::debug!("proxy response: {response:?}");
 
     Ok(response)
 }

@@ -21,16 +21,12 @@ pub struct Cache {
 pub struct CacheOptions {
     /// Name of the key-value store bucket to use for caching.
     pub bucket_name: String,
-
-    /// Time-to-live for cached responses, in seconds.
-    pub ttl_seconds: u64,
 }
 
 impl Default for CacheOptions {
     fn default() -> Self {
         Self {
             bucket_name: CACHE_BUCKET.to_string(),
-            ttl_seconds: 0,
         }
     }
 }
@@ -103,6 +99,11 @@ impl Cache {
         let bucket = store::open(&self.bucket)
             .map_err(|e| anyhow!("opening cache bucket `{}`: {e}", &self.bucket))?;
         bucket.set(&ctrl.etag, &value).map_err(|e| anyhow!("storing response in cache: {e}"))
+    }
+
+    /// Getter for etag
+    pub fn etag(&self) -> String {
+        self.control.etag.clone()
     }
 }
 

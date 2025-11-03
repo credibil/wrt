@@ -5,15 +5,17 @@
 
 #![cfg(target_arch = "wasm32")]
 
+use std::convert::Infallible;
+
 use anyhow::Context;
+use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::{Json, Router};
-use base64ct::{Base64, Encoding};
 use bytes::Bytes;
 use http::Method;
 use http::header::{CACHE_CONTROL, IF_NONE_MATCH};
 use http_body_util::{Empty, Full};
-use serde_json::{Value, json};
+use serde_json::Value;
 use tower_http::cors::{Any, CorsLayer};
 use tracing::Level;
 use wasi_http::{CacheOptions, Result};
@@ -41,8 +43,35 @@ impl Guest for HttpGuest {
 }
 
 // Forward request to external service and return the response
+// #[wasi_otel::instrument]
+// async fn get_handler() -> Result<Json<Value>> {
+//     let request = http::Request::builder()
+//         .method(Method::GET)
+//         .uri("https://jsonplaceholder.cypress.io/posts/1")
+//         .header(CACHE_CONTROL, "max-age=300") // enable caching for 5 minutes
+//         .header(IF_NONE_MATCH, "qf55low9rjsrup46vsiz9r73") // provide cache key
+//         .extension(CacheOptions {
+//             bucket_name: "example-bucket".to_string(),
+//         })
+//         .body(Empty::<Bytes>::new())
+//         .expect("failed to build request");
+//     let response = wasi_http::handle(request).await?;
+
+//     println!("response received: {:?}", response);
+
+//     let body = response.into_body();
+
+//     let body_str = Base64::encode_string(&body);
+
+//     Ok(Json(json!({
+//         "response": body_str
+//     })))
+// }
+
+use axum::body::Body;
+
 #[wasi_otel::instrument]
-async fn get_handler() -> Result<Json<Value>> {
+async fn get_handler() -> Result<impl IntoResponse, Infallible> {
     let request = http::Request::builder()
         .method(Method::GET)
         .uri("https://jsonplaceholder.cypress.io/posts/1")
@@ -50,18 +79,15 @@ async fn get_handler() -> Result<Json<Value>> {
         .header(IF_NONE_MATCH, "qf55low9rjsrup46vsiz9r73") // provide cache key
         .extension(CacheOptions {
             bucket_name: "example-bucket".to_string(),
-            ttl_seconds: 300,
         })
         .body(Empty::<Bytes>::new())
         .expect("failed to build request");
-    let response = wasi_http::handle(request).await?;
-    let body = response.into_body();
-
-    let body_str = Base64::encode_string(&body);
-
-    Ok(Json(json!({
-        "response": body_str
-    })))
+    let response = wasi_http::handle(request).await.unwrap();
+    println!("response from wasi_http: {response:?}");
+    let (parts, body) = response.into_parts();
+    let http_response = http::Response::from_parts(parts, Body::from(body));
+    println!("constructed http_response: {http_response:?}");
+    Ok(http_response)
 }
 
 // Forward request to external service and return the response.

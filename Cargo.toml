@@ -25,8 +25,12 @@ name = "minimal"
 path = "src/minimal.rs"
 
 [[bin]]
-name = "realtime"
-path = "src/realtime.rs"
+name = "rt_standard"
+path = "src/rt_standard.rs"
+
+[[bin]]
+name = "rt_minimal"
+path = "src/rt_minimal.rs"
 
 [lints]
 workspace = true
