@@ -37,6 +37,8 @@ impl Debug for Client {
 }
 
 impl Resource for Client {
+    type ConnectOptions = ();
+
     #[instrument]
     async fn connect() -> Result<Self> {
         let kafka_config = KafkaConfig::from_env();

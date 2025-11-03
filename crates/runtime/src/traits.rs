@@ -46,8 +46,12 @@ pub trait Server<S: State>: Debug + Sync + Send {
 /// WASI hosts that can be run implement this trait in order to allow the runtime to
 /// start them.
 pub trait Resource: Sized + Sync + Send {
-    // type Connection;
+    type ConnectOptions;
 
     /// Connect to the resource.
     fn connect() -> impl Future<Output = Result<Self>>;
+
+    fn connect_with(_options: &Self::ConnectOptions) -> impl Future<Output = Result<Self>> {
+        Self::connect()
+    }
 }

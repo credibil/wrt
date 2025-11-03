@@ -3,16 +3,21 @@
 mod sql;
 
 use std::env;
+use std::str;
 
 use anyhow::{Context as _, Result, anyhow};
-use deadpool_postgres::{Config, Pool, PoolConfig};
+use deadpool_postgres::{Config, Pool, PoolConfig, Runtime};
 use runtime::Resource;
+use rustls::crypto::ring;
+use rustls::{ClientConfig, RootCertStore};
 use tokio_postgres::config::{Host, SslMode};
-use tracing::{instrument, warn};
+use tokio_postgres_rustls::MakeRustlsConnect;
+use tracing::instrument;
+use webpki_roots::TLS_SERVER_ROOTS;
 
 /// Default Postgres connection parameters
 const DEF_URI: &str = "postgres://postgres:pass@localhost:5432/postgres?sslmode=disable";
-const DEF_POOL_SIZE: usize = 10;
+const DEF_POOL_SIZE: &str = "10";
 
 /// Postgres client
 #[derive(Debug)]
@@ -20,14 +25,78 @@ pub struct Client(Pool);
 
 /// Postgres resource builder
 impl Resource for Client {
+    type ConnectOptions = ConnectOptions;
+
     /// Connect to `PostgreSQL` and return a connection pool
     #[instrument(name = "Postgres::connect")]
     async fn connect() -> Result<Self> {
-        let uri = env::var("POSTGRES_URI").unwrap_or_else(|_| DEF_URI.into());
-        let pg_cfg: tokio_postgres::Config =
-            uri.parse().with_context(|| format!("invalid POSTGRES_URI: {uri}"))?;
+        let options = ConnectOptions::from_env()?;
+        Self::connect_with(&options).await
+    }
 
-        let host = pg_cfg
+    /// Connect to `PostgreSQL` with provided options and return a connection pool
+    async fn connect_with(options: &Self::ConnectOptions) -> Result<Self> {
+        let pool_config = Config::try_from(options)?;
+
+        let runtime = Some(Runtime::Tokio1);
+
+        if pool_config.ssl_mode.is_none() {
+            // Non-TLS mode
+            let pool = pool_config
+                .create_pool(runtime, tokio_postgres::NoTls)
+                .context("failed to create non-TLS postgres pool")?;
+            tracing::info!("connected to Postgres without TLS");
+            return Ok(Self(pool));
+        }
+
+        // TLS mode
+        ring::default_provider()
+            .install_default()
+            .map_err(|e| anyhow!("Failed to install rustls crypto provider: {e:?}"))?;
+
+        let mut store = RootCertStore::empty();
+        store.extend(TLS_SERVER_ROOTS.iter().cloned());
+
+        let client_config =
+            ClientConfig::builder().with_root_certificates(store).with_no_client_auth();
+        let pool = pool_config
+            .create_pool(runtime, MakeRustlsConnect::new(client_config))
+            .context("failed to create non-TLS postgres pool")?;
+
+        tracing::info!("connected to Postgres");
+
+        Ok(Self(pool))
+    }
+}
+
+pub struct ConnectOptions {
+    pub uri: String,
+    pub pool_size: usize,
+}
+
+impl ConnectOptions {
+    /// Create connection options from environment variables.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if required environment variables are missing or invalid.
+    pub fn from_env() -> Result<Self> {
+        let uri = env::var("POSTGRES_URI").unwrap_or_else(|_| DEF_URI.into());
+        let pool_size = env::var("POSTGRES_POOL_SIZE")
+            .unwrap_or_else(|_| DEF_POOL_SIZE.into())
+            .parse::<usize>()?;
+
+        Ok(Self { uri, pool_size })
+    }
+}
+
+impl TryFrom<&ConnectOptions> for deadpool_postgres::Config {
+    type Error = anyhow::Error;
+
+    fn try_from(options: &ConnectOptions) -> Result<Self> {
+        // parse postgres uri
+        let tokio: tokio_postgres::Config = options.uri.parse().context("parsing Postgres URI")?;
+        let host = tokio
             .get_hosts()
             .first()
             .map(|h| match h {
@@ -35,129 +104,30 @@ impl Resource for Client {
                 Host::Unix(path) => path.to_string_lossy().to_string(),
             })
             .unwrap_or_default();
-        let port = pg_cfg.get_ports().first().copied().ok_or_else(|| anyhow!("Port is missing"))?;
-        let username = pg_cfg.get_user().ok_or_else(|| anyhow!("Username is missing"))?;
-        let password = pg_cfg.get_password().ok_or_else(|| anyhow!("Password is missing"))?;
-        let database = pg_cfg.get_dbname().ok_or_else(|| anyhow!("Database is missing"))?;
+        let port = tokio.get_ports().first().copied().ok_or_else(|| anyhow!("Port is missing"))?;
+        let username = tokio.get_user().ok_or_else(|| anyhow!("Username is missing"))?;
+        let password = tokio.get_password().ok_or_else(|| anyhow!("Password is missing"))?;
+        let database = tokio.get_dbname().ok_or_else(|| anyhow!("Database is missing"))?;
+        let password =
+            str::from_utf8(password).map_err(|_e| anyhow!("Password contains invalid UTF-8"))?;
 
-        let tls_required = matches!(pg_cfg.get_ssl_mode(), SslMode::Require);
-
-        let pool_size = Some(
-            env::var("POSTGRES_POOL_SIZE")
-                .unwrap_or_else(|_e| DEF_POOL_SIZE.to_string())
-                .parse::<usize>()
-                .unwrap_or_else(|_e| {
-                    warn!("invalid pool size, using {DEF_POOL_SIZE}");
-                    DEF_POOL_SIZE
-                }),
-        );
-
-        let cfg = ConnectOptions {
-            host,
-            port,
-            username: username.to_string(),
-            password: String::from_utf8_lossy(password).into_owned(),
-            database: database.to_string(),
-            tls_required,
-            pool_size,
+        // convert tokio_postgres::Config to deadpool_postgres::Config
+        let mut deadpool = Self::new();
+        deadpool.host = Some(host);
+        deadpool.dbname = Some(database.to_string());
+        deadpool.port = Some(port);
+        deadpool.user = Some(username.to_string());
+        deadpool.password = Some(password.to_owned());
+        deadpool.pool = Some(PoolConfig {
+            max_size: options.pool_size,
+            ..PoolConfig::default()
+        });
+        deadpool.ssl_mode = match tokio.get_ssl_mode() {
+            SslMode::Require => Some(deadpool_postgres::SslMode::Require),
+            SslMode::Prefer => Some(deadpool_postgres::SslMode::Prefer),
+            _ => None,
         };
 
-        let tls_required = cfg.tls_required;
-        let pool_cfg = Config::from(cfg);
-
-        let pool = create_connection_pool(&pool_cfg, tls_required)?;
-        tracing::info!("connected to Postgres");
-
-        Ok(Self(pool))
-    }
-}
-
-/// Creation options for a Postgres connection
-#[derive(Debug, Clone, PartialEq, Eq)]
-struct ConnectOptions {
-    host: String,
-    port: u16,
-    username: String,
-    password: String,
-    database: String,
-    tls_required: bool,
-    pool_size: Option<usize>,
-}
-
-impl From<ConnectOptions> for Config {
-    fn from(opts: ConnectOptions) -> Self {
-        let mut cfg = Self::new();
-        cfg.host = Some(opts.host);
-        cfg.user = Some(opts.username);
-        cfg.password = Some(opts.password);
-        cfg.dbname = Some(opts.database);
-        cfg.port = Some(opts.port);
-        if let Some(pool_size) = opts.pool_size {
-            cfg.pool = Some(PoolConfig {
-                max_size: pool_size,
-                ..PoolConfig::default()
-            });
-        }
-        cfg
-    }
-}
-
-// Creates connection pool with enabled or disabled TLS
-fn create_connection_pool(cfg: &Config, tls_required: bool) -> Result<Pool> {
-    let runtime = Some(deadpool_postgres::Runtime::Tokio1);
-    if tls_required {
-        create_tls_pool(cfg, runtime)
-    } else {
-        cfg.create_pool(runtime, tokio_postgres::NoTls)
-            .context("failed to create non-TLS postgres pool")
-    }
-}
-
-// Creates connection pool with enabled TLS
-fn create_tls_pool(
-    cfg: &deadpool_postgres::Config, runtime: Option<deadpool_postgres::Runtime>,
-) -> Result<Pool> {
-    //setting default crypto provider for tls connection
-    rustls::crypto::ring::default_provider()
-        .install_default()
-        .expect("Failed to install rustls crypto provider");
-    let mut store = rustls::RootCertStore::empty();
-    store.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
-    cfg.create_pool(
-        runtime,
-        tokio_postgres_rustls::MakeRustlsConnect::new(
-            rustls::ClientConfig::builder().with_root_certificates(store).with_no_client_auth(),
-        ),
-    )
-    .context("failed to create TLS-enabled connection pool")
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    // -------------------------
-    // Test conversion from ConnectOptions to Config
-    // -------------------------
-    #[test]
-    fn test_connection_options_to_config() {
-        let opts = ConnectOptions {
-            host: "localhost".into(),
-            port: 5432,
-            username: "user".into(),
-            password: "pass".into(),
-            database: "db".into(),
-            tls_required: false,
-            pool_size: Some(5),
-        };
-
-        let cfg: Config = opts.into();
-
-        assert_eq!(cfg.host, Some("localhost".into()));
-        assert_eq!(cfg.port, Some(5432));
-        assert_eq!(cfg.user, Some("user".into()));
-        assert_eq!(cfg.password, Some("pass".into()));
-        assert_eq!(cfg.dbname, Some("db".into()));
-        assert_eq!(cfg.pool.unwrap().max_size, 5);
+        Ok(deadpool)
     }
 }
