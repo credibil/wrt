@@ -1,7 +1,6 @@
 [package]
 name = "wasi-messaging"
-description = "Wasm messaging WIT implementation"
-publish = false
+description = "WASI messaging WIT implementation"
 readme = "README.md"
 authors.workspace = true
 categories.workspace = true

@@ -1,6 +1,6 @@
 [package]
 name = "wasi-vault"
-description = "WASI Vault WIT implementation"
+description = "WASI Vault implementation"
 readme = "README.md"
 authors.workspace = true
 categories.workspace = true
