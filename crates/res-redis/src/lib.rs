@@ -1,6 +1,7 @@
 //! Redis Client.
 #![allow(missing_docs)]
 #![cfg(not(target_arch = "wasm32"))]
+
 mod keyvalue;
 
 use std::env;

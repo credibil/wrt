@@ -149,7 +149,7 @@ resolver = "3"
 
 [workspace.package]
 authors = ["Credibil"]
-categories = ["wasm", "wasi", "runtime"]
+categories = ["runtime", "wasi", "wasm"]
 edition = "2024"
 homepage = "https://credibil.io"
 keywords = ["decentralized", "identity"]
@@ -162,15 +162,15 @@ version = "0.13.0"
 # https://dirname.github.io/rust-std-doc/rustc/lints/listing/allowed-by-default.html
 # missing_docs = "warn"
 trivial_numeric_casts = "warn"
-unused_extern_crates = "warn"
 unsafe_op_in_unsafe_fn = "warn"
+unused_extern_crates = "warn"
 
 [workspace.lints.clippy]
 # https://doc.rust-lang.org/stable/clippy/index.html
 all = "warn"      # correctness, suspicious, style, complexity, perf
+cargo = "warn"
 nursery = "warn"
 pedantic = "warn"
-cargo = "warn"
 
 # Cherry-picked lints are from the `restriction` lint group in order to drive up
 # consistency, quality, and brevity

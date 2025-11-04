@@ -83,7 +83,7 @@ impl ConnectOptions {
     ///
     /// Returns an error if required environment variables are missing or invalid.
     pub fn from_env() -> Result<Self> {
-        let address = env::var("KV_ADDR")?;
+        let address = env::var("AZURE_KEYVAULT_ADDR")?;
 
         #[cfg(debug_assertions)]
         {

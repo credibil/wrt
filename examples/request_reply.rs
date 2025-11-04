@@ -6,7 +6,6 @@ use axum::{Json, Router};
 use bytes::Bytes;
 use serde_json::{Value, json};
 use tracing::Level;
-use wasi_messaging::incoming_handler::Configuration;
 use wasi_messaging::request_reply;
 use wasi_messaging::types::{Client, Error, Message};
 use wasip3::exports::http::handler::Guest;
@@ -27,7 +26,10 @@ impl Guest for Http {
 async fn handler(body: Bytes) -> Json<Value> {
     let client = Client::connect("nats").unwrap();
     let message = Message::new(&body);
-    let reply = request_reply::request(&client, "a", &message, None).expect("should reply");
+    let reply = wit_bindgen::block_on(async move {
+        request_reply::request(&client, "a".to_string(), &message, None).await
+    })
+    .expect("should reply");
 
     // process first reply
     let data = reply[0].data();
@@ -61,13 +63,5 @@ impl wasi_messaging::incoming_handler::Guest for RequestReply {
             }
         }
         Ok(())
-    }
-
-    // Subscribe to topics.
-    #[wasi_otel::instrument(name = "messaging_guest_configure",level = Level::DEBUG)]
-    async fn configure() -> Result<Configuration, Error> {
-        Ok(Configuration {
-            topics: vec!["a".to_string()],
-        })
     }
 }
