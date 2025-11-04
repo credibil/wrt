@@ -42,9 +42,13 @@ async fn main() -> Result<()> {
     // prepare state
     let run_state = RunState {
         instance_pre: compiled.pre_instantiate()?,
-        nats_client: NatsCtx::connect_with(&nats_options).await.context("issue connecting to nats")?,
+        nats_client: NatsCtx::connect_with(&nats_options)
+            .await
+            .context("issue connecting to nats")?,
         mongodb_client: MongoDbCtx::connect().await.context("issue connecting to mongodb")?,
-        vault_client: AzKeyVaultCtx::connect().await.context("issue connecting to azure key vault")?,
+        vault_client: AzKeyVaultCtx::connect()
+            .await
+            .context("issue connecting to azure key vault")?,
     };
 
     // run server(s)
