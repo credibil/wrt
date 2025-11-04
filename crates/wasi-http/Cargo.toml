@@ -28,7 +28,7 @@ tracing.workspace = true
 base64ct.workspace = true
 futures.workspace = true
 http-body-util.workspace = true
-hyper = "1.7.0"
+hyper.workspace = true
 reqwest = { workspace = true, features = ["rustls-tls"] }
 runtime.workspace = true
 tokio.workspace = true
