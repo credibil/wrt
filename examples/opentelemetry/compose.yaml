@@ -1,29 +1,6 @@
-name: http-redis-cache
-
-secrets:
-  credibil:
-    environment: CARGO_REGISTRIES_CREDIBIL_TOKEN
+name: opentelemetry
 
 services:
-  proxy:
-    image: http-redis-cache:latest
-    container_name: http-redis-cache
-    env_file: ../../.env
-    build:
-      context: ../..
-      dockerfile: Dockerfile
-      secrets:
-        - credibil
-      args:
-        BIN: realtime
-    volumes:
-       - ../../target/wasm32-wasip2/release/examples/http_redis_cache.wasm:/app.wasm
-    ports:
-      - 8080:8080
-    depends_on:
-      - redis
-      - otelcol
-
   otelcol:
     image: otel/opentelemetry-collector-contrib:latest
     volumes:
@@ -53,8 +30,3 @@ services:
       - --web.enable-remote-write-receiver
       # - --log.level=debug
 
-  redis:
-    image: redis:latest
-    command: redis-server --save "" --appendonly no
-    ports:
-      - 6379:6379

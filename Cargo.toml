@@ -25,8 +25,12 @@ name = "minimal"
 path = "src/minimal.rs"
 
 [[bin]]
-name = "realtime"
-path = "src/realtime.rs"
+name = "rt_standard"
+path = "src/rt_standard.rs"
+
+[[bin]]
+name = "rt_minimal"
+path = "src/rt_minimal.rs"
 
 [[bin]]
 name = "websockets"
@@ -48,14 +52,14 @@ wasi-blobstore.workspace = true
 wasi-http.workspace = true
 wasi-keyvalue.workspace = true
 wasi-messaging.workspace = true
-wasi-messaging-kafka.workspace = true
 wasi-otel.workspace = true
+wasi-sql.workspace = true
 wasi-vault.workspace = true
 wasi-websockets.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 base64ct.workspace = true
-build-macro = { path = "crates/build-macro", version = "0.12.0", registry = "credibil" }
+build-macro = { path = "crates/build-macro", version = "0.13.0", registry = "credibil" }
 bytes.workspace = true
 futures.workspace = true
 http.workspace = true
@@ -128,13 +132,13 @@ path = "examples/vault.rs"
 crate-type = ["cdylib"]
 
 [[example]]
-name = "http-redis-cache"
-path = "examples/http-redis-cache/lib.rs"
+name = "redis"
+path = "examples/redis/lib.rs"
 crate-type = ["cdylib"]
 
 [[example]]
-name = "pub-sub-kafka"
-path = "examples/pub-sub-kafka/lib.rs"
+name = "kafka"
+path = "examples/kafka/lib.rs"
 crate-type = ["cdylib"]
 
 [[example]]
@@ -156,28 +160,28 @@ resolver = "3"
 
 [workspace.package]
 authors = ["Credibil"]
-categories = ["wasm", "wasi", "runtime"]
+categories = ["runtime", "wasi", "wasm"]
 edition = "2024"
 homepage = "https://credibil.io"
 keywords = ["decentralized", "identity"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/credibil/wrt"
 rust-version = "1.91"
-version = "0.12.0"
+version = "0.13.0"
 
 [workspace.lints.rust]
 # https://dirname.github.io/rust-std-doc/rustc/lints/listing/allowed-by-default.html
 # missing_docs = "warn"
 trivial_numeric_casts = "warn"
-unused_extern_crates = "warn"
 unsafe_op_in_unsafe_fn = "warn"
+unused_extern_crates = "warn"
 
 [workspace.lints.clippy]
 # https://doc.rust-lang.org/stable/clippy/index.html
 all = "warn"      # correctness, suspicious, style, complexity, perf
+cargo = "warn"
 nursery = "warn"
 pedantic = "warn"
-cargo = "warn"
 
 # Cherry-picked lints are from the `restriction` lint group in order to drive up
 # consistency, quality, and brevity
@@ -253,7 +257,7 @@ wit-bindgen = { version = "0.46.0" }
 # wit-bindgen = { version = "0.47.0", features = ["async-spawn"] }
 
 jsonschema = "0.30.0"
-rdkafka = { version = "0.38", features = ["ssl-vendored", "cmake-build", "tokio"] }
+rdkafka = { version = "0.38", features = ["cmake-build", "ssl-vendored", "tokio"] }
 schema-registry-client = "0.4.1"
 
 # credibil registry
@@ -261,22 +265,21 @@ credibil-encoding = { version = "0.4.0", registry = "credibil" }
 credibil-otel = { version = "0.4.0", registry = "credibil" }
 
 # interally referenced crates
-res-azkeyvault = { path = "crates/res-azkeyvault", version = "0.12.0", registry = "credibil" }
-res-kafka = { path = "crates/res-kafka", version = "0.12.0", registry = "credibil" }
-res-mongodb = { path = "crates/res-mongodb", version = "0.12.0", registry = "credibil" }
-res-nats = { path = "crates/res-nats", version = "0.12.0", registry = "credibil" }
-res-redis = { path = "crates/res-redis", version = "0.12.0", registry = "credibil" }
-runtime = { path = "crates/runtime", version = "0.12.0", registry = "credibil" }
-wasi-blobstore = { path = "crates/wasi-blobstore", version = "0.12.0", registry = "credibil" }
-wasi-http = { path = "crates/wasi-http", version = "0.12.0", registry = "credibil" }
-wasi-keyvalue = { path = "crates/wasi-keyvalue", version = "0.12.0", registry = "credibil" }
-wasi-messaging = { path = "crates/wasi-messaging", version = "0.12.0", registry = "credibil" }
-wasi-messaging-kafka = { path = "crates/wasi-messaging-kafka", version = "0.12.0", registry = "credibil" }
-wasi-otel = { path = "crates/wasi-otel", version = "0.12.0", registry = "credibil" }
-wasi-otel-attr = { path = "crates/wasi-otel-attr", version = "0.12.0", registry = "credibil" }
-wasi-sql = { path = "crates/wasi-sql", version = "0.12.0", registry = "credibil" }
-wasi-vault = { path = "crates/wasi-vault", version = "0.12.0", registry = "credibil" }
-wasi-websockets = { path = "crates/wasi-websockets", version = "0.12.0", registry = "credibil" }
+res-azkeyvault = { path = "crates/res-azkeyvault", version = "0.13.0", registry = "credibil" }
+res-kafka = { path = "crates/res-kafka", version = "0.13.0", registry = "credibil" }
+res-mongodb = { path = "crates/res-mongodb", version = "0.13.0", registry = "credibil" }
+res-nats = { path = "crates/res-nats", version = "0.13.0", registry = "credibil" }
+res-redis = { path = "crates/res-redis", version = "0.13.0", registry = "credibil" }
+runtime = { path = "crates/runtime", version = "0.13.0", registry = "credibil" }
+wasi-blobstore = { path = "crates/wasi-blobstore", version = "0.13.0", registry = "credibil" }
+wasi-http = { path = "crates/wasi-http", version = "0.13.0", registry = "credibil" }
+wasi-keyvalue = { path = "crates/wasi-keyvalue", version = "0.13.0", registry = "credibil" }
+wasi-messaging = { path = "crates/wasi-messaging", version = "0.13.0", registry = "credibil" }
+wasi-otel = { path = "crates/wasi-otel", version = "0.13.0", registry = "credibil" }
+wasi-otel-attr = { path = "crates/wasi-otel-attr", version = "0.13.0", registry = "credibil" }
+wasi-sql = { path = "crates/wasi-sql", version = "0.13.0", registry = "credibil" }
+wasi-vault = { path = "crates/wasi-vault", version = "0.13.0", registry = "credibil" }
+wasi-websockets = { path = "crates/wasi-websockets", version = "0.13.0", registry = "credibil" }
 
 # [patch."https://github.com/credibil/core.git"]
 # credibil-otel = { path = "../../credibil/core/crates/otel" }

@@ -15,9 +15,9 @@ services:
       secrets:
         - credibil
       args:
-        BIN: realtime
+        BIN: rt_standard
     volumes:
-       - ../../target/wasm32-wasip2/release/examples/pub_sub_kafka.wasm:/app.wasm
+       - ../../target/wasm32-wasip2/release/examples/kafka.wasm:/app.wasm
     ports:
       - 8080:8080
     depends_on:

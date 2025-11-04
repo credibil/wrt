@@ -9,13 +9,15 @@ use std::fmt::Debug;
 use std::sync::Arc;
 
 use anyhow::{Result, anyhow};
-use azure_core::credentials::{Secret, TokenCredential};
-use azure_identity::{ClientSecretCredential, DeveloperToolsCredential};
+#[cfg(not(debug_assertions))]
+use azure_core::credentials::Secret;
+use azure_core::credentials::TokenCredential;
+#[cfg(not(debug_assertions))]
+use azure_identity::ClientSecretCredential;
+use azure_identity::DeveloperToolsCredential;
 use azure_security_keyvault_secrets::SecretClient;
 use runtime::Resource;
 use tracing::instrument;
-
-const DEF_KV_ADDR: &str = "https://kv-credibil-demo.vault.azure.net";
 
 #[derive(Clone)]
 pub struct Client(Arc<SecretClient>);
@@ -27,24 +29,33 @@ impl Debug for Client {
 }
 
 impl Resource for Client {
-    // type Connection = Self;
+    type ConnectOptions = ConnectOptions;
 
     #[instrument]
     async fn connect() -> Result<Self> {
-        let addr = env::var("KV_ADDR").unwrap_or_else(|_| DEF_KV_ADDR.into());
+        let options = ConnectOptions::from_env()?;
+        Self::connect_with(&options).await
+    }
 
-        let credential: Arc<dyn TokenCredential> = if cfg!(debug_assertions) {
+    async fn connect_with(options: &Self::ConnectOptions) -> Result<Self> {
+        #[cfg(debug_assertions)]
+        let credential: Arc<dyn TokenCredential> = {
             DeveloperToolsCredential::new(None)
                 .map_err(|e| anyhow!("could not create credential: {e}"))?
-        } else {
-            let tenant_id = env::var("AZURE_TENANT_ID")?;
-            let client_id = env::var("AZURE_CLIENT_ID")?;
-            let client_secret = env::var("AZURE_CLIENT_SECRET")?;
-            let secret = Secret::new(client_secret);
-            ClientSecretCredential::new(&tenant_id, client_id, secret, None)?
         };
 
-        let client = SecretClient::new(&addr, credential, None)
+        #[cfg(not(debug_assertions))]
+        let credential: Arc<dyn TokenCredential> = {
+            let secret = Secret::new(options.client_secret.clone());
+            ClientSecretCredential::new(
+                &options.tenant_id,
+                options.client_id.clone(),
+                secret,
+                None,
+            )?
+        };
+
+        let client = SecretClient::new(&options.address, credential, None)
             .map_err(|e| anyhow!("failed to connect to azure keyvault: {e}"))?;
         tracing::info!("connected to azure keyvault");
 
@@ -52,11 +63,45 @@ impl Resource for Client {
     }
 }
 
-// impl IntoFuture for AzKeyVault {
-//     type IntoFuture = Pin<Box<dyn Future<Output = Self::Output> + Send + 'static>>;
-//     type Output = Result<Client>;
+#[cfg(not(debug_assertions))]
+pub struct ConnectOptions {
+    pub address: String,
+    pub tenant_id: String,
+    pub client_id: String,
+    pub client_secret: String,
+}
 
-//     fn into_future(self) -> Self::IntoFuture {
-//         Box::pin(self.connect())
-//     }
-// }
+#[cfg(debug_assertions)]
+pub struct ConnectOptions {
+    pub address: String,
+}
+
+impl ConnectOptions {
+    /// Create connection options from environment variables.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if required environment variables are missing or invalid.
+    pub fn from_env() -> Result<Self> {
+        let address = env::var("AZURE_KEYVAULT_ADDR")?;
+
+        #[cfg(debug_assertions)]
+        {
+            Ok(Self { address })
+        }
+
+        #[cfg(not(debug_assertions))]
+        {
+            let tenant_id = env::var("AZURE_TENANT_ID")?;
+            let client_id = env::var("AZURE_CLIENT_ID")?;
+            let client_secret = env::var("AZURE_CLIENT_SECRET")?;
+
+            Ok(Self {
+                address,
+                tenant_id,
+                client_id,
+                client_secret,
+            })
+        }
+    }
+}

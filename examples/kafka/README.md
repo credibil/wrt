@@ -10,16 +10,16 @@ It will also send 100 generated messages to "b.v1".
 
 To get started add a `.env` file to the workspace root. See the `.env.example` file for a template.
 
-In a console, build and run the `pub-sub-kafka` example:
+In a console, build and run the `kafka` example:
 
 ```bash
 # build the guest.
-cargo build --example pub-sub-kafka --target wasm32-wasip2 --release
+cargo build --example kafka --target wasm32-wasip2 --release
 
 Run the services in Docker containers using docker compose.
 
 ```bash
-docker compose --file ./examples/pub-sub-kafka/compose.yaml up
+docker compose --file ./examples/kafka/compose.yaml up
 ```
 
 Use Postman or in a separate console, call the guest:

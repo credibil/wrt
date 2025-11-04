@@ -50,20 +50,17 @@ where
         let store_data = self.state.new_store();
         let mut store = Store::new(instance_pre.engine(), store_data);
         let instance = instance_pre.instantiate_async(&mut store).await?;
-        let messaging = Messaging::new(&mut store, &instance)?;
 
         instance
             .run_concurrent(&mut store, async |accessor| {
-                let guest = messaging.wasi_messaging_incoming_handler();
-                let config = guest.call_configure(accessor).await??;
                 let client =
                     accessor.with(|mut store| store.get().messaging().ctx.connect()).await?;
-                client.subscribe(config.topics.clone()).await
+                client.subscribe().await
             })
             .await?
     }
 
-    // Forward message to the wasm component.
+    // Forward message to the wasm guest.
     async fn send(&self, message: Message) -> Result<()> {
         let mut store_data = self.state.new_store();
         let res_msg = store_data.messaging().table.push(message.clone())?;
@@ -75,16 +72,8 @@ where
 
         instance
             .run_concurrent(&mut store, async |accessor| {
-                // let client =
-                //     accessor.with(|mut store| store.get().messaging().ctx.connect()).await?;
-                // client.pre_send(&message).await?;
-
                 let guest = messaging.wasi_messaging_incoming_handler();
-                guest.call_handle(accessor, res_msg).await??;
-
-                // client.post_send(&message).await?;
-
-                Ok::<(), anyhow::Error>(())
+                Ok(guest.call_handle(accessor, res_msg).await??)
             })
             .instrument(debug_span!("messaging-handle"))
             .await

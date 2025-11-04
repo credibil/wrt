@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::env;
 use std::sync::Arc;
 
 use anyhow::anyhow;
@@ -16,8 +17,10 @@ impl WasiMessagingCtx for crate::Client {
 }
 
 impl Client for crate::Client {
-    fn subscribe(&self, topics: Vec<String>) -> FutureResult<Subscriptions> {
+    fn subscribe(&self) -> FutureResult<Subscriptions> {
         let client = self.0.clone();
+        let topics_env = env::var("NATS_TOPICS").unwrap_or_default();
+        let topics = topics_env.split(',').map(ToString::to_string).collect::<Vec<_>>();
 
         async move {
             tracing::trace!("subscribing to messaging topics: {topics:?}");

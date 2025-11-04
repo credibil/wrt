@@ -9,7 +9,7 @@ use bytes::Bytes;
 use serde_json::{Value, json};
 use tracing::Level;
 use wasi_http::Result;
-use wasi_messaging::incoming_handler::Configuration;
+// use wasi_messaging::incoming_handler::Configuration;
 use wasi_messaging::producer;
 use wasi_messaging::types::{Client, Error, Message};
 use wasip3::exports::http::handler::Guest;
@@ -26,20 +26,19 @@ impl Guest for Http {
     }
 }
 
-// #[wasi_otel::instrument]
+#[wasi_otel::instrument]
 #[axum::debug_handler]
 async fn handler(Json(body): Json<Value>) -> Result<Json<Value>> {
     let body_bytes = Bytes::from(body.to_string());
     let client = Client::connect("nats").unwrap();
     let message = Message::new(&body_bytes);
+
     // TODO: really want spawn here but handler returns and the guest is
     // dropped before the async task completes. Needs investigation.
     wit_bindgen::block_on(async move {
         if let Err(e) = producer::send(&client, "a".to_string(), message).await {
             tracing::error!("error sending message to topic 'a': {e}");
-            println!("error sending message to topic 'a': {e}");
         }
-        println!("handler: message published to topic 'a'");
     });
 
     Ok(Json(json!({"message": "message published"})))
@@ -49,7 +48,7 @@ pub struct Messaging;
 wasi_messaging::export!(Messaging with_types_in wasi_messaging);
 
 impl wasi_messaging::incoming_handler::Guest for Messaging {
-    // #[wasi_otel::instrument(name = "messaging_guest_handle",level = Level::DEBUG)]
+    #[wasi_otel::instrument(name = "messaging_guest_handle",level = Level::DEBUG)]
     async fn handle(message: Message) -> Result<(), Error> {
         let data = message.data();
         let data_str =
@@ -105,13 +104,5 @@ impl wasi_messaging::incoming_handler::Guest for Messaging {
             }
         }
         Ok(())
-    }
-
-    // Subscribe to topics.
-    // #[wasi_otel::instrument(name = "messaging_guest_configure",level = Level::DEBUG)]
-    async fn configure() -> Result<Configuration, Error> {
-        Ok(Configuration {
-            topics: vec!["a".to_string(), "b".to_string()],
-        })
     }
 }
