@@ -52,8 +52,8 @@ async fn post_handler(body: String) -> Result<Json<Value>> {
         .filter(|p| !(p.address.starts_with("127.0.0.1") || p.address.starts_with("localhost")))
         .map(|p| p.address.clone())
         .collect();
-    let result = handler::send_peers(&body, &recipients);
-    if let Err(e) = result {
+
+    if let Err(e) = handler::send_peers(&body, &recipients) {
         println!("Error sending websocket message: {e}");
     }
 
