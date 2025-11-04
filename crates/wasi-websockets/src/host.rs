@@ -51,7 +51,7 @@ use self::generated::wasi::websockets::types::{Error, Peer};
 
 const DEF_WEBSOCKETS_ADDR: &str = "0.0.0.0:80";
 
-impl<T> Host<T> for SocketMessaging
+impl<T> Host<T> for WasiWebSockets
 where
     T: WebSocketsView + 'static,
 {
@@ -60,34 +60,35 @@ where
     }
 }
 
-impl<S> Server<S> for SocketMessaging
+impl<S> Server<S> for WasiWebSockets
 where
     S: State,
     <S as State>::StoreData: WebSocketsView,
 {
     /// Provide http proxy service the specified wasm component.
+    /// ``state`` will be used at a later time to provide resource access to guest handlers
     async fn run(&self, state: &S) -> Result<()> {
         run(state).await
     }
 }
 
 pub trait WebSocketsView: Send {
-    fn start(&mut self) -> SocketMessagingView<'_>;
+    fn start(&mut self) -> WasiWebSocketsView<'_>;
 }
 
 #[derive(Clone, Debug)]
-pub struct SocketMessaging;
-impl HasData for SocketMessaging {
-    type Data<'a> = SocketMessagingView<'a>;
+pub struct WasiWebSockets;
+impl HasData for WasiWebSockets {
+    type Data<'a> = WasiWebSocketsView<'a>;
 }
 
-/// View into [`SocketMessagingView`] implementation and [`ResourceTable`].
-pub struct SocketMessagingView<'a> {
+/// View into [`WasiWebSockets`] implementation and [`ResourceTable`].
+pub struct WasiWebSocketsView<'a> {
     /// Mutable reference to table used to manage resources.
     pub table: &'a mut ResourceTable,
 }
 
-impl handler::Host for SocketMessagingView<'_> {
+impl handler::Host for WasiWebSocketsView<'_> {
     async fn get_peers(&mut self) -> Result<Vec<Peer>, Error> {
         let peer_map = PEER_MAP.get().ok_or_else(|| Error {
             message: "Peer map not initialized".into(),
@@ -264,9 +265,12 @@ async fn handle_request(
             .unwrap_or(false)
         || !headers.get(SEC_WEBSOCKET_VERSION).map(|h| h == "13").unwrap_or(false)
         || key.is_none()
-        || req.uri() != "/socket"
+        || req.uri() != "/"
     {
-        return Ok(Response::new(Body::from("Hello World!")));
+        let mut resp =
+            Response::new(Body::from("This service only supports WebSocket connections.\n"));
+        *resp.status_mut() = StatusCode::BAD_REQUEST;
+        return Ok(resp);
     }
     let ver = req.version();
     tokio::task::spawn(async move {

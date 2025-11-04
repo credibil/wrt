@@ -3,11 +3,11 @@
 use anyhow::{Result, anyhow};
 use res_kafka::Client as KafkaCtx;
 use runtime::{Cli, Command, Parser, Resource, Runtime, Server, State};
-use tokio::io;
+use tokio::{io, try_join};
 use wasi_http::{DefaultWasiHttpCtx, WasiHttp, WasiHttpCtxView, WasiHttpView};
 use wasi_messaging::{WasiMessaging, WasiMessagingCtxView, WasiMessagingView};
 use wasi_otel::{DefaultOtelCtx, WasiOtel, WasiOtelCtxView, WasiOtelView};
-use wasi_websockets::{SocketMessaging, SocketMessagingView, WebSocketsView as WebSocketsCtx};
+use wasi_websockets::{WasiWebSockets, WasiWebSocketsView, WebSocketsView as WebSocketsCtx};
 use wasmtime::component::InstancePre;
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 
@@ -22,7 +22,7 @@ async fn main() -> Result<()> {
     compiled.link(WasiHttp)?;
     compiled.link(WasiOtel)?;
     compiled.link(WasiMessaging)?;
-    compiled.link(SocketMessaging)?;
+    compiled.link(WasiWebSockets)?;
 
     // prepare state
     let run_state = RunState {
@@ -31,8 +31,7 @@ async fn main() -> Result<()> {
     };
 
     // run server(s)
-    WasiHttp.run(&run_state).await?;
-    WasiMessaging.run(&run_state).await?;
+    try_join!(WasiHttp.run(&run_state), WasiWebSockets.run(&run_state))?;
 
     Ok(())
 }
@@ -117,8 +116,8 @@ impl WasiOtelView for RunData {
 }
 
 impl WebSocketsCtx for RunData {
-    fn start(&mut self) -> SocketMessagingView<'_> {
-        SocketMessagingView {
+    fn start(&mut self) -> WasiWebSocketsView<'_> {
+        WasiWebSocketsView {
             table: &mut self.table,
         }
     }
