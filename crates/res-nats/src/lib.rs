@@ -11,10 +11,10 @@ use std::sync::Arc;
 
 use anyhow::{Context, Result, anyhow};
 use async_nats::AuthError;
+use fromenv::FromEnv;
+use fromenv::ParseResult;
 use runtime::Resource;
 use tracing::instrument;
-
-const DEF_NATS_ADDR: &str = "demo.nats.io";
 
 #[derive(Debug, Clone)]
 pub struct Client(async_nats::Client);
@@ -23,12 +23,7 @@ impl Resource for Client {
     type ConnectOptions = ConnectOptions;
 
     #[instrument]
-    async fn connect() -> Result<Self> {
-        let options = ConnectOptions::from_env()?;
-        Self::connect_with(&options).await
-    }
-
-    async fn connect_with(options: &Self::ConnectOptions) -> Result<Self> {
+    async fn connect_with(options: Self::ConnectOptions) -> Result<Self> {
         let mut nats_opts = async_nats::ConnectOptions::new();
 
         if let Some(jwt) = &options.jwt
@@ -49,31 +44,25 @@ impl Resource for Client {
     }
 }
 
+#[derive(Debug, Clone, FromEnv)]
 pub struct ConnectOptions {
+    #[env(from = "NATS_ADDRESS", default = "demo.nats.io")]
     pub address: String,
+    #[env(from = "NATS_TOPICS", with = split)]
     pub topics: Vec<String>,
+    #[env(from = "NATS_JWT")]
     pub jwt: Option<String>,
+    #[env(from = "NATS_SEED")]
     pub seed: Option<String>,
 }
 
-impl ConnectOptions {
-    /// Create connection options from environment variables.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if required environment variables are missing or invalid.
-    pub fn from_env() -> Result<Self> {
-        let address = env::var("NATS_ADDRESS").unwrap_or_else(|_| DEF_NATS_ADDR.into());
-        let topics_env = env::var("NATS_TOPICS")?;
-        let topics = topics_env.split(',').map(Into::into).collect();
-        let jwt = env::var("NATS_JWT").ok();
-        let seed = env::var("NATS_SEED").ok();
-
-        Ok(Self {
-            address,
-            topics,
-            jwt,
-            seed,
-        })
+impl runtime::FromEnv for ConnectOptions {
+    fn from_env() -> Result<Self> {
+        Self::from_env().finalize().map_err(|e| anyhow!("issue loading connection options: {e}"))
     }
+}
+
+#[allow(clippy::unnecessary_wraps)]
+fn split(s: &str) -> ParseResult<Vec<String>> {
+    Ok(s.split(',').map(ToOwned::to_owned).collect())
 }
