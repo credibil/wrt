@@ -148,7 +148,7 @@ async fn into_message(kafka_msg: &BorrowedMessage<'_>, registry: Option<&Registr
 
     let topic = kafka_msg.topic();
     let payload_bytes = kafka_msg.payload().unwrap_or_default().to_vec();
-    
+
     let payload = if let Some(sr) = &registry {
         sr.validate_and_decode_json(topic, &payload_bytes).await
     } else {
