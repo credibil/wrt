@@ -47,7 +47,7 @@ services:
     command: ["-js"]
 
   # http_websockets:
-  #   image: runtime:latest
+  #   image: ghcr.io/credibil-grid/runtime:latest
   #   env_file: .env
   #   ports:
   #     - 80:80
