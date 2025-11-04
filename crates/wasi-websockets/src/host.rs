@@ -292,9 +292,6 @@ async fn handle_request(
     res.headers_mut().append(CONNECTION, upgrade);
     res.headers_mut().append(UPGRADE, websocket);
     res.headers_mut().append(SEC_WEBSOCKET_ACCEPT, derived.unwrap().parse().unwrap());
-    // Let's add an additional header to our response to the client.
-    res.headers_mut().append("MyCustomHeader", ":)".parse().unwrap());
-    res.headers_mut().append("SOME_TUNGSTENITE_HEADER", "header_value".parse().unwrap());
     Ok(res)
 }
 
