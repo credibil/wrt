@@ -16,7 +16,7 @@ version.workspace = true
 [lints]
 workspace = true
 
-[dependencies]
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 anyhow.workspace = true
 deadpool-postgres = { version = "0.14", default-features = false, features = ["rt_tokio_1"] }
 futures.workspace = true

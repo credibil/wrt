@@ -16,62 +16,62 @@ skip_rust_env_info = true
 # -------------------------------------
 
 [tasks.clean]
-command = "cargo"
 args = ["clean"]
+command = "cargo"
 
 [tasks.build]
-command = "cargo"
 args = ["build"]
+command = "cargo"
 dependencies = ["clean"]
 
 [tasks.test]
+args = ["--all", "--all-features", "--no-tests=pass", "nextest", "run"]
 command = "cargo"
-args = ["nextest", "run", "--all", "--all-features", "--no-tests=pass"]
 dependencies = ["clean"]
 env = { RUSTFLAGS = "-Dwarnings" }
 
 [tasks.test-doc]
+args = ["--all-features", "--doc", "--workspace", "test"]
 command = "cargo"
-args = ["test", "--doc", "--all-features", "--workspace"]
 
 # -------------------------------------
 # Basic hygiene
 # -------------------------------------
 
 [tasks.fmt]
+dependencies = ["fmt-toml"]
 script = "cargo +nightly fmt --all"
-# dependencies = ["fmt-toml"]
 
-# [tasks.fmt-toml]
-# command = "taplo"
-# args = ["format"]
-# install_crate = "taplo-cli"
+[tasks.fmt-toml]
+args = ["format"]
+command = "taplo"
+install_crate = "taplo-cli"
 
 [tasks.lint]
+args = ["--all-features", "clippy"]
 command = "cargo"
-args = ["clippy", "--all-features"]
 install_crate = { rustup_component_name = "clippy" }
 
 [tasks.vet-imports]
+args = ["imports", "regenerate", "vet"]
 command = "cargo"
-args = ["vet", "regenerate", "imports"]
 install_crate = "cargo-vet"
 
 [tasks.vet-exempt]
+args = ["exemptions", "regenerate", "vet"]
 command = "cargo"
-args = ["vet", "regenerate", "exemptions"]
 install_crate = "cargo-vet"
 
 [tasks.vet-unpub]
+args = ["regenerate", "unpublished", "vet"]
 command = "cargo"
-args = ["vet", "regenerate", "unpublished"]
 install_crate = "cargo-vet"
 
 [tasks.vet]
+args = ["--locked", "vet"]
 command = "cargo"
-args = ["vet", "--locked"]
+dependencies = ["vet-exempt", "vet-imports", "vet-unpub"]
 install_crate = "cargo-vet"
-dependencies = ["vet-imports", "vet-exempt", "vet-unpub"]
 
 [tasks.miri]
 script = '''
@@ -83,22 +83,22 @@ cargo miri nextest run --no-tests=pass
 '''
 
 [tasks.audit]
-command = "cargo"
 args = ["audit"]
+command = "cargo"
 
 [tasks.unused]
+args = ["--skip-target-dir", "machete"]
 command = "cargo"
-args = ["machete", "--skip-target-dir"]
 install_crate = "cargo-machete"
 
 [tasks.outdated]
+args = ["--depth", "--exit-code", "--ignore", "--workspace", "1", "1", "outdated", "prost"]
 command = "cargo"
-args = ["outdated", "--workspace", "--exit-code", "1", "--depth", "1", "--ignore", "prost"]
 install_crate = "cargo-outdated"
 
 [tasks.deny]
+args = ["--workspace", "check", "deny"]
 command = "cargo"
-args = ["deny", "--workspace", "check"]
 install_crate = "cargo-deny"
 
 [tasks.check]
@@ -106,4 +106,4 @@ dependencies = ["audit", "fmt", "lint", "outdated", "unused"]
 
 # Emulate CI
 [tasks.ci]
-dependencies = ["lint", "test", "test-doc", "vet", "miri", "deny", "fmt"]
+dependencies = ["deny", "fmt", "lint", "miri", "test", "test-doc", "vet"]

@@ -1,3 +1,5 @@
+#![cfg(not(target_arch = "wasm32"))]
+
 //! Postgres client builder for runtime.
 
 mod sql;

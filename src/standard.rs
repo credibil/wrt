@@ -1,6 +1,6 @@
 #![cfg(not(target_arch = "wasm32"))]
 
-use anyhow::{Result, anyhow};
+use anyhow::{Context, Result, anyhow};
 use res_azkeyvault::Client as AzKeyVaultCtx;
 use res_mongodb::Client as MongoDbCtx;
 use res_nats::{Client as NatsCtx, ConnectOptions};
@@ -42,9 +42,9 @@ async fn main() -> Result<()> {
     // prepare state
     let run_state = RunState {
         instance_pre: compiled.pre_instantiate()?,
-        nats_client: NatsCtx::connect_with(&nats_options).await?,
-        mongodb_client: MongoDbCtx::connect().await?,
-        vault_client: AzKeyVaultCtx::connect().await?,
+        nats_client: NatsCtx::connect_with(&nats_options).await.context("issue connecting to nats")?,
+        mongodb_client: MongoDbCtx::connect().await.context("issue connecting to mongodb")?,
+        vault_client: AzKeyVaultCtx::connect().await.context("issue connecting to azure key vault")?,
     };
 
     // run server(s)
