@@ -33,8 +33,8 @@ name = "rt_minimal"
 path = "src/rt_minimal.rs"
 
 [[bin]]
-name = "websockets"
-path = "src/websockets.rs"
+name = "rt_websockets"
+path = "src/rt_websockets.rs"
 
 [lints]
 workspace = true
