@@ -61,6 +61,11 @@ impl Resource for Client {
             .create_pool(runtime, MakeRustlsConnect::new(client_config))
             .context("failed to create postgres pool")?;
 
+        // Check pool is usable
+        if pool.get().await.is_err() {
+            return Err(anyhow!("failed to get connection from pool"));
+        }
+
         tracing::info!("connected to Postgres");
 
         Ok(Self(pool))

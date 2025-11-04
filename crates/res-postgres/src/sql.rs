@@ -15,7 +15,7 @@ type ParamRef<'a> = &'a (dyn ToSql + Sync);
 
 impl WasiSqlCtx for Client {
     fn open(&self, name: String) -> FutureResult<Arc<dyn Connection>> {
-        tracing::trace!("getting connection {name}");
+        tracing::debug!("getting connection {name}");
         let pool = self.0.clone();
 
         async move {
@@ -31,7 +31,7 @@ struct PostgresConnection(Arc<Object>);
 
 impl Connection for PostgresConnection {
     fn query(&self, query: String, params: Vec<String>) -> FutureResult<Vec<Row>> {
-        tracing::trace!("query: {query}, params: {params:?}");
+        tracing::debug!("query: {query}, params: {params:?}");
         let cnn = Arc::clone(&self.0);
 
         async move {
@@ -53,15 +53,20 @@ impl Connection for PostgresConnection {
     }
 
     fn exec(&self, query: String, params: Vec<String>) -> FutureResult<u32> {
-        tracing::trace!("exec: {query}, params: {params:?}");
+        tracing::debug!("exec: {query}, params: {params:?}");
         let cnn = Arc::clone(&self.0);
 
         async move {
             let pg_params = params.iter().map(|s| into_param(s)).collect::<Vec<_>>();
             let param_refs: Vec<ParamRef> =
                 pg_params.iter().map(|b| b.as_ref() as ParamRef).collect();
-            let affected = cnn.execute(&query, &param_refs).await?;
-
+            let affected = match cnn.execute(&query, &param_refs).await {
+                Ok(count) => count,
+                Err(e) => {
+                    tracing::error!("exec failed: {e}");
+                    return Err(anyhow!("exec failed: {e}"));
+                }
+            };
             #[allow(clippy::cast_possible_truncation)]
             Ok(affected as u32)
         }
@@ -70,6 +75,10 @@ impl Connection for PostgresConnection {
 }
 
 // Parses a string parameter into a Postgres-compatible type.
+//
+// TODO: This may need to be expanded to support more types as needed.
+//
+// CAUTION: There is some sensitivity to the underlying table schema types
 fn into_param(value: &str) -> Param {
     value
         .parse::<i32>()
