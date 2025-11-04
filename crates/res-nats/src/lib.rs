@@ -11,8 +11,7 @@ use std::sync::Arc;
 
 use anyhow::{Context, Result, anyhow};
 use async_nats::AuthError;
-use fromenv::FromEnv;
-use fromenv::ParseResult;
+use fromenv::{FromEnv, ParseResult};
 use runtime::Resource;
 use tracing::instrument;
 
