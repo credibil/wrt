@@ -111,8 +111,13 @@ impl handler::Host for WasiWebSocketsView<'_> {
             peers: peers.join(","),
             content: message,
         })
-        .unwrap();
-        let _ = ws_client.lock().await.send(Message::Text(msg.into())).await;
+        .map_err(|e| Error {
+            message: format!("Failed to serialize PublishMessage: {e}"),
+        })?;
+        let send_result = ws_client.lock().await.send(Message::Text(msg.into())).await;
+        if let Err(e) = send_result {
+            tracing::error!("Failed to send message to peers: {e}");
+        }
         Ok(())
     }
 
@@ -172,7 +177,6 @@ async fn accept_connection(
     let is_service_peer = peer.ip().is_loopback();
 
     let (outgoing, incoming) = ws_stream.split();
-    let mut close_connection = false;
 
     let broadcast_incoming = incoming.try_for_each(|msg| {
         if is_service_peer {
@@ -189,7 +193,7 @@ async fn accept_connection(
                 }
             };
             let peers = peer_map.lock().unwrap();
-            let recipents = if message.peers == "all" {
+            let recipients = if message.peers == "all" {
                 peers.values().collect::<Vec<&PeerInfo>>()
             } else {
                 let target_peers: Vec<SocketAddr> =
@@ -203,7 +207,7 @@ async fn accept_connection(
                 filtered_peers
             };
 
-            for recp in recipents {
+            for recp in recipients {
                 recp.sender
                     .unbounded_send(Message::Text(Utf8Bytes::from(message.content.clone())))
                     .unwrap();
@@ -218,12 +222,8 @@ async fn accept_connection(
                 }
             } else {
                 tracing::error!("Expected filter json object, got unknown text instead: {text}");
-                close_connection = true;
+                return future::err(tokio_tungstenite::tungstenite::Error::ConnectionClosed);
             }
-        }
-
-        if close_connection {
-            return future::err(tokio_tungstenite::tungstenite::Error::ConnectionClosed);
         }
 
         future::ok(())

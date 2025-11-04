@@ -1,7 +1,7 @@
-//! # WASI Vault Service
+//! # WASI Websockets Service
 //!
-//! This module implements a runtime service for `wasi:vault`
-//! (<https://github.com/credibil/wasi-vault>).
+//! This module implements a runtime service for `wasi:websockets`
+//! (<https://github.com/credibil/wasi-websockets>).
 
 #[cfg(target_arch = "wasm32")]
 mod guest;

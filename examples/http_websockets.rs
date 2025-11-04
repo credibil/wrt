@@ -3,6 +3,7 @@
 
 use std::println;
 
+use anyhow::anyhow;
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use serde_json::{Value, json};
@@ -27,9 +28,10 @@ impl Guest for HttpGuest {
 //#[wasi_otel::instrument]
 async fn get_handler() -> Result<Json<Value>> {
     let status = handler::health_check();
+    let message = status.unwrap_or_else(|_| "Service is unhealthy".to_string());
 
     Ok(Json(json!({
-        "message": status.unwrap()
+        "message": message
     })))
 }
 
@@ -38,7 +40,13 @@ async fn get_handler() -> Result<Json<Value>> {
 //#[wasi_otel::instrument]
 async fn post_handler(body: String) -> Result<Json<Value>> {
     let peers = handler::get_peers();
-    let client_peers = peers.unwrap();
+    let client_peers = match peers {
+        Ok(p) => p,
+        Err(e) => {
+            println!("Error retrieving websocket peers: {e}");
+            return Err(anyhow!("error retrieving websocket peers").into());
+        }
+    };
     let recipients: Vec<String> = client_peers
         .iter()
         .filter(|p| !(p.address.starts_with("127.0.0.1") || p.address.starts_with("localhost")))
