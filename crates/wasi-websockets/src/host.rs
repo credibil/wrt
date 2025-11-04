@@ -14,21 +14,36 @@ mod generated {
 }
 
 use std::collections::HashMap;
+use std::convert::Infallible;
 use std::env;
+use std::fmt::Debug;
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex as StdMutex};
 
 use anyhow::Result;
-use futures::future::{BoxFuture, FutureExt};
 use futures_channel::mpsc::{UnboundedSender, unbounded};
 use futures_util::stream::TryStreamExt;
 use futures_util::{SinkExt, StreamExt, future, pin_mut};
-use runtime::RunState;
+use hyper::StatusCode;
+use hyper::body::Incoming;
+use hyper::header::{
+    CONNECTION, HeaderValue, SEC_WEBSOCKET_ACCEPT, SEC_WEBSOCKET_KEY, SEC_WEBSOCKET_VERSION,
+    UPGRADE,
+};
+use hyper::server::conn::http1;
+use hyper::service::service_fn;
+use hyper::upgrade::Upgraded;
+use hyper::{Method, Request, Response, Version};
+use hyper_util::rt::TokioIo;
+use runtime::{Host, Server, State};
+use serde::{Deserialize, Serialize};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::{Mutex, OnceCell};
+use tokio_tungstenite::tungstenite::handshake::derive_accept_key;
 use tokio_tungstenite::tungstenite::{Bytes, Message, Utf8Bytes};
-use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, accept_async, connect_async};
-use wasmtime::component::{HasData, InstancePre, Linker};
+use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, connect_async};
+use tungstenite::protocol::Role;
+use wasmtime::component::{HasData, Linker};
 use wasmtime_wasi::ResourceTable;
 
 use self::generated::wasi::websockets::handler;
@@ -36,39 +51,43 @@ use self::generated::wasi::websockets::types::{Error, Peer};
 
 const DEF_WEBSOCKETS_ADDR: &str = "0.0.0.0:80";
 
-/// Websockets service
-#[derive(Debug)]
-pub struct WebSockets;
-
-impl runtime::Service for WebSockets {
-    fn add_to_linker(&self, linker: &mut Linker<RunState>) -> Result<()> {
-        handler::add_to_linker::<_, SocketMessaging>(linker, Host::new)?;
-        Ok(())
+impl<T> Host<T> for SocketMessaging
+where
+    T: WebSocketsView + 'static,
+{
+    fn add_to_linker(linker: &mut Linker<T>) -> Result<()> {
+        handler::add_to_linker::<_, Self>(linker, T::start)
     }
+}
 
+impl<S> Server<S> for SocketMessaging
+where
+    S: State,
+    <S as State>::StoreData: WebSocketsView,
+{
     /// Provide http proxy service the specified wasm component.
-    fn start(&self, _: InstancePre<RunState>) -> BoxFuture<'static, Result<()>> {
-        Self::run().boxed()
+    async fn run(&self, state: &S) -> Result<()> {
+        run(state).await
     }
 }
 
-struct SocketMessaging;
+pub trait WebSocketsView: Send {
+    fn start(&mut self) -> SocketMessagingView<'_>;
+}
+
+#[derive(Clone, Debug)]
+pub struct SocketMessaging;
 impl HasData for SocketMessaging {
-    type Data<'a> = Host<'a>;
+    type Data<'a> = SocketMessagingView<'a>;
 }
 
-/// Host for WASI websockets
-pub struct Host<'a> {
-    _table: &'a mut ResourceTable,
+/// View into [`SocketMessagingView`] implementation and [`ResourceTable`].
+pub struct SocketMessagingView<'a> {
+    /// Mutable reference to table used to manage resources.
+    pub table: &'a mut ResourceTable,
 }
 
-impl Host<'_> {
-    const fn new(c: &mut RunState) -> Host<'_> {
-        Host { _table: &mut c.table }
-    }
-}
-
-impl handler::Host for Host<'_> {
+impl handler::Host for SocketMessagingView<'_> {
     async fn get_peers(&mut self) -> Result<Vec<Peer>, Error> {
         let peer_map = PEER_MAP.get().ok_or_else(|| Error {
             message: "Peer map not initialized".into(),
@@ -86,7 +105,7 @@ impl handler::Host for Host<'_> {
     }
 
     async fn send_peers(&mut self, message: String, peers: Vec<String>) -> Result<(), Error> {
-        tracing::info!("WebSocket write: {}", message);
+        tracing::info!("WebSocket write: {message} for peers: {:?}", peers);
         let ws_client = service_client().await;
         let msg = serde_json::to_string(&PublishMessage {
             peers: peers.join(","),
@@ -118,25 +137,29 @@ impl handler::Host for Host<'_> {
     }
 }
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PublishMessage {
     pub peers: String,
     pub content: String,
 }
 
+#[derive(Debug, Clone)]
 pub struct PeerInfo {
     sender: UnboundedSender<Message>,
     query: String,
 }
+
 type PeerMap = Arc<StdMutex<HashMap<SocketAddr, PeerInfo>>>;
-static SERVICE_CLIENT: tokio::sync::OnceCell<
-    tokio::sync::Mutex<WebSocketStream<MaybeTlsStream<TcpStream>>>,
-> = OnceCell::const_new();
 static PEER_MAP: OnceCell<PeerMap> = OnceCell::const_new();
 
+static SERVICE_CLIENT: OnceCell<Mutex<WebSocketStream<MaybeTlsStream<TcpStream>>>> =
+    OnceCell::const_new();
+
+/// Accept a new websocket connection
 #[allow(clippy::significant_drop_tightening)]
-async fn accept_connection(peer_map: PeerMap, peer: SocketAddr, stream: TcpStream) {
-    let ws_stream = accept_async(stream).await.expect("Failed to accept");
+async fn accept_connection(
+    peer_map: PeerMap, peer: SocketAddr, ws_stream: WebSocketStream<TokioIo<Upgraded>>,
+) {
     let (tx, rx) = unbounded();
     peer_map.lock().unwrap().insert(
         peer,
@@ -215,34 +238,104 @@ async fn accept_connection(peer_map: PeerMap, peer: SocketAddr, stream: TcpStrea
     peer_map.lock().unwrap().remove(&peer);
 }
 
-use http_body_util::Full;
-use hyper::body::{Bytes as HyperBytes, Incoming};
-use hyper::server::conn::http1;
-use hyper::service::service_fn;
-use hyper::{Request, Response};
-use hyper_tungstenite::{is_upgrade_request, upgrade};
-
-impl WebSockets {
-    /// Provide http proxy service the specified wasm component.
-    async fn run() -> Result<()> {
-        let state = PeerMap::new(StdMutex::new(HashMap::new()));
-        let _ = PEER_MAP.set(state);
-
-        let addr = env::var("WEBSOCKETS_ADDR").unwrap_or_else(|_| DEF_WEBSOCKETS_ADDR.into());
-        let listener = TcpListener::bind(&addr).await?;
-        tracing::info!("websocket server listening on: {}", listener.local_addr()?);
-        //connect_service_client(&addr).await?;
-
-        loop {
-            let (stream, _) = listener.accept().await?;
-            let peer = stream.peer_addr().expect("connected streams should have a peer address");
-            tracing::info!("Peer address: {}", peer);
-
-            tokio::spawn(accept_connection(Arc::clone(PEER_MAP.get().unwrap()), peer, stream));
+type Body = http_body_util::Full<hyper::body::Bytes>;
+/// Handle incoming HTTP requests and upgrade to ``WebSocket`` if appropriate
+#[allow(clippy::unused_async)]
+#[allow(clippy::map_unwrap_or)]
+async fn handle_request(
+    peer_map: PeerMap, mut req: Request<Incoming>, addr: SocketAddr,
+) -> Result<Response<Body>, Infallible> {
+    let upgrade = HeaderValue::from_static("Upgrade");
+    let websocket = HeaderValue::from_static("websocket");
+    let headers = req.headers();
+    let key = headers.get(SEC_WEBSOCKET_KEY);
+    let derived = key.map(|k| derive_accept_key(k.as_bytes()));
+    if req.method() != Method::GET
+        || req.version() < Version::HTTP_11
+        || !headers
+            .get(CONNECTION)
+            .and_then(|h| h.to_str().ok())
+            .map(|h| h.split([' ', ',']).any(|p| p.eq_ignore_ascii_case(upgrade.to_str().unwrap())))
+            .unwrap_or(false)
+        || !headers
+            .get(UPGRADE)
+            .and_then(|h| h.to_str().ok())
+            .map(|h| h.eq_ignore_ascii_case("websocket"))
+            .unwrap_or(false)
+        || !headers.get(SEC_WEBSOCKET_VERSION).map(|h| h == "13").unwrap_or(false)
+        || key.is_none()
+        || req.uri() != "/socket"
+    {
+        return Ok(Response::new(Body::from("Hello World!")));
+    }
+    let ver = req.version();
+    tokio::task::spawn(async move {
+        match hyper::upgrade::on(&mut req).await {
+            Ok(upgraded) => {
+                let upgraded = TokioIo::new(upgraded);
+                accept_connection(
+                    peer_map,
+                    addr,
+                    WebSocketStream::from_raw_socket(upgraded, Role::Server, None).await,
+                )
+                .await;
+            }
+            Err(e) => tracing::error!("upgrade error: {e}"),
         }
+    });
+    let mut res = Response::new(Body::default());
+    *res.status_mut() = StatusCode::SWITCHING_PROTOCOLS;
+    *res.version_mut() = ver;
+    res.headers_mut().append(CONNECTION, upgrade);
+    res.headers_mut().append(UPGRADE, websocket);
+    res.headers_mut().append(SEC_WEBSOCKET_ACCEPT, derived.unwrap().parse().unwrap());
+    // Let's add an additional header to our response to the client.
+    res.headers_mut().append("MyCustomHeader", ":)".parse().unwrap());
+    res.headers_mut().append("SOME_TUNGSTENITE_HEADER", "header_value".parse().unwrap());
+    Ok(res)
+}
+
+#[allow(clippy::missing_panics_doc)]
+#[allow(clippy::missing_errors_doc)]
+pub async fn run<S>(_: &S) -> Result<()>
+where
+    S: State,
+    <S as State>::StoreData: WebSocketsView,
+{
+    let state = PeerMap::new(StdMutex::new(HashMap::new()));
+    let _ = PEER_MAP.set(Arc::<StdMutex<HashMap<SocketAddr, PeerInfo>>>::clone(&state));
+
+    let addr = env::var("WEBSOCKETS_ADDR").unwrap_or_else(|_| DEF_WEBSOCKETS_ADDR.into());
+    let listener = TcpListener::bind(&addr).await?;
+    tracing::info!("websocket server listening on: {}", listener.local_addr()?);
+
+    loop {
+        let (stream, peer_addr) = listener.accept().await?;
+        let peer = stream.peer_addr().expect("connected streams should have a peer address");
+        tracing::info!("Peer address: {}", peer);
+        let state_ref = Arc::<StdMutex<HashMap<SocketAddr, PeerInfo>>>::clone(&state);
+
+        tokio::spawn(async move {
+            let io = TokioIo::new(stream);
+
+            let service = service_fn(move |req| {
+                handle_request(
+                    Arc::<StdMutex<HashMap<SocketAddr, PeerInfo>>>::clone(&state_ref),
+                    req,
+                    peer_addr,
+                )
+            });
+
+            let conn = http1::Builder::new().serve_connection(io, service).with_upgrades();
+
+            if let Err(err) = conn.await {
+                tracing::error!("failed to serve connection: {err:?}");
+            }
+        });
     }
 }
 
+/// Get the singleton websocket service client
 async fn service_client() -> &'static Mutex<WebSocketStream<MaybeTlsStream<TcpStream>>> {
     SERVICE_CLIENT
         .get_or_init(|| async {

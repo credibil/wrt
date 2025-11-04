@@ -1,3 +1,3 @@
-# Azure Key Vault wasi::vault Implementation
+# WASI Websockets Implementation
 
-This crate implements an Azure Key Vault-based `wasi::vault` service.
+This crate implements a websocket service provider.

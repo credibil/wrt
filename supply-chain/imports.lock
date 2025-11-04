@@ -1892,6 +1892,16 @@ criteria = "safe-to-deploy"
 delta = "0.4.0 -> 0.6.1"
 notes = "Major updates, but almost all safe code. Lots of pruning/deletions, nothing out of the ordrinary."
 
+[[audits.bytecode-alliance.audits.fallible-iterator]]
+who = "Alex Crichton <alex@alexcrichton.com>"
+criteria = "safe-to-deploy"
+delta = "0.2.0 -> 0.3.0"
+notes = """
+This major version update has a few minor breaking changes but everything
+this crate has to do with iterators and `Result` and such. No `unsafe` or
+anything like that, all looks good.
+"""
+
 [[audits.bytecode-alliance.audits.fastrand]]
 who = "Alex Crichton <alex@alexcrichton.com>"
 criteria = "safe-to-deploy"

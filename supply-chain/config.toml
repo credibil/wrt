@@ -306,10 +306,6 @@ criteria = "safe-to-deploy"
 version = "0.2.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.fallible-iterator]]
-version = "0.3.0"
-criteria = "safe-to-deploy"
-
 [[exemptions.fancy-regex]]
 version = "0.14.0"
 criteria = "safe-to-deploy"
