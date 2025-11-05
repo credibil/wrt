@@ -11,6 +11,7 @@ use std::sync::Arc;
 
 use anyhow::{Result, anyhow};
 use fromenv::{FromEnv, ParseResult};
+use rdkafka::consumer::Consumer;
 use rdkafka::consumer::StreamConsumer;
 use rdkafka::producer::{DeliveryResult, ProducerContext, ThreadedProducer};
 use rdkafka::{ClientConfig, ClientContext, Message as _};
@@ -23,10 +24,9 @@ use crate::registry::Registry;
 #[derive(Clone)]
 pub struct Client {
     producer: ThreadedProducer<Tracer>,
-    consumer: Arc<StreamConsumer>,
     partitioner: Option<Partitioner>,
     registry: Option<Registry>,
-    topics: Vec<String>,
+    consumer: Option<Arc<StreamConsumer>>,
 }
 
 impl Debug for Client {
@@ -42,35 +42,31 @@ impl Resource for Client {
     async fn connect_with(options: Self::ConnectOptions) -> Result<Self> {
         let client_config = ClientConfig::from(&options);
 
-        // maybe custom partitioner
-        let partitioner = if options.js_partitioner.unwrap_or_default() {
-            options.partition_count.map(Partitioner::new)
-        } else {
-            None
-        };
-
-        // maybe schema registry
-        let registry = if let Some(cfg) = options.schema.as_ref()
-            && !cfg.url.is_empty()
-        {
-            Some(Registry::new(cfg))
-        } else {
-            None
-        };
-
-        // producer and consumer
+        // producer
         let producer = client_config
             .create_with_context(Tracer {})
             .map_err(|e| anyhow!("issue creating producer: {e}"))?;
-        let consumer =
-            client_config.create().map_err(|e| anyhow!("issue creating consumer: {e}"))?;
+
+        // maybe custom partitioner and schema registry
+        let partitioner = options.partition_count.map(Partitioner::new);
+        let registry = options.schema.as_ref().map(Registry::new);
+
+        // maybe consumer
+        let consumer = if let Some(topics) = options.topics {
+            let consumer: StreamConsumer =
+                client_config.create().map_err(|e| anyhow!("issue creating consumer: {e}"))?;
+            let topics = topics.iter().map(String::as_str).collect::<Vec<_>>();
+            consumer.subscribe(&topics)?;
+            Some(Arc::new(consumer))
+        } else {
+            None
+        };
 
         Ok(Self {
             producer,
-            consumer: Arc::new(consumer),
             partitioner,
             registry,
-            topics: options.topics,
+            consumer,
         })
     }
 }
@@ -79,16 +75,14 @@ impl Resource for Client {
 pub struct ConnectOptions {
     #[env(from = "KAFKA_BROKERS", default = "localhost:9094")]
     pub brokers: String,
-    #[env(from = "KAFKA_TOPICS", with = split)]
-    pub topics: Vec<String>,
-    #[env(from = "KAFKA_CONSUMER_GROUP")]
-    pub group_id: Option<String>,
     #[env(from = "KAFKA_USERNAME")]
     pub username: Option<String>,
     #[env(from = "KAFKA_PASSWORD")]
     pub password: Option<String>,
-    #[env(from = "KAFKA_JS_PARTITIONER")]
-    pub js_partitioner: Option<bool>,
+    #[env(from = "KAFKA_TOPICS", with = split)]
+    pub topics: Option<Vec<String>>,
+    #[env(from = "KAFKA_CONSUMER_GROUP")]
+    pub group_id: Option<String>,
     #[env(from = "KAFKA_PARTITION_COUNT")]
     pub partition_count: Option<i32>,
     #[env(nested)]
@@ -97,13 +91,13 @@ pub struct ConnectOptions {
 
 #[derive(Debug, Clone, FromEnv)]
 pub struct SchemaConfig {
-    #[env(from = "SCHEMA_REGISTRY_URL", default = "")]
+    #[env(from = "KAFKA_REGISTRY_URL")]
     pub url: String,
-    #[env(from = "SCHEMA_REGISTRY_API_KEY")]
+    #[env(from = "KAFKA_REGISTRY_API_KEY")]
     api_key: Option<String>,
-    #[env(from = "SCHEMA_REGISTRY_API_SECRET")]
+    #[env(from = "KAFKA_REGISTRY_API_SECRET")]
     api_secret: Option<String>,
-    #[env(from = "SCHEMA_CACHE_TTL_SECS")]
+    #[env(from = "KAFKA_CACHE_TTL_SECS")]
     cache_ttl_secs: Option<u64>,
 }
 
@@ -118,8 +112,8 @@ impl From<&ConnectOptions> for ClientConfig {
         config.set("bootstrap.servers", kafka.brokers.clone());
 
         // SASL authentication
-        if let Some(user) = kafka.username.as_ref()
-            && let Some(pass) = kafka.password.as_ref()
+        if let Some(user) = &kafka.username
+            && let Some(pass) = &kafka.password
         {
             config.set("security.protocol", "SASL_SSL");
             config.set("sasl.mechanisms", "PLAIN");
