@@ -4,7 +4,6 @@
 
 mod vault;
 
-use std::env;
 use std::fmt::Debug;
 use std::sync::Arc;
 
