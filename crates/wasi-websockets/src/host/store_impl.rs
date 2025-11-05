@@ -71,10 +71,6 @@ impl HostServerWithStore for WasiWebSockets {
     where
         Self: Sized,
     {
-        let peers = get_peer_map().map_err(|e| Error {
-            message: format!("Failed to get peer map: {e}"),
-        })?;
-        peers.lock().unwrap().clear();
         Ok(())
     }
 }

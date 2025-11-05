@@ -3,12 +3,12 @@
 
 use std::println;
 
-use anyhow::anyhow;
+use anyhow::{Context, anyhow};
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use serde_json::{Value, json};
 use wasi_http::Result;
-use wasi_websockets::handler;
+use wasi_websockets::store;
 use wasip3::exports::http::handler::Guest;
 use wasip3::http::types::{ErrorCode, Request, Response};
 
@@ -27,8 +27,8 @@ impl Guest for HttpGuest {
 #[axum::debug_handler]
 //#[wasi_otel::instrument]
 async fn get_handler() -> Result<Json<Value>> {
-    let status = handler::health_check();
-    let message = status.unwrap_or_else(|_| "Service is unhealthy".to_string());
+    let server = store::get_server().context("getting websocket server")?;
+    let message = server.health_check().unwrap_or_else(|_| "Service is unhealthy".to_string());
 
     Ok(Json(json!({
         "message": message
@@ -39,7 +39,8 @@ async fn get_handler() -> Result<Json<Value>> {
 #[axum::debug_handler]
 //#[wasi_otel::instrument]
 async fn post_handler(body: String) -> Result<Json<Value>> {
-    let peers = handler::get_peers();
+    let server = store::get_server().context("getting websocket server")?;
+    let peers = server.get_peers();
     let client_peers = match peers {
         Ok(p) => p,
         Err(e) => {
@@ -53,7 +54,7 @@ async fn post_handler(body: String) -> Result<Json<Value>> {
         .map(|p| p.address.clone())
         .collect();
 
-    if let Err(e) = handler::send_peers(&body, &recipients) {
+    if let Err(e) = server.send_peers(&body, &recipients) {
         println!("Error sending websocket message: {e}");
     }
 
