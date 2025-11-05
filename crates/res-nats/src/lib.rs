@@ -16,7 +16,10 @@ use runtime::Resource;
 use tracing::instrument;
 
 #[derive(Debug, Clone)]
-pub struct Client(async_nats::Client);
+pub struct Client {
+    inner: async_nats::Client,
+    topics: Vec<String>,
+}
 
 impl Resource for Client {
     type ConnectOptions = ConnectOptions;
@@ -39,7 +42,10 @@ impl Resource for Client {
 
         let client = nats_opts.connect(&options.address).await.map_err(|e| anyhow!("{e}"))?;
 
-        Ok(Self(client))
+        Ok(Self {
+            inner: client,
+            topics: options.topics,
+        })
     }
 }
 

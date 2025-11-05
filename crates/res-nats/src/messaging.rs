@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::env;
 use std::sync::Arc;
 
 use anyhow::anyhow;
@@ -18,23 +17,18 @@ impl WasiMessagingCtx for crate::Client {
 
 impl Client for crate::Client {
     fn subscribe(&self) -> FutureResult<Subscriptions> {
-        let client = self.0.clone();
-        let topics_env = env::var("NATS_TOPICS").unwrap_or_default();
-        let topics = topics_env.split(',').map(ToString::to_string).collect::<Vec<_>>();
+        let client = self.clone();
 
         async move {
-            tracing::trace!("subscribing to messaging topics: {topics:?}");
-
-            // topics to subscribe to
             let mut subscribers = vec![];
 
-            for t in &topics {
+            for t in &client.topics {
                 tracing::debug!("subscribing to {t}");
-                let subscriber = client.subscribe(t.clone()).await?;
+                let subscriber = client.inner.subscribe(t.clone()).await?;
                 subscribers.push(subscriber);
             }
 
-            tracing::info!("subscribed to {topics:?}");
+            tracing::info!("subscribed to {:?} topics", client.topics);
 
             // process messages until terminated
             let stream = stream::select_all(subscribers).map(into_message);
@@ -44,7 +38,7 @@ impl Client for crate::Client {
     }
 
     fn send(&self, topic: String, message: Message) -> FutureResult<()> {
-        let client = self.0.clone();
+        let client = self.inner.clone();
 
         async move {
             let Some(headers) = message.metadata.clone() else {
@@ -73,7 +67,7 @@ impl Client for crate::Client {
     fn request(
         &self, topic: String, message: Message, options: Option<RequestOptions>,
     ) -> FutureResult<Message> {
-        let client = self.0.clone();
+        let client = self.inner.clone();
 
         async move {
             let payload = message.payload.clone();
@@ -82,14 +76,7 @@ impl Client for crate::Client {
             for (k, v) in headers.iter() {
                 nats_headers.insert(k.as_str(), v.as_str());
             }
-
-            let timeout = if let Some(request_options) = options
-                && request_options.timeout.is_some()
-            {
-                request_options.timeout
-            } else {
-                None
-            };
+            let timeout = options.and_then(|options| options.timeout);
 
             let request = async_nats::Request::new()
                 .payload(payload.into())

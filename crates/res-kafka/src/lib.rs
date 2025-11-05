@@ -27,6 +27,7 @@ pub struct Client {
     consumer: Arc<StreamConsumer>,
     partitioner: Option<Partitioner>,
     registry: Option<Registry>,
+    topics: Vec<String>,
 }
 
 impl Debug for Client {
@@ -70,6 +71,7 @@ impl Resource for Client {
             consumer: Arc::new(consumer),
             partitioner,
             registry,
+            topics: options.topics,
         })
     }
 }
