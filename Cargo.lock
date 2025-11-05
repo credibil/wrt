@@ -3764,6 +3764,7 @@ dependencies = [
  "anyhow",
  "chrono",
  "csv",
+ "fromenv",
  "futures",
  "jsonschema",
  "rdkafka",
@@ -3816,6 +3817,7 @@ version = "0.13.0"
 dependencies = [
  "anyhow",
  "deadpool-postgres",
+ "fromenv",
  "futures",
  "runtime",
  "rustls 0.23.34",

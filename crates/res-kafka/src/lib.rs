@@ -11,6 +11,7 @@ use std::fmt::{self, Debug};
 use std::sync::Arc;
 
 use anyhow::{Result, anyhow};
+use fromenv::{FromEnv, ParseResult};
 use rdkafka::consumer::StreamConsumer;
 use rdkafka::producer::{DeliveryResult, ProducerContext, ThreadedProducer};
 use rdkafka::{ClientConfig, ClientContext, Message as _};
@@ -18,9 +19,7 @@ use runtime::Resource;
 use tracing::instrument;
 
 use crate::partitioner::Partitioner;
-use crate::registry::{Registry, SchemaConfig};
-
-const DEF_KAFKA_BROKERS: &str = "localhost:9094";
+use crate::registry::Registry;
 
 #[derive(Clone)]
 pub struct Client {
@@ -37,26 +36,21 @@ impl Debug for Client {
 }
 
 impl Resource for Client {
-    type ConnectOptions = KafkaConfig;
+    type ConnectOptions = ConnectOptions;
 
     #[instrument]
-    async fn connect() -> Result<Self> {
-        let kafka_config = KafkaConfig::from_env()?;
-        Self::connect_with(&kafka_config).await
-    }
-
-    async fn connect_with(kafka_config: &Self::ConnectOptions) -> Result<Self> {
-        let client_config = ClientConfig::from(kafka_config);
+    async fn connect_with(options: Self::ConnectOptions) -> Result<Self> {
+        let client_config = ClientConfig::from(&options);
 
         // maybe custom partitioner
-        let partitioner = if kafka_config.js_partitioner.unwrap_or_default() {
-            kafka_config.partition_count.map(Partitioner::new)
+        let partitioner = if options.js_partitioner.unwrap_or_default() {
+            options.partition_count.map(Partitioner::new)
         } else {
             None
         };
 
         // maybe schema registry
-        let registry = if let Some(cfg) = kafka_config.schema.as_ref()
+        let registry = if let Some(cfg) = options.schema.as_ref()
             && !cfg.url.is_empty()
         {
             Some(Registry::new(cfg))
@@ -80,50 +74,50 @@ impl Resource for Client {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct KafkaConfig {
+#[derive(Debug, Clone, FromEnv)]
+pub struct ConnectOptions {
+    #[env(from = "KAFKA_BROKERS", default = "localhost:9094")]
     brokers: String,
+    #[env(from = "KAFKA_TOPICS", with = split)]
+    topics: Vec<String>,
+    #[env(from = "KAFKA_CONSUMER_GROUP")]
+    group_id: Option<String>,
+    #[env(from = "KAFKA_USERNAME")]
     username: Option<String>,
+    #[env(from = "KAFKA_PASSWORD")]
     password: Option<String>,
+    #[env(from = "KAFKA_JS_PARTITIONER")]
     js_partitioner: Option<bool>,
-    partition_count: Option<i32>, // producer
+    #[env(from = "KAFKA_PARTITION_COUNT")]
+    partition_count: Option<i32>,
+    #[env(nested)]
     schema: Option<SchemaConfig>,
-    #[allow(unused)]
-    group_id: Option<String>, // consumer
 }
 
-impl KafkaConfig {
-    /// Create connection options from environment variables.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if required environment variables are missing or
-    /// invalid.
-    pub fn from_env() -> Result<Self> {
-        let brokers = env::var("KAFKA_BROKERS").unwrap_or_else(|_| DEF_KAFKA_BROKERS.into());
-        let username = env::var("KAFKA_USERNAME").ok();
-        let password = env::var("KAFKA_PASSWORD").ok();
-        let consumer_group = env::var("KAFKA_CONSUMER_GROUP").ok();
-        let js_partitioner = env::var("KAFKA_JS_PARTITIONER").ok().and_then(|s| s.parse().ok());
-        let partition_count = env::var("KAFKA_PARTITION_COUNT").ok().and_then(|s| s.parse().ok());
-        let schema = SchemaConfig::from_env();
+#[derive(Debug, Clone, FromEnv)]
+pub struct SchemaConfig {
+    #[env(from = "SCHEMA_REGISTRY_URL", default = "")]
+    pub url: String,
+    #[env(from = "SCHEMA_REGISTRY_API_KEY")]
+    api_key: Option<String>,
+    #[env(from = "SCHEMA_REGISTRY_API_SECRET")]
+    api_secret: Option<String>,
+    #[env(from = "SCHEMA_CACHE_TTL_SECS")]
+    cache_ttl_secs: Option<u64>,
+}
 
-        tracing::info!("Kafka configuration built for brokers: {brokers}");
-
-        Ok(Self {
-            brokers,
-            username,
-            password,
-            group_id: consumer_group,
-            js_partitioner,
-            partition_count,
-            schema,
-        })
+impl runtime::FromEnv for ConnectOptions {
+    fn from_env() -> Result<Self> {
+        Self::from_env().finalize().map_err(|e| anyhow!("issue loading connection options: {e}"))
     }
 }
 
-impl From<&KafkaConfig> for ClientConfig {
-    fn from(kafka: &KafkaConfig) -> Self {
+fn split(s: &str) -> ParseResult<Vec<String>> {
+    Ok(s.split(',').map(ToOwned::to_owned).collect())
+}
+
+impl From<&ConnectOptions> for ClientConfig {
+    fn from(kafka: &ConnectOptions) -> Self {
         let mut config = Self::new();
         config.set("bootstrap.servers", kafka.brokers.clone());
 

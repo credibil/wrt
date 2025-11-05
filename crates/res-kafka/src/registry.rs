@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::env;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -10,29 +9,7 @@ use serde_json::Value;
 use tokio::sync::Mutex;
 use tokio::time;
 
-#[derive(Debug, Clone)]
-pub struct SchemaConfig {
-    pub url: String,
-    api_key: Option<String>,
-    api_secret: Option<String>,
-    cache_ttl_secs: Option<u64>,
-}
-
-impl SchemaConfig {
-    pub fn from_env() -> Option<Self> {
-        let url = env::var("SCHEMA_REGISTRY_URL").ok()?;
-        let api_key = env::var("SCHEMA_REGISTRY_API_KEY").ok();
-        let api_secret = env::var("SCHEMA_REGISTRY_API_SECRET").ok();
-        let cache_ttl_secs = env::var("SCHEMA_CACHE_TTL_SECS").ok().and_then(|s| s.parse().ok());
-
-        Some(Self {
-            url,
-            api_key,
-            api_secret,
-            cache_ttl_secs,
-        })
-    }
-}
+use crate::SchemaConfig;
 
 /// Schema Registry client with caching
 #[derive(Clone)]
