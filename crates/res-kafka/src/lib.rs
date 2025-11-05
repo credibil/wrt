@@ -72,7 +72,7 @@ impl Resource for Client {
 
 #[derive(Debug, Clone, FromEnv)]
 pub struct ConnectOptions {
-    #[env(from = "KAFKA_BROKERS", default = "localhost:9094")]
+    #[env(from = "KAFKA_BROKERS")]
     pub brokers: String,
     #[env(from = "KAFKA_USERNAME")]
     pub username: Option<String>,
@@ -93,11 +93,11 @@ pub struct RegistryOptions {
     #[env(from = "KAFKA_REGISTRY_URL")]
     pub url: String,
     #[env(from = "KAFKA_REGISTRY_API_KEY")]
-    api_key: Option<String>,
+    api_key: String,
     #[env(from = "KAFKA_REGISTRY_API_SECRET")]
-    api_secret: Option<String>,
-    #[env(from = "KAFKA_REGISTRY_CACHE_TTL")]
-    cache_ttl_secs: Option<u64>,
+    api_secret: String,
+    #[env(from = "KAFKA_REGISTRY_CACHE_TTL", default = "3600")]
+    cache_ttl_secs: u64,
 }
 
 #[allow(clippy::unnecessary_wraps)]

@@ -26,20 +26,13 @@ impl Registry {
     #[must_use]
     pub fn new(options: RegistryOptions) -> Self {
         let mut config = RegistryConfig::new(vec![options.url.clone()]);
-
-        if let Some(api_key) = options.api_key {
-            config.basic_auth = Some((api_key, options.api_secret));
-        }
+        config.basic_auth = Some((options.api_key, Some(options.api_secret)));
 
         let sr_client = Self {
             client: Some(SchemaRegistryClient::new(config)),
             schemas: Arc::new(Mutex::new(HashMap::new())),
         };
-
-        // start background cache cleaner only when TTL is provided
-        if let Some(ttl_secs) = options.cache_ttl_secs {
-            sr_client.start_cache_cleaner(ttl_secs);
-        }
+        sr_client.start_cache_cleaner(options.cache_ttl_secs);
 
         sr_client
     }
