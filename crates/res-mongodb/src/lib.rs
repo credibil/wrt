@@ -4,9 +4,8 @@
 
 mod blobstore;
 
-use std::env;
-
 use anyhow::{Result, anyhow};
+use fromenv::FromEnv;
 use runtime::Resource;
 use tracing::instrument;
 
@@ -17,12 +16,7 @@ impl Resource for Client {
     type ConnectOptions = ConnectOptions;
 
     #[instrument(name = "MongoDb::connect")]
-    async fn connect() -> Result<Self> {
-        let options = ConnectOptions::from_env()?;
-        Self::connect_with(&options).await
-    }
-
-    async fn connect_with(options: &Self::ConnectOptions) -> Result<Self> {
+    async fn connect_with(options: Self::ConnectOptions) -> Result<Self> {
         let client = mongodb::Client::with_uri_str(&options.uri)
             .await
             .map_err(|e| anyhow!("failed to connect to mongo: {e}"))?;
@@ -32,18 +26,14 @@ impl Resource for Client {
     }
 }
 
+#[derive(Clone, Debug, FromEnv)]
 pub struct ConnectOptions {
+    #[env(from = "MONGODB_URI")]
     pub uri: String,
 }
 
-impl ConnectOptions {
-    /// Create connection options from environment variables.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if required environment variables are missing or invalid.
-    pub fn from_env() -> Result<Self> {
-        let uri = env::var("MONGODB_URI")?;
-        Ok(Self { uri })
+impl runtime::FromEnv for ConnectOptions {
+    fn from_env() -> Result<Self> {
+        Self::from_env().finalize().map_err(|e| anyhow!("issue loading connection options: {e}"))
     }
 }

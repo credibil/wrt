@@ -1,11 +1,11 @@
 #![cfg(not(target_arch = "wasm32"))]
 
 use anyhow::{Result, anyhow};
-use res_kafka::{Client as KafkaCtx, KafkaConfig};
-use res_redis::{Client as RedisCtx, RedisConfig};
-use runtime::{Cli, Command, Parser, Resource, Runtime, Server, State};
+use res_kafka::{Client as KafkaCtx, ConnectOptions as KafkaConfig};
+use res_redis::{Client as RedisCtx, ConnectOptions as RedisConfig};
+use runtime::{Cli, Command, FromEnv, Parser, Resource, Runtime, Server, State};
 use tokio::{io, try_join};
-use wasi_http::{DefaultWasiHttpCtx, WasiHttp, WasiHttpCtxView, WasiHttpView};
+use wasi_http::{WasiHttp, WasiHttpCtx, WasiHttpCtxView, WasiHttpView};
 use wasi_keyvalue::{WasiKeyValue, WasiKeyValueCtxView, WasiKeyValueView};
 use wasi_messaging::{WasiMessaging, WasiMessagingCtxView, WasiMessagingView};
 use wasi_otel::{DefaultOtelCtx, WasiOtel, WasiOtelCtxView, WasiOtelView};
@@ -19,8 +19,8 @@ async fn main() -> Result<()> {
     };
 
     // environment variables
-    let kafka_options = KafkaConfig::from_env()?;
-    let redis_options = RedisConfig::from_env()?;
+    let kafka_options = <KafkaConfig as FromEnv>::from_env()?;
+    let redis_options = <RedisConfig as FromEnv>::from_env()?;
 
     // link dependencies
     let mut rt = Runtime::<RunData>::new(wasm).compile()?;
@@ -34,8 +34,8 @@ async fn main() -> Result<()> {
     // prepare state
     let run_state = RunState {
         instance_pre,
-        kafka_client: KafkaCtx::connect_with(&kafka_options).await?,
-        redis_client: RedisCtx::connect_with(&redis_options).await?,
+        kafka_client: KafkaCtx::connect_with(kafka_options).await?,
+        redis_client: RedisCtx::connect_with(redis_options).await?,
     };
 
     // run server(s)
@@ -71,7 +71,7 @@ impl State for RunState {
         RunData {
             table: ResourceTable::new(),
             wasi_ctx,
-            http_ctx: DefaultWasiHttpCtx,
+            http_ctx: WasiHttpCtx,
             otel_ctx: DefaultOtelCtx,
             messaging_ctx: self.kafka_client.clone(),
             keyvalue_ctx: self.redis_client.clone(),
@@ -84,7 +84,7 @@ impl State for RunState {
 pub struct RunData {
     pub table: ResourceTable,
     pub wasi_ctx: WasiCtx,
-    pub http_ctx: DefaultWasiHttpCtx,
+    pub http_ctx: WasiHttpCtx,
     pub otel_ctx: DefaultOtelCtx,
     pub messaging_ctx: KafkaCtx,
     pub keyvalue_ctx: RedisCtx,

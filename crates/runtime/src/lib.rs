@@ -11,6 +11,7 @@ use std::path::PathBuf;
 
 pub use clap::Parser;
 use clap::Subcommand;
+pub use {wasmtime, wasmtime_wasi};
 
 #[cfg(feature = "jit")]
 pub use self::compiler::*;

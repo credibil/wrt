@@ -19,6 +19,7 @@ workspace = true
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 anyhow.workspace = true
 deadpool-postgres = { version = "0.14", default-features = false, features = ["rt_tokio_1"] }
+fromenv.workspace = true
 futures.workspace = true
 runtime.workspace = true
 rustls = { version = "0.23.26", default-features = false, features = ["ring"] }

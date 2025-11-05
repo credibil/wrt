@@ -16,7 +16,7 @@ use crate::Client;
 impl WasiBlobstoreCtx for Client {
     fn create_container(&self, name: String) -> FutureResult<Arc<dyn Container>> {
         tracing::trace!("creating container: {name}");
-        let client = self.0.clone();
+        let client = self.inner.clone();
 
         async move {
             let store = jetstream::new(client)
@@ -26,7 +26,6 @@ impl WasiBlobstoreCtx for Client {
                 })
                 .await
                 .context("creating object store")?;
-
             let metadata = metadata(name);
 
             Ok(Arc::new(NatsContainer { metadata, store }) as Arc<dyn Container>)
@@ -36,7 +35,7 @@ impl WasiBlobstoreCtx for Client {
 
     fn get_container(&self, name: String) -> FutureResult<Arc<dyn Container>> {
         tracing::trace!("getting container: {name}");
-        let client = self.0.clone();
+        let client = self.inner.clone();
 
         async move {
             let store = jetstream::new(client)
@@ -52,7 +51,7 @@ impl WasiBlobstoreCtx for Client {
 
     fn delete_container(&self, name: String) -> FutureResult<()> {
         tracing::trace!("deleting container: {name}");
-        let client = self.0.clone();
+        let client = self.inner.clone();
 
         async move {
             jetstream::new(client)
@@ -66,7 +65,7 @@ impl WasiBlobstoreCtx for Client {
 
     fn container_exists(&self, name: String) -> FutureResult<bool> {
         tracing::trace!("checking existence of container: {name}");
-        let client = self.0.clone();
+        let client = self.inner.clone();
 
         async move {
             let exists = jetstream::new(client).get_object_store(&name).await.is_ok();

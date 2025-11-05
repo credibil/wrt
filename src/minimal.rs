@@ -3,7 +3,7 @@
 use anyhow::{Result, anyhow};
 use runtime::{Cli, Command, Parser, Runtime, Server, State};
 use tokio::io;
-use wasi_http::{DefaultWasiHttpCtx, WasiHttp, WasiHttpCtxView, WasiHttpView};
+use wasi_http::{WasiHttp, WasiHttpCtx, WasiHttpCtxView, WasiHttpView};
 use wasi_otel::{DefaultOtelCtx, WasiOtel, WasiOtelCtxView, WasiOtelView};
 use wasmtime::component::InstancePre;
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
@@ -55,7 +55,7 @@ impl State for RunState {
         RunData {
             table: ResourceTable::new(),
             wasi_ctx,
-            http_ctx: DefaultWasiHttpCtx,
+            http_ctx: WasiHttpCtx,
             otel_ctx: DefaultOtelCtx,
         }
     }
@@ -66,7 +66,7 @@ impl State for RunState {
 pub struct RunData {
     pub table: ResourceTable,
     pub wasi_ctx: WasiCtx,
-    pub http_ctx: DefaultWasiHttpCtx,
+    pub http_ctx: WasiHttpCtx,
     pub otel_ctx: DefaultOtelCtx,
 }
 

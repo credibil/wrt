@@ -4,7 +4,6 @@
 
 mod vault;
 
-use std::env;
 use std::fmt::Debug;
 use std::sync::Arc;
 
@@ -16,6 +15,8 @@ use azure_core::credentials::TokenCredential;
 use azure_identity::ClientSecretCredential;
 use azure_identity::DeveloperToolsCredential;
 use azure_security_keyvault_secrets::SecretClient;
+#[cfg(debug_assertions)]
+use fromenv::FromEnv;
 use runtime::Resource;
 use tracing::instrument;
 
@@ -32,12 +33,7 @@ impl Resource for Client {
     type ConnectOptions = ConnectOptions;
 
     #[instrument]
-    async fn connect() -> Result<Self> {
-        let options = ConnectOptions::from_env()?;
-        Self::connect_with(&options).await
-    }
-
-    async fn connect_with(options: &Self::ConnectOptions) -> Result<Self> {
+    async fn connect_with(options: Self::ConnectOptions) -> Result<Self> {
         #[cfg(debug_assertions)]
         let credential: Arc<dyn TokenCredential> = {
             DeveloperToolsCredential::new(None)
@@ -63,45 +59,28 @@ impl Resource for Client {
     }
 }
 
-#[cfg(not(debug_assertions))]
+#[cfg(debug_assertions)]
+#[derive(Debug, Clone, FromEnv)]
 pub struct ConnectOptions {
+    #[env(from = "AZURE_KEYVAULT_ADDR")]
     pub address: String,
+}
+
+#[cfg(not(debug_assertions))]
+#[derive(Debug, Clone, FromEnv)]
+pub struct ConnectOptions {
+    #[env(from = "AZURE_KEYVAULT_ADDR")]
+    pub address: String,
+    #[env(from = "AZURE_TENANT_ID")]
     pub tenant_id: String,
+    #[env(from = "AZURE_CLIENT_ID")]
     pub client_id: String,
+    #[env(from = "AZURE_CLIENT_SECRET")]
     pub client_secret: String,
 }
 
-#[cfg(debug_assertions)]
-pub struct ConnectOptions {
-    pub address: String,
-}
-
-impl ConnectOptions {
-    /// Create connection options from environment variables.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if required environment variables are missing or invalid.
-    pub fn from_env() -> Result<Self> {
-        let address = env::var("AZURE_KEYVAULT_ADDR")?;
-
-        #[cfg(debug_assertions)]
-        {
-            Ok(Self { address })
-        }
-
-        #[cfg(not(debug_assertions))]
-        {
-            let tenant_id = env::var("AZURE_TENANT_ID")?;
-            let client_id = env::var("AZURE_CLIENT_ID")?;
-            let client_secret = env::var("AZURE_CLIENT_SECRET")?;
-
-            Ok(Self {
-                address,
-                tenant_id,
-                client_id,
-                client_secret,
-            })
-        }
+impl runtime::FromEnv for ConnectOptions {
+    fn from_env() -> Result<Self> {
+        Self::from_env().finalize().map_err(|e| anyhow!("issue loading connection options: {e}"))
     }
 }
