@@ -11,8 +11,7 @@ use std::sync::Arc;
 
 use anyhow::{Result, anyhow};
 use fromenv::{FromEnv, ParseResult};
-use rdkafka::consumer::Consumer;
-use rdkafka::consumer::StreamConsumer;
+use rdkafka::consumer::{Consumer, StreamConsumer};
 use rdkafka::producer::{DeliveryResult, ProducerContext, ThreadedProducer};
 use rdkafka::{ClientConfig, ClientContext, Message as _};
 use runtime::Resource;
@@ -40,21 +39,21 @@ impl Resource for Client {
 
     #[instrument]
     async fn connect_with(options: Self::ConnectOptions) -> Result<Self> {
-        let client_config = ClientConfig::from(&options);
+        let config = ClientConfig::from(&options);
 
         // producer
-        let producer = client_config
+        let producer = config
             .create_with_context(Tracer {})
             .map_err(|e| anyhow!("issue creating producer: {e}"))?;
 
         // maybe custom partitioner and schema registry
         let partitioner = options.partition_count.map(Partitioner::new);
-        let registry = options.schema.as_ref().map(Registry::new);
+        let registry = options.registry.map(Registry::new);
 
         // maybe consumer
         let consumer = if let Some(topics) = options.topics {
             let consumer: StreamConsumer =
-                client_config.create().map_err(|e| anyhow!("issue creating consumer: {e}"))?;
+                config.create().map_err(|e| anyhow!("issue creating consumer: {e}"))?;
             let topics = topics.iter().map(String::as_str).collect::<Vec<_>>();
             consumer.subscribe(&topics)?;
             Some(Arc::new(consumer))
@@ -86,11 +85,11 @@ pub struct ConnectOptions {
     #[env(from = "KAFKA_PARTITION_COUNT")]
     pub partition_count: Option<i32>,
     #[env(nested)]
-    pub schema: Option<SchemaConfig>,
+    pub registry: Option<RegistryOptions>,
 }
 
 #[derive(Debug, Clone, FromEnv)]
-pub struct SchemaConfig {
+pub struct RegistryOptions {
     #[env(from = "KAFKA_REGISTRY_URL")]
     pub url: String,
     #[env(from = "KAFKA_REGISTRY_API_KEY")]
