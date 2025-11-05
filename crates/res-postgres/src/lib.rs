@@ -8,6 +8,7 @@ use std::{env, str};
 
 use anyhow::{Context as _, Result, anyhow};
 use deadpool_postgres::{Config, Pool, PoolConfig, Runtime};
+use fromenv::FromEnv;
 use runtime::Resource;
 use rustls::crypto::ring;
 use rustls::{ClientConfig, RootCertStore};
@@ -15,10 +16,6 @@ use tokio_postgres::config::{Host, SslMode};
 use tokio_postgres_rustls::MakeRustlsConnect;
 use tracing::instrument;
 use webpki_roots::TLS_SERVER_ROOTS;
-
-/// Default Postgres connection parameters
-const DEF_URI: &str = "postgres://postgres:pass@localhost:5432/postgres?sslmode=disable";
-const DEF_POOL_SIZE: &str = "10";
 
 /// Postgres client
 #[derive(Debug)]
@@ -28,17 +25,10 @@ pub struct Client(Pool);
 impl Resource for Client {
     type ConnectOptions = ConnectOptions;
 
-    /// Connect to `PostgreSQL` and return a connection pool
-    #[instrument(name = "Postgres::connect")]
-    async fn connect() -> Result<Self> {
-        let options = ConnectOptions::from_env()?;
-        Self::connect_with(&options).await
-    }
-
     /// Connect to `PostgreSQL` with provided options and return a connection pool
-    async fn connect_with(options: &Self::ConnectOptions) -> Result<Self> {
-        let pool_config = Config::try_from(options)?;
-
+    #[instrument]
+    async fn connect_with(options: Self::ConnectOptions) -> Result<Self> {
+        let pool_config = Config::try_from(&options)?;
         let runtime = Some(Runtime::Tokio1);
 
         if pool_config.ssl_mode.is_none() {
@@ -70,24 +60,20 @@ impl Resource for Client {
     }
 }
 
+#[derive(Debug, Clone, FromEnv)]
 pub struct ConnectOptions {
+    #[env(
+        from = "POSTGRES_URI",
+        default = "postgres://postgres:pass@localhost:5432/postgres?sslmode=disable"
+    )]
     pub uri: String,
+    #[env(from = "POSTGRES_POOL_SIZE", default = "10")]
     pub pool_size: usize,
 }
 
-impl ConnectOptions {
-    /// Create connection options from environment variables.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if required environment variables are missing or invalid.
-    pub fn from_env() -> Result<Self> {
-        let uri = env::var("POSTGRES_URI").unwrap_or_else(|_| DEF_URI.into());
-        let pool_size = env::var("POSTGRES_POOL_SIZE")
-            .unwrap_or_else(|_| DEF_POOL_SIZE.into())
-            .parse::<usize>()?;
-
-        Ok(Self { uri, pool_size })
+impl runtime::FromEnv for ConnectOptions {
+    fn from_env() -> Result<Self> {
+        Self::from_env().finalize().map_err(|e| anyhow!("issue loading connection options: {e}"))
     }
 }
 

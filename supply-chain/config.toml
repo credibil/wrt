@@ -326,6 +326,14 @@ criteria = "safe-to-deploy"
 version = "0.15.3"
 criteria = "safe-to-deploy"
 
+[[exemptions.fromenv]]
+version = "0.1.0"
+criteria = "safe-to-deploy"
+
+[[exemptions.fromenv-derive]]
+version = "0.1.0"
+criteria = "safe-to-deploy"
+
 [[exemptions.funty]]
 version = "2.0.0"
 criteria = "safe-to-deploy"

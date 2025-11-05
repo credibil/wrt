@@ -71,10 +71,10 @@ res-kafka.workspace = true
 res-nats.workspace = true
 res-redis.workspace = true
 runtime.workspace = true
-tokio = { workspace = true, features = ["signal"] }
+tokio.workspace = true
+wasmtime.workspace = true
 wasmtime-wasi.workspace = true
 wasmtime-wasi-http.workspace = true
-wasmtime.workspace = true
 
 # required for azure_identity, etc.
 openssl = { version = "0.10", features = ["vendored"] }
@@ -220,6 +220,7 @@ bytes = "1.10.1"
 cfg-if = "1.0.3"
 chrono = "0.4.42"
 csv = "1.4.0"
+fromenv = "0.1.0"
 futures = "0.3.31"
 futures-channel = "0.3.31"
 futures-util = "0.3.31"
@@ -228,14 +229,17 @@ http-body-util = "0.1.3"
 hyper = "1.7.0"
 hyper-tungstenite = "0.19.0"
 hyper-util = "0.1.17"
+jsonschema = "0.30.0"
 mongodb = "3.3.0"
 nkeys = "0.4.5"
 opentelemetry = "0.31.0"
 opentelemetry_sdk = { version = "0.31.0", features = ["experimental_metrics_custom_reader"] }
 proc-macro2 = "1.0.101"
 quote = "1.0.40"
+rdkafka = { version = "0.38", features = ["cmake-build", "ssl-vendored", "tokio"] }
 redis = { version = "0.32.6", features = ["aio", "connection-manager", "tokio-comp"] }
 reqwest = "0.12.24"
+schema-registry-client = "0.4.1"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"
 syn = { version = "2.0.106", features = ["parsing"] }
@@ -254,11 +258,6 @@ wasmtime-wasi = { version = "38.0.3", features = ["p3"] }
 wasmtime-wasi-http = { version = "38.0.3", features = ["p3"] }
 wasmtime-wasi-io = "38.0.3"
 wit-bindgen = { version = "0.46.0" }
-# wit-bindgen = { version = "0.47.0", features = ["async-spawn"] }
-
-jsonschema = "0.30.0"
-rdkafka = { version = "0.38", features = ["cmake-build", "ssl-vendored", "tokio"] }
-schema-registry-client = "0.4.1"
 
 # credibil registry
 credibil-encoding = { version = "0.4.0", registry = "credibil" }

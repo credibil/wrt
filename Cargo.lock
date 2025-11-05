@@ -1596,6 +1596,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "fromenv"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bd2533b77a14842773bf61b964f0505bad13f93950ae587aa7168d128ee68aee"
+dependencies = [
+ "fromenv-derive",
+]
+
+[[package]]
+name = "fromenv-derive"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1856514341cd2126a40fb64a82c9c800c369d461fd403aba32555d0195bc4002"
+dependencies = [
+ "darling",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "fs-set-times"
 version = "0.20.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3743,6 +3764,7 @@ dependencies = [
  "azure_identity",
  "azure_security_keyvault_secrets",
  "base64ct",
+ "fromenv",
  "futures",
  "http",
  "runtime",
@@ -3757,6 +3779,7 @@ dependencies = [
  "anyhow",
  "chrono",
  "csv",
+ "fromenv",
  "futures",
  "jsonschema",
  "rdkafka",
@@ -3775,6 +3798,7 @@ version = "0.13.0"
 dependencies = [
  "anyhow",
  "chrono",
+ "fromenv",
  "futures",
  "mongodb",
  "runtime",
@@ -3791,6 +3815,7 @@ dependencies = [
  "anyhow",
  "async-nats",
  "chrono",
+ "fromenv",
  "futures",
  "nkeys",
  "runtime",
@@ -3807,6 +3832,7 @@ version = "0.13.0"
 dependencies = [
  "anyhow",
  "deadpool-postgres",
+ "fromenv",
  "futures",
  "runtime",
  "rustls 0.23.34",
@@ -3823,6 +3849,7 @@ name = "res-redis"
 version = "0.13.0"
 dependencies = [
  "anyhow",
+ "fromenv",
  "futures",
  "redis",
  "runtime",

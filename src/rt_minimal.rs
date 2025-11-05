@@ -1,10 +1,10 @@
 #![cfg(not(target_arch = "wasm32"))]
 
 use anyhow::{Result, anyhow};
-use res_redis::{Client as RedisCtx, RedisConfig};
-use runtime::{Cli, Command, Parser, Resource, Runtime, Server, State};
+use res_redis::{Client as RedisCtx, ConnectOptions as RedisOptions};
+use runtime::{Cli, Command, FromEnv, Parser, Resource, Runtime, Server, State};
 use tokio::io;
-use wasi_http::{DefaultWasiHttpCtx, WasiHttp, WasiHttpCtxView, WasiHttpView};
+use wasi_http::{WasiHttp, WasiHttpCtx, WasiHttpCtxView, WasiHttpView};
 use wasi_keyvalue::{WasiKeyValue, WasiKeyValueCtxView, WasiKeyValueView};
 use wasi_otel::{DefaultOtelCtx, WasiOtel, WasiOtelCtxView, WasiOtelView};
 use wasmtime::component::InstancePre;
@@ -16,8 +16,7 @@ async fn main() -> Result<()> {
         return Err(anyhow!("only run command is supported"));
     };
 
-    // environment variables
-    let redis_options = RedisConfig::from_env()?;
+    let redis_options = <RedisOptions as FromEnv>::from_env()?;
 
     // link dependencies
     let mut rt = Runtime::<RunData>::new(wasm).compile()?;
@@ -30,7 +29,7 @@ async fn main() -> Result<()> {
     // prepare state
     let run_state = RunState {
         instance_pre,
-        redis_client: RedisCtx::connect_with(&redis_options).await?,
+        redis_client: RedisCtx::connect_with(redis_options).await?,
     };
 
     // run server(s)
@@ -65,7 +64,7 @@ impl State for RunState {
         RunData {
             table: ResourceTable::new(),
             wasi_ctx,
-            http_ctx: DefaultWasiHttpCtx,
+            http_ctx: WasiHttpCtx,
             otel_ctx: DefaultOtelCtx,
             keyvalue_ctx: self.redis_client.clone(),
         }
@@ -77,7 +76,7 @@ impl State for RunState {
 pub struct RunData {
     pub table: ResourceTable,
     pub wasi_ctx: WasiCtx,
-    pub http_ctx: DefaultWasiHttpCtx,
+    pub http_ctx: WasiHttpCtx,
     pub otel_ctx: DefaultOtelCtx,
     pub keyvalue_ctx: RedisCtx,
 }

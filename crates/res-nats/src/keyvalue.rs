@@ -13,7 +13,7 @@ use crate::Client;
 impl WasiKeyValueCtx for Client {
     fn open_bucket(&self, identifier: String) -> FutureResult<Arc<dyn Bucket>> {
         tracing::trace!("opening bucket: {identifier}");
-        let client = self.0.clone();
+        let client = self.inner.clone();
 
         async move {
             let jetstream = jetstream::new(client);

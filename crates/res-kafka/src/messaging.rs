@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::env;
 use std::pin::Pin;
 use std::sync::Arc;
 
@@ -30,15 +29,13 @@ impl WasiMessagingCtx for crate::Client {
 impl Client for crate::Client {
     fn subscribe(&self) -> FutureResult<Subscriptions> {
         let client = self.clone();
-        let topics_env = env::var("KAFKA_TOPICS").unwrap_or_default();
-        let topics = topics_env.split(',').map(ToString::to_string).collect::<Vec<_>>();
 
         async move {
             let consumer = client.consumer;
             let registry = client.registry;
 
             // subscribe
-            let topics = topics.iter().map(String::as_str).collect::<Vec<_>>();
+            let topics = client.topics.iter().map(String::as_str).collect::<Vec<_>>();
             consumer.subscribe(&topics)?;
 
             // spawn a task to read messages and forward subscriber
