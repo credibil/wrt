@@ -7,7 +7,7 @@ use tokio::{io, try_join};
 use wasi_http::{DefaultWasiHttpCtx, WasiHttp, WasiHttpCtxView, WasiHttpView};
 use wasi_messaging::{WasiMessaging, WasiMessagingCtxView, WasiMessagingView};
 use wasi_otel::{DefaultOtelCtx, WasiOtel, WasiOtelCtxView, WasiOtelView};
-use wasi_websockets::{WasiWebSockets, WasiWebSocketsView, WebSocketsView as WebSocketsCtx};
+use wasi_websockets::{DefaultWebSocketsCtx, WasiWebSockets, WasiWebSocketsView, WebSocketsView};
 use wasmtime::component::InstancePre;
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 
@@ -65,6 +65,7 @@ impl State for RunState {
             http_ctx: DefaultWasiHttpCtx,
             otel_ctx: DefaultOtelCtx,
             messaging_ctx: self.kafka_client.clone(),
+            websockets_ctx: DefaultWebSocketsCtx,
         }
     }
 }
@@ -77,6 +78,7 @@ pub struct RunData {
     pub http_ctx: DefaultWasiHttpCtx,
     pub otel_ctx: DefaultOtelCtx,
     pub messaging_ctx: KafkaCtx,
+    pub websockets_ctx: DefaultWebSocketsCtx,
 }
 
 impl WasiView for RunData {
@@ -115,9 +117,10 @@ impl WasiOtelView for RunData {
     }
 }
 
-impl WebSocketsCtx for RunData {
+impl WebSocketsView for RunData {
     fn start(&mut self) -> WasiWebSocketsView<'_> {
         WasiWebSocketsView {
+            ctx: &mut self.websockets_ctx,
             table: &mut self.table,
         }
     }
