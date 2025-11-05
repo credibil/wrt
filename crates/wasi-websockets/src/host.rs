@@ -30,12 +30,13 @@ use anyhow::Result;
 use futures::FutureExt;
 use runtime::{Host, Server, State};
 use server::run_server;
-pub use store_impl::WasiWebSocketsView;
 use wasmtime::component::{HasData, Linker};
+use wasmtime_wasi::ResourceTable;
 
 use store_impl::{DefaultWebSocketServer, FutureResult, WebSocketServer};
 
 use self::generated::wasi::websockets::store;
+use self::generated::wasi::websockets::store::{Host as WsHost, HostServer};
 
 const DEF_WEBSOCKETS_ADDR: &str = "0.0.0.0:80";
 
@@ -60,14 +61,27 @@ where
     }
 }
 
+/// View into [`WebSocketsCtxView`] and [`ResourceTable`].
+pub struct WasiWebSocketsCtxView<'a> {
+    /// View to the Web sockets context.
+    pub ctx: &'a dyn WebSocketsCtxView,
+
+    /// Mutable reference to table used to manage resources.
+    pub table: &'a mut ResourceTable,
+}
+
+impl WsHost for WasiWebSocketsCtxView<'_> {}
+
+impl HostServer for WasiWebSocketsCtxView<'_> {}
+
 pub trait WebSocketsView: Send {
-    fn start(&mut self) -> WasiWebSocketsView<'_>;
+    fn start(&mut self) -> WasiWebSocketsCtxView<'_>;
 }
 
 #[derive(Clone, Debug)]
 pub struct WasiWebSockets;
 impl HasData for WasiWebSockets {
-    type Data<'a> = WasiWebSocketsView<'a>;
+    type Data<'a> = WasiWebSocketsCtxView<'a>;
 }
 
 pub trait WebSocketsCtxView: Debug + Send + Sync + 'static {

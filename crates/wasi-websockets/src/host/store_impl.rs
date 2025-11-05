@@ -6,12 +6,8 @@ use futures::future::BoxFuture;
 use futures_util::SinkExt;
 use tokio_tungstenite::tungstenite::{Bytes, Message};
 use wasmtime::component::{Accessor, Resource};
-use wasmtime_wasi::ResourceTable;
 
-use crate::WebSocketsCtxView;
-use crate::host::generated::wasi::websockets::store::{
-    Host, HostServer, HostServerWithStore, HostWithStore,
-};
+use crate::host::generated::wasi::websockets::store::{HostServerWithStore, HostWithStore};
 use crate::host::generated::wasi::websockets::types::{Error, Peer};
 use crate::host::resource::{PublishMessage, WebSocketProxy};
 use crate::host::server::{get_peer_map, service_client};
@@ -44,7 +40,7 @@ impl HostServerWithStore for WasiWebSockets {
         let ws_server = use_server(accessor, &self_)?;
         let result = ws_server.send_peers(message, peers).await;
         match result {
-            Ok(_) => Ok(()),
+            Ok(()) => Ok(()),
             Err(e) => Err(e.into()),
         }
     }
@@ -55,7 +51,7 @@ impl HostServerWithStore for WasiWebSockets {
         let ws_server = use_server(accessor, &self_)?;
         let result = ws_server.send_all(message).await;
         match result {
-            Ok(_) => Ok(()),
+            Ok(()) => Ok(()),
             Err(e) => Err(e.into()),
         }
     }
@@ -82,19 +78,6 @@ impl HostServerWithStore for WasiWebSockets {
         Ok(())
     }
 }
-
-/// View into [`WebSocketsCtxView`] and [`ResourceTable`].
-pub struct WasiWebSocketsView<'a> {
-    /// View to the Web sockets context.
-    pub ctx: &'a dyn WebSocketsCtxView,
-
-    /// Mutable reference to table used to manage resources.
-    pub table: &'a mut ResourceTable,
-}
-
-impl Host for WasiWebSocketsView<'_> {}
-
-impl HostServer for WasiWebSocketsView<'_> {}
 
 pub fn use_server<T>(
     accessor: &Accessor<T, WasiWebSockets>, self_: &Resource<WebSocketProxy>,
