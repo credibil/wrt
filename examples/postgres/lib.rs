@@ -10,7 +10,7 @@ use anyhow::anyhow;
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use bytes::Bytes;
-use serde_json::{Map, Number, Value, json};
+use serde_json::{Map, Value, json};
 use tracing::Level;
 use wasi_http::Result;
 use wasi_sql::readwrite;
@@ -47,28 +47,11 @@ async fn select(body: Bytes) -> Result<Json<Value>> {
     let mut json_map = Map::new();
     for row in &res {
         let key = &row.field_name;
-        let value = match &row.value {
-            DataType::Int32(v) => Value::Number((*v).into()),
-            DataType::Int64(v) => Value::Number((*v).into()),
-            DataType::Uint32(v) => Value::Number((*v).into()),
-            DataType::Uint64(v) => Value::Number((*v).into()),
-            DataType::Float(v) | DataType::Double(v) => {
-                if v.is_nan() {
-                    Value::String("NaN".to_string())
-                } else if v.is_infinite() && *v > 0.0 {
-                    Value::String("Infinity".to_string())
-                } else if v.is_infinite() && *v < 0.0 {
-                    Value::String("-Infinity".to_string())
-                } else {
-                    Value::Number(Number::from_f64(*v).unwrap_or_else(|| Number::from(0)))
-                }
-            }
-            DataType::Str(v) | DataType::Date(v) | DataType::Time(v) | DataType::Timestamp(v) => {
-                Value::String(v.clone())
-            }
-            DataType::Boolean(v) => Value::Bool(*v),
-            _ => Value::String(format!("{:?}", &row.value)),
+        let DataType::Str(data_value) = &row.value else {
+            return Err(anyhow!("expected string data type for field value").into());
         };
+        let value: Value = serde_json::from_str(&data_value)
+            .map_err(|_| anyhow!("failed to convert field value to JSON"))?;
         json_map.insert(key.clone(), value);
     }
     let serialized_rows = Value::Object(json_map);

@@ -5,7 +5,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use futures::future::BoxFuture;
 
-use crate::host::Row;
+use crate::host::{DataType, Row};
 
 pub type FutureResult<T> = BoxFuture<'static, Result<T>>;
 
@@ -14,10 +14,10 @@ pub type FutureResult<T> = BoxFuture<'static, Result<T>>;
 /// statements.
 pub trait Connection: Debug + Send + Sync + 'static {
     /// Execute a query and return the resulting rows.
-    fn query(&self, query: String, params: Vec<String>) -> FutureResult<Vec<Row>>;
+    fn query(&self, query: String, params: Vec<DataType>) -> FutureResult<Vec<Row>>;
 
     /// Execute a query that does not return rows (e.g., an `INSERT`, `UPDATE`, or `DELETE`).
-    fn exec(&self, query: String, params: Vec<String>) -> FutureResult<u32>;
+    fn exec(&self, query: String, params: Vec<DataType>) -> FutureResult<u32>;
 }
 
 /// [`ConnectionProxy`] provides a concrete wrapper around a `dyn Connection` object.
@@ -40,5 +40,5 @@ pub struct Statement {
     pub query: String,
 
     /// Query parameters.
-    pub params: Vec<String>,
+    pub params: Vec<DataType>,
 }

@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use anyhow::anyhow;
+use chrono::NaiveDate;
 use deadpool_postgres::Object;
 use futures::future::FutureExt;
 use serde_json::json;
@@ -30,7 +31,7 @@ impl WasiSqlCtx for Client {
 struct PostgresConnection(Arc<Object>);
 
 impl Connection for PostgresConnection {
-    fn query(&self, query: String, params: Vec<String>) -> FutureResult<Vec<Row>> {
+    fn query(&self, query: String, params: Vec<DataType>) -> FutureResult<Vec<Row>> {
         tracing::debug!("query: {query}, params: {params:?}");
         let cnn = Arc::clone(&self.0);
 
@@ -52,7 +53,7 @@ impl Connection for PostgresConnection {
         .boxed()
     }
 
-    fn exec(&self, query: String, params: Vec<String>) -> FutureResult<u32> {
+    fn exec(&self, query: String, params: Vec<DataType>) -> FutureResult<u32> {
         tracing::debug!("exec: {query}, params: {params:?}");
         let cnn = Arc::clone(&self.0);
 
@@ -75,18 +76,41 @@ impl Connection for PostgresConnection {
 }
 
 // Parses a string parameter into a Postgres-compatible type.
-//
-// TODO: This may need to be expanded to support more types as needed.
-//
-// CAUTION: There is some sensitivity to the underlying table schema types
-fn into_param(value: &str) -> Param {
-    value
-        .parse::<i32>()
-        .map(|i| Box::new(i) as Param)
-        .or_else(|_| value.parse::<i64>().map(|ts| Box::new(ts) as Param))
-        .or_else(|_| value.parse::<f64>().map(|f| Box::new(f) as Param))
-        .or_else(|_| value.parse::<bool>().map(|b| Box::new(b) as Param))
-        .unwrap_or_else(|_| Box::new(value.to_owned()) as Param)
+// There is not a one-to-one mapping between `wasi-sql` `DataType` and Postgres
+// types, so the `WIT` may need to be expanded in future to support more types.
+fn into_param(value: &DataType) -> anyhow::Result<Param> {
+    match value {
+        DataType::Int32(i) => Ok(Box::new(*i) as Param), // INT, SERIAL
+        DataType::Int64(i) => Ok(Box::new(*i) as Param), // BIGINT, BIGSERIAL
+        DataType::Uint32(u) => Ok(Box::new(*u) as Param), // OID
+        DataType::Uint64(_u) => Err(anyhow!("no Postgres equivalent for uint64")),
+        DataType::Float(f) => Ok(Box::new(*f) as Param), // REAL
+        DataType::Double(d) => Ok(Box::new(*d) as Param), // DOUBLE PRECISION
+        DataType::Str(s) => Ok(Box::new(s.clone()) as Param), // TEXT, VARCHAR, CHAR(n), CITEXT, NAME
+        DataType::Boolean(b) => Ok(Box::new(*b) as Param),    // BOOL
+        DataType::Date(fv) => match fv {
+            Some(fv) => match NaiveDate::parse_from_str(&fv.value, &fv.format) {
+                Ok(d) => Ok(Box::new(d) as Param),
+                Err(e) => return Err(anyhow!("invalid date format: {e}")),
+            },
+            None => Ok(Box::new(None::<NaiveDate>) as Param),
+        }, // DATE
+        DataType::Time(fv) => match fv {
+            Some(fv) => match chrono::NaiveTime::parse_from_str(&fv.value, &fv.format) {
+                Ok(t) => Ok(Box::new(t) as Param),
+                Err(e) => return Err(anyhow!("invalid time format: {e}")),
+            },
+            None => Ok(Box::new(None::<chrono::NaiveTime>) as Param),
+        }, // TIME
+        DataType::Timestamp(fv) => match fv {
+            Some(fv) => match chrono::NaiveDateTime::parse_from_str(&fv.value, &fv.format) {
+                Ok(ts) => Ok(Box::new(ts) as Param),
+                Err(e) => return Err(anyhow!("invalid timestamp format: {e}")),
+            },
+            None => Ok(Box::new(None::<chrono::NaiveDateTime>) as Param),
+        } // TIMESTAMP
+        DataType::Binary(v) => Ok(Box::new(v.clone()) as Param), // BYTEA
+    }
 }
 
 // Converts a Postgres row into a `wasi-sql` `Row`.

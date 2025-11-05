@@ -18,12 +18,13 @@ workspace = true
 
 [dependencies]
 anyhow.workspace = true
+chrono.workspace = true
 deadpool-postgres = { version = "0.14", default-features = false, features = ["rt_tokio_1"] }
 futures.workspace = true
 runtime.workspace = true
 rustls = { version = "0.23.26", default-features = false, features = ["ring"] }
 serde_json.workspace = true
-tokio-postgres = "0.7"
+tokio-postgres = { version = "0.7", features = ["with-chrono-0_4"] }
 tokio-postgres-rustls = { version = "0.13", default-features = false }
 tracing.workspace = true
 wasi-sql.workspace = true
