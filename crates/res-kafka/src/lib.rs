@@ -96,7 +96,7 @@ pub struct RegistryOptions {
     api_key: Option<String>,
     #[env(from = "KAFKA_REGISTRY_API_SECRET")]
     api_secret: Option<String>,
-    #[env(from = "KAFKA_CACHE_TTL_SECS")]
+    #[env(from = "KAFKA_REGISTRY_CACHE_TTL")]
     cache_ttl_secs: Option<u64>,
 }
 

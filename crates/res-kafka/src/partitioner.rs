@@ -9,14 +9,14 @@
 /// compatibility within out Kafka cluster.
 #[derive(Clone)]
 pub struct Partitioner {
-    num_partitions: i32,
+    count: i32,
 }
 
 impl Partitioner {
     /// Create a new partitioner with the given number of partitions.
     #[must_use]
-    pub const fn new(num_partitions: i32) -> Self {
-        Self { num_partitions }
+    pub const fn new(count: i32) -> Self {
+        Self { count }
     }
 
     /// Based on
@@ -25,7 +25,7 @@ impl Partitioner {
     #[allow(clippy::cast_possible_truncation)]
     pub fn partition(&self, key: &[u8]) -> i32 {
         let hash = to_positive(murmur2(key)) as i64;
-        (hash % i64::from(self.num_partitions)) as i32
+        (hash % i64::from(self.count)) as i32
     }
 }
 
@@ -98,7 +98,7 @@ fn murmur2(key: &[u8]) -> f64 {
 
 #[allow(clippy::cast_possible_truncation, clippy::cast_precision_loss)]
 const fn to_positive(x: f64) -> f64 {
-    (x as i64 & 0x7FFF_FFFF) as f64
+    (x as i64 & i32::MAX as i64) as f64
 }
 
 /// How JS converts numbers (which are f64 internally) to i32 before doing bit operations.

@@ -62,10 +62,7 @@ impl Resource for Client {
 
 #[derive(Debug, Clone, FromEnv)]
 pub struct ConnectOptions {
-    #[env(
-        from = "POSTGRES_URI",
-        default = "postgres://postgres:pass@localhost:5432/postgres?sslmode=disable"
-    )]
+    #[env(from = "POSTGRES_URL")]
     pub uri: String,
     #[env(from = "POSTGRES_POOL_SIZE", default = "10")]
     pub pool_size: usize,
