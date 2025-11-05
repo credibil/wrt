@@ -6,7 +6,6 @@ mod blobstore;
 mod keyvalue;
 mod messaging;
 
-use std::env;
 use std::sync::Arc;
 
 use anyhow::{Context, Result, anyhow};

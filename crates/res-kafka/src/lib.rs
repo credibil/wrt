@@ -6,7 +6,6 @@ mod messaging;
 mod partitioner;
 mod registry;
 
-use std::env;
 use std::fmt::{self, Debug};
 use std::sync::Arc;
 

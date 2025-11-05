@@ -4,7 +4,6 @@
 
 mod keyvalue;
 
-use std::env;
 use std::fmt::Debug;
 
 use anyhow::{Result, anyhow};

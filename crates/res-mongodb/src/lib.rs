@@ -4,8 +4,6 @@
 
 mod blobstore;
 
-use std::env;
-
 use anyhow::{Result, anyhow};
 use fromenv::FromEnv;
 use runtime::Resource;
