@@ -18,7 +18,6 @@ use tokio::net::TcpListener;
 use tokio::sync::oneshot;
 use tracing::{Instrument, debug_span};
 use wasmtime::Store;
-
 use wasmtime_wasi_http::io::TokioIo;
 use wasmtime_wasi_http::p3::WasiHttpView;
 use wasmtime_wasi_http::p3::bindings::ProxyIndices;

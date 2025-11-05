@@ -3,7 +3,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use jsonschema::validate;
-use schema_registry_client::rest::client_config::{BasicAuth, ClientConfig as SchemaClientConfig};
+use schema_registry_client::rest::client_config::ClientConfig as SchemaClientConfig;
 use schema_registry_client::rest::schema_registry_client::{Client, SchemaRegistryClient};
 use serde_json::Value;
 use tokio::sync::Mutex;
@@ -19,36 +19,24 @@ pub struct Registry {
 }
 
 /// Constants for encoding/decoding
-const MAGIC_BYTE: u8 = 0; // single byte
+const MAGIC_BYTE: u8 = 0;
 
 impl Registry {
     /// Create a new Schema Registry client
     #[must_use]
     pub fn new(schema_cfg: &SchemaConfig) -> Self {
-        // Build optional basic auth
-        let auth: Option<BasicAuth> = schema_cfg.api_key.as_ref().map(|key| {
-            (key.clone(), schema_cfg.api_secret.clone()) // BasicAuth = (String, Option<String>)
-        });
-
-        // Create SchemaRegistry client config with just URLs
         let mut client_config = SchemaClientConfig::new(vec![schema_cfg.url.clone()]);
 
-        // Set basic auth if present
-        if let Some((username, password)) = auth {
-            client_config.basic_auth = Some((username, password));
+        if let Some(api_key) = &schema_cfg.api_key {
+            client_config.basic_auth = Some((api_key.clone(), schema_cfg.api_secret.clone()));
         }
 
-        // Create the schema registry client
-        let client = Some(SchemaRegistryClient::new(client_config));
-
-        let schemas = Arc::new(Mutex::new(HashMap::new()));
-
         let sr_client = Self {
-            client,
-            schemas: Arc::clone(&schemas),
+            client: Some(SchemaRegistryClient::new(client_config)),
+            schemas: Arc::new(Mutex::new(HashMap::new())),
         };
 
-        // Start background cache cleaner only if TTL is provided
+        // start background cache cleaner only when TTL is provided
         if let Some(ttl_secs) = schema_cfg.cache_ttl_secs {
             sr_client.start_cache_cleaner(ttl_secs);
         }

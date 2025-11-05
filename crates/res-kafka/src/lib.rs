@@ -77,21 +77,21 @@ impl Resource for Client {
 #[derive(Debug, Clone, FromEnv)]
 pub struct ConnectOptions {
     #[env(from = "KAFKA_BROKERS", default = "localhost:9094")]
-    brokers: String,
+    pub brokers: String,
     #[env(from = "KAFKA_TOPICS", with = split)]
-    topics: Vec<String>,
+    pub topics: Vec<String>,
     #[env(from = "KAFKA_CONSUMER_GROUP")]
-    group_id: Option<String>,
+    pub group_id: Option<String>,
     #[env(from = "KAFKA_USERNAME")]
-    username: Option<String>,
+    pub username: Option<String>,
     #[env(from = "KAFKA_PASSWORD")]
-    password: Option<String>,
+    pub password: Option<String>,
     #[env(from = "KAFKA_JS_PARTITIONER")]
-    js_partitioner: Option<bool>,
+    pub js_partitioner: Option<bool>,
     #[env(from = "KAFKA_PARTITION_COUNT")]
-    partition_count: Option<i32>,
+    pub partition_count: Option<i32>,
     #[env(nested)]
-    schema: Option<SchemaConfig>,
+    pub schema: Option<SchemaConfig>,
 }
 
 #[derive(Debug, Clone, FromEnv)]
@@ -106,12 +106,7 @@ pub struct SchemaConfig {
     cache_ttl_secs: Option<u64>,
 }
 
-impl runtime::FromEnv for ConnectOptions {
-    fn from_env() -> Result<Self> {
-        Self::from_env().finalize().map_err(|e| anyhow!("issue loading connection options: {e}"))
-    }
-}
-
+#[allow(clippy::unnecessary_wraps)]
 fn split(s: &str) -> ParseResult<Vec<String>> {
     Ok(s.split(',').map(ToOwned::to_owned).collect())
 }
@@ -136,6 +131,12 @@ impl From<&ConnectOptions> for ClientConfig {
         }
 
         config
+    }
+}
+
+impl runtime::FromEnv for ConnectOptions {
+    fn from_env() -> Result<Self> {
+        Self::from_env().finalize().map_err(|e| anyhow!("issue loading connection options: {e}"))
     }
 }
 
