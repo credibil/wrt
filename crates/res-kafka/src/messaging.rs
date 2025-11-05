@@ -149,9 +149,8 @@ async fn into_message(kafka_msg: &BorrowedMessage<'_>, registry: Option<&Registr
     let topic = kafka_msg.topic();
     let payload_bytes = kafka_msg.payload().unwrap_or_default().to_vec();
 
-    // TODO: when do we use 'validate_and_decode_json'??
     let payload = if let Some(sr) = &registry {
-        sr.validate_and_encode_json(topic, payload_bytes).await
+        sr.validate_and_decode_json(topic, &payload_bytes).await
     } else {
         payload_bytes
     };
