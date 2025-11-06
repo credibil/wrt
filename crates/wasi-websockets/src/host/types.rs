@@ -1,9 +1,7 @@
+use std::collections::HashMap;
+use std::fmt::Debug;
 use std::net::SocketAddr;
-use std::{
-    collections::HashMap,
-    fmt::Debug,
-    sync::{Arc, Mutex},
-};
+use std::sync::{Arc, Mutex};
 
 use futures_channel::mpsc::UnboundedSender;
 use serde::{Deserialize, Serialize};

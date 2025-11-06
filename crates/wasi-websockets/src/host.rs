@@ -29,13 +29,12 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use futures::FutureExt;
+use resource::{DefaultWebSocketServer, WebSocketServer};
 use runtime::{Host, Server, State};
 use server::run_server;
+use store_impl::FutureResult;
 use wasmtime::component::{HasData, Linker};
 use wasmtime_wasi::ResourceTable;
-
-use resource::{DefaultWebSocketServer, WebSocketServer};
-use store_impl::FutureResult;
 
 use self::generated::wasi::websockets::store;
 use self::generated::wasi::websockets::store::{Host as WsHost, HostServer};

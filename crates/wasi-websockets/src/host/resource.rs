@@ -6,12 +6,10 @@ use futures::FutureExt;
 use futures_util::SinkExt;
 use tokio_tungstenite::tungstenite::{Bytes, Message};
 
-use crate::host::{
-    generated::wasi::websockets::types::{Error, Peer},
-    server::{get_peer_map, service_client},
-    store_impl::FutureResult,
-    types::PublishMessage,
-};
+use crate::host::generated::wasi::websockets::types::{Error, Peer};
+use crate::host::server::{get_peer_map, service_client};
+use crate::host::store_impl::FutureResult;
+use crate::host::types::PublishMessage;
 
 #[derive(Clone, Debug)]
 pub struct WebSocketProxy(pub Arc<dyn WebSocketServer>);
