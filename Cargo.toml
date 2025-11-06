@@ -32,6 +32,10 @@ path = "src/rt_standard.rs"
 name = "rt_minimal"
 path = "src/rt_minimal.rs"
 
+[[bin]]
+name = "rt_websockets"
+path = "src/rt_websockets.rs"
+
 [lints]
 workspace = true
 
@@ -43,6 +47,7 @@ jit = ["runtime/jit"]
 [dependencies]
 anyhow.workspace = true
 tracing.workspace = true
+wasip3.workspace = true
 wasi-blobstore.workspace = true
 wasi-http.workspace = true
 wasi-keyvalue.workspace = true
@@ -50,6 +55,7 @@ wasi-messaging.workspace = true
 wasi-otel.workspace = true
 wasi-sql.workspace = true
 wasi-vault.workspace = true
+wasi-websockets.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 base64ct.workspace = true
@@ -135,6 +141,11 @@ name = "kafka"
 path = "examples/kafka/lib.rs"
 crate-type = ["cdylib"]
 
+[[example]]
+name = "http-websockets"
+path = "examples/http_websockets.rs"
+crate-type = ["cdylib"]
+
 [profile.release]
 lto = true
 opt-level = "s"
@@ -211,9 +222,13 @@ chrono = "0.4.42"
 csv = "1.4.0"
 fromenv = "0.1.0"
 futures = "0.3.31"
+futures-channel = "0.3.31"
+futures-util = "0.3.31"
 http = "1.3.1"
 http-body-util = "0.1.3"
 hyper = "1.7.0"
+hyper-tungstenite = "0.19.0"
+hyper-util = "0.1.17"
 jsonschema = "0.30.0"
 mongodb = "3.3.0"
 nkeys = "0.4.5"
@@ -225,16 +240,18 @@ rdkafka = { version = "0.38", features = ["cmake-build", "ssl-vendored", "tokio"
 redis = { version = "0.32.6", features = ["aio", "connection-manager", "tokio-comp"] }
 reqwest = "0.12.24"
 schema-registry-client = "0.4.1"
-serde = { version = "1.0.225", features = ["derive"] }
+serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"
 syn = { version = "2.0.106", features = ["parsing"] }
 time = "0.3.44"
 tokio = { version = "1.47.1", default-features = false }
+tokio-tungstenite = "0.28.0"
 tower = "0.5.2"
 tower-http = { version = "0.6.6", features = ["cors", "trace"] }
 tracing = "0.1.41"
 tracing-opentelemetry = "0.32.0"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter", "fmt"] }
+tungstenite = "0.28.0"
 wasip3 = { version = "0.2.1", features = ["http-compat"] }
 wasmtime = { version = "38.0.3", default-features = false, features = ["component-model-async"] }
 wasmtime-wasi = { version = "38.0.3", features = ["p3"] }
@@ -261,6 +278,7 @@ wasi-otel = { path = "crates/wasi-otel", version = "0.13.0", registry = "credibi
 wasi-otel-attr = { path = "crates/wasi-otel-attr", version = "0.13.0", registry = "credibil" }
 wasi-sql = { path = "crates/wasi-sql", version = "0.13.0", registry = "credibil" }
 wasi-vault = { path = "crates/wasi-vault", version = "0.13.0", registry = "credibil" }
+wasi-websockets = { path = "crates/wasi-websockets", version = "0.13.0", registry = "credibil" }
 
 # [patch."https://github.com/credibil/core.git"]
 # credibil-otel = { path = "../../credibil/core/crates/otel" }

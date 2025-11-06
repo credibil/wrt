@@ -2020,6 +2020,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "hyper-tungstenite"
+version = "0.19.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bc778da281a749ed28d2be73a9f2cd13030680a1574bc729debd1195e44f00e9"
+dependencies = [
+ "http-body-util",
+ "hyper",
+ "hyper-util",
+ "pin-project-lite",
+ "tokio",
+ "tokio-tungstenite",
+ "tungstenite",
+]
+
+[[package]]
 name = "hyper-util"
 version = "0.1.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3907,6 +3922,7 @@ dependencies = [
  "wasi-otel",
  "wasi-sql",
  "wasi-vault",
+ "wasi-websockets",
  "wasip3",
  "wasmtime",
  "wasmtime-wasi",
@@ -4918,6 +4934,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "tokio-tungstenite"
+version = "0.28.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d25a406cddcc431a75d3d9afc6a7c0f7428d4891dd973e4d54c56b46127bf857"
+dependencies = [
+ "futures-util",
+ "log",
+ "tokio",
+ "tungstenite",
+]
+
+[[package]]
 name = "tokio-util"
 version = "0.7.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5183,6 +5211,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "tungstenite"
+version = "0.28.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8628dcc84e5a09eb3d8423d6cb682965dea9133204e8fb3efee74c2a0c259442"
+dependencies = [
+ "bytes",
+ "data-encoding",
+ "http",
+ "httparse",
+ "log",
+ "rand 0.9.2",
+ "sha1",
+ "thiserror 2.0.17",
+ "utf-8",
+]
+
+[[package]]
 name = "typed-builder"
 version = "0.20.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5327,6 +5372,12 @@ dependencies = [
  "percent-encoding",
  "serde",
 ]
+
+[[package]]
+name = "utf-8"
+version = "0.7.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "09cc8ee72d2a9becf2f2febe0205bbed8fc6615b7cb429ad062dc7b7ddd036a9"
 
 [[package]]
 name = "utf8_iter"
@@ -5555,6 +5606,30 @@ dependencies = [
  "futures",
  "runtime",
  "tracing",
+ "wasmtime",
+ "wasmtime-wasi",
+ "wit-bindgen",
+]
+
+[[package]]
+name = "wasi-websockets"
+version = "0.13.0"
+dependencies = [
+ "anyhow",
+ "futures",
+ "futures-channel",
+ "futures-util",
+ "http-body-util",
+ "hyper",
+ "hyper-tungstenite",
+ "hyper-util",
+ "runtime",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tokio-tungstenite",
+ "tracing",
+ "tungstenite",
  "wasmtime",
  "wasmtime-wasi",
  "wit-bindgen",
