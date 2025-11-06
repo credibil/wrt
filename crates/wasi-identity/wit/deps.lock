@@ -1,4 +1,4 @@
-[vault]
-url = "https://github.com/credibil/wasi-vault/archive/main.tar.gz"
-sha256 = "29d92372f1735476f04e50c29615bc5d57c69ca79a09ddb7a72d79377675ca3b"
-sha512 = "e1c56238dcff58268608e903e9e9f8323a603af0b232dec483226f519a63339371d5602b1df95084548c1c3e4f2e0f3eea227119d1f4425368df585294bf74f2"
+[identity]
+path = "../../../../wasi-identity/wit"
+sha256 = "e231d00d52527f798487a7fa63e9265c453846261267adcdc181d3eb916a67fc"
+sha512 = "683ab1d66ad1caeb8f190e5fab17d1d6e6cdacda3e3e79e0cc1d20a9a0e55c2c1c941dde5c7df1c95b1eb9ecee1e58a31317fb6b8e4a76843b689cff5caea07e"

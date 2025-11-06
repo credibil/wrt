@@ -1,2 +1,3 @@
 
-vault = "https://github.com/credibil/wasi-vault/archive/main.tar.gz"
+# identity = "https://github.com/credibil/wasi-identity/archive/main.tar.gz"
+identity = "../../../../wasi-identity/wit"
