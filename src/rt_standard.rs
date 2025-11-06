@@ -1,10 +1,10 @@
 #![cfg(not(target_arch = "wasm32"))]
 
 use anyhow::{Result, anyhow};
-use res_kafka::{Client as KafkaCtx, KafkaConfig};
+use res_kafka::{Client as KafkaCtx, ConnectOptions as KafkaConfig};
 use res_postgres::{Client as PostgresCtx, ConnectOptions as PostgresConfig};
-use res_redis::{Client as RedisCtx, RedisConfig};
-use runtime::{Cli, Command, Parser, Resource, Runtime, Server, State};
+use res_redis::{Client as RedisCtx, ConnectOptions as RedisConfig};
+use runtime::{Cli, Command, FromEnv, Parser, Resource, Runtime, Server, State};
 use tokio::{io, try_join};
 use wasi_http::{WasiHttp, WasiHttpCtx, WasiHttpCtxView, WasiHttpView};
 use wasi_keyvalue::{WasiKeyValue, WasiKeyValueCtxView, WasiKeyValueView};
@@ -21,9 +21,9 @@ async fn main() -> Result<()> {
     };
 
     // environment variables
-    let kafka_options = KafkaConfig::from_env()?;
-    let redis_options = RedisConfig::from_env()?;
-    let postgres_options = PostgresConfig::from_env()?;
+    let kafka_options = <KafkaConfig as FromEnv>::from_env()?;
+    let redis_options = <RedisConfig as FromEnv>::from_env()?;
+    let postgres_options = <PostgresConfig as FromEnv>::from_env()?;
 
     // link dependencies
     let mut rt = Runtime::<RunData>::new(wasm).compile()?;
@@ -38,9 +38,9 @@ async fn main() -> Result<()> {
     // prepare state
     let run_state = RunState {
         instance_pre,
-        kafka_client: KafkaCtx::connect_with(&kafka_options).await?,
-        redis_client: RedisCtx::connect_with(&redis_options).await?,
-        postgres_client: PostgresCtx::connect_with(&postgres_options).await?,
+        kafka_client: KafkaCtx::connect_with(kafka_options).await?,
+        redis_client: RedisCtx::connect_with(redis_options).await?,
+        postgres_client: PostgresCtx::connect_with(postgres_options).await?,
     };
 
     // run server(s)

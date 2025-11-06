@@ -9,7 +9,7 @@
 
 mod sql;
 
-use std::{env, str};
+use std::str;
 
 use anyhow::{Context as _, Result, anyhow};
 use deadpool_postgres::{Config, Pool, PoolConfig, Runtime};
@@ -21,9 +21,6 @@ use tokio_postgres::config::{Host, SslMode};
 use tokio_postgres_rustls::MakeRustlsConnect;
 use tracing::instrument;
 use webpki_roots::TLS_SERVER_ROOTS;
-
-/// Default Postgres connection parameters
-const DEF_POOL_SIZE: &str = "10";
 
 /// Postgres client
 #[derive(Clone, Debug)]
@@ -84,19 +81,9 @@ pub struct ConnectOptions {
     pub pool_size: usize,
 }
 
-impl ConnectOptions {
-    /// Create connection options from environment variables.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if required environment variables are missing or invalid.
-    pub fn from_env() -> Result<Self> {
-        let uri = env::var("POSTGRES_URI")?;
-        let pool_size = env::var("POSTGRES_POOL_SIZE")
-            .unwrap_or_else(|_| DEF_POOL_SIZE.into())
-            .parse::<usize>()?;
-
-        Ok(Self { uri, pool_size })
+impl runtime::FromEnv for ConnectOptions {
+    fn from_env() -> Result<Self> {
+        Self::from_env().finalize().map_err(|e| anyhow!("issue loading connection options: {e}"))
     }
 }
 
