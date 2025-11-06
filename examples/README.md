@@ -39,14 +39,14 @@ This will start a wasm runtime running a simple HTTP server instrumented with lo
 export CARGO_REGISTRIES_CREDIBIL_TOKEN="<registry token>"
 
 docker build \
-  --build-arg BIN=standard \
+  --build-arg FEATURES=minimal \
   --secret id=credibil,env=CARGO_REGISTRIES_CREDIBIL_TOKEN \
   --tag ghcr.io/credibil/wrt .
 
 #  OR 
 
 docker build \
-  --build-arg BIN=minimal \
+  --build-arg FEATURES=standard \
   --secret id=credibil,env=CARGO_REGISTRIES_CREDIBIL_TOKEN \
   --tag ghcr.io/credibil/wrt .
 ```

@@ -20,7 +20,7 @@ doctest = false
 workspace = true
 
 [features]
-default = ["jit", "rt-http"]
+default = ["jit", "minimal"]
 
 # Top-level feature sets that can be used to create a build. 
 # Each set represents a known combination of components and resources used by
