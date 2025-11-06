@@ -91,6 +91,6 @@ pub trait WebSocketsCtxView: Debug + Send + Sync + 'static {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct DefaultWebSocketsCtx;
 impl WebSocketsCtxView for DefaultWebSocketsCtx {}

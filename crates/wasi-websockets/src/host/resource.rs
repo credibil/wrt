@@ -12,7 +12,7 @@ use futures_util::SinkExt;
 use serde::{Deserialize, Serialize};
 use tokio_tungstenite::tungstenite::{Bytes, Message};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct PublishMessage {
     pub peers: String,
     pub content: String,
@@ -48,7 +48,7 @@ pub trait WebSocketServer: Debug + Send + Sync + 'static {
 
     /// Send a message to the specified peers.
     fn send_peers(&self, message: String, peers: Vec<String>) -> FutureResult<()> {
-        tracing::info!("WebSocket write: {message} for peers: {:?}", peers);
+        tracing::debug!("WebSocket write: {message} for peers: {:?}", peers);
         async move {
             let ws_client = service_client().await;
             let msg = serde_json::to_string(&PublishMessage {
@@ -69,7 +69,7 @@ pub trait WebSocketServer: Debug + Send + Sync + 'static {
 
     /// Send a message to all connected peers.
     fn send_all(&self, message: String) -> FutureResult<()> {
-        tracing::info!("WebSocket write: {}", message);
+        tracing::debug!("WebSocket write: {}", message);
         async move {
             let ws_client = service_client().await;
             let msg = serde_json::to_string(&PublishMessage {

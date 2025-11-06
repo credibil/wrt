@@ -23,7 +23,7 @@ use runtime::State;
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::{Mutex, OnceCell};
 use tokio_tungstenite::tungstenite::handshake::derive_accept_key;
-use tokio_tungstenite::tungstenite::{Message, Utf8Bytes};
+use tokio_tungstenite::tungstenite::{Bytes, Message, Utf8Bytes};
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, connect_async};
 use tungstenite::protocol::Role;
 
@@ -79,6 +79,10 @@ async fn accept_connection(
 
     let broadcast_incoming = incoming.try_for_each(|msg| {
         if is_service_peer {
+            if Message::Ping(Bytes::new()) == msg {
+                tracing::info!("Received ping from service peer {}", peer);
+                return future::ok(());
+            }
             tracing::info!(
                 "Received a message from service peer {}: {}",
                 peer,
@@ -138,7 +142,7 @@ async fn accept_connection(
 }
 
 type Body = http_body_util::Full<hyper::body::Bytes>;
-/// Handle incoming HTTP requests and upgrade to ``WebSocket`` if appropriate
+/// Handle incoming HTTP requests and upgrade to [`WebSocket`] if appropriate
 #[allow(clippy::unused_async)]
 #[allow(clippy::map_unwrap_or)]
 async fn handle_request(
