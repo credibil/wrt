@@ -1,12 +1,11 @@
 use std::collections::HashMap;
 use std::convert::Infallible;
 use std::env;
-use std::fmt::Debug;
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex as StdMutex};
 
 use anyhow::Result;
-use futures_channel::mpsc::{UnboundedSender, unbounded};
+use futures_channel::mpsc::unbounded;
 use futures_util::stream::TryStreamExt;
 use futures_util::{StreamExt, future, pin_mut};
 use hyper::body::Incoming;
@@ -27,7 +26,7 @@ use tokio_tungstenite::tungstenite::{Bytes, Message, Utf8Bytes};
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, connect_async};
 use tungstenite::protocol::Role;
 
-use crate::host::resource::PublishMessage;
+use crate::host::types::{PeerInfo, PeerMap, PublishMessage};
 use crate::host::{DEF_WEBSOCKETS_ADDR, WebSocketsView};
 
 static PEER_MAP: OnceCell<PeerMap> = OnceCell::const_new();
@@ -50,14 +49,6 @@ pub async fn service_client() -> &'static Mutex<WebSocketStream<MaybeTlsStream<T
         })
         .await
 }
-
-#[derive(Debug, Clone)]
-pub struct PeerInfo {
-    pub sender: UnboundedSender<Message>,
-    pub query: String,
-}
-
-pub type PeerMap = Arc<StdMutex<HashMap<SocketAddr, PeerInfo>>>;
 
 /// Accept a new websocket connection
 #[allow(clippy::significant_drop_tightening)]

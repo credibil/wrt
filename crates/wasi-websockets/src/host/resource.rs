@@ -2,21 +2,16 @@ use std::fmt::Debug;
 use std::ops::Deref;
 use std::sync::Arc;
 
+use futures::FutureExt;
+use futures_util::SinkExt;
+use tokio_tungstenite::tungstenite::{Bytes, Message};
+
 use crate::host::{
     generated::wasi::websockets::types::{Error, Peer},
     server::{get_peer_map, service_client},
     store_impl::FutureResult,
+    types::PublishMessage,
 };
-use futures::FutureExt;
-use futures_util::SinkExt;
-use serde::{Deserialize, Serialize};
-use tokio_tungstenite::tungstenite::{Bytes, Message};
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct PublishMessage {
-    pub peers: String,
-    pub content: String,
-}
 
 #[derive(Clone, Debug)]
 pub struct WebSocketProxy(pub Arc<dyn WebSocketServer>);

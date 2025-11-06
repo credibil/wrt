@@ -5,6 +5,7 @@
 mod resource;
 mod server;
 mod store_impl;
+mod types;
 
 mod generated {
     #![allow(clippy::trait_duplication_in_bounds)]
