@@ -22,15 +22,15 @@ workspace = true
 [features]
 default = ["jit", "rt-http"]
 
-# Top-level feature sets that can be used to create a specific build. Each set 
-# represents a known combination of components and resources used by wasm 
-# apps.
+# Top-level feature sets that can be used to create a build. 
+# Each set represents a known combination of components and resources used by
+# wasm apps.
 minimal = ["http", "otel"]
 standard = ["http", "otel", "keyvalue", "messaging", "blobstore", "vault", "azkeyvault", "nats", "mongodb"]
 rt-http = ["http", "keyvalue", "otel", "redis"]
 rt-messaging = ["messaging", "kafka"]
 
-# WASI components
+# WASI components (not intended to be used directly)
 blobstore = ["dep:wasi-blobstore"]
 http = ["dep:wasi-http", "dep:wasmtime-wasi-http"]
 keyvalue = ["dep:wasi-keyvalue"]
@@ -39,7 +39,11 @@ otel = ["dep:wasi-otel"]
 sql = ["dep:wasi-sql"]
 vault = ["dep:wasi-vault"]
 
-# Component resources
+# Component resources (not intended to be used directly)
+# N.B. certain resources are mutually exclusive:
+# - nats and redis for keyvalue
+# - nats and kafka for messaging
+# - nats and mongodb for blobstore
 azkeyvault = ["dep:res-azkeyvault"]
 kafka = ["dep:res-kafka"]
 mongodb = ["dep:res-mongodb"]
