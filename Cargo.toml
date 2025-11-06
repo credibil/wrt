@@ -16,10 +16,6 @@ version.workspace = true
 [lib]
 doctest = false
 
-[[bin]]
-name = "rt_websockets"
-path = "src/rt_websockets.rs"
-
 [lints]
 workspace = true
 
