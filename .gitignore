@@ -10,6 +10,9 @@ gen/
 # local env file(s)
 .env
 
+# local vscode settings
+.vscode/
+
 # rustc internal compiler error files
 rustc-ice-*
 

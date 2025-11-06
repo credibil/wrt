@@ -21,7 +21,7 @@ use res_redis::Client as RedisCtx;
     feature = "redis"
 ))]
 use runtime::Resource;
-#[cfg(any(feature = "http", feature = "messaging"))]
+#[cfg(any(feature = "http", feature = "messaging", feature = "websockets"))]
 use runtime::Server;
 use runtime::{Runtime, State};
 #[cfg(feature = "blobstore")]
@@ -36,6 +36,10 @@ use wasi_messaging::{WasiMessaging, WasiMessagingCtxView, WasiMessagingView};
 use wasi_otel::{DefaultOtelCtx, WasiOtel, WasiOtelCtxView, WasiOtelView};
 #[cfg(feature = "vault")]
 use wasi_vault::{WasiVault, WasiVaultCtxView, WasiVaultView};
+#[cfg(feature = "websockets")]
+use wasi_websockets::{
+    DefaultWebSocketsCtx, WasiWebSockets, WasiWebSocketsCtxView, WebSocketsView,
+};
 use wasmtime::component::InstancePre;
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 
@@ -60,6 +64,8 @@ pub async fn run(wasm: PathBuf) -> Result<()> {
     compiled.link(WasiOtel)?;
     #[cfg(feature = "vault")]
     compiled.link(WasiVault)?;
+    #[cfg(feature = "websockets")]
+    compiled.link(WasiWebSockets)?;
 
     // prepare state
     let run_state = RunState {
@@ -77,15 +83,33 @@ pub async fn run(wasm: PathBuf) -> Result<()> {
         azure_ctx: AzKeyVaultCtx::connect().await?,
     };
 
-    // run server(s)
-    #[cfg(all(feature = "http", not(feature = "messaging")))]
+    // single server
+    #[cfg(all(feature = "http", not(all(feature = "messaging", feature = "websockets"))))]
     tokio::try_join!(WasiHttp.run(&run_state))?;
 
-    #[cfg(all(not(feature = "http"), feature = "messaging"))]
+    #[cfg(all(feature = "messaging", not(all(feature = "http", feature = "websockets"))))]
     tokio::try_join!(WasiMessaging.run(&run_state))?;
 
-    #[cfg(all(feature = "http", feature = "messaging"))]
+    #[cfg(all(feature = "websockets", not(all(feature = "http", feature = "messaging"))))]
+    tokio::try_join!(WasiWebSockets.run(&run_state))?;
+
+    // two servers
+    #[cfg(all(feature = "http", feature = "messaging", not(feature = "websockets")))]
     tokio::try_join!(WasiHttp.run(&run_state), WasiMessaging.run(&run_state))?;
+
+    #[cfg(all(feature = "http", feature = "websockets", not(feature = "messaging")))]
+    tokio::try_join!(WasiHttp.run(&run_state), WasiWebSockets.run(&run_state))?;
+
+    #[cfg(all(feature = "messaging", feature = "websockets", not(feature = "http")))]
+    tokio::try_join!(WasiMessaging.run(&run_state), WasiWebSockets.run(&run_state))?;
+
+    // three servers
+    #[cfg(all(feature = "http", feature = "messaging", feature = "websockets"))]
+    tokio::try_join!(
+        WasiHttp.run(&run_state),
+        WasiMessaging.run(&run_state),
+        WasiWebSockets.run(&run_state)
+    )?;
 
     Ok(())
 }
@@ -144,6 +168,8 @@ impl State for RunState {
             otel_ctx: DefaultOtelCtx,
             #[cfg(all(feature = "vault", feature = "azure"))]
             vault_ctx: self.azure_ctx.clone(),
+            #[cfg(feature = "websockets")]
+            websockets_ctx: DefaultWebSocketsCtx,
         }
     }
 }
@@ -171,6 +197,8 @@ pub struct RunData {
     pub otel_ctx: DefaultOtelCtx,
     #[cfg(all(feature = "vault", feature = "azure"))]
     pub vault_ctx: AzKeyVaultCtx,
+    #[cfg(feature = "websockets")]
+    pub websockets_ctx: DefaultWebSocketsCtx,
 }
 
 impl WasiView for RunData {
@@ -237,6 +265,16 @@ impl WasiVaultView for RunData {
     fn vault(&mut self) -> WasiVaultCtxView<'_> {
         WasiVaultCtxView {
             ctx: &mut self.vault_ctx,
+            table: &mut self.table,
+        }
+    }
+}
+
+#[cfg(feature = "websockets")]
+impl WebSocketsView for RunData {
+    fn start(&mut self) -> WasiWebSocketsCtxView<'_> {
+        WasiWebSocketsCtxView {
+            ctx: &mut self.websockets_ctx,
             table: &mut self.table,
         }
     }
