@@ -1,16 +1,10 @@
-use std::fmt::Debug;
-
 use anyhow::anyhow;
-use futures::FutureExt;
 use futures::future::BoxFuture;
-use futures_util::SinkExt;
-use tokio_tungstenite::tungstenite::{Bytes, Message};
 use wasmtime::component::{Accessor, Resource};
 
 use crate::host::generated::wasi::websockets::store::{HostServerWithStore, HostWithStore};
 use crate::host::generated::wasi::websockets::types::{Error, Peer};
-use crate::host::resource::{PublishMessage, WebSocketProxy};
-use crate::host::server::{get_peer_map, service_client};
+use crate::host::resource::WebSocketProxy;
 use crate::host::{Result, WasiWebSockets};
 
 pub type FutureResult<T> = BoxFuture<'static, Result<T>>;
@@ -100,74 +94,3 @@ impl From<anyhow::Error> for Error {
         }
     }
 }
-
-/// Providers implement the [`WebSocketServer`] trait to allow the host to
-/// interact with backend resources.
-pub trait WebSocketServer: Debug + Send + Sync + 'static {
-    /// Get the peers connected to the server.
-    fn get_peers(&self) -> Vec<Peer> {
-        let peer_map = get_peer_map().unwrap();
-        peer_map
-            .lock()
-            .unwrap()
-            .iter()
-            .map(|(key, peer)| Peer {
-                address: key.to_string(),
-                query: peer.query.clone(),
-            })
-            .collect()
-    }
-
-    /// Send a message to the specified peers.
-    fn send_peers(&self, message: String, peers: Vec<String>) -> FutureResult<()> {
-        tracing::info!("WebSocket write: {message} for peers: {:?}", peers);
-        async move {
-            let ws_client = service_client().await;
-            let msg = serde_json::to_string(&PublishMessage {
-                peers: peers.join(","),
-                content: message,
-            })
-            .map_err(|e| Error {
-                message: format!("Failed to serialize PublishMessage: {e}"),
-            })?;
-            let send_result = ws_client.lock().await.send(Message::Text(msg.into())).await;
-            if let Err(e) = send_result {
-                tracing::error!("Failed to send message to peers: {e}");
-            }
-            Ok(())
-        }
-        .boxed()
-    }
-
-    /// Send a message to all connected peers.
-    fn send_all(&self, message: String) -> FutureResult<()> {
-        tracing::info!("WebSocket write: {}", message);
-        async move {
-            let ws_client = service_client().await;
-            let msg = serde_json::to_string(&PublishMessage {
-                peers: "all".into(),
-                content: message,
-            })
-            .unwrap();
-            let _ = ws_client.lock().await.send(Message::Text(msg.into())).await;
-            Ok(())
-        }
-        .boxed()
-    }
-
-    /// Perform a health check on the server.
-    fn health_check(&self) -> FutureResult<String> {
-        async move {
-            let ws_client = service_client().await;
-            ws_client.lock().await.send(Message::Ping(Bytes::new())).await.map_err(|e| Error {
-                message: format!("Websocket service is unhealthy: {e}"),
-            })?;
-            Ok("websockets service is healthy".into())
-        }
-        .boxed()
-    }
-}
-
-#[derive(Debug)]
-pub struct DefaultWebSocketServer;
-impl WebSocketServer for DefaultWebSocketServer {}

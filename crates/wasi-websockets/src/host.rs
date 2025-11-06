@@ -33,7 +33,8 @@ use server::run_server;
 use wasmtime::component::{HasData, Linker};
 use wasmtime_wasi::ResourceTable;
 
-use store_impl::{DefaultWebSocketServer, FutureResult, WebSocketServer};
+use resource::{DefaultWebSocketServer, WebSocketServer};
+use store_impl::FutureResult;
 
 use self::generated::wasi::websockets::store;
 use self::generated::wasi::websockets::store::{Host as WsHost, HostServer};
