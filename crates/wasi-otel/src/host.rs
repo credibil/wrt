@@ -31,7 +31,7 @@ use self::generated::wasi::otel as wasi;
 
 pub type FutureResult<T> = BoxFuture<'static, Result<T>>;
 
-const DEF_HTTP_ADDR: &str = "http://localhost:4318";
+const DEF_HTTP_URL: &str = "http://localhost:4318";
 
 impl<T> Host<T> for WasiOtel
 where
@@ -54,7 +54,7 @@ impl HasData for WasiOtel {
 /// A trait which provides internal WASI OpenTelemetry context.
 ///
 /// This is implemented by the resource-specific provider of OpenTelemetry
-/// functionality. For example, an in-memory store, or a Redis-backed store.
+/// functionality.
 pub trait WasiOtelCtx: Debug + Send + Sync + 'static {
     fn export(&self, request: http::Request<Vec<u8>>) -> FutureResult<()> {
         async move {
