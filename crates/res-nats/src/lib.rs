@@ -49,7 +49,7 @@ impl Resource for Client {
 
 #[derive(Debug, Clone, FromEnv)]
 pub struct ConnectOptions {
-    #[env(from = "NATS_ADDRESS", default = "demo.nats.io")]
+    #[env(from = "NATS_ADDR", default = "demo.nats.io")]
     pub address: String,
     #[env(from = "NATS_TOPICS", with = split)]
     pub topics: Option<Vec<String>>,
