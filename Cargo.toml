@@ -3,7 +3,6 @@ name = "runtime-cli"
 description = "Credibil runtime"
 publish = false
 readme = "README.md"
-# default-run = "standard"
 authors.workspace = true
 categories.workspace = true
 edition.workspace = true
@@ -14,42 +13,52 @@ repository.workspace = true
 rust-version.workspace = true
 version.workspace = true
 
-default-run = "standard"
-
-[[bin]]
-name = "standard"
-path = "src/standard.rs"
-
-[[bin]]
-name = "minimal"
-path = "src/minimal.rs"
-
-[[bin]]
-name = "rt_standard"
-path = "src/rt_standard.rs"
-
-[[bin]]
-name = "rt_minimal"
-path = "src/rt_minimal.rs"
+[lib]
+doctest = false
 
 [lints]
 workspace = true
 
 [features]
-default = ["jit"]
+default = ["jit", "standard"]
+
+# Top-level feature sets that can be used to create a specific build. Each set 
+# represents a known combination of components and resources used by wasm 
+# apps.
+minimal = ["http", "otel"]
+standard = ["http", "otel", "keyvalue", "messaging", "blobstore", "vault", "azkeyvault", "nats", "mongodb"]
+rt-http = ["http", "keyvalue", "otel", "redis"]
+rt-messaging = ["messaging", "kafka"]
+
+# WASI components
+blobstore = ["dep:wasi-blobstore"]
+http = ["dep:wasi-http", "dep:wasmtime-wasi-http"]
+keyvalue = ["dep:wasi-keyvalue"]
+messaging = ["dep:wasi-messaging"]
+otel = ["dep:wasi-otel"]
+sql = ["dep:wasi-sql"]
+vault = ["dep:wasi-vault"]
+
+# Component resources
+azkeyvault = ["dep:res-azkeyvault"]
+kafka = ["dep:res-kafka"]
+mongodb = ["dep:res-mongodb"]
+nats = ["dep:res-nats"]
+redis = ["dep:res-redis"]
+
 # Enables just-in-time wasm to machine code compilation.
 jit = ["runtime/jit"]
 
 [dependencies]
 anyhow.workspace = true
 tracing.workspace = true
-wasi-blobstore.workspace = true
-wasi-http.workspace = true
-wasi-keyvalue.workspace = true
-wasi-messaging.workspace = true
-wasi-otel.workspace = true
-wasi-sql.workspace = true
-wasi-vault.workspace = true
+wasi-blobstore = { workspace = true, optional = true }
+wasi-http = { workspace = true, optional = true }
+wasi-keyvalue = { workspace = true, optional = true }
+wasi-messaging = { workspace = true, optional = true }
+wasi-otel = { workspace = true, optional = true }
+wasi-sql = { workspace = true, optional = true }
+wasi-vault = { workspace = true, optional = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 base64ct.workspace = true
@@ -59,16 +68,16 @@ futures.workspace = true
 http.workspace = true
 http-body-util.workspace = true
 reqwest.workspace = true
-res-azkeyvault.workspace = true
-res-mongodb.workspace = true
-res-kafka.workspace = true
-res-nats.workspace = true
-res-redis.workspace = true
+res-azkeyvault = { workspace = true, optional = true }
+res-mongodb = { workspace = true, optional = true }
+res-kafka = { workspace = true, optional = true }
+res-nats = { workspace = true, optional = true }
+res-redis = { workspace = true, optional = true }
 runtime.workspace = true
-tokio.workspace = true
+tokio = { workspace = true, features = ["macros"] }
 wasmtime.workspace = true
 wasmtime-wasi.workspace = true
-wasmtime-wasi-http.workspace = true
+wasmtime-wasi-http = { workspace = true, optional = true }
 
 # required for azure_identity, etc.
 openssl = { version = "0.10", features = ["vendored"] }
