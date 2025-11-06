@@ -1,10 +1,15 @@
 #![cfg(not(target_arch = "wasm32"))]
 
 use anyhow::{Result, anyhow};
-use runtime::{Cli, Command, Parser, Runtime, Server, State};
-use tokio::io;
+use res_kafka::Client as KafkaCtx;
+use runtime::{Cli, Command, Parser, Resource, Runtime, Server, State};
+use tokio::{io, try_join};
 use wasi_http::{WasiHttp, WasiHttpCtx, WasiHttpCtxView, WasiHttpView};
+use wasi_messaging::{WasiMessaging, WasiMessagingCtxView, WasiMessagingView};
 use wasi_otel::{DefaultOtelCtx, WasiOtel, WasiOtelCtxView, WasiOtelView};
+use wasi_websockets::{
+    DefaultWebSocketsCtx, WasiWebSockets, WasiWebSocketsCtxView, WebSocketsView,
+};
 use wasmtime::component::InstancePre;
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 
@@ -14,18 +19,21 @@ async fn main() -> Result<()> {
         return Err(anyhow!("only run command is supported"));
     };
 
-    // link dependencies
-    let mut rt = Runtime::<RunData>::new(wasm).compile()?;
-    rt.link(WasiHttp)?;
-    rt.link(WasiOtel)?;
-
-    let instance_pre = rt.pre_instantiate()?;
+    // compile and link dependencies
+    let mut compiled = Runtime::<RunData>::new(wasm).compile()?;
+    compiled.link(WasiHttp)?;
+    compiled.link(WasiOtel)?;
+    compiled.link(WasiMessaging)?;
+    compiled.link(WasiWebSockets)?;
 
     // prepare state
-    let run_state = RunState { instance_pre };
+    let run_state = RunState {
+        instance_pre: compiled.pre_instantiate()?,
+        kafka_client: KafkaCtx::connect().await?,
+    };
 
     // run server(s)
-    WasiHttp.run(&run_state).await?;
+    try_join!(WasiHttp.run(&run_state), WasiWebSockets.run(&run_state))?;
 
     Ok(())
 }
@@ -33,6 +41,7 @@ async fn main() -> Result<()> {
 #[derive(Clone)]
 pub struct RunState {
     instance_pre: InstancePre<RunData>,
+    kafka_client: KafkaCtx,
 }
 
 impl State for RunState {
@@ -57,6 +66,8 @@ impl State for RunState {
             wasi_ctx,
             http_ctx: WasiHttpCtx,
             otel_ctx: DefaultOtelCtx,
+            messaging_ctx: self.kafka_client.clone(),
+            websockets_ctx: DefaultWebSocketsCtx,
         }
     }
 }
@@ -68,6 +79,8 @@ pub struct RunData {
     pub wasi_ctx: WasiCtx,
     pub http_ctx: WasiHttpCtx,
     pub otel_ctx: DefaultOtelCtx,
+    pub messaging_ctx: KafkaCtx,
+    pub websockets_ctx: DefaultWebSocketsCtx,
 }
 
 impl WasiView for RunData {
@@ -88,10 +101,28 @@ impl WasiHttpView for RunData {
     }
 }
 
+impl WasiMessagingView for RunData {
+    fn messaging(&mut self) -> WasiMessagingCtxView<'_> {
+        WasiMessagingCtxView {
+            ctx: &mut self.messaging_ctx,
+            table: &mut self.table,
+        }
+    }
+}
+
 impl WasiOtelView for RunData {
     fn otel(&mut self) -> WasiOtelCtxView<'_> {
         WasiOtelCtxView {
             ctx: &mut self.otel_ctx,
+            table: &mut self.table,
+        }
+    }
+}
+
+impl WebSocketsView for RunData {
+    fn start(&mut self) -> WasiWebSocketsCtxView<'_> {
+        WasiWebSocketsCtxView {
+            ctx: &mut self.websockets_ctx,
             table: &mut self.table,
         }
     }

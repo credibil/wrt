@@ -1,0 +1,5 @@
+package credibil:wasi-websockets;
+
+world websockets {
+    include wasi:websockets/imports@0.1.0;
+}

@@ -1,6 +1,6 @@
 # https://doc.rust-lang.org/stable/clippy/index.html
 
-doc-valid-idents = ["WebAssembly", "MongoDB", "JetStream", "NATS", "OpenTelemetry"]
+doc-valid-idents = ["JetStream", "MongoDB", "NATS", "OpenTelemetry", "WebAssembly"]
 
 allowed-duplicate-crates = [
   "addr2line",
@@ -11,8 +11,8 @@ allowed-duplicate-crates = [
   "embedded-io",
   "fallible-iterator",
   "getrandom",
-  "hashbrown",
   "gimli",
+  "hashbrown",
   "hashbrown",
   "indexmap",
   "linux-raw-sys",
@@ -32,6 +32,9 @@ allowed-duplicate-crates = [
   "thiserror",
   "thiserror-impl",
   "tokio-rustls",
+  "wasm-encoder",
+  "wasm-metadata",
+  "wasmparser",
   "webpki-roots",
   "windows-link",
   "windows-result",
@@ -46,9 +49,6 @@ allowed-duplicate-crates = [
   "windows_x86_64_gnu",
   "windows_x86_64_gnullvm",
   "windows_x86_64_msvc",
-  "wasm-encoder",
-  "wasm-metadata",
-  "wasmparser",
   "wit-bindgen",
   "wit-bindgen-core",
   "wit-bindgen-rust",

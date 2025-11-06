@@ -6,7 +6,7 @@ use res_postgres::{Client as PostgresCtx, ConnectOptions as PostgresConfig};
 use res_redis::{Client as RedisCtx, RedisConfig};
 use runtime::{Cli, Command, Parser, Resource, Runtime, Server, State};
 use tokio::{io, try_join};
-use wasi_http::{DefaultWasiHttpCtx, WasiHttp, WasiHttpCtxView, WasiHttpView};
+use wasi_http::{WasiHttp, WasiHttpCtx, WasiHttpCtxView, WasiHttpView};
 use wasi_keyvalue::{WasiKeyValue, WasiKeyValueCtxView, WasiKeyValueView};
 use wasi_messaging::{WasiMessaging, WasiMessagingCtxView, WasiMessagingView};
 use wasi_otel::{DefaultOtelCtx, WasiOtel, WasiOtelCtxView, WasiOtelView};
@@ -77,7 +77,7 @@ impl State for RunState {
         RunData {
             table: ResourceTable::new(),
             wasi_ctx,
-            http_ctx: DefaultWasiHttpCtx,
+            http_ctx: WasiHttpCtx,
             otel_ctx: DefaultOtelCtx,
             messaging_ctx: self.kafka_client.clone(),
             keyvalue_ctx: self.redis_client.clone(),
@@ -91,7 +91,7 @@ impl State for RunState {
 pub struct RunData {
     pub table: ResourceTable,
     pub wasi_ctx: WasiCtx,
-    pub http_ctx: DefaultWasiHttpCtx,
+    pub http_ctx: WasiHttpCtx,
     pub otel_ctx: DefaultOtelCtx,
     pub messaging_ctx: KafkaCtx,
     pub keyvalue_ctx: RedisCtx,

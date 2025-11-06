@@ -326,6 +326,14 @@ criteria = "safe-to-deploy"
 version = "0.15.3"
 criteria = "safe-to-deploy"
 
+[[exemptions.fromenv]]
+version = "0.1.0"
+criteria = "safe-to-deploy"
+
+[[exemptions.fromenv-derive]]
+version = "0.1.0"
+criteria = "safe-to-deploy"
+
 [[exemptions.funty]]
 version = "2.0.0"
 criteria = "safe-to-deploy"
@@ -376,6 +384,10 @@ criteria = "safe-to-deploy"
 
 [[exemptions.hyper-timeout]]
 version = "0.5.2"
+criteria = "safe-to-deploy"
+
+[[exemptions.hyper-tungstenite]]
+version = "0.19.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.icu_collections]]
@@ -930,6 +942,10 @@ criteria = "safe-to-deploy"
 version = "0.26.4"
 criteria = "safe-to-deploy"
 
+[[exemptions.tokio-tungstenite]]
+version = "0.28.0"
+criteria = "safe-to-deploy"
+
 [[exemptions.tokio-websockets]]
 version = "0.10.1"
 criteria = "safe-to-deploy"
@@ -978,6 +994,10 @@ criteria = "safe-to-deploy"
 version = "0.5.2"
 criteria = "safe-to-deploy"
 
+[[exemptions.tungstenite]]
+version = "0.28.0"
+criteria = "safe-to-deploy"
+
 [[exemptions.typed-builder]]
 version = "0.20.1"
 criteria = "safe-to-deploy"
@@ -1012,6 +1032,10 @@ criteria = "safe-to-deploy"
 
 [[exemptions.unty]]
 version = "0.0.4"
+criteria = "safe-to-deploy"
+
+[[exemptions.utf-8]]
+version = "0.7.6"
 criteria = "safe-to-deploy"
 
 [[exemptions.uuid]]

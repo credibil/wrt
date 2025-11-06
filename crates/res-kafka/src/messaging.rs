@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::env;
 use std::pin::Pin;
 use std::sync::Arc;
 
@@ -30,15 +29,13 @@ impl WasiMessagingCtx for crate::Client {
 impl Client for crate::Client {
     fn subscribe(&self) -> FutureResult<Subscriptions> {
         let client = self.clone();
-        let topics_env = env::var("KAFKA_TOPICS").unwrap_or_default();
-        let topics = topics_env.split(',').map(ToString::to_string).collect::<Vec<_>>();
 
         async move {
             let consumer = client.consumer;
             let registry = client.registry;
 
             // subscribe
-            let topics = topics.iter().map(String::as_str).collect::<Vec<_>>();
+            let topics = client.topics.iter().map(String::as_str).collect::<Vec<_>>();
             consumer.subscribe(&topics)?;
 
             // spawn a task to read messages and forward subscriber
@@ -149,9 +146,8 @@ async fn into_message(kafka_msg: &BorrowedMessage<'_>, registry: Option<&Registr
     let topic = kafka_msg.topic();
     let payload_bytes = kafka_msg.payload().unwrap_or_default().to_vec();
 
-    // TODO: when do we use 'validate_and_decode_json'??
     let payload = if let Some(sr) = &registry {
-        sr.validate_and_encode_json(topic, payload_bytes).await
+        sr.validate_and_decode_json(topic, &payload_bytes).await
     } else {
         payload_bytes
     };

@@ -1,6 +1,6 @@
 [package]
-name = "wasi-messaging"
-description = "WASI messaging WIT implementation"
+name = "wasi-websockets"
+description = "WASI WebSockets WIT implementation"
 readme = "README.md"
 authors.workspace = true
 categories.workspace = true
@@ -20,14 +20,20 @@ workspace = true
 # host dependencies
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 anyhow.workspace = true
-async-nats.workspace = true
 futures.workspace = true
-http.workspace = true
+futures-channel.workspace = true
+futures-util.workspace = true
+http-body-util.workspace = true
+hyper.workspace = true
+hyper-tungstenite.workspace = true
+hyper-util.workspace = true
 runtime.workspace = true
 serde.workspace = true
-time.workspace = true
-tokio.workspace = true
+serde_json.workspace = true
+tokio = {workspace = true, features=["sync"]}
+tokio-tungstenite.workspace = true
 tracing.workspace = true
+tungstenite.workspace = true
 wasmtime.workspace = true
 wasmtime-wasi.workspace = true
 

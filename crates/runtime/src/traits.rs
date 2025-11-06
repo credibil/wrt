@@ -1,4 +1,4 @@
-//! # Service
+//! # Traits for WASI Components
 //!
 //! This module contains traits implemented by concrete WASI services.
 //!
@@ -46,12 +46,22 @@ pub trait Server<S: State>: Debug + Sync + Send {
 /// WASI hosts that can be run implement this trait in order to allow the runtime to
 /// start them.
 pub trait Resource: Sized + Sync + Send {
-    type ConnectOptions;
+    type ConnectOptions: FromEnv;
 
     /// Connect to the resource.
-    fn connect() -> impl Future<Output = Result<Self>>;
-
-    fn connect_with(_options: &Self::ConnectOptions) -> impl Future<Output = Result<Self>> {
-        Self::connect()
+    #[must_use]
+    fn connect() -> impl Future<Output = Result<Self>> {
+        async { Self::connect_with(Self::ConnectOptions::from_env()?).await }
     }
+
+    fn connect_with(options: Self::ConnectOptions) -> impl Future<Output = Result<Self>>;
+}
+
+pub trait FromEnv: Sized {
+    /// Create connection options from environment variables.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if required environment variables are missing or invalid.
+    fn from_env() -> Result<Self>;
 }

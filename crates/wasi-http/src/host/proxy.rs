@@ -5,7 +5,7 @@ use http_body_util::BodyExt;
 use http_body_util::combinators::BoxBody;
 use wasmtime_wasi::TrappableError;
 use wasmtime_wasi_http::p3::bindings::http::types::ErrorCode;
-use wasmtime_wasi_http::p3::{RequestOptions, WasiHttpCtx};
+use wasmtime_wasi_http::p3::{self, RequestOptions};
 
 pub type HttpResult<T> = Result<T, HttpError>;
 pub type HttpError = TrappableError<ErrorCode>;
@@ -15,8 +15,9 @@ pub type HttpError = TrappableError<ErrorCode>;
 // pub type RequestOptionsResult<T> = Result<T, RequestOptionsError>;
 // pub type RequestOptionsError = TrappableError<types::RequestOptionsError>;
 
-pub struct DefaultWasiHttpCtx;
-impl WasiHttpCtx for DefaultWasiHttpCtx {
+pub struct WasiHttpCtx;
+
+impl p3::WasiHttpCtx for WasiHttpCtx {
     fn send_request(
         &mut self, request: http::Request<BoxBody<Bytes, ErrorCode>>,
         _options: Option<RequestOptions>,

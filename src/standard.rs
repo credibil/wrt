@@ -1,13 +1,13 @@
 #![cfg(not(target_arch = "wasm32"))]
 
-use anyhow::{Result, anyhow};
+use anyhow::{Context, Result, anyhow};
 use res_azkeyvault::Client as AzKeyVaultCtx;
 use res_mongodb::Client as MongoDbCtx;
-use res_nats::{Client as NatsCtx, ConnectOptions};
+use res_nats::Client as NatsCtx;
 use runtime::{Cli, Command, Parser, Resource, Runtime, Server, State};
 use tokio::{io, try_join};
 use wasi_blobstore::{WasiBlobstore, WasiBlobstoreCtxView, WasiBlobstoreView};
-use wasi_http::{DefaultWasiHttpCtx, WasiHttp, WasiHttpCtxView, WasiHttpView};
+use wasi_http::{WasiHttp, WasiHttpCtx, WasiHttpCtxView, WasiHttpView};
 use wasi_keyvalue::{WasiKeyValue, WasiKeyValueCtxView, WasiKeyValueView};
 use wasi_messaging::{WasiMessaging, WasiMessagingCtxView, WasiMessagingView};
 use wasi_otel::{DefaultOtelCtx, WasiOtel, WasiOtelCtxView, WasiOtelView};
@@ -28,7 +28,7 @@ async fn main() -> Result<()> {
         return Err(anyhow!("only run command is supported"));
     };
 
-    let nats_options = ConnectOptions::from_env()?;
+    // let nats_options = ConnectOptions::from_env()?;
 
     // compile and link dependencies
     let mut compiled = Runtime::<RunData>::new(wasm).compile()?;
@@ -42,9 +42,12 @@ async fn main() -> Result<()> {
     // prepare state
     let run_state = RunState {
         instance_pre: compiled.pre_instantiate()?,
-        nats_client: NatsCtx::connect_with(&nats_options).await?,
-        mongodb_client: MongoDbCtx::connect().await?,
-        vault_client: AzKeyVaultCtx::connect().await?,
+        // nats_client: NatsCtx::connect_with(&nats_options)
+        nats_client: NatsCtx::connect().await.context("issue connecting to nats")?,
+        mongodb_client: MongoDbCtx::connect().await.context("issue connecting to mongodb")?,
+        vault_client: AzKeyVaultCtx::connect()
+            .await
+            .context("issue connecting to azure key vault")?,
     };
 
     // run server(s)
@@ -81,7 +84,7 @@ impl State for RunState {
         RunData {
             table: ResourceTable::new(),
             wasi_ctx,
-            http_ctx: DefaultWasiHttpCtx,
+            http_ctx: WasiHttpCtx,
             otel_ctx: DefaultOtelCtx,
             messaging_ctx: self.nats_client.clone(),
             keyvalue_ctx: self.nats_client.clone(),
@@ -96,7 +99,7 @@ impl State for RunState {
 pub struct RunData {
     pub table: ResourceTable,
     pub wasi_ctx: WasiCtx,
-    pub http_ctx: DefaultWasiHttpCtx,
+    pub http_ctx: WasiHttpCtx,
     pub otel_ctx: DefaultOtelCtx,
     pub messaging_ctx: NatsCtx,
     pub keyvalue_ctx: NatsCtx,

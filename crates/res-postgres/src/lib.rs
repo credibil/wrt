@@ -1,3 +1,5 @@
+#![cfg(not(target_arch = "wasm32"))]
+
 //! Postgres client builder for runtime.
 //!
 //! TODO: This attempt uses an enum in the wit for data types as a way to map
@@ -11,6 +13,7 @@ use std::{env, str};
 
 use anyhow::{Context as _, Result, anyhow};
 use deadpool_postgres::{Config, Pool, PoolConfig, Runtime};
+use fromenv::FromEnv;
 use runtime::Resource;
 use rustls::crypto::ring;
 use rustls::{ClientConfig, RootCertStore};
@@ -30,17 +33,10 @@ pub struct Client(Pool);
 impl Resource for Client {
     type ConnectOptions = ConnectOptions;
 
-    /// Connect to `PostgreSQL` and return a connection pool
-    #[instrument(name = "Postgres::connect")]
-    async fn connect() -> Result<Self> {
-        let options = ConnectOptions::from_env()?;
-        Self::connect_with(&options).await
-    }
-
     /// Connect to `PostgreSQL` with provided options and return a connection pool
-    async fn connect_with(options: &Self::ConnectOptions) -> Result<Self> {
-        let pool_config = Config::try_from(options)?;
-
+    #[instrument]
+    async fn connect_with(options: Self::ConnectOptions) -> Result<Self> {
+        let pool_config = Config::try_from(&options)?;
         let runtime = Some(Runtime::Tokio1);
 
         if pool_config.ssl_mode.is_none() {
@@ -77,8 +73,14 @@ impl Resource for Client {
     }
 }
 
+#[derive(Debug, Clone, FromEnv)]
 pub struct ConnectOptions {
+    #[env(
+        from = "POSTGRES_URI",
+        default = "postgres://postgres:pass@localhost:5432/postgres?sslmode=disable"
+    )]
     pub uri: String,
+    #[env(from = "POSTGRES_POOL_SIZE", default = "10")]
     pub pool_size: usize,
 }
 

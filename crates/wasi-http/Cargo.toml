@@ -27,14 +27,14 @@ tracing.workspace = true
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 base64ct.workspace = true
 futures.workspace = true
-hyper = "1.7.0"
+http-body-util.workspace = true
+hyper.workspace = true
 reqwest = { workspace = true, features = ["rustls-tls"] }
 runtime.workspace = true
 tokio.workspace = true
 wasmtime = { workspace = true, features = ["component-model-async"] }
 wasmtime-wasi.workspace = true
 wasmtime-wasi-http.workspace = true
-http-body-util.workspace = true
 
 # guest dependencies
 [target.'cfg(target_arch = "wasm32")'.dependencies]
@@ -44,12 +44,12 @@ bytes.workspace = true
 credibil-encoding.workspace = true
 http-body = "1.0.1"
 http-body-util.workspace = true
+percent-encoding = "2.3.2"
 serde.workspace = true
 serde_json.workspace = true
 tower.workspace = true
-wit-bindgen.workspace = true
-percent-encoding = "2.3.2"
 wasi-keyvalue.workspace = true
 wasip3.workspace = true
+wit-bindgen.workspace = true
 
 serde_urlencoded = "0.7.1"
