@@ -9,8 +9,9 @@ use tokio_tungstenite::tungstenite::Message;
 
 #[derive(Debug, Clone)]
 pub struct PeerInfo {
-    pub sender: UnboundedSender<Message>,
+    pub is_service: bool,
     pub query: String,
+    pub sender: UnboundedSender<Message>,
 }
 
 pub type PeerMap = Arc<Mutex<HashMap<SocketAddr, PeerInfo>>>;

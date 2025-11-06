@@ -56,20 +56,21 @@ async fn accept_connection(
     peer_map: PeerMap, peer: SocketAddr, ws_stream: WebSocketStream<TokioIo<Upgraded>>,
 ) {
     let (tx, rx) = unbounded();
+
+    let is_service = peer.ip().is_loopback();
     peer_map.lock().unwrap().insert(
         peer,
         PeerInfo {
-            sender: tx,
+            is_service,
             query: String::new(),
+            sender: tx,
         },
     );
-
-    let is_service_peer = peer.ip().is_loopback();
 
     let (outgoing, incoming) = ws_stream.split();
 
     let broadcast_incoming = incoming.try_for_each(|msg| {
-        if is_service_peer {
+        if is_service {
             if Message::Ping(Bytes::new()) == msg {
                 tracing::info!("Received ping from service peer {}", peer);
                 return future::ok(());

@@ -32,6 +32,7 @@ pub trait WebSocketServer: Debug + Send + Sync + 'static {
             .lock()
             .unwrap()
             .iter()
+            .filter(|(_, peer)| !peer.is_service)
             .map(|(key, peer)| Peer {
                 address: key.to_string(),
                 query: peer.query.clone(),

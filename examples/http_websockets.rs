@@ -48,11 +48,7 @@ async fn post_handler(body: String) -> Result<Json<Value>> {
             return Err(anyhow!("error retrieving websocket peers").into());
         }
     };
-    let recipients: Vec<String> = client_peers
-        .iter()
-        .filter(|p| !(p.address.starts_with("127.0.0.1") || p.address.starts_with("localhost")))
-        .map(|p| p.address.clone())
-        .collect();
+    let recipients: Vec<String> = client_peers.iter().map(|p| p.address.clone()).collect();
 
     if let Err(e) = server.send_peers(&body, &recipients) {
         println!("Error sending websocket message: {e}");
