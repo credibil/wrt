@@ -4,13 +4,15 @@ use std::path::PathBuf;
 
 use anyhow::Result;
 #[cfg(feature = "azure")]
-use res_azure::Client as AzKeyVaultCtx;
+use res_azure::Client as AzureCtx;
 #[cfg(all(feature = "kafka", not(feature = "nats")))]
 use res_kafka::Client as KafkaCtx;
 #[cfg(feature = "mongodb")]
 use res_mongodb::Client as MongoDbCtx;
 #[cfg(feature = "nats")]
 use res_nats::Client as NatsCtx;
+#[cfg(feature = "postgres")]
+use res_postgres::Client as PostgresCtx;
 #[cfg(feature = "redis")]
 use res_redis::Client as RedisCtx;
 #[cfg(any(
@@ -18,7 +20,8 @@ use res_redis::Client as RedisCtx;
     feature = "kafka",
     feature = "mongodb",
     feature = "nats",
-    feature = "redis"
+    feature = "redis",
+    feature = "postgres"
 ))]
 use runtime::Resource;
 #[cfg(any(feature = "http", feature = "messaging", feature = "websockets"))]
@@ -34,6 +37,8 @@ use wasi_keyvalue::{WasiKeyValue, WasiKeyValueCtxView, WasiKeyValueView};
 use wasi_messaging::{WasiMessaging, WasiMessagingCtxView, WasiMessagingView};
 #[cfg(feature = "otel")]
 use wasi_otel::{DefaultOtelCtx, WasiOtel, WasiOtelCtxView, WasiOtelView};
+#[cfg(feature = "sql")]
+use wasi_sql::{WasiSql, WasiSqlCtxView, WasiSqlView};
 #[cfg(feature = "vault")]
 use wasi_vault::{WasiVault, WasiVaultCtxView, WasiVaultView};
 #[cfg(feature = "websockets")]
@@ -62,6 +67,8 @@ pub async fn run(wasm: PathBuf) -> Result<()> {
     compiled.link(WasiMessaging)?;
     #[cfg(feature = "otel")]
     compiled.link(WasiOtel)?;
+    #[cfg(feature = "sql")]
+    compiled.link(WasiSql)?;
     #[cfg(feature = "vault")]
     compiled.link(WasiVault)?;
     #[cfg(feature = "websockets")]
@@ -71,16 +78,18 @@ pub async fn run(wasm: PathBuf) -> Result<()> {
     let run_state = RunState {
         instance_pre: compiled.pre_instantiate()?,
 
+        #[cfg(feature = "azure")]
+        azure_ctx: AzureCtx::connect().await?,
         #[cfg(all(feature = "kafka", not(feature = "nats")))]
         kafka_ctx: KafkaCtx::connect().await?,
-        #[cfg(feature = "nats")]
-        nats_ctx: NatsCtx::connect().await?,
         #[cfg(feature = "mongodb")]
         mongodb_ctx: MongoDbCtx::connect().await?,
+        #[cfg(feature = "nats")]
+        nats_ctx: NatsCtx::connect().await?,
+        #[cfg(feature = "postgres")]
+        postgres_ctx: PostgresCtx::connect().await?,
         #[cfg(feature = "redis")]
         redis_ctx: RedisCtx::connect().await?,
-        #[cfg(feature = "azure")]
-        azure_ctx: AzKeyVaultCtx::connect().await?,
     };
 
     // single server
@@ -118,16 +127,18 @@ pub async fn run(wasm: PathBuf) -> Result<()> {
 pub struct RunState {
     instance_pre: InstancePre<RunData>,
 
+    #[cfg(feature = "azure")]
+    azure_ctx: AzureCtx,
     #[cfg(all(feature = "kafka", not(feature = "nats")))]
     kafka_ctx: KafkaCtx,
     #[cfg(feature = "mongodb")]
     mongodb_ctx: MongoDbCtx,
     #[cfg(feature = "nats")]
     nats_ctx: NatsCtx,
+    #[cfg(feature = "postgres")]
+    postgres_ctx: PostgresCtx,
     #[cfg(feature = "redis")]
     redis_ctx: RedisCtx,
-    #[cfg(feature = "azure")]
-    azure_ctx: AzKeyVaultCtx,
 }
 
 impl State for RunState {
@@ -166,6 +177,8 @@ impl State for RunState {
             messaging_ctx: self.nats_ctx.clone(),
             #[cfg(feature = "otel")]
             otel_ctx: DefaultOtelCtx,
+            #[cfg(all(feature = "sql", feature = "postgres"))]
+            sql_ctx: self.postgres_ctx.clone(),
             #[cfg(all(feature = "vault", feature = "azure"))]
             vault_ctx: self.azure_ctx.clone(),
             #[cfg(feature = "websockets")]
@@ -195,8 +208,10 @@ pub struct RunData {
     pub messaging_ctx: NatsCtx,
     #[cfg(feature = "otel")]
     pub otel_ctx: DefaultOtelCtx,
+    #[cfg(all(feature = "sql", feature = "postgres"))]
+    pub sql_ctx: PostgresCtx,
     #[cfg(all(feature = "vault", feature = "azure"))]
-    pub vault_ctx: AzKeyVaultCtx,
+    pub vault_ctx: AzureCtx,
     #[cfg(feature = "websockets")]
     pub websockets_ctx: DefaultWebSocketsCtx,
 }
@@ -255,6 +270,16 @@ impl WasiOtelView for RunData {
     fn otel(&mut self) -> WasiOtelCtxView<'_> {
         WasiOtelCtxView {
             ctx: &mut self.otel_ctx,
+            table: &mut self.table,
+        }
+    }
+}
+
+#[cfg(feature = "sql")]
+impl WasiSqlView for RunData {
+    fn sql(&mut self) -> WasiSqlCtxView<'_> {
+        WasiSqlCtxView {
+            ctx: &mut self.sql_ctx,
             table: &mut self.table,
         }
     }

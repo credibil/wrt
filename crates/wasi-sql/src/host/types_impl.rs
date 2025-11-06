@@ -2,7 +2,7 @@ use anyhow::Result;
 use wasmtime::component::{Accessor, Resource};
 
 use crate::host::generated::wasi::sql::types::{
-    Connection, Error, Host, HostConnection, HostConnectionWithStore, HostError,
+    Connection, DataType, Error, Host, HostConnection, HostConnectionWithStore, HostError,
     HostErrorWithStore, HostStatement, HostStatementWithStore, Statement,
 };
 use crate::host::resource::ConnectionProxy;
@@ -34,7 +34,7 @@ impl HostConnectionWithStore for WasiSql {
 
 impl HostStatementWithStore for WasiSql {
     async fn prepare<T>(
-        accessor: &Accessor<T, Self>, query: String, params: Vec<String>,
+        accessor: &Accessor<T, Self>, query: String, params: Vec<DataType>,
     ) -> Result<Result<Resource<Statement>, Resource<Error>>> {
         let statement = Statement { query, params };
         Ok(Ok(accessor.with(|mut store| store.get().table.push(statement))?))

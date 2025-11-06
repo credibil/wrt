@@ -1,6 +1,6 @@
-//! # Host implementation for WASI Vault Service
+//! # Host implementation for WASI SQL Service
 //!
-//! This module implements the host-side logic for the WASI Vault service.
+//! This module implements the host-side logic for the WASI SQL service.
 
 mod readwrite_impl;
 mod resource;
@@ -38,7 +38,7 @@ use wasmtime::component::{HasData, Linker};
 use wasmtime_wasi::ResourceTable;
 
 use self::generated::wasi::sql::{readwrite, types};
-pub use crate::host::generated::wasi::sql::types::{DataType, Row};
+pub use crate::host::generated::wasi::sql::types::{DataType, Field, FormattedValue, Row};
 pub use crate::host::resource::*;
 
 impl<T> Host<T> for WasiSql
@@ -57,17 +57,17 @@ impl HasData for WasiSql {
     type Data<'a> = WasiSqlCtxView<'a>;
 }
 
-/// A trait which provides internal WASI Key-Value context.
+/// A trait which provides internal WASI SQL context.
 ///
-/// This is implemented by the resource-specific provider of Key-Value
-/// functionality. For example, an in-memory store, or a Redis-backed store.
+/// This is implemented by the resource-specific provider of SQL
+/// functionality. For example, `PostgreSQL`, `MySQL`, `SQLite`, etc.
 pub trait WasiSqlCtx: Debug + Send + Sync + 'static {
     fn open(&self, name: String) -> FutureResult<Arc<dyn Connection>>;
 }
 
 /// View into [`WasiSqlCtx`] implementation and [`ResourceTable`].
 pub struct WasiSqlCtxView<'a> {
-    /// Mutable reference to the WASI Key-Value context.
+    /// Mutable reference to the WASI SQL context.
     pub ctx: &'a mut dyn WasiSqlCtx,
 
     /// Mutable reference to table used to manage resources.
