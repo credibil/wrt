@@ -15,7 +15,6 @@ use azure_core::credentials::TokenCredential;
 use azure_identity::ClientSecretCredential;
 use azure_identity::DeveloperToolsCredential;
 use azure_security_keyvault_secrets::SecretClient;
-#[cfg(debug_assertions)]
 use fromenv::FromEnv;
 use runtime::Resource;
 use tracing::instrument;
