@@ -75,11 +75,8 @@ wasi-sql = { workspace = true, optional = true }
 wasi-vault = { workspace = true, optional = true }
 wasi-websockets = { workspace = true, optional = true }
 
-wasip3.workspace = true
-
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 base64ct.workspace = true
-build-macro = { path = "crates/build-macro", version = "0.13.0", registry = "credibil" }
 bytes.workspace = true
 futures.workspace = true
 http.workspace = true
