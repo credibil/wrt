@@ -31,6 +31,7 @@ default = ["jit", "http-default", "otel-default"]
 credibil = ["http-default", "otel-default", "blobstore-mongodb", "keyvalue-nats", "messaging-nats", "vault-azure"]
 realtime-http = ["http-default", "otel-default", "keyvalue-redis"]
 realtime-messaging = ["messaging-kafka"]
+realtime-websockets = ["http-default", "otel-default", "websockets-default"]
 
 # Component-Resource tuples
 blobstore-mongodb = ["blobstore", "mongodb"]
