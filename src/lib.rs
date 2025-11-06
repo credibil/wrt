@@ -5,14 +5,14 @@ use std::path::PathBuf;
 use anyhow::Result;
 #[cfg(feature = "azkeyvault")]
 use res_azkeyvault::Client as AzKeyVaultCtx;
-#[cfg(feature = "kafka")]
+#[cfg(all(feature = "kafka", not(feature = "nats")))]
 use res_kafka::Client as KafkaCtx;
 #[cfg(feature = "mongodb")]
 use res_mongodb::Client as MongoDbCtx;
 #[cfg(feature = "nats")]
 use res_nats::Client as NatsCtx;
 #[cfg(feature = "redis")]
-use res_redis::{Client as RedisCtx, ConnectOptions as RedisConfig};
+use res_redis::Client as RedisCtx;
 #[cfg(any(
     feature = "azkeyvault",
     feature = "kafka",
@@ -65,7 +65,7 @@ pub async fn run(wasm: PathBuf) -> Result<()> {
     let run_state = RunState {
         instance_pre: compiled.pre_instantiate()?,
 
-        #[cfg(feature = "kafka")]
+        #[cfg(all(feature = "kafka", not(feature = "nats")))]
         kafka_ctx: KafkaCtx::connect().await?,
         #[cfg(feature = "nats")]
         nats_ctx: NatsCtx::connect().await?,
@@ -94,7 +94,7 @@ pub async fn run(wasm: PathBuf) -> Result<()> {
 pub struct RunState {
     instance_pre: InstancePre<RunData>,
 
-    #[cfg(feature = "kafka")]
+    #[cfg(all(feature = "kafka", not(feature = "nats")))]
     kafka_ctx: KafkaCtx,
     #[cfg(feature = "mongodb")]
     mongodb_ctx: MongoDbCtx,
@@ -132,11 +132,11 @@ impl State for RunState {
             blobstore_ctx: self.mongodb_ctx.clone(),
             #[cfg(feature = "http")]
             http_ctx: WasiHttpCtx,
-            #[cfg(all(feature = "keyvalue", feature = "nats"))]
+            #[cfg(all(feature = "keyvalue", all(feature = "nats", not(feature = "redis"))))]
             keyvalue_ctx: self.nats_ctx.clone(),
             #[cfg(all(feature = "keyvalue", feature = "redis"))]
             keyvalue_ctx: self.redis_ctx.clone(),
-            #[cfg(all(feature = "messaging", feature = "kafka"))]
+            #[cfg(all(feature = "messaging", all(feature = "kafka", not(feature = "nats"))))]
             messaging_ctx: self.kafka_ctx.clone(),
             #[cfg(all(feature = "messaging", feature = "nats"))]
             messaging_ctx: self.nats_ctx.clone(),
@@ -159,11 +159,11 @@ pub struct RunData {
     pub blobstore_ctx: MongoDbCtx,
     #[cfg(feature = "http")]
     pub http_ctx: WasiHttpCtx,
-    #[cfg(all(feature = "keyvalue", feature = "nats"))]
+    #[cfg(all(feature = "keyvalue", all(feature = "nats", not(feature = "redis"))))]
     pub keyvalue_ctx: NatsCtx,
     #[cfg(all(feature = "keyvalue", feature = "redis"))]
     pub keyvalue_ctx: RedisCtx,
-    #[cfg(all(feature = "messaging", feature = "kafka"))]
+    #[cfg(all(feature = "messaging", all(feature = "kafka", not(feature = "nats"))))]
     pub messaging_ctx: KafkaCtx,
     #[cfg(all(feature = "messaging", feature = "nats"))]
     pub messaging_ctx: NatsCtx,

@@ -47,7 +47,7 @@ version = "3.4.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.async-nats]]
-version = "0.44.2"
+version = "0.45.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.async-recursion]]
@@ -427,7 +427,7 @@ version = "2.11.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.iri-string]]
-version = "0.7.8"
+version = "0.7.9"
 criteria = "safe-to-deploy"
 
 [[exemptions.itertools]]
@@ -763,7 +763,7 @@ version = "0.22.4"
 criteria = "safe-to-deploy"
 
 [[exemptions.rustls]]
-version = "0.23.34"
+version = "0.23.35"
 criteria = "safe-to-deploy"
 
 [[exemptions.rustls-native-certs]]
@@ -803,7 +803,7 @@ version = "0.9.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.schemars]]
-version = "1.0.5"
+version = "1.1.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.security-framework]]

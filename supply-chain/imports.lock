@@ -676,8 +676,8 @@ user-login = "Thomasdezeeuw"
 user-name = "Thomas de Zeeuw"
 
 [[publisher.syn]]
-version = "2.0.108"
-when = "2025-10-22"
+version = "2.0.109"
+when = "2025-11-05"
 user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
@@ -823,8 +823,8 @@ user-login = "alexcrichton"
 user-name = "Alex Crichton"
 
 [[publisher.wasip3]]
-version = "0.2.1+wasi-0.3.0-rc-2025-09-16"
-when = "2025-10-23"
+version = "0.2.2+wasi-0.3.0-rc-2025-09-16"
+when = "2025-11-04"
 user-id = 1
 user-login = "alexcrichton"
 user-name = "Alex Crichton"

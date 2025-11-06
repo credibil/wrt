@@ -20,7 +20,7 @@ doctest = false
 workspace = true
 
 [features]
-default = ["jit", "standard"]
+default = ["jit", "rt-http"]
 
 # Top-level feature sets that can be used to create a specific build. Each set 
 # represents a known combination of components and resources used by wasm 
@@ -208,7 +208,7 @@ unused_result_ok = "warn"
 
 [workspace.dependencies]
 anyhow = "1.0.100"
-async-nats = { version = "0.44.2" }
+async-nats = { version = "0.45.0" }
 axum = { version = "0.8.4", default-features = false, features = ["json"] }
 azure_core = "0.29.1"
 azure_identity = "0.29.0"
