@@ -1,4 +1,9 @@
 //! Postgres client builder for runtime.
+//!
+//! TODO: This attempt uses an enum in the wit for data types as a way to map
+//! a few of the many Postgres types to Rust types. Investigate if using any low
+//! level tools inside an ORM crate like Diesel would get us better type
+//! coverage with less effort.
 
 mod sql;
 

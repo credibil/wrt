@@ -10,11 +10,11 @@ use anyhow::anyhow;
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use bytes::Bytes;
-use serde_json::{Map, Value, json};
+use serde_json::{Value, json};
 use tracing::Level;
 use wasi_http::Result;
-use wasi_sql::readwrite;
-use wasi_sql::types::{Connection, DataType, Statement};
+use wasi_sql::types::{Connection, DataType, FormattedValue, Statement};
+use wasi_sql::{json_rows, readwrite};
 use wasip3::exports::http::handler::Guest;
 use wasip3::http::types::{ErrorCode, Request, Response};
 
@@ -44,17 +44,7 @@ async fn select(body: Bytes) -> Result<Json<Value>> {
 
     let res = readwrite::query(&pool, &stmt).map_err(|e| anyhow!("query failed: {e:?}"))?;
 
-    let mut json_map = Map::new();
-    for row in &res {
-        let key = &row.field_name;
-        let DataType::Str(data_value) = &row.value else {
-            return Err(anyhow!("expected string data type for field value").into());
-        };
-        let value: Value = serde_json::from_str(&data_value)
-            .map_err(|_| anyhow!("failed to convert field value to JSON"))?;
-        json_map.insert(key.clone(), value);
-    }
-    let serialized_rows = Value::Object(json_map);
+    let serialized_rows = json_rows(res)?;
 
     Ok(Json(serialized_rows))
 }
@@ -63,11 +53,19 @@ async fn select(body: Bytes) -> Result<Json<Value>> {
 #[wasi_otel::instrument]
 async fn insert(body: Bytes) -> Result<Json<Value>> {
     tracing::info!("handling request with body: {:?}", body);
-    let query = "insert into mytable (feed_id, agency_id, agency_name, agency_url, agency_timezone) values ($1, $2, $3, $4, $5);";
-    let params: Vec<String> = ["1224", "test1", "name1", "url1", "NZL"]
-        .iter()
-        .map(std::string::ToString::to_string)
-        .collect();
+    let query = "insert into mytable (feed_id, agency_id, agency_name, agency_url, agency_timezone, created_at) values ($1, $2, $3, $4, $5, $6);";
+    let params: Vec<DataType> = [
+        DataType::Int32(Some(1224)),
+        DataType::Str(Some("test1".to_string())),
+        DataType::Str(Some("name1".to_string())),
+        DataType::Str(Some("url1".to_string())),
+        DataType::Str(Some("NZL".to_string())),
+        DataType::Timestamp(Some(FormattedValue {
+            value: "2025-11-06T00:05:30".to_string(),
+            format: "%Y-%m-%dT%H:%M:%S".to_string(),
+        })),
+    ]
+    .to_vec();
 
     tracing::debug!("opening connection to postgres");
     let pool =

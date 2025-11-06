@@ -38,7 +38,7 @@ use wasmtime::component::{HasData, Linker};
 use wasmtime_wasi::ResourceTable;
 
 use self::generated::wasi::sql::{readwrite, types};
-pub use crate::host::generated::wasi::sql::types::{DataType, Row};
+pub use crate::host::generated::wasi::sql::types::{DataType, Field, FormattedValue, Row};
 pub use crate::host::resource::*;
 
 impl<T> Host<T> for WasiSql

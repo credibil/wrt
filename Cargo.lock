@@ -5515,8 +5515,10 @@ name = "wasi-sql"
 version = "0.13.0"
 dependencies = [
  "anyhow",
+ "base64ct",
  "futures",
  "runtime",
+ "serde_json",
  "tracing",
  "wasmtime",
  "wasmtime-wasi",

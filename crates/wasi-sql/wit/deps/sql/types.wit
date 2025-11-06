@@ -1,8 +1,15 @@
 interface types {
+
+    /// one field in a row
+    record field {
+        name: string,
+        value: data-type,
+    }
+
     /// one single row item
     record row {
-        field-name: string,
-        value: data-type,
+        index: string,
+        fields: list<field>,
     }
 
     /// data value with format hint for parsing

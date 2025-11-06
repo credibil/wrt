@@ -19,7 +19,6 @@ workspace = true
 
 # host dependencies
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-anyhow.workspace = true
 futures.workspace = true
 runtime.workspace = true
 tracing.workspace = true
@@ -28,4 +27,10 @@ wasmtime-wasi.workspace = true
 
 # guest dependencies
 [target.'cfg(target_arch = "wasm32")'.dependencies]
+base64ct.workspace = true
+serde_json.workspace = true
 wit-bindgen.workspace = true
+
+# shared dependencies
+[dependencies]
+anyhow.workspace = true
