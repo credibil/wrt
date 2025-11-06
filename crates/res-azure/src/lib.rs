@@ -2,7 +2,7 @@
 
 //! Azure Key Vault Secrets Client.
 
-mod vault;
+mod key_vault;
 
 use std::fmt::Debug;
 use std::sync::Arc;
@@ -15,7 +15,6 @@ use azure_core::credentials::TokenCredential;
 use azure_identity::ClientSecretCredential;
 use azure_identity::DeveloperToolsCredential;
 use azure_security_keyvault_secrets::SecretClient;
-#[cfg(debug_assertions)]
 use fromenv::FromEnv;
 use runtime::Resource;
 use tracing::instrument;
@@ -62,14 +61,14 @@ impl Resource for Client {
 #[cfg(debug_assertions)]
 #[derive(Debug, Clone, FromEnv)]
 pub struct ConnectOptions {
-    #[env(from = "AZURE_KEYVAULT_ADDR")]
+    #[env(from = "AZURE_KEYVAULT_URL")]
     pub address: String,
 }
 
 #[cfg(not(debug_assertions))]
 #[derive(Debug, Clone, FromEnv)]
 pub struct ConnectOptions {
-    #[env(from = "AZURE_KEYVAULT_ADDR")]
+    #[env(from = "AZURE_KEYVAULT_URL")]
     pub address: String,
     #[env(from = "AZURE_TENANT_ID")]
     pub tenant_id: String,

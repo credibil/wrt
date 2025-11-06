@@ -17,7 +17,7 @@ use tracing::instrument;
 #[derive(Debug, Clone)]
 pub struct Client {
     inner: async_nats::Client,
-    topics: Vec<String>,
+    topics: Option<Vec<String>>,
 }
 
 impl Resource for Client {
@@ -32,7 +32,6 @@ impl Resource for Client {
         {
             let key_pair = nkeys::KeyPair::from_seed(seed).context("creating KeyPair")?;
             let key_pair = Arc::new(key_pair);
-
             nats_opts = nats_opts.jwt(jwt.clone(), move |nonce| {
                 let key_pair = Arc::clone(&key_pair);
                 async move { key_pair.sign(&nonce).map_err(AuthError::new) }
@@ -50,10 +49,10 @@ impl Resource for Client {
 
 #[derive(Debug, Clone, FromEnv)]
 pub struct ConnectOptions {
-    #[env(from = "NATS_ADDRESS", default = "demo.nats.io")]
+    #[env(from = "NATS_ADDR", default = "demo.nats.io")]
     pub address: String,
     #[env(from = "NATS_TOPICS", with = split)]
-    pub topics: Vec<String>,
+    pub topics: Option<Vec<String>>,
     #[env(from = "NATS_JWT")]
     pub jwt: Option<String>,
     #[env(from = "NATS_SEED")]

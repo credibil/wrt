@@ -2,12 +2,12 @@ use std::collections::HashMap;
 use std::pin::Pin;
 use std::sync::Arc;
 
+use anyhow::anyhow;
 use futures::Stream;
 use futures::future::FutureExt;
 use futures::stream::StreamExt;
 use futures::task::{Context, Poll};
 use rdkafka::Message as _;
-use rdkafka::consumer::Consumer;
 use rdkafka::message::{BorrowedMessage, Headers};
 use rdkafka::producer::BaseRecord;
 use tokio::sync::mpsc;
@@ -31,12 +31,10 @@ impl Client for crate::Client {
         let client = self.clone();
 
         async move {
-            let consumer = client.consumer;
+            let Some(consumer) = client.consumer else {
+                return Err(anyhow!("No topics specified"));
+            };
             let registry = client.registry;
-
-            // subscribe
-            let topics = client.topics.iter().map(String::as_str).collect::<Vec<_>>();
-            consumer.subscribe(&topics)?;
 
             // spawn a task to read messages and forward subscriber
             let (sender, receiver) = mpsc::channel::<Message>(CAPACITY);

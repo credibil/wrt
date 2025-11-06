@@ -23,10 +23,7 @@ use prost::Message;
 use wasmtime::component::Accessor;
 
 use crate::host::generated::wasi::otel::metrics::{self as wasi, HostWithStore};
-use crate::host::{DEF_HTTP_ADDR, WasiOtel, WasiOtelCtxView};
-
-// *** WASIP3 ***
-// use `HostWithStore` to add async support`
+use crate::host::{DEF_HTTP_URL, WasiOtel, WasiOtelCtxView};
 
 impl HostWithStore for WasiOtel {
     async fn export<T>(
@@ -43,7 +40,7 @@ impl HostWithStore for WasiOtel {
         let body = Message::encode_to_vec(&request);
 
         // build request to send to collector
-        let addr = env::var("OTEL_HTTP_ADDR").unwrap_or_else(|_| DEF_HTTP_ADDR.to_string());
+        let addr = env::var("OTEL_HTTP_URL").unwrap_or_else(|_| DEF_HTTP_URL.to_string());
         let request = http::Request::builder()
             .method("POST")
             .uri(format!("{addr}/v1/metrics"))

@@ -25,14 +25,14 @@ use wasmtime_wasi_http::p3::bindings::http::types::{self as wasi, ErrorCode};
 
 type OutgoingBody = BoxBody<Bytes, anyhow::Error>;
 
-const DEF_HTTP_ADDR: &str = "0.0.0.0:8080";
+const DEF_HTTP_URL: &str = "0.0.0.0:8080";
 
 pub async fn serve<S>(state: &S) -> Result<()>
 where
     S: State,
     <S as State>::StoreData: WasiHttpView,
 {
-    let addr = env::var("HTTP_ADDR").unwrap_or_else(|_| DEF_HTTP_ADDR.into());
+    let addr = env::var("HTTP_ADDR").unwrap_or_else(|_| DEF_HTTP_URL.into());
     let listener = TcpListener::bind(&addr).await?;
     tracing::info!("http server listening on: {}", listener.local_addr()?);
 

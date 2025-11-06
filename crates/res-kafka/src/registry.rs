@@ -3,13 +3,13 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use jsonschema::validate;
-use schema_registry_client::rest::client_config::ClientConfig as SchemaClientConfig;
+use schema_registry_client::rest::client_config::ClientConfig as RegistryConfig;
 use schema_registry_client::rest::schema_registry_client::{Client, SchemaRegistryClient};
 use serde_json::Value;
 use tokio::sync::Mutex;
 use tokio::time;
 
-use crate::SchemaConfig;
+use crate::RegistryOptions;
 
 /// Schema Registry client with caching
 #[derive(Clone)]
@@ -18,28 +18,21 @@ pub struct Registry {
     schemas: Arc<Mutex<HashMap<String, (i32, Value)>>>,
 }
 
-/// Constants for encoding/decoding
-const MAGIC_BYTE: u8 = 0;
+/// Endianness byte used in schema registry payloads
+const BIG_ENDIAN: u8 = 0;
 
 impl Registry {
     /// Create a new Schema Registry client
     #[must_use]
-    pub fn new(schema_cfg: &SchemaConfig) -> Self {
-        let mut client_config = SchemaClientConfig::new(vec![schema_cfg.url.clone()]);
-
-        if let Some(api_key) = &schema_cfg.api_key {
-            client_config.basic_auth = Some((api_key.clone(), schema_cfg.api_secret.clone()));
-        }
+    pub fn new(options: RegistryOptions) -> Self {
+        let mut config = RegistryConfig::new(vec![options.url.clone()]);
+        config.basic_auth = Some((options.api_key, Some(options.api_secret)));
 
         let sr_client = Self {
-            client: Some(SchemaRegistryClient::new(client_config)),
+            client: Some(SchemaRegistryClient::new(config)),
             schemas: Arc::new(Mutex::new(HashMap::new())),
         };
-
-        // start background cache cleaner only when TTL is provided
-        if let Some(ttl_secs) = schema_cfg.cache_ttl_secs {
-            sr_client.start_cache_cleaner(ttl_secs);
-        }
+        sr_client.start_cache_cleaner(options.cache_ttl_secs);
 
         sr_client
     }
@@ -178,7 +171,7 @@ impl Payload<'_> {
     #[must_use]
     pub fn encode(registry_id: i32, payload: Vec<u8>) -> Vec<u8> {
         let mut buf = Vec::with_capacity(1 + 4 + payload.len());
-        buf.push(MAGIC_BYTE);
+        buf.push(BIG_ENDIAN);
         buf.extend(&registry_id.to_be_bytes());
         buf.extend(payload);
         buf
@@ -205,7 +198,7 @@ impl Payload<'_> {
 
 #[cfg(test)]
 mod tests {
-    use super::*; // brings Payload, MAGIC_BYTE, MessagingError into scope
+    use super::*; // brings Payload, BIG_ENDIAN, MessagingError into scope
 
     #[test]
     fn encode_then_decode_roundtrip() {
@@ -218,7 +211,7 @@ mod tests {
 
         // Expected layout:
         // [ magic_byte ][ registry_id (4 bytes BE) ][ payload... ]
-        assert_eq!(encoded[0], MAGIC_BYTE, "magic byte mismatch");
+        assert_eq!(encoded[0], BIG_ENDIAN, "magic byte mismatch");
 
         let expected_id_bytes = registry_id.to_be_bytes();
         assert_eq!(&encoded[1..5], &expected_id_bytes, "registry id mismatch");
@@ -227,7 +220,7 @@ mod tests {
         // Decode
         let decoded = Payload::decode(&encoded).expect("decode failed");
 
-        assert_eq!(decoded.magic_byte, MAGIC_BYTE);
+        assert_eq!(decoded.magic_byte, BIG_ENDIAN);
         assert_eq!(decoded.registry_id, registry_id);
         assert_eq!(decoded.data, payload.as_slice());
     }

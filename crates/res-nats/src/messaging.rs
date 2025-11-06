@@ -20,15 +20,17 @@ impl Client for crate::Client {
         let client = self.clone();
 
         async move {
-            let mut subscribers = vec![];
+            let Some(topics) = client.topics else {
+                return Err(anyhow!("No topics specified"));
+            };
 
-            for t in &client.topics {
-                tracing::debug!("subscribing to {t}");
+            let mut subscribers = vec![];
+            for t in &topics {
                 let subscriber = client.inner.subscribe(t.clone()).await?;
                 subscribers.push(subscriber);
             }
 
-            tracing::info!("subscribed to {:?} topics", client.topics);
+            tracing::info!("subscribed to {topics:?} topics");
 
             // process messages until terminated
             let stream = stream::select_all(subscribers).map(into_message);

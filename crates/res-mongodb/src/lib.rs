@@ -28,7 +28,7 @@ impl Resource for Client {
 
 #[derive(Clone, Debug, FromEnv)]
 pub struct ConnectOptions {
-    #[env(from = "MONGODB_URI")]
+    #[env(from = "MONGODB_URL")]
     pub uri: String,
 }
 
