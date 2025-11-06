@@ -69,6 +69,7 @@ res-azkeyvault.workspace = true
 res-mongodb.workspace = true
 res-kafka.workspace = true
 res-nats.workspace = true
+res-postgres.workspace = true
 res-redis.workspace = true
 runtime.workspace = true
 tokio.workspace = true
@@ -144,6 +145,11 @@ crate-type = ["cdylib"]
 [[example]]
 name = "http-websockets"
 path = "examples/http_websockets.rs"
+crate-type = ["cdylib"]
+
+[[example]]
+name = "postgres"
+path = "examples/postgres/lib.rs"
 crate-type = ["cdylib"]
 
 [profile.release]
@@ -268,6 +274,7 @@ res-azkeyvault = { path = "crates/res-azkeyvault", version = "0.13.0", registry 
 res-kafka = { path = "crates/res-kafka", version = "0.13.0", registry = "credibil" }
 res-mongodb = { path = "crates/res-mongodb", version = "0.13.0", registry = "credibil" }
 res-nats = { path = "crates/res-nats", version = "0.13.0", registry = "credibil" }
+res-postgres = { path = "crates/res-postgres", version = "0.13.0", registry = "credibil" }
 res-redis = { path = "crates/res-redis", version = "0.13.0", registry = "credibil" }
 runtime = { path = "crates/runtime", version = "0.13.0", registry = "credibil" }
 wasi-blobstore = { path = "crates/wasi-blobstore", version = "0.13.0", registry = "credibil" }

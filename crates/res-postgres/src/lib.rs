@@ -1,10 +1,15 @@
 #![cfg(not(target_arch = "wasm32"))]
 
 //! Postgres client builder for runtime.
+//!
+//! TODO: This attempt uses an enum in the wit for data types as a way to map
+//! a few of the many Postgres types to Rust types. Investigate if using any low
+//! level tools inside an ORM crate like Diesel would get us better type
+//! coverage with less effort.
 
 mod sql;
 
-use std::{env, str};
+use std::str;
 
 use anyhow::{Context as _, Result, anyhow};
 use deadpool_postgres::{Config, Pool, PoolConfig, Runtime};
@@ -18,7 +23,7 @@ use tracing::instrument;
 use webpki_roots::TLS_SERVER_ROOTS;
 
 /// Postgres client
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Client(Pool);
 
 /// Postgres resource builder
@@ -53,6 +58,11 @@ impl Resource for Client {
         let pool = pool_config
             .create_pool(runtime, MakeRustlsConnect::new(client_config))
             .context("failed to create postgres pool")?;
+
+        // Check pool is usable
+        if pool.get().await.is_err() {
+            return Err(anyhow!("failed to get connection from pool"));
+        }
 
         tracing::info!("connected to Postgres");
 
