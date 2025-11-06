@@ -2,7 +2,7 @@
 
 //! Azure Key Vault Secrets Client.
 
-mod vault;
+mod key_vault;
 
 use std::fmt::Debug;
 use std::sync::Arc;

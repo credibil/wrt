@@ -84,3 +84,21 @@ fn into_error(e: reqwest::Error) -> ErrorCode {
         ErrorCode::InternalError(Some(e.to_string()))
     }
 }
+
+// use std::env;
+
+// use azure_core::credentials::TokenCredential;
+// use azure_identity::{ManagedIdentityCredential, ManagedIdentityCredentialOptions, UserAssignedId};
+
+// async fn access_token() -> Result<String, anyhow::Error> {
+//     let user_assigned_id = env::var("AZURE_IDENTITY").ok().map(UserAssignedId::ClientId);
+//     let options = ManagedIdentityCredentialOptions { user_assigned_id, ..Default::default() };
+//     let credential = ManagedIdentityCredential::new(Some(options))?;
+
+//     let token = {
+//         let access_token = credential.get_token(&[], None).await?;
+//         let token = access_token.token.secret().to_string();
+//         token
+//     };
+//     Ok(token)
+// }

@@ -2,6 +2,7 @@
 name = "runtime-cli"
 description = "Credibil runtime"
 publish = false
+default-run = "main"
 readme = "README.md"
 authors.workspace = true
 categories.workspace = true
@@ -20,15 +21,23 @@ doctest = false
 workspace = true
 
 [features]
-default = ["jit", "minimal"]
+default = ["jit", "http", "otel"]
 
 # Top-level feature sets that can be used to create a build. 
-# Each set represents a known combination of components and resources used by
-# wasm apps.
-minimal = ["http", "otel"]
-standard = ["http", "otel", "keyvalue", "messaging", "blobstore", "vault", "azkeyvault", "nats", "mongodb"]
-rt-http = ["http", "keyvalue", "otel", "redis"]
-rt-messaging = ["messaging", "kafka"]
+# Each set contains a unique grouping of component-resource tuples used by wasm apps.
+standard = ["http", "otel", "blobstore-mongodb", "keyvalue-nats", "messaging-nats", "vault-azure"]
+realtime-http = ["http", "otel", "keyvalue-redis"]
+
+# Component-Resource tuples
+blobstore-mongodb = ["blobstore", "mongodb"]
+blobstore-nats = ["blobstore", "nats"]
+keyvalue-nats = ["keyvalue", "nats"]
+keyvalue-redis = ["keyvalue", "redis"]
+messaging-nats = ["messaging", "nats"]
+messaging-kafka = ["messaging", "kafka"]
+sql-postgres = ["sql", "postgres"]
+vault-azure = ["vault", "azure"]
+# otel-otlp = ["otel"]
 
 # WASI components (not intended to be used directly)
 blobstore = ["dep:wasi-blobstore"]
@@ -40,18 +49,36 @@ sql = ["dep:wasi-sql"]
 vault = ["dep:wasi-vault"]
 
 # Component resources (not intended to be used directly)
-# N.B. certain resources are mutually exclusive:
-# - nats and redis for keyvalue
-# - nats and kafka for messaging
-# - nats and mongodb for blobstore
-azkeyvault = ["dep:res-azkeyvault"]
+azure = ["dep:res-azure"]
 kafka = ["dep:res-kafka"]
 mongodb = ["dep:res-mongodb"]
 nats = ["dep:res-nats"]
+postgres = ["dep:res-postgres"]
 redis = ["dep:res-redis"]
 
 # Enables just-in-time wasm to machine code compilation.
 jit = ["runtime/jit"]
+
+[[bin]]
+name = "main"
+path = "src/main.rs"
+
+[[bin]]
+name = "standard"
+path = "src/bin/standard.rs"
+required-features = [
+    "http",
+    "otel",
+    "blobstore-mongodb",
+    "keyvalue-nats",
+    "messaging-nats",
+    "vault-azure",
+]
+
+[[bin]]
+name = "http"
+path = "src/bin/http.rs"
+required-features = ["http", "otel"]
 
 [dependencies]
 anyhow.workspace = true
@@ -72,10 +99,11 @@ futures.workspace = true
 http.workspace = true
 http-body-util.workspace = true
 reqwest.workspace = true
-res-azkeyvault = { workspace = true, optional = true }
+res-azure = { workspace = true, optional = true }
 res-mongodb = { workspace = true, optional = true }
 res-kafka = { workspace = true, optional = true }
 res-nats = { workspace = true, optional = true }
+res-postgres = { workspace = true, optional = true }
 res-redis = { workspace = true, optional = true }
 runtime.workspace = true
 tokio = { workspace = true, features = ["macros"] }
@@ -260,10 +288,11 @@ credibil-encoding = { version = "0.4.0", registry = "credibil" }
 credibil-otel = { version = "0.4.0", registry = "credibil" }
 
 # interally referenced crates
-res-azkeyvault = { path = "crates/res-azkeyvault", version = "0.13.0", registry = "credibil" }
+res-azure = { path = "crates/res-azure", version = "0.13.0", registry = "credibil" }
 res-kafka = { path = "crates/res-kafka", version = "0.13.0", registry = "credibil" }
 res-mongodb = { path = "crates/res-mongodb", version = "0.13.0", registry = "credibil" }
 res-nats = { path = "crates/res-nats", version = "0.13.0", registry = "credibil" }
+res-postgres = { path = "crates/res-postgres", version = "0.13.0", registry = "credibil" }
 res-redis = { path = "crates/res-redis", version = "0.13.0", registry = "credibil" }
 runtime = { path = "crates/runtime", version = "0.13.0", registry = "credibil" }
 wasi-blobstore = { path = "crates/wasi-blobstore", version = "0.13.0", registry = "credibil" }

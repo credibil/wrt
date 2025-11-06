@@ -3,8 +3,8 @@
 use std::path::PathBuf;
 
 use anyhow::Result;
-#[cfg(feature = "azkeyvault")]
-use res_azkeyvault::Client as AzKeyVaultCtx;
+#[cfg(feature = "azure")]
+use res_azure::Client as AzKeyVaultCtx;
 #[cfg(all(feature = "kafka", not(feature = "nats")))]
 use res_kafka::Client as KafkaCtx;
 #[cfg(feature = "mongodb")]
@@ -14,7 +14,7 @@ use res_nats::Client as NatsCtx;
 #[cfg(feature = "redis")]
 use res_redis::Client as RedisCtx;
 #[cfg(any(
-    feature = "azkeyvault",
+    feature = "azure",
     feature = "kafka",
     feature = "mongodb",
     feature = "nats",
@@ -73,7 +73,7 @@ pub async fn run(wasm: PathBuf) -> Result<()> {
         mongodb_ctx: MongoDbCtx::connect().await?,
         #[cfg(feature = "redis")]
         redis_ctx: RedisCtx::connect().await?,
-        #[cfg(feature = "azkeyvault")]
+        #[cfg(feature = "azure")]
         azure_ctx: AzKeyVaultCtx::connect().await?,
     };
 
@@ -102,7 +102,7 @@ pub struct RunState {
     nats_ctx: NatsCtx,
     #[cfg(feature = "redis")]
     redis_ctx: RedisCtx,
-    #[cfg(feature = "azkeyvault")]
+    #[cfg(feature = "azure")]
     azure_ctx: AzKeyVaultCtx,
 }
 
@@ -142,7 +142,7 @@ impl State for RunState {
             messaging_ctx: self.nats_ctx.clone(),
             #[cfg(feature = "otel")]
             otel_ctx: DefaultOtelCtx,
-            #[cfg(all(feature = "vault", feature = "azkeyvault"))]
+            #[cfg(all(feature = "vault", feature = "azure"))]
             vault_ctx: self.azure_ctx.clone(),
         }
     }
@@ -169,7 +169,7 @@ pub struct RunData {
     pub messaging_ctx: NatsCtx,
     #[cfg(feature = "otel")]
     pub otel_ctx: DefaultOtelCtx,
-    #[cfg(all(feature = "vault", feature = "azkeyvault"))]
+    #[cfg(all(feature = "vault", feature = "azure"))]
     pub vault_ctx: AzKeyVaultCtx,
 }
 

@@ -3741,7 +3741,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "res-azkeyvault"
+name = "res-azure"
 version = "0.13.0"
 dependencies = [
  "anyhow",
@@ -3890,10 +3890,11 @@ dependencies = [
  "openssl",
  "opentelemetry",
  "reqwest",
- "res-azkeyvault",
+ "res-azure",
  "res-kafka",
  "res-mongodb",
  "res-nats",
+ "res-postgres",
  "res-redis",
  "runtime",
  "serde_json",

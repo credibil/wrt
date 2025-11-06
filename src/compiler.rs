@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use anyhow::{Result, anyhow};
-use res_azkeyvault::AzKeyVault;
+use res_azure::AzKeyVault;
 use res_mongodb::MongoDb;
 use res_nats::Nats;
 use runtime::{AddResource, Cli, Command, Parser, Resource, Runtime};
