@@ -102,7 +102,7 @@ impl<T: WasiView> Runtime<T> {
 
         // initialize telemetry
         let mut builder = Telemetry::new(prefix);
-        if let Ok(endpoint) = env::var("OTEL_GRPC_ADDR") {
+        if let Ok(endpoint) = env::var("OTEL_GRPC_URL") {
             builder = builder.endpoint(endpoint);
         }
         builder.build().context("initializing telemetry")
