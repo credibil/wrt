@@ -5517,6 +5517,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "wasi-identity"
+version = "0.13.0"
+dependencies = [
+ "anyhow",
+ "futures",
+ "runtime",
+ "tracing",
+ "wasmtime",
+ "wasmtime-wasi",
+ "wit-bindgen",
+]
+
+[[package]]
 name = "wasi-keyvalue"
 version = "0.13.0"
 dependencies = [
