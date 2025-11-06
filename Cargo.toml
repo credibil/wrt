@@ -2,7 +2,6 @@
 name = "runtime-cli"
 description = "Credibil runtime"
 publish = false
-default-run = "main"
 readme = "README.md"
 authors.workspace = true
 categories.workspace = true
@@ -25,8 +24,9 @@ default = ["jit", "http", "otel"]
 
 # Top-level feature sets that can be used to create a build. 
 # Each set contains a unique grouping of component-resource tuples used by wasm apps.
-standard = ["http", "otel", "blobstore-mongodb", "keyvalue-nats", "messaging-nats", "vault-azure"]
+credibil = ["http", "otel", "blobstore-mongodb", "keyvalue-nats", "messaging-nats", "vault-azure"]
 realtime-http = ["http", "otel", "keyvalue-redis"]
+realtime-messaging = ["messaging-kafka"]
 
 # Component-Resource tuples
 blobstore-mongodb = ["blobstore", "mongodb"]
@@ -58,27 +58,6 @@ redis = ["dep:res-redis"]
 
 # Enables just-in-time wasm to machine code compilation.
 jit = ["runtime/jit"]
-
-[[bin]]
-name = "main"
-path = "src/main.rs"
-
-[[bin]]
-name = "standard"
-path = "src/bin/standard.rs"
-required-features = [
-    "http",
-    "otel",
-    "blobstore-mongodb",
-    "keyvalue-nats",
-    "messaging-nats",
-    "vault-azure",
-]
-
-[[bin]]
-name = "http"
-path = "src/bin/http.rs"
-required-features = ["http", "otel"]
 
 [dependencies]
 anyhow.workspace = true
