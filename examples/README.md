@@ -42,11 +42,4 @@ docker build \
   --build-arg FEATURES=http-server \
   --secret id=credibil,env=CARGO_REGISTRIES_CREDIBIL_TOKEN \
   --tag ghcr.io/credibil/wrt .
-
-#  OR 
-
-docker build \
-  --build-arg FEATURES=standard \
-  --secret id=credibil,env=CARGO_REGISTRIES_CREDIBIL_TOKEN \
-  --tag ghcr.io/credibil/wrt .
 ```

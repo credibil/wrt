@@ -1,5 +1,7 @@
 #![cfg(not(target_arch = "wasm32"))]
 
+//! WRT runtime CLI entry point.
+
 use anyhow::{Result, anyhow};
 use runtime::{Cli, Command, Parser};
 
