@@ -201,7 +201,7 @@ mod tests {
     use super::*; // brings Payload, BIG_ENDIAN, MessagingError into scope
 
     #[test]
-    fn encode_then_decode_roundtrip() {
+    fn encode_decode() {
         #[allow(clippy::cast_possible_wrap)]
         let registry_id: i32 = 0xAABB_CCDDu32 as i32;
         let payload = b"hello world".to_vec();

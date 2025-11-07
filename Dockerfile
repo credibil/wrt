@@ -6,6 +6,8 @@ ARG FEATURES=default
 RUN apk add --no-cache build-base cmake perl
 RUN adduser --disabled-password --gecos "" --home "/nonexistent" \
     --shell "/sbin/nologin" --no-create-home --uid 10001 appuser
+    
+RUN echo $CARGO_HOME
 
 WORKDIR /app
 RUN \

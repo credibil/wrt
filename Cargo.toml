@@ -20,10 +20,11 @@ doctest = false
 workspace = true
 
 [features]
-default = ["jit", "http-default", "otel-default"]
+default = ["jit", "http-server"]
 
 # Top-level feature sets that can be used to create a build. 
 # Each set contains a unique grouping of component-resource tuples used by wasm apps.
+http-server = ["http-default", "otel-default"]
 credibil = ["http-default", "otel-default", "blobstore-mongodb", "keyvalue-nats", "messaging-nats", "vault-azure"]
 realtime-http = ["http-default", "otel-default", "keyvalue-redis"]
 realtime-messaging = ["http-default", "otel-default", "messaging-kafka", "identity-azure"]
