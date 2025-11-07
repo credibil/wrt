@@ -4,26 +4,26 @@ on:
   workflow_dispatch:
 
 jobs:
-  skip:
-    name: Skipped
-    if: ${{ !startsWith(github.ref_name, 'release-') }}
-    runs-on: ubuntu-latest
-    steps:
-      - run: |
-          echo "This workflow only runs on the 'release-*' branches"
-          exit 1
+  # skip:
+  #   name: Skipped
+  #   if: ${{ !startsWith(github.ref_name, 'release-') }}
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - run: |
+  #         echo "This workflow only runs on the 'release-*' branches"
+  #         exit 1
 
-  ci:
-    name: CI
-    if: ${{ startsWith(github.ref_name, 'release-') }}
-    uses: credibil/pipeline/.github/workflows/ci.yaml@main
-    secrets: inherit
-    with:
-      outdated: prost
+  # ci:
+  #   name: CI
+  #   if: ${{ startsWith(github.ref_name, 'release-') }}
+  #   uses: credibil/pipeline/.github/workflows/ci.yaml@main
+  #   secrets: inherit
+  #   with:
+  #     outdated: prost
 
   publish:
     name: Publish
-    needs: ci
+    # needs: ci
     uses: credibil/pipeline/.github/workflows/publish.yaml@main
 
   crates:
@@ -51,6 +51,16 @@ jobs:
           registry: https://ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+        
+      - name: Create Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
 
       - name: Build and push image
         uses: docker/build-push-action@v6
@@ -58,11 +68,14 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           build-args: |
-            BIN=standard
+            FEATURES=http-server
           secrets: |
             credibil=${{ secrets.CARGO_REGISTRIES_CREDIBIL_TOKEN }}
           tags: |
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ needs.publish.outputs.version }}
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest
-          cache-to: type=inline
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+          
+          # cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest
+          # cache-to: type=inline

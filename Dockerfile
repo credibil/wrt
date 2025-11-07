@@ -6,16 +6,14 @@ ARG FEATURES=default
 RUN apk add --no-cache build-base cmake perl
 RUN adduser --disabled-password --gecos "" --home "/nonexistent" \
     --shell "/sbin/nologin" --no-create-home --uid 10001 appuser
-    
-RUN echo $CARGO_HOME
 
 WORKDIR /app
 RUN \
     --mount=type=secret,id=credibil,env=CARGO_REGISTRIES_CREDIBIL_TOKEN \
-    --mount=type=bind,src=.cargo,dst=.cargo \
-    --mount=type=bind,src=Cargo.toml,dst=Cargo.toml \
-    --mount=type=bind,src=Cargo.lock,dst=Cargo.lock \
-    --mount=type=bind,src=src,dst=src \
+    --mount=type=bind,source=.cargo,target=.cargo \
+    --mount=type=bind,source=Cargo.toml,target=Cargo.toml \
+    --mount=type=bind,source=Cargo.lock,target=Cargo.lock \
+    --mount=type=bind,source=src,target=src \
     --mount=type=bind,source=crates,target=crates \
     --mount=type=bind,source=examples,target=examples \
     --mount=type=cache,target=$CARGO_HOME/git/db \
