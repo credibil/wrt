@@ -70,12 +70,13 @@ jobs:
           secrets: |
             credibil=${{ secrets.CARGO_REGISTRIES_CREDIBIL_TOKEN }}
           tags: |
-            ${{ env.IMAGE_NAME }}:latest
-            ${{ env.IMAGE_NAME }}:${{ needs.publish.outputs.version }}
+            ${{ env.IMAGE_NAME }}:latest 
           cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache
           cache-to: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache,mode=max
         env:
           IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
+
+          # ${{ env.IMAGE_NAME }}:${{ needs.publish.outputs.version }}
 
       # ---------------------------------------------------
       # Local cache
