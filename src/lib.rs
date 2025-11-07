@@ -210,8 +210,6 @@ pub struct RunData {
     pub http_ctx: WasiHttpCtx,
     #[cfg(all(feature = "identity", feature = "azure"))]
     pub identity_ctx: AzureCtx,
-    #[cfg(all(feature = "keyvalue", feature = "redis"))]
-    pub keyvalue_ctx: RedisCtx,
     #[cfg(all(feature = "keyvalue", all(feature = "nats", not(feature = "redis"))))]
     pub keyvalue_ctx: NatsCtx,
     #[cfg(all(feature = "keyvalue", feature = "redis"))]

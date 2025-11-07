@@ -9,10 +9,8 @@ use std::fmt::Debug;
 use std::sync::Arc;
 
 use anyhow::{Result, anyhow};
-use azure_core::credentials::Secret;
-use azure_core::credentials::TokenCredential;
-use azure_identity::ClientSecretCredential;
-use azure_identity::DeveloperToolsCredential;
+use azure_core::credentials::{Secret, TokenCredential};
+use azure_identity::{ClientSecretCredential, DeveloperToolsCredential};
 use azure_security_keyvault_secrets::SecretClient;
 use fromenv::FromEnv;
 use runtime::Resource;
