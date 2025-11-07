@@ -21,20 +21,20 @@ jobs:
   #   with:
   #     outdated: prost
 
-  publish:
-    name: Publish
-    # needs: ci
-    uses: credibil/pipeline/.github/workflows/publish.yaml@main
+  # publish:
+  #   name: Publish
+  #   needs: ci
+  #   uses: credibil/pipeline/.github/workflows/publish.yaml@main
 
-  crates:
-    name: Publish crates
-    needs: publish
-    uses: credibil/pipeline/.github/workflows/crates.yaml@main
-    secrets: inherit
+  # crates:
+  #   name: Publish crates
+  #   needs: publish
+  #   uses: credibil/pipeline/.github/workflows/crates.yaml@main
+  #   secrets: inherit
 
   package:
     name: Package
-    needs: publish
+    # needs: publish
     runs-on: ubuntu-latest-m
     permissions:
       contents: read
