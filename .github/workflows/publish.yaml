@@ -51,32 +51,40 @@ jobs:
           registry: https://ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-        
+
       - name: Create Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - uses: actions/cache@v4
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
+      # - name: Cache Docker layers
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: /tmp/.buildx-cache
+      #     key: ${{ runner.os }}-buildx-${{ github.sha }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-buildx-
 
       - name: Build and push image
         uses: docker/build-push-action@v6
         with:
           push: true
-          platforms: linux/amd64,linux/arm64
+          # platforms: linux/amd64,linux/arm64
           build-args: |
             FEATURES=http-server
           secrets: |
             credibil=${{ secrets.CARGO_REGISTRIES_CREDIBIL_TOKEN }}
           tags: |
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+            ${{ env.IMAGE_NAME }}:latest
+          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache,mode=max
+        env:
+          IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
 
-          # ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ needs.publish.outputs.version }}
-          
-          # cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest
-          # cache-to: type=inline
+          # ${{ env.IMAGE_NAME }}:${{ needs.publish.outputs.version }}
+
+          # Local cache
+          # cache-from: type=local,src=/tmp/.buildx-cache
+          # cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+          # Registry cache
+          # cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache
+          # cache-to: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache,mode=max
