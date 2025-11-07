@@ -39,8 +39,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, ubuntu-latest-arm ]
-        feature: [ "realtime-http", "realtime-messaging", "realtime-websockets" ]
+        os: [ ubuntu-latest, ubuntu-24.04-arm ]
+        feature: [ realtime-http, realtime-messaging, realtime-websockets ]
     permissions:
       contents: read
       packages: write
