@@ -1,97 +1,63 @@
 use anyhow::Context;
 use wasmtime::component::{Accessor, Resource, ResourceTableError};
 
-use crate::host::generated::wasi::vault::vault::Error;
-use crate::host::resource::LockerProxy;
-use crate::host::vault::{Host, HostLocker, HostLockerWithStore, HostWithStore};
-use crate::host::{WasiVault, WasiVaultCtxView};
+use crate::host::generated::wasi::identity::credentials::{
+    AccessToken, Host, HostIdentity, HostIdentityWithStore, HostWithStore,
+};
+use crate::host::generated::wasi::identity::types::Error;
+use crate::host::resource::IdentityProxy;
+use crate::host::{WasiIdentity, WasiIdentityCtxView};
 
 pub type Result<T, E = Error> = anyhow::Result<T, E>;
 
-impl HostWithStore for WasiVault {
-    async fn open<T>(
-        accessor: &Accessor<T, Self>, locker_id: String,
-    ) -> Result<Resource<LockerProxy>> {
-        let locker = accessor.with(|mut store| store.get().ctx.open_locker(locker_id)).await?;
-        let proxy = LockerProxy(locker);
+impl HostWithStore for WasiIdentity {
+    async fn get_identity<T>(
+        accessor: &Accessor<T, Self>, name: String,
+    ) -> Result<Resource<IdentityProxy>> {
+        let identity = accessor.with(|mut store| store.get().ctx.get_identity(name)).await?;
+        let proxy = IdentityProxy(identity);
+
         Ok(accessor.with(|mut store| store.get().table.push(proxy))?)
     }
 }
 
-impl HostLockerWithStore for WasiVault {
-    async fn get<T>(
-        accessor: &Accessor<T, Self>, self_: Resource<LockerProxy>, secret_id: String,
-    ) -> Result<Option<Vec<u8>>> {
-        let locker = get_locker(accessor, &self_)?;
-        let value = locker.get(secret_id).await.context("issue getting value")?;
-        Ok(value)
-    }
-
-    async fn set<T>(
-        accessor: &Accessor<T, Self>, self_: Resource<LockerProxy>, secret_id: String,
-        value: Vec<u8>,
-    ) -> Result<(), Error> {
-        let locker = get_locker(accessor, &self_)?;
-        locker.set(secret_id, value).await.context("issue setting value")?;
-        Ok(())
-    }
-
-    async fn delete<T>(
-        accessor: &Accessor<T, Self>, self_: Resource<LockerProxy>, secret_id: String,
-    ) -> Result<()> {
-        let locker = get_locker(accessor, &self_)?;
-        locker.delete(secret_id).await.context("issue deleting value")?;
-        Ok(())
-    }
-
-    async fn exists<T>(
-        accessor: &Accessor<T, Self>, self_: Resource<LockerProxy>, secret_id: String,
-    ) -> Result<bool> {
-        let locker = get_locker(accessor, &self_)?;
-        let value = locker.get(secret_id).await.context("issue getting value")?;
-        Ok(value.is_some())
-    }
-
-    async fn list_ids<T>(
-        accessor: &Accessor<T, Self>, self_: Resource<LockerProxy>,
-    ) -> Result<Vec<String>> {
-        let locker = get_locker(accessor, &self_)?;
-        let secret_ids = locker.list_ids().await.context("issue getting value")?;
-        Ok(secret_ids)
+impl HostIdentityWithStore for WasiIdentity {
+    async fn get_token<T>(
+        accessor: &Accessor<T, Self>, self_: Resource<IdentityProxy>,scope: Vec<String>,
+    ) -> Result<AccessToken> {
+        let identity = get_identity(accessor, &self_)?;
+        let token =
+            identity.0.get_token(scope).await.context("issue getting access token")?;
+        Ok(token)
     }
 
     async fn drop<T>(
-        accessor: &Accessor<T, Self>, rep: Resource<LockerProxy>,
+        accessor: &Accessor<T, Self>, rep: Resource<IdentityProxy>,
     ) -> anyhow::Result<()> {
         accessor.with(|mut store| store.get().table.delete(rep).map(|_| Ok(())))?
     }
 }
 
-impl Host for WasiVaultCtxView<'_> {
-    fn convert_error(&mut self, err: Error) -> Result<Error, anyhow::Error> {
-        Ok(err)
-    }
-}
+impl Host for WasiIdentityCtxView<'_> {}
+impl HostIdentity for WasiIdentityCtxView<'_> {}
 
-impl HostLocker for WasiVaultCtxView<'_> {}
-
-pub fn get_locker<T>(
-    accessor: &Accessor<T, WasiVault>, self_: &Resource<LockerProxy>,
-) -> Result<LockerProxy> {
+pub fn get_identity<T>(
+    accessor: &Accessor<T, WasiIdentity>, self_: &Resource<IdentityProxy>,
+) -> Result<IdentityProxy> {
     accessor.with(|mut store| {
-        let locker = store.get().table.get(self_)?;
-        Ok::<_, Error>(locker.clone())
+        let identity = store.get().table.get(self_).map_err(|_e| Error::NoSuchIdentity)?;
+        Ok::<_, Error>(identity.clone())
     })
 }
 
 impl From<anyhow::Error> for Error {
     fn from(err: anyhow::Error) -> Self {
-        Self::Other(err.to_string())
+        Self::InternalFailure(err.to_string())
     }
 }
 
 impl From<ResourceTableError> for Error {
     fn from(err: ResourceTableError) -> Self {
-        Self::Other(err.to_string())
+        Self::InternalFailure(err.to_string())
     }
 }

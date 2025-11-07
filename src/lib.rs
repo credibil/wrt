@@ -1,5 +1,9 @@
 #![cfg(not(target_arch = "wasm32"))]
 
+// compile-time feature combination checks
+// #[cfg(all(feature = "keyvalue", feature = "nats", feature = "redis"))]
+// compile_error!("features \"nats\" and \"redis\" cannot be enabled for keyvalue at the same time");
+
 use std::path::PathBuf;
 
 use anyhow::Result;

@@ -1,20 +1,25 @@
-//! # Host implementation for WASI Vault Service
+//! # Host implementation for WASI Identity Service
 //!
-//! This module implements the host-side logic for the WASI Vault service.
+//! This module implements the host-side logic for the WASI Identity service.
 
+mod credentials_impl;
 mod resource;
-mod identity_impl;
+mod types_impl;
 
 mod generated {
     #![allow(clippy::trait_duplication_in_bounds)]
 
-    pub use self::wasi::identity::identity::Error;
+    pub use self::wasi::identity::types::Error;
+    pub use crate::host::resource::IdentityProxy;
 
     wasmtime::component::bindgen!({
         world: "identity",
         path: "wit",
         imports: {
             default: async | store | tracing | trappable,
+        },
+        with: {
+            "wasi:identity/credentials/identity": IdentityProxy,
         },
         trappable_error_type: {
             "wasi:identity/types/error" => Error,
@@ -29,7 +34,7 @@ use runtime::Host;
 use wasmtime::component::{HasData, Linker};
 use wasmtime_wasi::ResourceTable;
 
-use self::generated::wasi::identity::identity;
+use self::generated::wasi::identity::credentials;
 pub use crate::host::resource::*;
 
 impl<T> Host<T> for WasiIdentity
@@ -37,7 +42,7 @@ where
     T: WasiIdentityView + 'static,
 {
     fn add_to_linker(linker: &mut Linker<T>) -> anyhow::Result<()> {
-        identity::add_to_linker::<_, Self>(linker, T::identity)
+        credentials::add_to_linker::<_, Self>(linker, T::identity)
     }
 }
 
@@ -52,7 +57,7 @@ impl HasData for WasiIdentity {
 /// This is implemented by the resource-specific provider of Key-Value
 /// functionality. For example, an in-memory store, or a Redis-backed store.
 pub trait WasiIdentityCtx: Debug + Send + Sync + 'static {
-    fn open_locker(&self, identifier: String) -> FutureResult<Arc<dyn Locker>>;
+    fn get_identity(&self, name: String) -> FutureResult<Arc<dyn Identity>>;
 }
 
 /// View into [`WasiIdentityCtx`] implementation and [`ResourceTable`].
