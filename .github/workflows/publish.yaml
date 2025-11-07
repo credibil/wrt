@@ -74,7 +74,7 @@ jobs:
           cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache
           cache-to: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache,mode=max
         env:
-          IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
+          IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}-${{ matrix.feature }}
 
           # ${{ env.IMAGE_NAME }}:${{ needs.publish.outputs.version }}
 
