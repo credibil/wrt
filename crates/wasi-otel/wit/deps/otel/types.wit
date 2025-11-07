@@ -1,5 +1,5 @@
 interface types {
-    use wasi:clocks/wall-clock@0.2.6.{datetime};
+    use wasi:clocks/wall-clock@0.2.8.{datetime};
 
     /// A key-value pair describing an attribute.
     record key-value {

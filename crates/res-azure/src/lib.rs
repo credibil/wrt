@@ -2,16 +2,15 @@
 
 //! Azure Key Vault Secrets Client.
 
+mod identity;
 mod key_vault;
 
 use std::fmt::Debug;
 use std::sync::Arc;
 
 use anyhow::{Result, anyhow};
-#[cfg(not(debug_assertions))]
 use azure_core::credentials::Secret;
 use azure_core::credentials::TokenCredential;
-#[cfg(not(debug_assertions))]
 use azure_identity::ClientSecretCredential;
 use azure_identity::DeveloperToolsCredential;
 use azure_security_keyvault_secrets::SecretClient;
@@ -20,7 +19,9 @@ use runtime::Resource;
 use tracing::instrument;
 
 #[derive(Clone)]
-pub struct Client(Arc<SecretClient>);
+pub struct Client {
+    key_vault: Option<Arc<SecretClient>>,
+}
 
 impl Debug for Client {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -33,43 +34,45 @@ impl Resource for Client {
 
     #[instrument]
     async fn connect_with(options: Self::ConnectOptions) -> Result<Self> {
-        #[cfg(debug_assertions)]
-        let credential: Arc<dyn TokenCredential> = {
+        // connect to Azure API
+        let credential: Arc<dyn TokenCredential> = if let Some(cred) = &options.credential {
+            ClientSecretCredential::new(
+                &cred.tenant_id,
+                cred.client_id.clone(),
+                Secret::new(cred.client_secret.clone()),
+                None,
+            )?
+        } else {
             DeveloperToolsCredential::new(None)
                 .map_err(|e| anyhow!("could not create credential: {e}"))?
         };
+        tracing::info!("connected to azure api");
 
-        #[cfg(not(debug_assertions))]
-        let credential: Arc<dyn TokenCredential> = {
-            let secret = Secret::new(options.client_secret.clone());
-            ClientSecretCredential::new(
-                &options.tenant_id,
-                options.client_id.clone(),
-                secret,
-                None,
-            )?
+        let Some(url) = &options.keyvault_url else {
+            tracing::info!("no azure keyvault url provided");
+            return Ok(Self { key_vault: None });
         };
 
-        let client = SecretClient::new(&options.address, credential, None)
+        let client = SecretClient::new(url, credential, None)
             .map_err(|e| anyhow!("failed to connect to azure keyvault: {e}"))?;
         tracing::info!("connected to azure keyvault");
 
-        Ok(Self(Arc::new(client)))
+        Ok(Self {
+            key_vault: Some(Arc::new(client)),
+        })
     }
 }
 
-#[cfg(debug_assertions)]
 #[derive(Debug, Clone, FromEnv)]
 pub struct ConnectOptions {
+    #[env(nested)]
+    pub credential: Option<CredentialOptions>,
     #[env(from = "AZURE_KEYVAULT_URL")]
-    pub address: String,
+    pub keyvault_url: Option<String>,
 }
 
-#[cfg(not(debug_assertions))]
 #[derive(Debug, Clone, FromEnv)]
-pub struct ConnectOptions {
-    #[env(from = "AZURE_KEYVAULT_URL")]
-    pub address: String,
+pub struct CredentialOptions {
     #[env(from = "AZURE_TENANT_ID")]
     pub tenant_id: String,
     #[env(from = "AZURE_CLIENT_ID")]

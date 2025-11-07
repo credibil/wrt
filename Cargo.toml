@@ -26,13 +26,14 @@ default = ["jit", "http-default", "otel-default"]
 # Each set contains a unique grouping of component-resource tuples used by wasm apps.
 credibil = ["http-default", "otel-default", "blobstore-mongodb", "keyvalue-nats", "messaging-nats", "vault-azure"]
 realtime-http = ["http-default", "otel-default", "keyvalue-redis"]
-realtime-messaging = ["messaging-kafka"]
+realtime-messaging = ["http-default", "otel-default", "messaging-kafka", "identity-azure"]
 realtime-websockets = ["http-default", "otel-default", "websockets-default"]
 
 # Component-Resource tuples
 blobstore-mongodb = ["blobstore", "mongodb"]
 blobstore-nats = ["blobstore", "nats"]
 http-default = ["http"]
+identity-azure = ["identity", "azure"]
 keyvalue-nats = ["keyvalue", "nats"]
 keyvalue-redis = ["keyvalue", "redis"]
 messaging-nats = ["messaging", "nats"]
@@ -45,6 +46,7 @@ websockets-default = ["websockets"]
 # WASI components (not intended to be used directly)
 blobstore = ["dep:wasi-blobstore"]
 http = ["dep:wasi-http", "dep:wasmtime-wasi-http"]
+identity = ["dep:wasi-identity"]
 keyvalue = ["dep:wasi-keyvalue"]
 messaging = ["dep:wasi-messaging"]
 otel = ["dep:wasi-otel"]
@@ -68,6 +70,7 @@ anyhow.workspace = true
 tracing.workspace = true
 wasi-blobstore = { workspace = true, optional = true }
 wasi-http = { workspace = true, optional = true }
+wasi-identity = { workspace = true, optional = true }
 wasi-keyvalue = { workspace = true, optional = true }
 wasi-messaging = { workspace = true, optional = true }
 wasi-otel = { workspace = true, optional = true }
@@ -296,6 +299,7 @@ res-redis = { path = "crates/res-redis", version = "0.13.0", registry = "credibi
 runtime = { path = "crates/runtime", version = "0.13.0", registry = "credibil" }
 wasi-blobstore = { path = "crates/wasi-blobstore", version = "0.13.0", registry = "credibil" }
 wasi-http = { path = "crates/wasi-http", version = "0.13.0", registry = "credibil" }
+wasi-identity = { path = "crates/wasi-identity", version = "0.13.0", registry = "credibil" }
 wasi-keyvalue = { path = "crates/wasi-keyvalue", version = "0.13.0", registry = "credibil" }
 wasi-messaging = { path = "crates/wasi-messaging", version = "0.13.0", registry = "credibil" }
 wasi-otel = { path = "crates/wasi-otel", version = "0.13.0", registry = "credibil" }

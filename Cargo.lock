@@ -3761,7 +3761,9 @@ dependencies = [
  "http",
  "runtime",
  "tracing",
+ "wasi-identity",
  "wasi-vault",
+ "wasip3",
 ]
 
 [[package]]
@@ -3910,6 +3912,7 @@ dependencies = [
  "tracing",
  "wasi-blobstore",
  "wasi-http",
+ "wasi-identity",
  "wasi-keyvalue",
  "wasi-messaging",
  "wasi-otel",

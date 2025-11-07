@@ -1,5 +1,5 @@
 interface metrics {
-    use wasi:clocks/wall-clock@0.2.6.{datetime};
+    use wasi:clocks/wall-clock@0.2.8.{datetime};
     use types.{key, value, key-value, instrumentation-scope, %resource, error};
 
     /// Gathers and returns all metric data related to the [MetricReader] from the

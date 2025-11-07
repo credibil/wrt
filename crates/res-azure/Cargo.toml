@@ -29,4 +29,6 @@ futures.workspace = true
 http.workspace = true
 runtime.workspace = true
 tracing.workspace = true
+wasi-identity.workspace = true
 wasi-vault.workspace = true
+wasip3.workspace = true

@@ -16,18 +16,16 @@ impl HostWithStore for WasiIdentity {
     ) -> Result<Resource<IdentityProxy>> {
         let identity = accessor.with(|mut store| store.get().ctx.get_identity(name)).await?;
         let proxy = IdentityProxy(identity);
-
         Ok(accessor.with(|mut store| store.get().table.push(proxy))?)
     }
 }
 
 impl HostIdentityWithStore for WasiIdentity {
     async fn get_token<T>(
-        accessor: &Accessor<T, Self>, self_: Resource<IdentityProxy>,scope: Vec<String>,
+        accessor: &Accessor<T, Self>, self_: Resource<IdentityProxy>, scope: Vec<String>,
     ) -> Result<AccessToken> {
         let identity = get_identity(accessor, &self_)?;
-        let token =
-            identity.0.get_token(scope).await.context("issue getting access token")?;
+        let token = identity.0.get_token(scope).await.context("issue getting access token")?;
         Ok(token)
     }
 
