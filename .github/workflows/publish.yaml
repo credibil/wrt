@@ -99,7 +99,7 @@ jobs:
 
     steps:
       - run: |
-          echo "${{ fromJSON(needs.package.outputs.json) }}"
+          echo "${{ fromJSON(needs.package.outputs.json.digest) }}"
 
       # - uses: int128/docker-manifest-create-action@v2
       #   with:
