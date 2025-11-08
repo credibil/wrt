@@ -45,6 +45,12 @@ jobs:
       packages: write
 
     steps:
+
+      - uses: actions/checkout@v5
+      - uses: credibil/pipeline/.github/actions/cargo-cache@main
+      - uses: mozilla-actions/sccache-action@v0.0.9
+      - run: cargo fetch
+        
       - uses: credibil/pipeline/.github/actions/cargo-cache@main
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
@@ -55,9 +61,6 @@ jobs:
           registry: https://ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create Docker Buildx
-        uses: docker/setup-buildx-action@v3
 
       - name: Build and push image
         uses: docker/build-push-action@v6
@@ -73,7 +76,6 @@ jobs:
           cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache
           cache-to: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache,mode=max
         env:
-          # PLATFORM: ${{ matrix.os == 'ubuntu-latest' && 'linux/amd64' || 'linux/arm64' }}
           IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}-${{ matrix.feature }}
 
           # ${{ env.IMAGE_NAME }}:${{ needs.publish.outputs.version }}
