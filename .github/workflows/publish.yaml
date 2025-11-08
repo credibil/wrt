@@ -103,7 +103,7 @@ jobs:
         run: |
           echo ("${{ needs.package.outputs.json }}")
 
-          echo "${{ needs.package.outputs.json }}" | jq '.[]
+          echo "${{ needs.package.outputs.json }}" | jq '.[]'
 
           # SOURCES=$(echo "${{ needs.package.outputs.json }}" | jq '.[]."${{ matrix.feature }}" | select(. != null)')
           # echo "SOURCES: ${SOURCES}"  
