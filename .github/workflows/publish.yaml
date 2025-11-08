@@ -35,13 +35,19 @@ jobs:
   package:
     name: Package
     # needs: publish
-    # runs-on: ubuntu-latest
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.platform.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, ubuntu-24.04-arm]
-        # platform: [linux/amd64, linux/arm64]
+        platform:
+          - name: linux/amd64
+            os: ubuntu-latest
+          - name: linux/arm64
+            os: ubuntu-24.04-arm
         feature: [realtime-http, realtime-messaging, realtime-websockets]
+    # outputs:
+    #   ${{ matrix.feature }}-${{ matrix.os }}: ${{ steps.build.outputs.digest }}
+    outputs:
+      json: ${{ steps.digest.outputs.json }}
     permissions:
       contents: read
       packages: write
@@ -59,37 +65,51 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push image
+        id: build
         uses: docker/build-push-action@v6
         with:
           push: true
-          platforms: ${{ env.PLATFORM }}
+          platforms: ${{ matrix.platform.name }}
           build-args: |
             FEATURES=${{ matrix.feature }}
           secrets: |
             credibil=${{ secrets.CARGO_REGISTRIES_CREDIBIL_TOKEN }}
           tags: |
             ${{ env.IMAGE_NAME }}:latest
-          cache-to: type=gha,scope=${{ env.IMAGE_NAME }}-${{ env.PLATFORM }},mode=max
-          cache-from: type=gha,scope=${{ env.IMAGE_NAME }}-${{ env.PLATFORM }}
+          cache-to: type=gha,scope=${{ env.IMAGE_NAME }}-${{ matrix.platform.name }},mode=max
+          cache-from: type=gha,scope=${{ env.IMAGE_NAME }}-${{ matrix.platform.name }}
         env:
-          PLATFORM: ${{ matrix.os == 'ubuntu-latest' && 'linux/amd64' || 'linux/arm64' }}
           IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}-${{ matrix.feature }}
 
           # ${{ env.IMAGE_NAME }}:${{ needs.publish.outputs.version }}
 
-      # ---------------------------------------------------
-      # Local cache (alternative to Docker registry cache)
-      # ---------------------------------------------------
-      # - name: Cache Docker layers
-      #   uses: actions/cache@v4
-      #   with:
-      #     path: /tmp/.buildx-cache
-      #     key: ${{ runner.os }}-buildx-${{ github.sha }}
-      #     restore-keys: |
-      #       ${{ runner.os }}-buildx-
+      - uses: beacon-biosignals/matrix-output@v1
+        id: digest
+        with:
+          yaml: |
+            image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}-${{ matrix.feature }}@${{ steps.build.outputs.digest }}
 
-      # - name: Build and push image
-      #   uses: docker/build-push-action@v6
+  manifest:
+    name: Manifest
+    needs: package
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm]
+        feature: [realtime-http, realtime-messaging, realtime-websockets]
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - run: |
+          echo "${{ needs.package.outputs.json }}"
+
+      # - uses: int128/docker-manifest-create-action@v2
       #   with:
-      #     cache-from: type=local,src=/tmp/.buildx-cache
-      #     cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+      #     tags: ${{ env.IMAGE_NAME }}:latest
+      #     sources: |
+      #       ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}@${{ steps.build-amd64.outputs.digest }}
+      #   env:
+      #     #   PLATFORM: ${{ matrix.os == 'ubuntu-latest' && 'linux/amd64' || 'linux/arm64' }}
+      #     IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}-${{ matrix.feature }}
