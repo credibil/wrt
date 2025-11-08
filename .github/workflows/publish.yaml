@@ -67,7 +67,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           push: true
-          platforms: ${{ matrix.platform.name }}
+          # platforms: ${{ matrix.platform.name }}
           build-args: |
             FEATURES=${{ matrix.feature }}
           secrets: |
@@ -97,8 +97,8 @@ jobs:
       packages: write
 
     steps:
-      - run: |
-          echo "${{ needs.package.outputs.json}}"
+      # - run: |
+      #     echo "${{ needs.package.outputs.json}}"
 
       - uses: docker/login-action@v3
         with:
