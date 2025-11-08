@@ -35,8 +35,8 @@ jobs:
   package:
     name: Package
     # needs: publish
-    # runs-on: ${{ matrix.os }}
-    runs-on: ubuntu-latest
+    # runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, ubuntu-24.04-arm]
