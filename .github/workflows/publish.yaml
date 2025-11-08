@@ -38,12 +38,12 @@ jobs:
     runs-on: ${{ matrix.platform.os }}
     strategy:
       matrix:
+        feature: [realtime-http, realtime-messaging, realtime-websockets]
         platform:
           - name: linux/amd64
             os: ubuntu-latest
           - name: linux/arm64
             os: ubuntu-24.04-arm
-        feature: [realtime-http, realtime-messaging, realtime-websockets]
     outputs:
       json: ${{ steps.digest.outputs.json }}
     permissions:
@@ -85,7 +85,8 @@ jobs:
         id: digest
         with:
           yaml: |
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}-${{ matrix.feature }}: ${{ steps.build.outputs.digest }}
+            image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}-${{ matrix.feature }}
+            digest: ${{ steps.build.outputs.digest }}
 
   manifest:
     name: Manifest
