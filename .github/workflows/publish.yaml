@@ -44,8 +44,6 @@ jobs:
           - name: linux/arm64
             os: ubuntu-24.04-arm
         feature: [realtime-http, realtime-messaging, realtime-websockets]
-    # outputs:
-    #   ${{ matrix.feature }}-${{ matrix.os }}: ${{ steps.build.outputs.digest }}
     outputs:
       json: ${{ steps.digest.outputs.json }}
     permissions:
@@ -87,7 +85,7 @@ jobs:
         id: digest
         with:
           yaml: |
-            digest: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}-${{ matrix.feature }}@${{ steps.build.outputs.digest }}
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}-${{ matrix.feature }}: ${{ steps.build.outputs.digest }}
 
   manifest:
     name: Manifest
@@ -99,10 +97,20 @@ jobs:
 
     steps:
       - run: |
-          echo "${{ fromJSON(needs.package.outputs.json)[0].digest }}"
+          echo "${{ fromJSON(needs.package.outputs.json)[0] }}"
+          echo "${{ fromJSON(needs.package.outputs.json)[1] }}"
+          echo "${{ fromJSON(needs.package.outputs.json)[2] }}"
 
       # - uses: int128/docker-manifest-create-action@v2
       #   with:
       #     tags: ${{ env.IMAGE_NAME }}:latest
       #     sources: |
-      #       ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}@${{ steps.build-amd64.outputs.digest }}
+      #       ${{ fromJSON(needs.package.outputs.json)[0].source }}
+      #       ${{ fromJSON(needs.package.outputs.json)[1].source }}
+      #       ${{ fromJSON(needs.package.outputs.json)[2].source }}
+      #       ${{ fromJSON(needs.package.outputs.json)[3].source }}
+      #       ${{ fromJSON(needs.package.outputs.json)[4].source }}
+      #       ${{ fromJSON(needs.package.outputs.json)[5].source }}
+
+
+    
