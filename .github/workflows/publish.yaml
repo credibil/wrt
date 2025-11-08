@@ -87,11 +87,11 @@ jobs:
           yaml: |
             ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}-${{ matrix.feature }}: ${{ steps.build.outputs.digest }}
 
-      - name: Generate output
-        id: digests
-        run: |
-          version="${{ matrix.version }}"
-          echo "output_${version}=${version}" >> "$GITHUB_OUTPUT"
+      # - name: Generate output
+      #   id: digests
+      #   run: |
+      #     version="${{ matrix.version }}"
+      #     echo "output_${version}=${version}" >> "$GITHUB_OUTPUT"
 
   manifest:
     name: Manifest
