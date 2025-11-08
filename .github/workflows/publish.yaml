@@ -100,6 +100,12 @@ jobs:
       - run: |
           echo "${{ needs.package.outputs.json}}"
 
+      - uses: docker/login-action@v3
+        with:
+          registry: https://ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - uses: int128/docker-manifest-create-action@v2
         with:
           tags: ${{ fromJSON(needs.package.outputs.json)[0].image }}:latest
