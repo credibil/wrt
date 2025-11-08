@@ -39,7 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [ubuntu-latest, ubuntu-24.04-arm]
+        # os: [ubuntu-latest, ubuntu-24.04-arm]
         platform: [linux/amd64, linux/arm64]
         feature: [realtime-http, realtime-messaging, realtime-websockets]
     permissions:
