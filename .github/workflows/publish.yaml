@@ -35,15 +35,11 @@ jobs:
   package:
     name: Package
     # needs: publish
-    runs-on: ${{ matrix.platform.os }}
+    runs-on: ${{ matrix.platform.name == 'linux/amd64' && 'ubuntu-latest' || 'ubuntu-24.04-arm' }}
     strategy:
       matrix:
         feature: [realtime-http, realtime-messaging, realtime-websockets]
-        platform:
-          - name: linux/amd64
-            os: ubuntu-latest
-          - name: linux/arm64
-            os: ubuntu-24.04-arm
+        platform: [linux/amd64, linux/arm64]
     outputs:
       json: ${{ steps.digest.outputs.json }}
     permissions:
@@ -67,15 +63,15 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           push: true
-          platforms: ${{ matrix.platform.name }}
+          platforms: ${{ matrix.platform }}
           build-args: |
             FEATURES=${{ matrix.feature }}
           secrets: |
             credibil=${{ secrets.CARGO_REGISTRIES_CREDIBIL_TOKEN }}
           tags: |
             ${{ env.IMAGE_NAME }}:latest
-          cache-to: type=gha,scope=${{ env.IMAGE_NAME }}-${{ matrix.platform.name }},mode=max
-          cache-from: type=gha,scope=${{ env.IMAGE_NAME }}-${{ matrix.platform.name }}
+          cache-to: type=gha,scope=${{ env.IMAGE_NAME }}-${{ matrix.platform }},mode=max
+          cache-from: type=gha,scope=${{ env.IMAGE_NAME }}-${{ matrix.platform }}
         env:
           IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/${{ matrix.feature }}
 
@@ -86,8 +82,7 @@ jobs:
         id: digest
         with:
           yaml: |
-            image: ghcr.io/${{ github.repository_owner }}/${{ matrix.feature }}
-            digest: ${{ steps.build.outputs.digest }}
+            ${{ matrix.feature }}: ${{ steps.build.outputs.digest }}
 
   # Create and push manifests for each image. This job resolves an issue GitHub
   # has with matrix builds for multi-arch images where the architecture of the
@@ -104,31 +99,31 @@ jobs:
       packages: write
 
     steps:
-      # - run: |
-      #     echo "${{ needs.package.outputs.json}}"
-
-      - uses: docker/login-action@v3
-        with:
-          registry: https://ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: docker/metadata-action@v5
-        id: metadata
-        with:
-          images: ghcr.io/${{ github.repository_owner }}/${{ matrix.feature }}
-
       - run: |
-          echo "${{ steps.metadata.outputs }}"
+          echo "${{ needs.package.outputs.json}}"
+          echo "${{ needs.package.outputs.json}}" | jq  .[].${{ matrix.feature }} | select(. != null)'
+
+
+
+      # - uses: docker/login-action@v3
+      #   with:
+      #     registry: https://ghcr.io
+      #     username: ${{ github.actor }}
+      #     password: ${{ secrets.GITHUB_TOKEN }}
+
+      # - uses: docker/metadata-action@v5
+      #   id: metadata
+      #   with:
+      #     images: ghcr.io/${{ github.repository_owner }}/${{ matrix.feature }}
+
 
       # - uses: int128/docker-manifest-create-action@v2
       #   id: build
       #   with:
-      #     index-annotations: ${{ steps.metadata.outputs.labels }}
       #     tags: ${{ steps.metadata.outputs.tags }}
       #     sources: |
-      #       ${{ steps.ecr.outputs.registry }}/${{ github.repository }}@${{ needs.build-linux-amd64.outputs.digest }}
-      #       ${{ steps.ecr.outputs.registry }}/${{ github.repository }}@${{ needs.build-linux-arm64.outputs.digest }}
+      #       ghcr.io/${{ github.repository_owner }}/${{ matrix.feature }}@${{ needs.amd64.outputs.digest }}
+      #       ghcr.io/${{ github.repository_owner }}/${{ matrix.feature }}@${{ needs.arm64.outputs.digest }}
 
       # - uses: int128/docker-manifest-create-action@v2
       #   with:
