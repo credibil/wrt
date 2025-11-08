@@ -102,7 +102,7 @@ jobs:
       - id: digests
         run: |
           echo "${{ needs.package.outputs.json}}"
-          echo "${{ needs.package.outputs.json}}" | jq  '.[].${{ matrix.feature }} | select(. != null)'
+          echo "digests=${{ needs.package.outputs.json}}" | jq  '.[]."${{ matrix.feature }}" | select(. != null)' >> $GITHUB_OUTPUT
 
 
 
