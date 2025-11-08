@@ -71,8 +71,8 @@ jobs:
           #   org.opencontainers.image.description=${{ env.PLATFORM }}
           cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache
           cache-to: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache,mode=max
-          provenance: false # disable to avoid last build being named 'unknown/unknown'
-          sbom: false       # as above
+          # provenance: false # disable to avoid last build being named 'unknown/unknown'
+          # sbom: false       # as above
           outputs: type=image,name=target
         env:
           PLATFORM: ${{ matrix.os == 'ubuntu-latest' && 'linux/amd64' || 'linux/arm64' }}
