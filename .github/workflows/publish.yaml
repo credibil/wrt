@@ -103,11 +103,11 @@ jobs:
         run: |
           echo ("${{ needs.package.outputs.json }}")
 
-          echo "${{ needs.package.outputs.json }}" | jq '.[]'
+          echo "${{ needs.package.outputs.json }}" | jq '.[]."${{ matrix.feature }}"'
 
-          # SOURCES=$(echo "${{ needs.package.outputs.json }}" | jq '.[]."${{ matrix.feature }}" | select(. != null)')
-          # echo "SOURCES: ${SOURCES}"  
-          # echo "sources=${SOURCES}" >> $GITHUB_OUTPUT
+      # SOURCES=$(echo "${{ needs.package.outputs.json }}" | jq '.[]."${{ matrix.feature }}" | select(. != null)')
+      # echo "SOURCES: ${SOURCES}"  
+      # echo "sources=${SOURCES}" >> $GITHUB_OUTPUT
 
       # - uses: docker/login-action@v3
       #   with:
