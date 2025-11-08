@@ -35,10 +35,12 @@ jobs:
   package:
     name: Package
     # needs: publish
-    runs-on: ${{ matrix.os }}
+    # runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         os: [ubuntu-latest, ubuntu-24.04-arm]
+        platform: [linux/amd64, linux/arm64]
         feature: [realtime-http, realtime-messaging, realtime-websockets]
     permissions:
       contents: read
@@ -60,7 +62,8 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           push: true
-          platforms: ${{ env.PLATFORM }}
+          # platforms: ${{ env.PLATFORM }}
+          platforms: linux/${{ matrix.platform }}
           build-args: |
             FEATURES=${{ matrix.feature }}
           secrets: |
@@ -75,7 +78,7 @@ jobs:
           # sbom: false       # as above
           outputs: type=image,name=target
         env:
-          PLATFORM: ${{ matrix.os == 'ubuntu-latest' && 'linux/amd64' || 'linux/arm64' }}
+          # PLATFORM: ${{ matrix.os == 'ubuntu-latest' && 'linux/amd64' || 'linux/arm64' }}
           IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}-${{ matrix.feature }}
 
           # ${{ env.IMAGE_NAME }}:${{ needs.publish.outputs.version }}
