@@ -101,8 +101,8 @@ jobs:
     steps:
       - id: get-sources
         run: |
-          echo toJSON("${{ needs.package.outputs.json }}")
-          SOURCES=$(echo toJSON("${{ needs.package.outputs.json }}") | jq '.[]."${{ matrix.feature }}" | select(. != null)')
+          echo ("${{ toJSON(needs.package.outputs.json) }}")
+          SOURCES=$(echo "${{ toJSON(needs.package.outputs.json) }}" | jq '.[]."${{ matrix.feature }}" | select(. != null)')
           echo "SOURCES: ${SOURCES}"  
           echo "sources=${SOURCES}" >> $GITHUB_OUTPUT
 
