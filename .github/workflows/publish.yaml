@@ -87,23 +87,19 @@ jobs:
         id: digest
         with:
           yaml: |
-            image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}-${{ matrix.feature }}@${{ steps.build.outputs.digest }}
+            digest: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}-${{ matrix.feature }}@${{ steps.build.outputs.digest }}
 
   manifest:
     name: Manifest
     needs: package
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        os: [ubuntu-latest, ubuntu-24.04-arm]
-        feature: [realtime-http, realtime-messaging, realtime-websockets]
     permissions:
       contents: read
       packages: write
 
     steps:
       - run: |
-          echo "${{ needs.package.outputs.json }}"
+          echo "${{ fromJSON(needs.package.outputs.json) }}"
 
       # - uses: int128/docker-manifest-create-action@v2
       #   with:
