@@ -39,8 +39,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # os: [ubuntu-latest, ubuntu-24.04-arm]
-        platform: [linux/amd64, linux/arm64]
+        os: [ubuntu-latest, ubuntu-24.04-arm]
+        # platform: [linux/amd64, linux/arm64]
         feature: [realtime-http, realtime-messaging, realtime-websockets]
     permissions:
       contents: read
@@ -62,22 +62,20 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           push: true
-          platforms: ${{ matrix.platform }}
+          platforms: ${{ env.PLATFORM }}
           build-args: |
             FEATURES=${{ matrix.feature }}
           secrets: |
             credibil=${{ secrets.CARGO_REGISTRIES_CREDIBIL_TOKEN }}
           tags: |
             ${{ env.IMAGE_NAME }}:latest
-          # annotations:
-          #   org.opencontainers.image.description=${{ env.PLATFORM }}
           cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache
           cache-to: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache,mode=max
           # provenance: false # disable to avoid last build being named 'unknown/unknown'
           # sbom: false       # as above
           outputs: type=image,name=target
         env:
-          # PLATFORM: ${{ matrix.os == 'ubuntu-latest' && 'linux/amd64' || 'linux/arm64' }}
+          PLATFORM: ${{ matrix.os == 'ubuntu-latest' && 'linux/amd64' || 'linux/arm64' }}
           IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}-${{ matrix.feature }}
 
           # ${{ env.IMAGE_NAME }}:${{ needs.publish.outputs.version }}
