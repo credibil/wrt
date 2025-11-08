@@ -99,10 +99,10 @@ jobs:
       packages: write
 
     steps:
-      - id: get-digests
+      - id: get-sources
         run: |
-          echo "${{ needs.package.outputs.json}}"
-          SOURCES=$(echo "${{ needs.package.outputs.json}}" | jq -r '.[]."${{ matrix.feature }}" | select(. != null)')
+          echo "${{ needs.package.outputs.json }}"
+          SOURCES=$(echo "${{ needs.package.outputs.json }}" | jq '.[]."${{ matrix.feature }}" | select(. != null)')
           echo "SOURCES: ${SOURCES}"  
           echo "sources=${SOURCES}" >> $GITHUB_OUTPUT
 
