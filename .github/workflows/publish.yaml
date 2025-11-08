@@ -44,18 +44,7 @@ jobs:
       contents: read
       packages: write
 
-    env:
-      RUSTFLAGS: -Dwarnings
-      SCCACHE_GHA_ENABLED: true
-      RUSTC_WRAPPER: sccache
-
     steps:
-
-      - uses: actions/checkout@v5
-      - uses: credibil/pipeline/.github/actions/cargo-cache@main
-      - uses: mozilla-actions/sccache-action@v0.0.9
-      - run: cargo fetch
-        
       - uses: credibil/pipeline/.github/actions/cargo-cache@main
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
