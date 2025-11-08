@@ -67,8 +67,8 @@ jobs:
             credibil=${{ secrets.CARGO_REGISTRIES_CREDIBIL_TOKEN }}
           tags: |
             ${{ env.IMAGE_NAME }}:latest
-          annotations:
-            org.opencontainers.image.description=${{ env.PLATFORM }}
+          # annotations:
+          #   org.opencontainers.image.description=${{ env.PLATFORM }}
           cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache
           cache-to: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache,mode=max
           provenance: false # disable to avoid last build being named 'unknown/unknown'
