@@ -71,7 +71,7 @@ jobs:
             ${{ env.IMAGE_NAME }}:latest
           cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache
           cache-to: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache,mode=max
-          # provenance: false # disable to avoid last build being named 'unknown/unknown'
+          provenance: false # disable to avoid last build being named 'unknown/unknown'
           # sbom: false       # as above
           outputs: type=image,name=target
         env:
