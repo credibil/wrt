@@ -99,9 +99,10 @@ jobs:
       packages: write
 
     steps:
-      - run: |
+      - id: digests
+        run: |
           echo "${{ needs.package.outputs.json}}"
-          echo "${{ needs.package.outputs.json}}" | jq  .[].${{ matrix.feature }} | select(. != null)'
+          echo "${{ needs.package.outputs.json}}" | jq  '.[].${{ matrix.feature }} | select(. != null)'
 
 
 
