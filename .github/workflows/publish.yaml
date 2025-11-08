@@ -69,8 +69,8 @@ jobs:
             credibil=${{ secrets.CARGO_REGISTRIES_CREDIBIL_TOKEN }}
           tags: |
             ${{ env.IMAGE_NAME }}:latest
-          cache-to: type=gha,mode=max
-          cache-from: type=gha
+          cache-to: type=gha,scope=${{ env.IMAGE_NAME }}-${{ env.PLATFORM }},mode=max
+          cache-from: type=gha,scope=${{ env.IMAGE_NAME }}-${{ env.PLATFORM }}
           # cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:cache
           # cache-to: type=registry,ref=${{ env.IMAGE_NAME }}:cache,mode=max
         env:
