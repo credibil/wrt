@@ -67,7 +67,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           push: true
-          # platforms: ${{ matrix.platform.name }}
+          platforms: ${{ matrix.platform.name }}
           build-args: |
             FEATURES=${{ matrix.feature }}
           secrets: |
@@ -77,21 +77,28 @@ jobs:
           cache-to: type=gha,scope=${{ env.IMAGE_NAME }}-${{ matrix.platform.name }},mode=max
           cache-from: type=gha,scope=${{ env.IMAGE_NAME }}-${{ matrix.platform.name }}
         env:
-          IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}-${{ matrix.feature }}
+          IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/${{ matrix.feature }}
 
           # ${{ env.IMAGE_NAME }}:${{ needs.publish.outputs.version }}
 
-      - uses: beacon-biosignals/matrix-output@v1
+      - name: Export image digest
+        uses: beacon-biosignals/matrix-output@v1
         id: digest
         with:
           yaml: |
-            image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}-${{ matrix.feature }}
+            image: ghcr.io/${{ github.repository_owner }}/${{ matrix.feature }}
             digest: ${{ steps.build.outputs.digest }}
 
+  # Create and push manifests for each image. This job resolves an issue GitHub
+  # has with matrix builds for multi-arch images where the architecture of the
+  # last image is shown as 'unknown/unknown'.
   manifest:
     name: Manifest
     needs: package
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        feature: [realtime-http, realtime-messaging, realtime-websockets]
     permissions:
       contents: read
       packages: write
@@ -106,23 +113,40 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: int128/docker-manifest-create-action@v2
+      - uses: docker/metadata-action@v5
+        id: metadata
         with:
-          tags: ${{ fromJSON(needs.package.outputs.json)[0].image }}:latest
-          sources: |
-            ${{ fromJSON(needs.package.outputs.json)[0].image }}@${{ fromJSON(needs.package.outputs.json)[0].digest }}
-            ${{ fromJSON(needs.package.outputs.json)[0].image }}@${{ fromJSON(needs.package.outputs.json)[1].digest }}
+          images: ghcr.io/${{ github.repository_owner }}/${{ matrix.feature }}
 
-      - uses: int128/docker-manifest-create-action@v2
-        with:
-          tags: ${{ fromJSON(needs.package.outputs.json)[2].image }}:latest
-          sources: |
-            ${{ fromJSON(needs.package.outputs.json)[2].image }}@${{ fromJSON(needs.package.outputs.json)[2].digest }}
-            ${{ fromJSON(needs.package.outputs.json)[2].image }}@${{ fromJSON(needs.package.outputs.json)[3].digest }}
+      - run: |
+          echo "${{ steps.metadata.outputs }}"
 
-      - uses: int128/docker-manifest-create-action@v2
-        with:
-          tags: ${{ fromJSON(needs.package.outputs.json)[4].image }}:latest
-          sources: |
-            ${{ fromJSON(needs.package.outputs.json)[4].image }}@${{ fromJSON(needs.package.outputs.json)[4].digest }}
-            ${{ fromJSON(needs.package.outputs.json)[4].image }}@${{ fromJSON(needs.package.outputs.json)[5].digest }}
+      # - uses: int128/docker-manifest-create-action@v2
+      #   id: build
+      #   with:
+      #     index-annotations: ${{ steps.metadata.outputs.labels }}
+      #     tags: ${{ steps.metadata.outputs.tags }}
+      #     sources: |
+      #       ${{ steps.ecr.outputs.registry }}/${{ github.repository }}@${{ needs.build-linux-amd64.outputs.digest }}
+      #       ${{ steps.ecr.outputs.registry }}/${{ github.repository }}@${{ needs.build-linux-arm64.outputs.digest }}
+
+      # - uses: int128/docker-manifest-create-action@v2
+      #   with:
+      #     tags: ${{ fromJSON(needs.package.outputs.json)[0].image }}:latest
+      #     sources: |
+      #       ${{ fromJSON(needs.package.outputs.json)[0].image }}@${{ fromJSON(needs.package.outputs.json)[0].digest }}
+      #       ${{ fromJSON(needs.package.outputs.json)[0].image }}@${{ fromJSON(needs.package.outputs.json)[1].digest }}
+
+      # - uses: int128/docker-manifest-create-action@v2
+      #   with:
+      #     tags: ${{ fromJSON(needs.package.outputs.json)[2].image }}:latest
+      #     sources: |
+      #       ${{ fromJSON(needs.package.outputs.json)[2].image }}@${{ fromJSON(needs.package.outputs.json)[2].digest }}
+      #       ${{ fromJSON(needs.package.outputs.json)[2].image }}@${{ fromJSON(needs.package.outputs.json)[3].digest }}
+
+      # - uses: int128/docker-manifest-create-action@v2
+      #   with:
+      #     tags: ${{ fromJSON(needs.package.outputs.json)[4].image }}:latest
+      #     sources: |
+      #       ${{ fromJSON(needs.package.outputs.json)[4].image }}@${{ fromJSON(needs.package.outputs.json)[4].digest }}
+      #       ${{ fromJSON(needs.package.outputs.json)[4].image }}@${{ fromJSON(needs.package.outputs.json)[5].digest }}
