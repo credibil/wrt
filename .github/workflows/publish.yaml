@@ -99,13 +99,10 @@ jobs:
 
     steps:
       - run: |
-          echo "${{ fromJSON(needs.package.outputs.json.digest) }}"
+          echo "${{ fromJSON(needs.package.outputs.json) }}"
 
       # - uses: int128/docker-manifest-create-action@v2
       #   with:
       #     tags: ${{ env.IMAGE_NAME }}:latest
       #     sources: |
       #       ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}@${{ steps.build-amd64.outputs.digest }}
-      #   env:
-      #     #   PLATFORM: ${{ matrix.os == 'ubuntu-latest' && 'linux/amd64' || 'linux/arm64' }}
-      #     IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}-${{ matrix.feature }}
