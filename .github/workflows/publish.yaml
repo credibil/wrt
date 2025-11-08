@@ -72,6 +72,8 @@ jobs:
             ${{ env.IMAGE_NAME }}:latest
           cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache
           cache-to: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache,mode=max
+          provenance: false # Disable to avoid unknown/unknown
+          sbom: false       # Disable to avoid unknown/unknown
         env:
           IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}-${{ matrix.feature }}
 
