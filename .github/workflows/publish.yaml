@@ -69,11 +69,10 @@ jobs:
             credibil=${{ secrets.CARGO_REGISTRIES_CREDIBIL_TOKEN }}
           tags: |
             ${{ env.IMAGE_NAME }}:latest
-          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache
-          cache-to: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache,mode=max
-          provenance: false # disable to avoid last build being named 'unknown/unknown'
-          # sbom: false       # as above
-          outputs: type=image,name=target
+          cache-to: type=gha,mode=max
+          cache-from: type=gha
+          # cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:cache
+          # cache-to: type=registry,ref=${{ env.IMAGE_NAME }}:cache,mode=max
         env:
           PLATFORM: ${{ matrix.os == 'ubuntu-latest' && 'linux/amd64' || 'linux/arm64' }}
           IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}-${{ matrix.feature }}
