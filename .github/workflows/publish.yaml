@@ -82,7 +82,7 @@ jobs:
         id: digest
         with:
           yaml: |
-            ${{ matrix.feature }}: ${{ steps.build.outputs.digest }}
+            ${{ matrix.feature }}: ghcr.io/${{ github.repository_owner }}/${{ matrix.feature }}@${{ steps.build.outputs.digest }}
 
   # Create and push manifests for each image. This job resolves an issue GitHub
   # has with matrix builds for multi-arch images where the architecture of the
@@ -99,10 +99,12 @@ jobs:
       packages: write
 
     steps:
-      - id: digests
+      - id: get-digests
         run: |
           echo "${{ needs.package.outputs.json}}"
-          echo "digests=${{ needs.package.outputs.json}}" | jq  '.[]."${{ matrix.feature }}" | select(. != null)' >> $GITHUB_OUTPUT
+          SOURCES=$(echo "${{ needs.package.outputs.json}}" | jq -r '.[].'"${{ matrix.feature }}"' | select(. != null)')
+          echo "SOURCES: ${SOURCES}"  
+          echo "sources=${SOURCES}" >> $GITHUB_OUTPUT
 
 
 
