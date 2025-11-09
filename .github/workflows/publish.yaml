@@ -101,7 +101,7 @@ jobs:
     steps:
       - id: filter
         run: |
-          echo ${{ toJSON(needs.package.outputs.json) }} | jq '.[]."${{ matrix.feature }}"'
+          echo ${{ needs.package.outputs.json }} | jq '.[]."${{ matrix.feature }}"'
 
       # echo ("${{ needs.package.outputs.json }}")
 
