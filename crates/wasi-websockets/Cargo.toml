@@ -24,7 +24,7 @@ futures.workspace = true
 futures-channel.workspace = true
 futures-util.workspace = true
 http-body-util.workspace = true
-hyper.workspace = true
+hyper = { workspace = true, features = ["server"] }
 hyper-tungstenite.workspace = true
 hyper-util.workspace = true
 runtime.workspace = true

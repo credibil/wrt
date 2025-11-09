@@ -19,7 +19,7 @@ jobs:
     uses: credibil/pipeline/.github/workflows/ci.yaml@main
     secrets: inherit
     with:
-      outdated: prost
+      outdated: prost,openssl
 
   publish:
     name: Publish
@@ -35,7 +35,7 @@ jobs:
   package:
     name: Package
     needs: publish
-    runs-on: ${{ matrix.platform.name == 'linux/amd64' && 'ubuntu-latest' || 'ubuntu-24.04-arm' }}
+    runs-on: ${{ matrix.platform == 'linux/amd64' && 'ubuntu-latest' || 'ubuntu-24.04-arm' }}
     strategy:
       matrix:
         feature: [realtime-http, realtime-messaging, realtime-websockets]
