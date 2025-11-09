@@ -101,8 +101,9 @@ jobs:
     steps:
       - id: filter
         run: |
-          # echo ("${{ needs.package.outputs.json }}")
-          "${{ needs.package.outputs.json }}" | jq '.[]."${{ matrix.feature }}"'
+          ${{ needs.package.outputs.json }} | jq '.[]."${{ matrix.feature }}"'
+
+      # echo ("${{ needs.package.outputs.json }}")
 
       # SOURCES=$(echo "${{ needs.package.outputs.json }}" | jq '.[]."${{ matrix.feature }}" | select(. != null)')
       # echo "SOURCES: ${SOURCES}"  
