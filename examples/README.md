@@ -16,7 +16,7 @@ cargo build --example http --target wasm32-wasip2 --release
 
 # run the guest
 set -a && source .env && set +a
-cargo run --features "rt-http" -- run ./target/wasm32-wasip2/release/examples/http.wasm
+cargo run --features "realtime-http" -- run ./target/wasm32-wasip2/release/examples/http.wasm
 ```
 
 In a separate console, call the guest:

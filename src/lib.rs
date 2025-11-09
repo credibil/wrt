@@ -104,10 +104,10 @@ pub async fn run(wasm: PathBuf) -> Result<()> {
     #[cfg(all(feature = "http", not(all(feature = "messaging", feature = "websockets"))))]
     tokio::try_join!(WasiHttp.run(&run_state))?;
 
-    #[cfg(all(feature = "messaging", not(all(feature = "http", feature = "websockets"))))]
+    #[cfg(all(feature = "messaging", not(any(feature = "http", feature = "websockets"))))]
     tokio::try_join!(WasiMessaging.run(&run_state))?;
 
-    #[cfg(all(feature = "websockets", not(all(feature = "http", feature = "messaging"))))]
+    #[cfg(all(feature = "websockets", not(any(feature = "http", feature = "messaging"))))]
     tokio::try_join!(WasiWebSockets.run(&run_state))?;
 
     // two servers
