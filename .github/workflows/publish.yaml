@@ -4,37 +4,37 @@ on:
   workflow_dispatch:
 
 jobs:
-  # skip:
-  #   name: Skipped
-  #   if: ${{ !startsWith(github.ref_name, 'release-') }}
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - run: |
-  #         echo "This workflow only runs on the 'release-*' branches"
-  #         exit 1
+  skip:
+    name: Skipped
+    if: ${{ !startsWith(github.ref_name, 'release-') }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "This workflow only runs on the 'release-*' branches"
+          exit 1
 
-  # ci:
-  #   name: CI
-  #   if: ${{ startsWith(github.ref_name, 'release-') }}
-  #   uses: credibil/pipeline/.github/workflows/ci.yaml@main
-  #   secrets: inherit
-  #   with:
-  #     outdated: prost
+  ci:
+    name: CI
+    if: ${{ startsWith(github.ref_name, 'release-') }}
+    uses: credibil/pipeline/.github/workflows/ci.yaml@main
+    secrets: inherit
+    with:
+      outdated: prost
 
-  # publish:
-  #   name: Publish
-  #   needs: ci
-  #   uses: credibil/pipeline/.github/workflows/publish.yaml@main
+  publish:
+    name: Publish
+    needs: ci
+    uses: credibil/pipeline/.github/workflows/publish.yaml@main
 
-  # crates:
-  #   name: Publish crates
-  #   needs: publish
-  #   uses: credibil/pipeline/.github/workflows/crates.yaml@main
-  #   secrets: inherit
+  crates:
+    name: Publish crates
+    needs: publish
+    uses: credibil/pipeline/.github/workflows/crates.yaml@main
+    secrets: inherit
 
   package:
     name: Package
-    # needs: publish
+    needs: publish
     runs-on: ${{ matrix.platform.name == 'linux/amd64' && 'ubuntu-latest' || 'ubuntu-24.04-arm' }}
     strategy:
       matrix:
@@ -70,12 +70,11 @@ jobs:
             credibil=${{ secrets.CARGO_REGISTRIES_CREDIBIL_TOKEN }}
           tags: |
             ${{ env.IMAGE_NAME }}:latest
+            ${{ env.IMAGE_NAME }}:${{ needs.publish.outputs.version }}
           cache-to: type=gha,scope=${{ env.IMAGE_NAME }}-${{ matrix.platform }},mode=max
           cache-from: type=gha,scope=${{ env.IMAGE_NAME }}-${{ matrix.platform }}
         env:
           IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/${{ matrix.feature }}
-
-          # ${{ env.IMAGE_NAME }}:${{ needs.publish.outputs.version }}
 
       - name: Export image source
         uses: beacon-biosignals/matrix-output@v1
