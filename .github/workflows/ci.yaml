@@ -7,5 +7,5 @@ jobs:
   ci:
     uses: credibil/pipeline/.github/workflows/ci.yaml@main
     secrets: inherit
-    with:
-      outdated: prost,openssl
+    # with:
+    #   outdated: prost

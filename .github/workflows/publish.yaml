@@ -18,8 +18,8 @@ jobs:
     if: ${{ startsWith(github.ref_name, 'release-') }}
     uses: credibil/pipeline/.github/workflows/ci.yaml@main
     secrets: inherit
-    with:
-      outdated: prost,openssl
+    # with:
+    #   outdated: prost
 
   publish:
     name: Publish
