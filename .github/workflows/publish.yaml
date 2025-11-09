@@ -41,7 +41,7 @@ jobs:
         feature: [realtime-http, realtime-messaging, realtime-websockets]
         platform: [linux/amd64, linux/arm64]
     outputs:
-      json: ${{ steps.digest.outputs.json }}
+      sources: ${{ steps.source.outputs.json }}
     permissions:
       contents: read
       packages: write
@@ -77,9 +77,9 @@ jobs:
 
           # ${{ env.IMAGE_NAME }}:${{ needs.publish.outputs.version }}
 
-      - name: Export image digest
+      - name: Export image source
         uses: beacon-biosignals/matrix-output@v1
-        id: digest
+        id: source
         with:
           yaml: |
             ${{ matrix.feature }}: ghcr.io/${{ github.repository_owner }}/${{ matrix.feature }}@${{ steps.build.outputs.digest }}
@@ -99,39 +99,33 @@ jobs:
       packages: write
 
     steps:
-      - id: filter
+      - name: Select image sources
+        id: select
         run: |
-          SOURCES=$(echo '${{ needs.package.outputs.json }}' | jq -r '.[]."${{ matrix.feature }}" | select(. != null)')
+          SOURCES=$(echo '${{ needs.package.outputs.sources }}' | jq -r '.[]."${{ matrix.feature }}" | select(. != null)')
           {
             echo 'sources<<EOF'
             echo "${SOURCES}"
             echo EOF
           } >> $GITHUB_OUTPUT
 
-      - uses: docker/login-action@v3
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
         with:
           registry: https://ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: docker/metadata-action@v5
+      - name: Get image metadata
+        uses: docker/metadata-action@v5
         id: metadata
         with:
           images: ghcr.io/${{ github.repository_owner }}/${{ matrix.feature }}
 
-      - uses: int128/docker-manifest-create-action@v2
+      - name: Create Docker manifest
+        uses: int128/docker-manifest-create-action@v2
         id: build
         with:
           tags: ${{ steps.metadata.outputs.tags }}
           sources: |
-            ${{ steps.filter.outputs.sources }}
-
-          # ghcr.io/${{ github.repository_owner }}/${{ matrix.feature }}@${{ needs.amd64.outputs.digest }}
-          # ghcr.io/${{ github.repository_owner }}/${{ matrix.feature }}@${{ needs.arm64.outputs.digest }}
-
-      # - uses: int128/docker-manifest-create-action@v2
-      #   with:
-      #     tags: ${{ fromJSON(needs.package.outputs.json)[0].image }}:latest
-      #     sources: |
-      #       ${{ fromJSON(needs.package.outputs.json)[0].image }}@${{ fromJSON(needs.package.outputs.json)[0].digest }}
-      #       ${{ fromJSON(needs.package.outputs.json)[0].image }}@${{ fromJSON(needs.package.outputs.json)[1].digest }}
+            ${{ steps.select.outputs.sources }}
