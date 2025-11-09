@@ -310,6 +310,10 @@ criteria = "safe-to-deploy"
 version = "0.14.0"
 criteria = "safe-to-deploy"
 
+[[exemptions.fancy-regex]]
+version = "0.16.2"
+criteria = "safe-to-deploy"
+
 [[exemptions.fixedbitset]]
 version = "0.5.7"
 criteria = "safe-to-deploy"
@@ -444,6 +448,10 @@ criteria = "safe-to-deploy"
 
 [[exemptions.jsonschema]]
 version = "0.30.0"
+criteria = "safe-to-deploy"
+
+[[exemptions.jsonschema]]
+version = "0.33.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.libredox]]
@@ -740,6 +748,10 @@ criteria = "safe-to-deploy"
 
 [[exemptions.referencing]]
 version = "0.30.0"
+criteria = "safe-to-deploy"
+
+[[exemptions.referencing]]
+version = "0.33.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.regex-lite]]

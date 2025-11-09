@@ -1479,6 +1479,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "fancy-regex"
+version = "0.16.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "998b056554fbe42e03ae0e152895cd1a7e1002aec800fdc6635d20270260c46f"
+dependencies = [
+ "bit-set",
+ "regex-automata",
+ "regex-syntax",
+]
+
+[[package]]
 name = "fastrand"
 version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2303,7 +2314,7 @@ dependencies = [
  "base64 0.22.1",
  "bytecount",
  "email_address",
- "fancy-regex",
+ "fancy-regex 0.14.0",
  "fraction",
  "idna",
  "itoa",
@@ -2311,7 +2322,34 @@ dependencies = [
  "num-traits",
  "once_cell",
  "percent-encoding",
- "referencing",
+ "referencing 0.30.0",
+ "regex",
+ "regex-syntax",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "uuid-simd",
+]
+
+[[package]]
+name = "jsonschema"
+version = "0.33.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d46662859bc5f60a145b75f4632fbadc84e829e45df6c5de74cfc8e05acb96b5"
+dependencies = [
+ "ahash",
+ "base64 0.22.1",
+ "bytecount",
+ "email_address",
+ "fancy-regex 0.16.2",
+ "fraction",
+ "idna",
+ "itoa",
+ "num-cmp",
+ "num-traits",
+ "once_cell",
+ "percent-encoding",
+ "referencing 0.33.0",
  "regex",
  "regex-syntax",
  "reqwest",
@@ -3649,6 +3687,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "referencing"
+version = "0.33.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9e9c261f7ce75418b3beadfb3f0eb1299fe8eb9640deba45ffa2cb783098697d"
+dependencies = [
+ "ahash",
+ "fluent-uri",
+ "once_cell",
+ "parking_lot",
+ "percent-encoding",
+ "serde_json",
+]
+
+[[package]]
 name = "regalloc2"
 version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3775,7 +3827,7 @@ dependencies = [
  "csv",
  "fromenv",
  "futures",
- "jsonschema",
+ "jsonschema 0.33.0",
  "rdkafka",
  "runtime",
  "schema-registry-client",
@@ -4116,7 +4168,7 @@ dependencies = [
  "fastrand",
  "futures",
  "integer-encoding",
- "jsonschema",
+ "jsonschema 0.30.0",
  "lazy_static",
  "log",
  "mini-moka",
@@ -4125,7 +4177,7 @@ dependencies = [
  "prost-reflect",
  "prost-reflect-build",
  "prost-types",
- "referencing",
+ "referencing 0.30.0",
  "regex",
  "reqwest",
  "serde",
