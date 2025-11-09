@@ -101,7 +101,7 @@ jobs:
     steps:
       - id: filter
         run: |
-          SOURCES=$(echo '${{ needs.package.outputs.json }}' | jq '.[]."${{ matrix.feature }}" | select(. != null)')
+          SOURCES=$(echo '${{ needs.package.outputs.json }}' | jq -r '.[]."${{ matrix.feature }}" | select(. != null)')
           {
             echo 'sources<<EOF'
             echo "${SOURCES}"
@@ -135,17 +135,3 @@ jobs:
       #     sources: |
       #       ${{ fromJSON(needs.package.outputs.json)[0].image }}@${{ fromJSON(needs.package.outputs.json)[0].digest }}
       #       ${{ fromJSON(needs.package.outputs.json)[0].image }}@${{ fromJSON(needs.package.outputs.json)[1].digest }}
-
-      # - uses: int128/docker-manifest-create-action@v2
-      #   with:
-      #     tags: ${{ fromJSON(needs.package.outputs.json)[2].image }}:latest
-      #     sources: |
-      #       ${{ fromJSON(needs.package.outputs.json)[2].image }}@${{ fromJSON(needs.package.outputs.json)[2].digest }}
-      #       ${{ fromJSON(needs.package.outputs.json)[2].image }}@${{ fromJSON(needs.package.outputs.json)[3].digest }}
-
-      # - uses: int128/docker-manifest-create-action@v2
-      #   with:
-      #     tags: ${{ fromJSON(needs.package.outputs.json)[4].image }}:latest
-      #     sources: |
-      #       ${{ fromJSON(needs.package.outputs.json)[4].image }}@${{ fromJSON(needs.package.outputs.json)[4].digest }}
-      #       ${{ fromJSON(needs.package.outputs.json)[4].image }}@${{ fromJSON(needs.package.outputs.json)[5].digest }}
