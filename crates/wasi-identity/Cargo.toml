@@ -1,7 +1,6 @@
 [package]
-name = "res-azure"
-description = "Azure resource provider"
-publish = false
+name = "wasi-identity"
+description = "WASI Identity implementation"
 readme = "README.md"
 authors.workspace = true
 categories.workspace = true
@@ -13,22 +12,20 @@ repository.workspace = true
 rust-version.workspace = true
 version.workspace = true
 
-[lib]
-
 [lints]
 workspace = true
 
+[features]
+
+# host dependencies
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 anyhow.workspace = true
-azure_core.workspace = true
-azure_identity.workspace = true
-azure_security_keyvault_secrets.workspace = true
-base64ct.workspace = true
-fromenv.workspace = true
 futures.workspace = true
-http.workspace = true
 runtime.workspace = true
 tracing.workspace = true
-wasi-identity.workspace = true
-wasi-vault.workspace = true
-wasip3.workspace = true
+wasmtime.workspace = true
+wasmtime-wasi.workspace = true
+
+# guest dependencies
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wit-bindgen.workspace = true

@@ -1,5 +1,5 @@
 interface types {
-    use wasi:clocks/wall-clock@0.2.6.{datetime};
+    use wasi:clocks/wall-clock@0.2.8.{datetime};
 
     /// A key-value pair describing an attribute.
     record key-value {
@@ -60,7 +60,7 @@ interface types {
 
     /// The set of errors which may be raised by functions in this package
     variant error {
-        /// ExitGuard has already been invoked.
+        /// Shutdown has already been invoked.
         already-shutdown,
 
         /// Operation timed out before completing.

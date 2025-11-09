@@ -10,10 +10,10 @@ RUN adduser --disabled-password --gecos "" --home "/nonexistent" \
 WORKDIR /app
 RUN \
     --mount=type=secret,id=credibil,env=CARGO_REGISTRIES_CREDIBIL_TOKEN \
-    --mount=type=bind,src=.cargo,dst=.cargo \
-    --mount=type=bind,src=Cargo.toml,dst=Cargo.toml \
-    --mount=type=bind,src=Cargo.lock,dst=Cargo.lock \
-    --mount=type=bind,src=src,dst=src \
+    --mount=type=bind,source=.cargo,target=.cargo \
+    --mount=type=bind,source=Cargo.toml,target=Cargo.toml \
+    --mount=type=bind,source=Cargo.lock,target=Cargo.lock \
+    --mount=type=bind,source=src,target=src \
     --mount=type=bind,source=crates,target=crates \
     --mount=type=bind,source=examples,target=examples \
     --mount=type=cache,target=$CARGO_HOME/git/db \
@@ -22,13 +22,11 @@ RUN \
 
 # N.B. 'alpine' is ~10Mb larger than 'scratch' but appears to perform better
 FROM alpine:latest
-# ARG BIN
 
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=build /etc/passwd /etc/passwd
 COPY --from=build /etc/group /etc/group
 COPY --from=build --chown=appuser:appuser /app/target/release/runtime-cli /bin/server
-# COPY --from=build --chown=appuser:appuser /app/target/release/$BIN /bin/server
 
 USER appuser:appuser
 EXPOSE 8080

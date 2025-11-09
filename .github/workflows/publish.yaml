@@ -35,7 +35,13 @@ jobs:
   package:
     name: Package
     needs: publish
-    runs-on: ubuntu-latest-m
+    runs-on: ${{ matrix.platform.name == 'linux/amd64' && 'ubuntu-latest' || 'ubuntu-24.04-arm' }}
+    strategy:
+      matrix:
+        feature: [realtime-http, realtime-messaging, realtime-websockets]
+        platform: [linux/amd64, linux/arm64]
+    outputs:
+      sources: ${{ steps.source.outputs.json }}
     permissions:
       contents: read
       packages: write
@@ -53,16 +59,72 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push image
+        id: build
         uses: docker/build-push-action@v6
         with:
           push: true
-          platforms: linux/amd64,linux/arm64
+          platforms: ${{ matrix.platform }}
           build-args: |
-            BIN=standard
+            FEATURES=${{ matrix.feature }}
           secrets: |
             credibil=${{ secrets.CARGO_REGISTRIES_CREDIBIL_TOKEN }}
           tags: |
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ needs.publish.outputs.version }}
-            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest
-          cache-to: type=inline
+            ${{ env.IMAGE_NAME }}:latest
+            ${{ env.IMAGE_NAME }}:${{ needs.publish.outputs.version }}
+          cache-to: type=gha,scope=${{ env.IMAGE_NAME }}-${{ matrix.platform }},mode=max
+          cache-from: type=gha,scope=${{ env.IMAGE_NAME }}-${{ matrix.platform }}
+        env:
+          IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/${{ matrix.feature }}
+
+      - name: Export image source
+        uses: beacon-biosignals/matrix-output@v1
+        id: source
+        with:
+          yaml: |
+            ${{ matrix.feature }}: ghcr.io/${{ github.repository_owner }}/${{ matrix.feature }}@${{ steps.build.outputs.digest }}
+
+  # Create and push manifests for each image. This job resolves an issue GitHub
+  # has with matrix builds for multi-arch images where the architecture of the
+  # last image is shown as 'unknown/unknown'.
+  manifest:
+    name: Manifest
+    needs: package
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        feature: [realtime-http, realtime-messaging, realtime-websockets]
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Select image sources
+        id: select
+        run: |
+          SOURCES=$(echo '${{ needs.package.outputs.sources }}' | jq -r '.[]."${{ matrix.feature }}" | select(. != null)')
+          {
+            echo 'sources<<EOF'
+            echo "${SOURCES}"
+            echo EOF
+          } >> $GITHUB_OUTPUT
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: https://ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get image metadata
+        uses: docker/metadata-action@v5
+        id: metadata
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/${{ matrix.feature }}
+
+      - name: Create Docker manifest
+        uses: int128/docker-manifest-create-action@v2
+        id: build
+        with:
+          tags: ${{ steps.metadata.outputs.tags }}
+          sources: |
+            ${{ steps.select.outputs.sources }}
