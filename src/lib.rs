@@ -7,6 +7,7 @@
 use std::path::PathBuf;
 
 use anyhow::Result;
+use futures::future::{BoxFuture, TryJoinAll};
 #[cfg(feature = "azure")]
 use res_azure::Client as AzureCtx;
 #[cfg(all(feature = "kafka", not(feature = "nats")))]
@@ -100,33 +101,16 @@ pub async fn run(wasm: PathBuf) -> Result<()> {
         redis_ctx: RedisCtx::connect().await?,
     };
 
-    // single server
-    #[cfg(all(feature = "http", not(any(feature = "messaging", feature = "websockets"))))]
-    tokio::try_join!(WasiHttp.run(&run_state))?;
-
-    #[cfg(all(feature = "messaging", not(any(feature = "http", feature = "websockets"))))]
-    tokio::try_join!(WasiMessaging.run(&run_state))?;
-
-    #[cfg(all(feature = "websockets", not(any(feature = "http", feature = "messaging"))))]
-    tokio::try_join!(WasiWebSockets.run(&run_state))?;
-
-    // two servers
-    #[cfg(all(feature = "http", feature = "messaging", not(feature = "websockets")))]
-    tokio::try_join!(WasiHttp.run(&run_state), WasiMessaging.run(&run_state))?;
-
-    #[cfg(all(feature = "http", feature = "websockets", not(feature = "messaging")))]
-    tokio::try_join!(WasiHttp.run(&run_state), WasiWebSockets.run(&run_state))?;
-
-    #[cfg(all(feature = "messaging", feature = "websockets", not(feature = "http")))]
-    tokio::try_join!(WasiMessaging.run(&run_state), WasiWebSockets.run(&run_state))?;
-
-    // three servers
-    #[cfg(all(feature = "http", feature = "messaging", feature = "websockets"))]
-    tokio::try_join!(
-        WasiHttp.run(&run_state),
-        WasiMessaging.run(&run_state),
-        WasiWebSockets.run(&run_state)
-    )?;
+    // start server(s)
+    let futures: Vec<BoxFuture<'_, Result<()>>> = vec![
+        #[cfg(feature = "http")]
+        Box::pin(WasiHttp.run(&run_state)),
+        #[cfg(feature = "messaging")]
+        Box::pin(WasiMessaging.run(&run_state)),
+        #[cfg(feature = "websockets")]
+        Box::pin(WasiWebSockets.run(&run_state)),
+    ];
+    futures.into_iter().collect::<TryJoinAll<_>>().await?;
 
     Ok(())
 }
