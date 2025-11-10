@@ -1,4 +1,4 @@
-#![cfg(all(target_arch = "wasm32", not(miri)))]
+#![cfg(target_arch = "wasm32")]
 
 //! Minimal example of an HTTP proxy that uses Redis as a caching layer.
 //!

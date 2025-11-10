@@ -4,23 +4,8 @@ on:
   push:
 
 jobs:
-  # ci:
-  #   uses: credibil/pipeline/.github/workflows/ci.yaml@main
-  #   secrets: inherit
-  #   # with:
-  #   #   outdated: prost
-
-  miri:
-    name: Miri
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: credibil/pipeline/.github/actions/cargo-cache@main
-      - run: |
-          rustup toolchain install nightly --component miri
-          rustup override set nightly
-          cargo miri setup
-      - uses: taiki-e/install-action@nextest
-      - run: cargo miri nextest run --no-tests=pass
-        
-      # cargo +nightly miri nextest run --no-tests=pass --target x86_64-unknown-linux-gnu
+  ci:
+    uses: credibil/pipeline/.github/workflows/ci.yaml@main
+    secrets: inherit
+    # with:
+    #   outdated: prost
