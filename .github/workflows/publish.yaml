@@ -58,7 +58,6 @@ jobs:
           images: |
             ghcr.io/${{ github.repository_owner }}/${{ matrix.feature }}
           tags: |
-            type=ref,event=tag
             type=semver,pattern={{version}}
 
       - name: Log in to GHCR
