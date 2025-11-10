@@ -1,11 +1,11 @@
+#![cfg(target_arch = "wasm32")]
+
 //! Minimal example to show a SQL guest that can be used with a Postgres
 //! resource.
 //!
 //! The interface exposes simple HTTP GET and POST endpoints to trigger the SQL
 //! queries.
 
-#![allow(missing_docs)]
-#![cfg(target_arch = "wasm32")]
 use anyhow::anyhow;
 use axum::routing::{get, post};
 use axum::{Json, Router};

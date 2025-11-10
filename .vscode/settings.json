@@ -2,6 +2,6 @@
     "rust-analyzer.linkedProjects": [
         "Cargo.toml"
     ],
-    "rust-analyzer.check.command": "clippy"
-    // "rust-analyzer.cargo.target": "wasm32-wasip2"
+    "rust-analyzer.check.command": "clippy",
+    "rust-analyzer.cargo.target": "wasm32-wasip2"
 }

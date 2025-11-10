@@ -16,7 +16,7 @@ cargo build --example http --target wasm32-wasip2 --release
 
 # run the guest
 set -a && source .env && set +a
-cargo run --features "rt-http" -- run ./target/wasm32-wasip2/release/examples/http.wasm
+cargo run --features "realtime-http" -- run ./target/wasm32-wasip2/release/examples/http.wasm
 ```
 
 In a separate console, call the guest:
@@ -39,14 +39,7 @@ This will start a wasm runtime running a simple HTTP server instrumented with lo
 export CARGO_REGISTRIES_CREDIBIL_TOKEN="<registry token>"
 
 docker build \
-  --build-arg FEATURES=minimal \
-  --secret id=credibil,env=CARGO_REGISTRIES_CREDIBIL_TOKEN \
-  --tag ghcr.io/credibil/wrt .
-
-#  OR 
-
-docker build \
-  --build-arg FEATURES=standard \
+  --build-arg FEATURES=http-server \
   --secret id=credibil,env=CARGO_REGISTRIES_CREDIBIL_TOKEN \
   --tag ghcr.io/credibil/wrt .
 ```

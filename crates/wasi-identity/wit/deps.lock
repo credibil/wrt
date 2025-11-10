@@ -1,0 +1,14 @@
+[clocks]
+url = "https://github.com/WebAssembly/wasi-clocks/archive/main.tar.gz"
+sha256 = "be1d8c61e2544e2b48d902c60df73577e293349063344ce752cda4d323f8b913"
+sha512 = "0fd7962c62b135da0e584c2b58a55147bf09873848b0bb5bd3913019bc3f8d4b5969fbd6f7f96fd99a015efaf562a3eeafe3bc13049f8572a6e13ef9ef0e7e75"
+deps = ["io"]
+
+[identity]
+url = "https://github.com/credibil/wasi-identity/archive/main.tar.gz"
+sha256 = "8aeb8ce35e6437205a2679ae0fcdb0fd02a92df265f30ab31952ba31ae02c06b"
+sha512 = "45b977e3699315ecb9f3981bc83f03b44be70151d3514a3edb6670d2be2a19e081767bd9dd3353deb79c2c53395b20468240dd68370b1a38b06e12dff4e41dff"
+
+[io]
+sha256 = "9f1ad5da70f621bbd4c69e3bd90250a0c12ecfde266aa8f99684fc44bc1e7c15"
+sha512 = "6d0a9db6848f24762933d1c168a5b5b1065ba838c253ee20454afeb8dd1a049b918d25deff556083d68095dd3126ae131ac3e738774320eee5d918f5a4b5354e"

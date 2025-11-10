@@ -375,6 +375,12 @@ user-id = 3618 # David Tolnay (dtolnay)
 start = "2019-04-23"
 end = "2026-09-11"
 
+[[trusted.quote]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2019-04-09"
+end = "2026-11-07"
+
 [[trusted.ref-cast]]
 criteria = "safe-to-deploy"
 user-id = 3618 # David Tolnay (dtolnay)

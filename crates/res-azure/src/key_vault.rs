@@ -15,13 +15,15 @@ use crate::Client;
 impl WasiVaultCtx for Client {
     fn open_locker(&self, identifier: String) -> FutureResult<Arc<dyn Locker>> {
         tracing::trace!("opening locker: {identifier}");
-        let client = Arc::clone(&self.0);
+
+        let Some(key_vault) = &self.key_vault else {
+            return async move { Err(anyhow!("azure keyvault not configured for this client")) }
+                .boxed();
+        };
+        let vault = Arc::clone(key_vault);
 
         async move {
-            let locker = AzLocker {
-                vault: client,
-                identifier,
-            };
+            let locker = AzLocker { identifier, vault };
             Ok(Arc::new(locker) as Arc<dyn Locker>)
         }
         .boxed()

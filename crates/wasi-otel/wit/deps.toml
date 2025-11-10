@@ -1,2 +1,3 @@
 
 otel = "https://github.com/credibil/wasi-otel/archive/main.tar.gz"
+clocks = "https://github.com/WebAssembly/wasi-clocks/archive/main.tar.gz"

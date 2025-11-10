@@ -1,9 +1,9 @@
+#![cfg(target_arch = "wasm32")]
+
 //! Minimal example of an HTTP proxy that uses Redis as a caching layer.
 //!
 //! See the handler functions below for the use of headers to control caching
 //! behavior.
-
-#![cfg(target_arch = "wasm32")]
 
 use std::convert::Infallible;
 

@@ -1,8 +1,13 @@
 #![cfg(not(target_arch = "wasm32"))]
 
+// compile-time feature combination checks
+// #[cfg(all(feature = "keyvalue", feature = "nats", feature = "redis"))]
+// compile_error!("features \"nats\" and \"redis\" cannot be enabled for keyvalue at the same time");
+
 use std::path::PathBuf;
 
 use anyhow::Result;
+use futures::future::{BoxFuture, TryJoinAll};
 #[cfg(feature = "azure")]
 use res_azure::Client as AzureCtx;
 #[cfg(all(feature = "kafka", not(feature = "nats")))]
@@ -31,6 +36,8 @@ use runtime::{Runtime, State};
 use wasi_blobstore::{WasiBlobstore, WasiBlobstoreCtxView, WasiBlobstoreView};
 #[cfg(feature = "http")]
 use wasi_http::{WasiHttp, WasiHttpCtx, WasiHttpCtxView, WasiHttpView};
+#[cfg(feature = "identity")]
+use wasi_identity::{WasiIdentity, WasiIdentityCtxView, WasiIdentityView};
 #[cfg(feature = "keyvalue")]
 use wasi_keyvalue::{WasiKeyValue, WasiKeyValueCtxView, WasiKeyValueView};
 #[cfg(feature = "messaging")]
@@ -61,6 +68,8 @@ pub async fn run(wasm: PathBuf) -> Result<()> {
     compiled.link(WasiBlobstore)?;
     #[cfg(feature = "http")]
     compiled.link(WasiHttp)?;
+    #[cfg(feature = "identity")]
+    compiled.link(WasiIdentity)?;
     #[cfg(feature = "keyvalue")]
     compiled.link(WasiKeyValue)?;
     #[cfg(feature = "messaging")]
@@ -92,33 +101,16 @@ pub async fn run(wasm: PathBuf) -> Result<()> {
         redis_ctx: RedisCtx::connect().await?,
     };
 
-    // single server
-    #[cfg(all(feature = "http", not(all(feature = "messaging", feature = "websockets"))))]
-    tokio::try_join!(WasiHttp.run(&run_state))?;
-
-    #[cfg(all(feature = "messaging", not(all(feature = "http", feature = "websockets"))))]
-    tokio::try_join!(WasiMessaging.run(&run_state))?;
-
-    #[cfg(all(feature = "websockets", not(all(feature = "http", feature = "messaging"))))]
-    tokio::try_join!(WasiWebSockets.run(&run_state))?;
-
-    // two servers
-    #[cfg(all(feature = "http", feature = "messaging", not(feature = "websockets")))]
-    tokio::try_join!(WasiHttp.run(&run_state), WasiMessaging.run(&run_state))?;
-
-    #[cfg(all(feature = "http", feature = "websockets", not(feature = "messaging")))]
-    tokio::try_join!(WasiHttp.run(&run_state), WasiWebSockets.run(&run_state))?;
-
-    #[cfg(all(feature = "messaging", feature = "websockets", not(feature = "http")))]
-    tokio::try_join!(WasiMessaging.run(&run_state), WasiWebSockets.run(&run_state))?;
-
-    // three servers
-    #[cfg(all(feature = "http", feature = "messaging", feature = "websockets"))]
-    tokio::try_join!(
-        WasiHttp.run(&run_state),
-        WasiMessaging.run(&run_state),
-        WasiWebSockets.run(&run_state)
-    )?;
+    // start server(s)
+    let futures: Vec<BoxFuture<'_, Result<()>>> = vec![
+        #[cfg(feature = "http")]
+        Box::pin(WasiHttp.run(&run_state)),
+        #[cfg(feature = "messaging")]
+        Box::pin(WasiMessaging.run(&run_state)),
+        #[cfg(feature = "websockets")]
+        Box::pin(WasiWebSockets.run(&run_state)),
+    ];
+    futures.into_iter().collect::<TryJoinAll<_>>().await?;
 
     Ok(())
 }
@@ -167,6 +159,8 @@ impl State for RunState {
             blobstore_ctx: self.mongodb_ctx.clone(),
             #[cfg(feature = "http")]
             http_ctx: WasiHttpCtx,
+            #[cfg(all(feature = "identity", feature = "azure"))]
+            identity_ctx: self.azure_ctx.clone(),
             #[cfg(all(feature = "keyvalue", all(feature = "nats", not(feature = "redis"))))]
             keyvalue_ctx: self.nats_ctx.clone(),
             #[cfg(all(feature = "keyvalue", feature = "redis"))]
@@ -198,6 +192,8 @@ pub struct RunData {
     pub blobstore_ctx: MongoDbCtx,
     #[cfg(feature = "http")]
     pub http_ctx: WasiHttpCtx,
+    #[cfg(all(feature = "identity", feature = "azure"))]
+    pub identity_ctx: AzureCtx,
     #[cfg(all(feature = "keyvalue", all(feature = "nats", not(feature = "redis"))))]
     pub keyvalue_ctx: NatsCtx,
     #[cfg(all(feature = "keyvalue", feature = "redis"))]
@@ -240,6 +236,16 @@ impl WasiHttpView for RunData {
     fn http(&mut self) -> WasiHttpCtxView<'_> {
         WasiHttpCtxView {
             ctx: &mut self.http_ctx,
+            table: &mut self.table,
+        }
+    }
+}
+
+#[cfg(feature = "identity")]
+impl WasiIdentityView for RunData {
+    fn identity(&mut self) -> WasiIdentityCtxView<'_> {
+        WasiIdentityCtxView {
+            ctx: &mut self.identity_ctx,
             table: &mut self.table,
         }
     }

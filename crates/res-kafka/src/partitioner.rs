@@ -6,7 +6,7 @@
 /// operations are not what they typically are
 ///
 /// This partitioner replicates the partitioning scheme from `KafkaJS` so that we maintain backwards
-/// compatibility within out Kafka cluster.
+/// compatibility within our Kafka cluster.
 #[derive(Clone)]
 pub struct Partitioner {
     count: i32,
@@ -152,7 +152,7 @@ mod tests {
     }
 
     #[test]
-    fn test_murmur2() {
+    fn verify_murmur2() {
         let cases = vec![
             // Taken from
             // https://github.com/tulios/kafkajs/blob/v1.15.0/src/producer/partitioners/default/murmur2.spec.js
@@ -241,7 +241,7 @@ mod tests {
     }
 
     #[test]
-    fn test_partition() {
+    fn verify_partitioning() {
         let cases = vec![
             // Based on messages published in our Kafka cluster.
             TestCase {
@@ -303,14 +303,13 @@ mod tests {
     }
 
     #[test]
-    fn test_partitions() {
+    fn load_partitions() {
         let partitioner = Partitioner::new(12);
         let data = include_bytes!("../data/partitions.csv");
         let mut reader = csv::ReaderBuilder::new().from_reader(data.as_slice());
 
         for result in reader.deserialize() {
             let record: Partition = result.expect("should deserialize");
-
             let found = partitioner.partition(record.key.as_bytes());
             assert_eq!(found, record.partition);
         }

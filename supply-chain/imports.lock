@@ -528,6 +528,13 @@ when = "2025-10-24"
 user-id = 73222
 user-login = "wasmtime-publish"
 
+[[publisher.quote]]
+version = "1.0.42"
+when = "2025-11-06"
+user-id = 3618
+user-login = "dtolnay"
+user-name = "David Tolnay"
+
 [[publisher.ref-cast]]
 version = "1.0.25"
 when = "2025-09-28"

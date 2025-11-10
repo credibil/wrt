@@ -1,6 +1,13 @@
 # https://doc.rust-lang.org/stable/clippy/index.html
 
-doc-valid-idents = ["JetStream", "MongoDB", "NATS", "OpenTelemetry", "WebAssembly"]
+doc-valid-idents = [
+  "JetStream",
+  "MongoDB",
+  "NATS",
+  "OpenTelemetry",
+  "WebAssembly",
+  "WebSockets",
+]
 
 allowed-duplicate-crates = [
   "addr2line",
@@ -10,11 +17,13 @@ allowed-duplicate-crates = [
   "dashmap",
   "embedded-io",
   "fallible-iterator",
+  "fancy-regex",
   "getrandom",
   "gimli",
   "hashbrown",
   "hashbrown",
   "indexmap",
+  "jsonschema",
   "linux-raw-sys",
   "object",
   "prost",
@@ -22,6 +31,8 @@ allowed-duplicate-crates = [
   "rand",
   "rand_chacha",
   "rand_core",
+  "jsonschema",
+  "referencing",
   "rustix",
   "rustls",
   "rustls-native-certs",

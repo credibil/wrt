@@ -50,7 +50,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn ttlvalue_tryfrom_valid() {
+    fn ttlvalue_valid() {
         let value = vec![1, 2, 3, 4];
         let ttl = Some(60u64);
         let timestamp = Some(1_700_000_000u64);
@@ -67,7 +67,7 @@ mod tests {
     }
 
     #[test]
-    fn ttlvalue_tryfrom_missing_optional() {
+    fn ttlvalue_missing_optional() {
         let value = vec![5, 6, 7];
         let ttl_value = TtlValue {
             value: value.clone(),
@@ -82,7 +82,7 @@ mod tests {
     }
 
     #[test]
-    fn ttlvalue_tryfrom_invalid_json() {
+    fn ttlvalue_invalid_json() {
         let invalid = b"not a json".to_vec();
         let result = TtlValue::try_from(invalid);
         assert!(result.is_err());
@@ -91,7 +91,7 @@ mod tests {
     }
 
     #[test]
-    fn ttlvalue_tryfrom_wrong_type() {
+    fn ttlvalue_wrong_type() {
         // JSON for a different type (e.g., a string)
         let json = serde_json::to_vec(&"just a string").unwrap();
         let result = TtlValue::try_from(json);

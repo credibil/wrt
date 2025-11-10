@@ -20,19 +20,22 @@ doctest = false
 workspace = true
 
 [features]
-default = ["jit", "http-default", "otel-default"]
+default = ["jit", "http-server"]
 
-# Top-level feature sets that can be used to create a build. 
-# Each set contains a unique grouping of component-resource tuples used by wasm apps.
+# Top-level feature sets that can be used to create a build.
+# Each set contains a unique grouping of component-resource tuples used by wasm
+# apps.
+http-server = ["http-default", "otel-default"]
 credibil = ["http-default", "otel-default", "blobstore-mongodb", "keyvalue-nats", "messaging-nats", "vault-azure"]
 realtime-http = ["http-default", "otel-default", "keyvalue-redis"]
-realtime-messaging = ["messaging-kafka"]
-realtime-websockets = ["http-default", "otel-default", "websockets-default"]
+realtime-messaging = ["http-default", "otel-default", "messaging-kafka", "identity-azure"]
+realtime-websockets = ["http-default", "messaging-kafka", "otel-default", "websockets-default"]
 
-# Component-Resource tuples
+# Component-Resource tuples (not intended to be used directly)
 blobstore-mongodb = ["blobstore", "mongodb"]
 blobstore-nats = ["blobstore", "nats"]
 http-default = ["http"]
+identity-azure = ["identity", "azure"]
 keyvalue-nats = ["keyvalue", "nats"]
 keyvalue-redis = ["keyvalue", "redis"]
 messaging-nats = ["messaging", "nats"]
@@ -45,6 +48,7 @@ websockets-default = ["websockets"]
 # WASI components (not intended to be used directly)
 blobstore = ["dep:wasi-blobstore"]
 http = ["dep:wasi-http", "dep:wasmtime-wasi-http"]
+identity = ["dep:wasi-identity"]
 keyvalue = ["dep:wasi-keyvalue"]
 messaging = ["dep:wasi-messaging"]
 otel = ["dep:wasi-otel"]
@@ -68,6 +72,7 @@ anyhow.workspace = true
 tracing.workspace = true
 wasi-blobstore = { workspace = true, optional = true }
 wasi-http = { workspace = true, optional = true }
+wasi-identity = { workspace = true, optional = true }
 wasi-keyvalue = { workspace = true, optional = true }
 wasi-messaging = { workspace = true, optional = true }
 wasi-otel = { workspace = true, optional = true }
@@ -95,7 +100,7 @@ wasmtime-wasi.workspace = true
 wasmtime-wasi-http = { workspace = true, optional = true }
 
 # required for azure_identity, etc.
-openssl = { version = "0.10", features = ["vendored"] }
+openssl = { version = "0.10.75", features = ["vendored"] }
 
 [dev-dependencies]
 axum = { workspace = true, features = ["macros"] }
@@ -113,61 +118,73 @@ wit-bindgen.workspace = true
 name = "blobstore"
 path = "examples/blobstore.rs"
 crate-type = ["cdylib"]
+required-features = ["blobstore"]
 
 [[example]]
 name = "http"
 path = "examples/http.rs"
 crate-type = ["cdylib"]
+required-features = ["http", "otel"]
 
 [[example]]
 name = "proxy"
 path = "examples/proxy.rs"
 crate-type = ["cdylib"]
+required-features = ["http", "keyvalue"]
 
 [[example]]
 name = "keyvalue"
 path = "examples/keyvalue.rs"
 crate-type = ["cdylib"]
+required-features = ["keyvalue"]
 
 [[example]]
 name = "otel"
 path = "examples/otel.rs"
 crate-type = ["cdylib"]
+required-features = ["http", "otel"]
 
 [[example]]
 name = "pub-sub"
 path = "examples/pub_sub.rs"
 crate-type = ["cdylib"]
+required-features = ["messaging"]
 
 [[example]]
 name = "request-reply"
 path = "examples/request_reply.rs"
 crate-type = ["cdylib"]
+required-features = ["messaging"]
 
 [[example]]
 name = "vault"
 path = "examples/vault.rs"
 crate-type = ["cdylib"]
+required-features = ["vault"]
 
 [[example]]
 name = "redis"
 path = "examples/redis/lib.rs"
 crate-type = ["cdylib"]
+required-features = ["keyvalue", "redis"]
 
 [[example]]
 name = "kafka"
 path = "examples/kafka/lib.rs"
 crate-type = ["cdylib"]
+required-features = ["messaging", "kafka"]
 
 [[example]]
 name = "websockets"
 path = "examples/websockets.rs"
 crate-type = ["cdylib"]
+required-features = ["websockets"]
 
 [[example]]
 name = "postgres"
 path = "examples/postgres/lib.rs"
 crate-type = ["cdylib"]
+required-features = ["sql", "postgres"]
 
 [profile.release]
 lto = true
@@ -190,7 +207,7 @@ keywords = ["decentralized", "identity"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/credibil/wrt"
 rust-version = "1.91"
-version = "0.13.0"
+version = "0.15.0"
 
 [workspace.lints.rust]
 # https://dirname.github.io/rust-std-doc/rustc/lints/listing/allowed-by-default.html
@@ -252,7 +269,7 @@ http-body-util = "0.1.3"
 hyper = "1.7.0"
 hyper-tungstenite = "0.19.0"
 hyper-util = "0.1.17"
-jsonschema = "0.30.0"
+jsonschema = "0.33.0"
 mongodb = "3.3.0"
 nkeys = "0.4.5"
 opentelemetry = "0.31.0"
@@ -287,22 +304,23 @@ credibil-encoding = { version = "0.4.0", registry = "credibil" }
 credibil-otel = { version = "0.4.0", registry = "credibil" }
 
 # interally referenced crates
-res-azure = { path = "crates/res-azure", version = "0.13.0", registry = "credibil" }
-res-kafka = { path = "crates/res-kafka", version = "0.13.0", registry = "credibil" }
-res-mongodb = { path = "crates/res-mongodb", version = "0.13.0", registry = "credibil" }
-res-nats = { path = "crates/res-nats", version = "0.13.0", registry = "credibil" }
-res-postgres = { path = "crates/res-postgres", version = "0.13.0", registry = "credibil" }
-res-redis = { path = "crates/res-redis", version = "0.13.0", registry = "credibil" }
-runtime = { path = "crates/runtime", version = "0.13.0", registry = "credibil" }
-wasi-blobstore = { path = "crates/wasi-blobstore", version = "0.13.0", registry = "credibil" }
-wasi-http = { path = "crates/wasi-http", version = "0.13.0", registry = "credibil" }
-wasi-keyvalue = { path = "crates/wasi-keyvalue", version = "0.13.0", registry = "credibil" }
-wasi-messaging = { path = "crates/wasi-messaging", version = "0.13.0", registry = "credibil" }
-wasi-otel = { path = "crates/wasi-otel", version = "0.13.0", registry = "credibil" }
-wasi-otel-attr = { path = "crates/wasi-otel-attr", version = "0.13.0", registry = "credibil" }
-wasi-sql = { path = "crates/wasi-sql", version = "0.13.0", registry = "credibil" }
-wasi-vault = { path = "crates/wasi-vault", version = "0.13.0", registry = "credibil" }
-wasi-websockets = { path = "crates/wasi-websockets", version = "0.13.0", registry = "credibil" }
+res-azure = { path = "crates/res-azure", version = "0.15.0", registry = "credibil" }
+res-kafka = { path = "crates/res-kafka", version = "0.15.0", registry = "credibil" }
+res-mongodb = { path = "crates/res-mongodb", version = "0.15.0", registry = "credibil" }
+res-nats = { path = "crates/res-nats", version = "0.15.0", registry = "credibil" }
+res-postgres = { path = "crates/res-postgres", version = "0.15.0", registry = "credibil" }
+res-redis = { path = "crates/res-redis", version = "0.15.0", registry = "credibil" }
+runtime = { path = "crates/runtime", version = "0.15.0", registry = "credibil" }
+wasi-blobstore = { path = "crates/wasi-blobstore", version = "0.15.0", registry = "credibil" }
+wasi-http = { path = "crates/wasi-http", version = "0.15.0", registry = "credibil" }
+wasi-identity = { path = "crates/wasi-identity", version = "0.15.0", registry = "credibil" }
+wasi-keyvalue = { path = "crates/wasi-keyvalue", version = "0.15.0", registry = "credibil" }
+wasi-messaging = { path = "crates/wasi-messaging", version = "0.15.0", registry = "credibil" }
+wasi-otel = { path = "crates/wasi-otel", version = "0.15.0", registry = "credibil" }
+wasi-otel-attr = { path = "crates/wasi-otel-attr", version = "0.15.0", registry = "credibil" }
+wasi-sql = { path = "crates/wasi-sql", version = "0.15.0", registry = "credibil" }
+wasi-vault = { path = "crates/wasi-vault", version = "0.15.0", registry = "credibil" }
+wasi-websockets = { path = "crates/wasi-websockets", version = "0.15.0", registry = "credibil" }
 
 # [patch."https://github.com/credibil/core.git"]
 # credibil-otel = { path = "../../credibil/core/crates/otel" }

@@ -39,7 +39,7 @@ version = "1.7.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.async-compression]]
-version = "0.4.32"
+version = "0.4.33"
 criteria = "safe-to-deploy"
 
 [[exemptions.async-lock]]
@@ -139,7 +139,7 @@ version = "0.14.2"
 criteria = "safe-to-deploy"
 
 [[exemptions.cc]]
-version = "1.2.44"
+version = "1.2.45"
 criteria = "safe-to-deploy"
 
 [[exemptions.chrono]]
@@ -155,11 +155,11 @@ version = "4.6.7"
 criteria = "safe-to-deploy"
 
 [[exemptions.compression-codecs]]
-version = "0.4.31"
+version = "0.4.32"
 criteria = "safe-to-deploy"
 
 [[exemptions.compression-core]]
-version = "0.4.29"
+version = "0.4.30"
 criteria = "safe-to-deploy"
 
 [[exemptions.concurrent-queue]]
@@ -310,6 +310,10 @@ criteria = "safe-to-deploy"
 version = "0.14.0"
 criteria = "safe-to-deploy"
 
+[[exemptions.fancy-regex]]
+version = "0.16.2"
+criteria = "safe-to-deploy"
+
 [[exemptions.fixedbitset]]
 version = "0.5.7"
 criteria = "safe-to-deploy"
@@ -446,6 +450,10 @@ criteria = "safe-to-deploy"
 version = "0.30.0"
 criteria = "safe-to-deploy"
 
+[[exemptions.jsonschema]]
+version = "0.33.0"
+criteria = "safe-to-deploy"
+
 [[exemptions.libredox]]
 version = "0.1.10"
 criteria = "safe-to-deploy"
@@ -567,11 +575,11 @@ version = "1.21.3"
 criteria = "safe-to-deploy"
 
 [[exemptions.openssl]]
-version = "0.10.74"
+version = "0.10.75"
 criteria = "safe-to-deploy"
 
 [[exemptions.openssl-sys]]
-version = "0.9.110"
+version = "0.9.111"
 criteria = "safe-to-deploy"
 
 [[exemptions.opentelemetry]]
@@ -710,10 +718,6 @@ criteria = "safe-to-deploy"
 version = "0.11.13"
 criteria = "safe-to-deploy"
 
-[[exemptions.quote]]
-version = "1.0.42"
-criteria = "safe-to-deploy"
-
 [[exemptions.r-efi]]
 version = "5.3.0"
 criteria = "safe-to-deploy"
@@ -744,6 +748,10 @@ criteria = "safe-to-deploy"
 
 [[exemptions.referencing]]
 version = "0.30.0"
+criteria = "safe-to-deploy"
+
+[[exemptions.referencing]]
+version = "0.33.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.regex-lite]]
