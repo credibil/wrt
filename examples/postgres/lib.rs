@@ -1,4 +1,4 @@
-#![cfg(target_arch = "wasm32")]
+#![cfg(all(target_arch = "wasm32", not(miri)))]
 
 //! Minimal example to show a SQL guest that can be used with a Postgres
 //! resource.

@@ -1,4 +1,4 @@
-#![cfg(target_arch = "wasm32")]
+#![cfg(all(target_arch = "wasm32", not(miri)))]
 
 use axum::routing::post;
 use axum::{Json, Router};
