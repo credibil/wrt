@@ -70,11 +70,12 @@ jobs:
             credibil=${{ secrets.CARGO_REGISTRIES_CREDIBIL_TOKEN }}
           tags: |
             ${{ env.IMAGE_NAME }}:latest
-            ${{ env.IMAGE_NAME }}:${{ needs.publish.outputs.version }}
           cache-to: type=gha,scope=${{ env.IMAGE_NAME }}-${{ matrix.platform }},mode=max
           cache-from: type=gha,scope=${{ env.IMAGE_NAME }}-${{ matrix.platform }}
         env:
           IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/${{ matrix.feature }}
+
+    # ${{ env.IMAGE_NAME }}:${{ needs.publish.outputs.version }}
 
       - name: Export image source
         uses: beacon-biosignals/matrix-output@v1
