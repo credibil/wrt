@@ -41,78 +41,26 @@ impl Deref for ClientProxy {
 /// different backend messaging systems.
 pub trait Message: Debug + Send + Sync + 'static {
     /// Topic the message is published to.
-    fn topic(&self) -> &'static str;
+    fn topic(&self) -> String;
 
     /// Message content.
-    fn payload(&self) -> &[u8];
+    fn payload(&self) -> Vec<u8>;
 
     /// Headers or metadata associated with the message.
-    fn metadata(&self) -> Option<&Metadata>;
+    fn metadata(&self) -> Option<Metadata>;
 
     /// Optional message description.
-    fn description(&self) -> Option<&String>;
+    fn description(&self) -> Option<String>;
 
     /// Number of bytes in the payload.
     fn length(&self) -> usize;
 
     /// Optional reply topic to which a response can be published.
-    fn reply(&self) -> Option<&Reply>;
+    fn reply(&self) -> Option<Reply>;
 
     /// For downcasting support.
     fn as_any(&self) -> &dyn Any;
 }
-
-// #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-// pub struct Message {
-//     pub topic: String,
-
-//     /// Payload of the message. Can be any arbitrary data format.
-//     pub payload: Vec<u8>,
-
-//     /// Optional metadata.
-//     pub metadata: Option<Metadata>,
-
-//     /// Optional  description.
-//     pub description: Option<String>,
-
-//     pub length: usize,
-
-//     /// Optional reply topic to which response can be published.
-//     pub reply: Option<Reply>,
-// }
-
-// impl Message {
-//     #[must_use]
-//     pub fn new() -> Self {
-//         Self::default()
-//     }
-
-//     #[must_use]
-//     pub fn payload(mut self, payload: Vec<u8>) -> Self {
-//         self.length = payload.len();
-//         self.payload = payload;
-//         self
-//     }
-
-//     #[must_use]
-//     pub fn metadata(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
-//         let metadata = self.metadata.get_or_insert_with(Metadata::new);
-//         metadata.insert(key.into(), value.into());
-//         self
-//     }
-
-//     #[must_use]
-//     pub fn description(mut self, description: String) -> Self {
-//         self.description = Some(description);
-//         self
-//     }
-
-//     #[must_use]
-//     pub fn reply(mut self, reply: Reply) -> Self {
-//         self.reply = Some(reply);
-//         self
-//     }
-// }
 
 #[derive(Clone, Debug)]
 pub struct MessageProxy(pub Arc<dyn Message>);

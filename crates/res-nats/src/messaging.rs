@@ -1,4 +1,5 @@
 use std::any::Any;
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use anyhow::anyhow;
@@ -132,28 +133,39 @@ impl WasiMessagingCtx for crate::Client {
 struct NatsMessage(async_nats::Message);
 
 impl Message for NatsMessage {
-    fn topic(&self) -> &'static str {
-        todo!()
+    fn topic(&self) -> String {
+        self.0.subject.to_string()
     }
 
-    fn payload(&self) -> &[u8] {
-        todo!()
+    fn payload(&self) -> Vec<u8> {
+        self.0.payload.to_vec()
     }
 
-    fn metadata(&self) -> Option<&Metadata> {
-        todo!()
+    fn metadata(&self) -> Option<Metadata> {
+        if self.0.headers.is_none() { None } else {
+            let mut md = HashMap::new();
+            for (k, v) in self.0.headers.as_ref().unwrap().iter() {
+                let v_str =
+                    v.iter().map(|val| val.as_str().into()).collect::<Vec<String>>().join(", ");
+                md.insert(k.to_string(), v_str);
+            }
+            Some(Metadata { inner: md })
+        }
     }
 
-    fn description(&self) -> Option<&String> {
-        todo!()
+    fn description(&self) -> Option<String> {
+        self.0.description.clone()
     }
 
     fn length(&self) -> usize {
-        todo!()
+        self.0.length
     }
 
-    fn reply(&self) -> Option<&Reply> {
-        todo!()
+    fn reply(&self) -> Option<Reply> {
+        self.0.reply.clone().map(|r| Reply {
+            client_name: String::new(),
+            topic: r.to_string(),
+        })
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -179,9 +191,8 @@ impl Client for crate::Client {
             tracing::info!("subscribed to {topics:?} topics");
 
             // process messages until terminated
-            let stream = stream::select_all(subscribers).map(|msg| {
-                MessageProxy(Arc::new(NatsMessage(msg)) as Arc<dyn Message>)
-            });
+            let stream = stream::select_all(subscribers)
+                .map(|msg| MessageProxy(Arc::new(NatsMessage(msg)) as Arc<dyn Message>));
             Ok(Box::pin(stream) as Subscriptions)
         }
         .boxed()
@@ -190,7 +201,7 @@ impl Client for crate::Client {
     fn send(&self, topic: String, message: MessageProxy) -> FutureResult<()> {
         let client = self.inner.clone();
         async move {
-            let payload = message.payload().to_owned();
+            let payload = message.payload();
             let Some(headers) = message.metadata() else {
                 client
                     .publish(topic.clone(), payload.into())
@@ -220,7 +231,7 @@ impl Client for crate::Client {
         let client = self.inner.clone();
 
         async move {
-            let payload = message.payload().to_owned();
+            let payload = message.payload();
             let headers = message.metadata();
             let mut nats_headers = async_nats::HeaderMap::new();
             if let Some(meta) = headers {

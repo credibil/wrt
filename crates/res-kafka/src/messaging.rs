@@ -24,6 +24,9 @@ impl WasiMessagingCtx for crate::Client {
         let client = self.clone();
         async move { Ok(Arc::new(client) as Arc<dyn Client>) }.boxed()
     }
+
+    fn new_message(&self, data: Vec<u8>) -> FutureResult<Arc<dyn Message>> {
+    }
 }
 
 impl Client for crate::Client {

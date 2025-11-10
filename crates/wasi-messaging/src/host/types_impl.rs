@@ -43,7 +43,7 @@ impl HostMessageWithStore for WasiMessaging {
     ) -> anyhow::Result<Option<Topic>> {
         let message = get_message(accessor, &self_)?;
         let topic = message.topic();
-        if topic.is_empty() { Ok(None) } else { Ok(Some(topic.to_string())) }
+        if topic.is_empty() { Ok(None) } else { Ok(Some(topic)) }
     }
 
     /// An optional content-type describing the format of the data in the
@@ -52,8 +52,13 @@ impl HostMessageWithStore for WasiMessaging {
         accessor: &Accessor<T, Self>, self_: Resource<MessageProxy>,
     ) -> anyhow::Result<Option<String>> {
         let message = get_message(accessor, &self_)?;
-        let content_type = message.metadata().as_ref().and_then(|md| md.get("content-type"));
-        Ok(content_type.cloned())
+        if let Some (md) = message.metadata() {
+            if let Some(content_type) = md.get("content-type") {
+                return Ok(Some(content_type.clone()));
+            }
+            return Ok(None);
+        }
+        Ok(None)
     }
 
     /// Set the content-type describing the format of the data in the message.
@@ -74,7 +79,7 @@ impl HostMessageWithStore for WasiMessaging {
         accessor: &Accessor<T, Self>, self_: Resource<MessageProxy>,
     ) -> anyhow::Result<Vec<u8>> {
         let message = get_message(accessor, &self_)?;
-        Ok(message.payload().to_vec())
+        Ok(message.payload())
     }
 
     /// Set the opaque blob of data for this message, discarding the old value.
@@ -92,7 +97,7 @@ impl HostMessageWithStore for WasiMessaging {
         accessor: &Accessor<T, Self>, self_: Resource<MessageProxy>,
     ) -> anyhow::Result<Option<types::Metadata>> {
         let message = get_message(accessor, &self_)?;
-        let md = message.metadata().map(|meta| meta.clone().into());
+        let md = message.metadata().map(std::convert::Into::into);
         Ok(md)
     }
 
