@@ -69,7 +69,7 @@ jobs:
           secrets: |
             credibil=${{ secrets.CARGO_REGISTRIES_CREDIBIL_TOKEN }}
           tags: |
-            ${{ env.IMAGE_NAME }}:latest
+            type=semver,pattern={{version}}
           cache-to: type=gha,scope=${{ env.IMAGE_NAME }}-${{ matrix.platform }},mode=max
           cache-from: type=gha,scope=${{ env.IMAGE_NAME }}-${{ matrix.platform }}
         env:
