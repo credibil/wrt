@@ -14,7 +14,7 @@ rust-version.workspace = true
 version.workspace = true
 
 [lib]
-crate-type = ["rlib"]
+name = "xx"
 doctest = false
 
 [lints]
