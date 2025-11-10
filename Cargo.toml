@@ -14,7 +14,6 @@ rust-version.workspace = true
 version.workspace = true
 
 [lib]
-name = "xx"
 doctest = false
 
 [lints]
@@ -23,8 +22,9 @@ workspace = true
 [features]
 default = ["jit", "http-server"]
 
-# Top-level feature sets that can be used to create a build. 
-# Each set contains a unique grouping of component-resource tuples used by wasm apps.
+# Top-level feature sets that can be used to create a build.
+# Each set contains a unique grouping of component-resource tuples used by wasm
+# apps.
 http-server = ["http-default", "otel-default"]
 credibil = ["http-default", "otel-default", "blobstore-mongodb", "keyvalue-nats", "messaging-nats", "vault-azure"]
 realtime-http = ["http-default", "otel-default", "keyvalue-redis"]
