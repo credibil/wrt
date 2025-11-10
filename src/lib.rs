@@ -101,7 +101,7 @@ pub async fn run(wasm: PathBuf) -> Result<()> {
     };
 
     // single server
-    #[cfg(all(feature = "http", not(all(feature = "messaging", feature = "websockets"))))]
+    #[cfg(all(feature = "http", not(any(feature = "messaging", feature = "websockets"))))]
     tokio::try_join!(WasiHttp.run(&run_state))?;
 
     #[cfg(all(feature = "messaging", not(any(feature = "http", feature = "websockets"))))]
