@@ -142,7 +142,9 @@ impl Message for NatsMessage {
     }
 
     fn metadata(&self) -> Option<Metadata> {
-        if self.0.headers.is_none() { None } else {
+        if self.0.headers.is_none() {
+            None
+        } else {
             let mut md = HashMap::new();
             for (k, v) in self.0.headers.as_ref().unwrap().iter() {
                 let v_str =

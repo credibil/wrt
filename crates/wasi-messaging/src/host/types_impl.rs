@@ -52,7 +52,7 @@ impl HostMessageWithStore for WasiMessaging {
         accessor: &Accessor<T, Self>, self_: Resource<MessageProxy>,
     ) -> anyhow::Result<Option<String>> {
         let message = get_message(accessor, &self_)?;
-        if let Some (md) = message.metadata() {
+        if let Some(md) = message.metadata() {
             if let Some(content_type) = md.get("content-type") {
                 return Ok(Some(content_type.clone()));
             }
@@ -87,7 +87,8 @@ impl HostMessageWithStore for WasiMessaging {
         accessor: &Accessor<T, Self>, self_: Resource<MessageProxy>, data: Vec<u8>,
     ) -> anyhow::Result<()> {
         let message = get_message(accessor, &self_)?;
-        let updated_message = accessor.with(|mut store| store.get().ctx.set_payload(message.0, data)).await?;
+        let updated_message =
+            accessor.with(|mut store| store.get().ctx.set_payload(message.0, data)).await?;
         accessor.with(|mut store| store.get().table.push(updated_message))?;
         Ok(())
     }
@@ -106,9 +107,8 @@ impl HostMessageWithStore for WasiMessaging {
         accessor: &Accessor<T, Self>, self_: Resource<MessageProxy>, key: String, value: String,
     ) -> anyhow::Result<()> {
         let message = get_message(accessor, &self_)?;
-        let updated_message = accessor
-            .with(|mut store| store.get().ctx.add_metadata(message.0, key, value))
-            .await?;
+        let updated_message =
+            accessor.with(|mut store| store.get().ctx.add_metadata(message.0, key, value)).await?;
         accessor.with(|mut store| store.get().table.push(updated_message))?;
         Ok(())
     }
@@ -118,9 +118,8 @@ impl HostMessageWithStore for WasiMessaging {
         accessor: &Accessor<T, Self>, self_: Resource<MessageProxy>, meta: types::Metadata,
     ) -> anyhow::Result<()> {
         let message = get_message(accessor, &self_)?;
-        let updated_message = accessor
-            .with(|mut store| store.get().ctx.set_metadata(message.0, meta.into()))
-            .await?;
+        let updated_message =
+            accessor.with(|mut store| store.get().ctx.set_metadata(message.0, meta.into())).await?;
         accessor.with(|mut store| store.get().table.push(updated_message))?;
         Ok(())
     }
@@ -130,9 +129,8 @@ impl HostMessageWithStore for WasiMessaging {
         accessor: &Accessor<T, Self>, self_: Resource<MessageProxy>, key: String,
     ) -> anyhow::Result<()> {
         let message = get_message(accessor, &self_)?;
-        let updated_message = accessor
-            .with(|mut store| store.get().ctx.remove_metadata(message.0, key))
-            .await?;
+        let updated_message =
+            accessor.with(|mut store| store.get().ctx.remove_metadata(message.0, key)).await?;
         accessor.with(|mut store| store.get().table.push(updated_message))?;
         Ok(())
     }
