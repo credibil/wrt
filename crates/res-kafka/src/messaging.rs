@@ -12,7 +12,7 @@ use rdkafka::message::{BorrowedMessage, Headers};
 use rdkafka::producer::BaseRecord;
 use tokio::sync::mpsc;
 use wasi_messaging::{
-    Client, FutureResult, Message, Metadata, RequestOptions, Subscriptions, WasiMessagingCtx,
+    Client, FutureResult, Message, MessageProxy, Metadata, RequestOptions, Subscriptions, WasiMessagingCtx
 };
 
 use crate::registry::Registry;
@@ -24,8 +24,55 @@ impl WasiMessagingCtx for crate::Client {
         let client = self.clone();
         async move { Ok(Arc::new(client) as Arc<dyn Client>) }.boxed()
     }
+}
 
-    fn new_message(&self, data: Vec<u8>) -> FutureResult<Arc<dyn Message>> {
+#[derive(Debug)]
+struct KafkaMessage(BorrowedMessage<'static>);
+
+impl Message for KafkaMessage {
+    fn topic(&self) -> String {
+        self.0.topic().to_string()
+    }
+
+    fn payload(&self) -> Vec<u8> {
+        self.0.payload().unwrap_or_default().to_vec()
+    }
+
+    fn metadata(&self) -> Option<Metadata> {
+        self.0.headers().map(|headers| {
+            let mut md = HashMap::new();
+            for h in headers.iter() {
+                let bytes = h.value.unwrap_or_default();
+                let v = String::from_utf8_lossy(bytes).to_string();
+                md.insert(h.key.to_string(), v);
+            }
+            Metadata { inner: md }
+        })
+    }
+
+    fn description(&self) -> Option<String> {
+        if let Some(headers) = self.0.headers() {
+            for h in headers.iter() {
+                if h.key == "description" {
+                    if let Some(bytes) = h.value {
+                        return Some(String::from_utf8_lossy(bytes).to_string());
+                    }
+                }
+            }
+        }
+        None
+    }
+
+    fn length(&self) -> usize {
+        self.0.payload().map_or(0, |p| p.len())
+    }
+
+    fn reply(&self) -> Option<wasi_messaging::Reply> {
+        None
+    }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
     }
 }
 
@@ -40,7 +87,7 @@ impl Client for crate::Client {
             let registry = client.registry;
 
             // spawn a task to read messages and forward subscriber
-            let (sender, receiver) = mpsc::channel::<Message>(CAPACITY);
+            let (sender, receiver) = mpsc::channel::<MessageProxy>(CAPACITY);
             tokio::spawn(async move {
                 consumer
                     .stream()
@@ -72,7 +119,7 @@ impl Client for crate::Client {
         .boxed()
     }
 
-    fn send(&self, topic: String, message: Message) -> FutureResult<()> {
+    fn send(&self, topic: String, message: MessageProxy) -> FutureResult<()> {
         let client = self.clone();
 
         // TODO: add offset to header??
@@ -80,12 +127,12 @@ impl Client for crate::Client {
         async move {
             // schema registry validation when available
             let payload = if let Some(sr) = &client.registry {
-                sr.validate_and_encode_json(&topic, message.payload).await
+                sr.validate_and_encode_json(&topic, message.payload()).await
             } else {
-                message.payload
+                message.payload()
             };
 
-            let metadata = message.metadata.unwrap_or_default();
+            let metadata = message.metadata().unwrap_or_default();
             let now = chrono::Utc::now().timestamp_millis();
 
             let key = metadata.get("key").cloned().unwrap_or_default();
@@ -114,52 +161,52 @@ impl Client for crate::Client {
     }
 
     fn request(
-        &self, _topic: String, _message: Message, _options: Option<RequestOptions>,
-    ) -> FutureResult<Message> {
+        &self, _topic: String, _message: MessageProxy, _options: Option<RequestOptions>,
+    ) -> FutureResult<MessageProxy> {
         async move { unimplemented!() }.boxed()
     }
 }
 
 #[derive(Debug)]
 pub struct Subscriber {
-    receiver: mpsc::Receiver<Message>,
+    receiver: mpsc::Receiver<MessageProxy>,
 }
 
 impl Stream for Subscriber {
-    type Item = Message;
+    type Item = MessageProxy;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         self.receiver.poll_recv(cx)
     }
 }
 
-async fn into_message(kafka_msg: &BorrowedMessage<'_>, registry: Option<&Registry>) -> Message {
-    let metadata = kafka_msg.headers().map(|headers| {
-        let mut md = HashMap::new();
-        for h in headers.iter() {
-            let bytes = h.value.unwrap_or_default();
-            let v = String::from_utf8_lossy(bytes).to_string();
-            md.insert(h.key.to_string(), v);
-        }
-        Metadata { inner: md }
-    });
+// async fn into_message(kafka_msg: &BorrowedMessage<'_>, registry: Option<&Registry>) -> Message {
+//     let metadata = kafka_msg.headers().map(|headers| {
+//         let mut md = HashMap::new();
+//         for h in headers.iter() {
+//             let bytes = h.value.unwrap_or_default();
+//             let v = String::from_utf8_lossy(bytes).to_string();
+//             md.insert(h.key.to_string(), v);
+//         }
+//         Metadata { inner: md }
+//     });
 
-    let topic = kafka_msg.topic();
-    let payload_bytes = kafka_msg.payload().unwrap_or_default().to_vec();
+//     let topic = kafka_msg.topic();
+//     let payload_bytes = kafka_msg.payload().unwrap_or_default().to_vec();
 
-    let payload = if let Some(sr) = &registry {
-        sr.validate_and_decode_json(topic, &payload_bytes).await
-    } else {
-        payload_bytes
-    };
+//     let payload = if let Some(sr) = &registry {
+//         sr.validate_and_decode_json(topic, &payload_bytes).await
+//     } else {
+//         payload_bytes
+//     };
 
-    let length = payload.len();
+//     let length = payload.len();
 
-    Message {
-        topic: topic.to_string(),
-        payload,
-        metadata,
-        length,
-        ..Message::default()
-    }
-}
+//     Message {
+//         topic: topic.to_string(),
+//         payload,
+//         metadata,
+//         length,
+//         ..Message::default()
+//     }
+// }
