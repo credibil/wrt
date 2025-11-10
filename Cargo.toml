@@ -22,8 +22,9 @@ workspace = true
 [features]
 default = ["jit", "http-server"]
 
-# Top-level feature sets that can be used to create a build. 
-# Each set contains a unique grouping of component-resource tuples used by wasm apps.
+# Top-level feature sets that can be used to create a build.
+# Each set contains a unique grouping of component-resource tuples used by wasm
+# apps.
 http-server = ["http-default", "otel-default"]
 credibil = ["http-default", "otel-default", "blobstore-mongodb", "keyvalue-nats", "messaging-nats", "vault-azure"]
 realtime-http = ["http-default", "otel-default", "keyvalue-redis"]
@@ -117,61 +118,73 @@ wit-bindgen.workspace = true
 name = "blobstore"
 path = "examples/blobstore.rs"
 crate-type = ["cdylib"]
+required-features = ["blobstore"]
 
 [[example]]
 name = "http"
 path = "examples/http.rs"
 crate-type = ["cdylib"]
+required-features = ["http", "otel"]
 
 [[example]]
 name = "proxy"
 path = "examples/proxy.rs"
 crate-type = ["cdylib"]
+required-features = ["http", "keyvalue"]
 
 [[example]]
 name = "keyvalue"
 path = "examples/keyvalue.rs"
 crate-type = ["cdylib"]
+required-features = ["keyvalue"]
 
 [[example]]
 name = "otel"
 path = "examples/otel.rs"
 crate-type = ["cdylib"]
+required-features = ["http", "otel"]
 
 [[example]]
 name = "pub-sub"
 path = "examples/pub_sub.rs"
 crate-type = ["cdylib"]
+required-features = ["messaging"]
 
 [[example]]
 name = "request-reply"
 path = "examples/request_reply.rs"
 crate-type = ["cdylib"]
+required-features = ["messaging"]
 
 [[example]]
 name = "vault"
 path = "examples/vault.rs"
 crate-type = ["cdylib"]
+required-features = ["vault"]
 
 [[example]]
 name = "redis"
 path = "examples/redis/lib.rs"
 crate-type = ["cdylib"]
+required-features = ["keyvalue", "redis"]
 
 [[example]]
 name = "kafka"
 path = "examples/kafka/lib.rs"
 crate-type = ["cdylib"]
+required-features = ["messaging", "kafka"]
 
 [[example]]
 name = "websockets"
 path = "examples/websockets.rs"
 crate-type = ["cdylib"]
+required-features = ["websockets"]
 
 [[example]]
 name = "postgres"
 path = "examples/postgres/lib.rs"
 crate-type = ["cdylib"]
+required-features = ["sql", "postgres"]
 
 [profile.release]
 lto = true

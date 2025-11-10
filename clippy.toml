@@ -1,6 +1,13 @@
 # https://doc.rust-lang.org/stable/clippy/index.html
 
-doc-valid-idents = ["JetStream", "MongoDB", "NATS", "OpenTelemetry", "WebAssembly"]
+doc-valid-idents = [
+  "JetStream",
+  "MongoDB",
+  "NATS",
+  "OpenTelemetry",
+  "WebAssembly",
+  "WebSockets",
+]
 
 allowed-duplicate-crates = [
   "addr2line",
