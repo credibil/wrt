@@ -3801,7 +3801,7 @@ dependencies = [
 
 [[package]]
 name = "res-azure"
-version = "0.14.0"
+version = "0.15.0"
 dependencies = [
  "anyhow",
  "azure_core",
@@ -3820,7 +3820,7 @@ dependencies = [
 
 [[package]]
 name = "res-kafka"
-version = "0.14.0"
+version = "0.15.0"
 dependencies = [
  "anyhow",
  "chrono",
@@ -3840,7 +3840,7 @@ dependencies = [
 
 [[package]]
 name = "res-mongodb"
-version = "0.14.0"
+version = "0.15.0"
 dependencies = [
  "anyhow",
  "chrono",
@@ -3856,7 +3856,7 @@ dependencies = [
 
 [[package]]
 name = "res-nats"
-version = "0.14.0"
+version = "0.15.0"
 dependencies = [
  "anyhow",
  "async-nats",
@@ -3874,7 +3874,7 @@ dependencies = [
 
 [[package]]
 name = "res-postgres"
-version = "0.14.0"
+version = "0.15.0"
 dependencies = [
  "anyhow",
  "chrono",
@@ -3893,7 +3893,7 @@ dependencies = [
 
 [[package]]
 name = "res-redis"
-version = "0.14.0"
+version = "0.15.0"
 dependencies = [
  "anyhow",
  "fromenv",
@@ -3926,7 +3926,7 @@ dependencies = [
 
 [[package]]
 name = "runtime"
-version = "0.14.0"
+version = "0.15.0"
 dependencies = [
  "anyhow",
  "cfg-if",
@@ -3939,7 +3939,7 @@ dependencies = [
 
 [[package]]
 name = "runtime-cli"
-version = "0.14.0"
+version = "0.15.0"
 dependencies = [
  "anyhow",
  "axum",
@@ -4597,9 +4597,9 @@ checksum = "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
 
 [[package]]
 name = "syn"
-version = "2.0.109"
+version = "2.0.110"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2f17c7e013e88258aa9543dcbe81aca68a667a9ac37cd69c9fbc07858bfe0e2f"
+checksum = "a99801b5bd34ede4cf3fc688c5919368fea4e4814a4664359503e6015b280aea"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -5519,7 +5519,7 @@ checksum = "ccf3ec651a847eb01de73ccad15eb7d99f80485de043efb2f370cd654f4ea44b"
 
 [[package]]
 name = "wasi-blobstore"
-version = "0.14.0"
+version = "0.15.0"
 dependencies = [
  "anyhow",
  "bytes",
@@ -5533,7 +5533,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-http"
-version = "0.14.0"
+version = "0.15.0"
 dependencies = [
  "anyhow",
  "axum",
@@ -5565,7 +5565,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-identity"
-version = "0.14.0"
+version = "0.15.0"
 dependencies = [
  "anyhow",
  "futures",
@@ -5578,7 +5578,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-keyvalue"
-version = "0.14.0"
+version = "0.15.0"
 dependencies = [
  "anyhow",
  "async-nats",
@@ -5595,7 +5595,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-messaging"
-version = "0.14.0"
+version = "0.15.0"
 dependencies = [
  "anyhow",
  "async-nats",
@@ -5613,7 +5613,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-otel"
-version = "0.14.0"
+version = "0.15.0"
 dependencies = [
  "anyhow",
  "cfg-if",
@@ -5638,7 +5638,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-otel-attr"
-version = "0.14.0"
+version = "0.15.0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -5648,7 +5648,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-sql"
-version = "0.14.0"
+version = "0.15.0"
 dependencies = [
  "anyhow",
  "base64ct",
@@ -5663,7 +5663,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-vault"
-version = "0.14.0"
+version = "0.15.0"
 dependencies = [
  "anyhow",
  "futures",
@@ -5676,7 +5676,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-websockets"
-version = "0.14.0"
+version = "0.15.0"
 dependencies = [
  "anyhow",
  "futures",
