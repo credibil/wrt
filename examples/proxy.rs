@@ -1,4 +1,5 @@
-#![cfg(target_arch = "wasm32")]
+#![cfg(all(target_arch = "wasm32", feature = "http"))]
+
 use anyhow::Context;
 use axum::routing::{get, post};
 use axum::{Json, Router};

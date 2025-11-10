@@ -1,4 +1,4 @@
-#![cfg(target_arch = "wasm32")]
+#![cfg(all(target_arch = "wasm32", feature = "blobstore"))]
 
 use anyhow::{Context, anyhow};
 use axum::routing::post;

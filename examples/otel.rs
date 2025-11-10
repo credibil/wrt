@@ -1,4 +1,4 @@
-#![cfg(target_arch = "wasm32")]
+#![cfg(all(target_arch = "wasm32", all(feature = "http", feature = "otel")))]
 
 use axum::routing::{options, post};
 use axum::{Json, Router};
