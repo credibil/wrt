@@ -125,6 +125,7 @@ jobs:
         uses: int128/docker-manifest-create-action@v2
         id: build
         with:
+          index-annotations: ${{ steps.metadata.outputs.labels }}
           tags: ${{ steps.metadata.outputs.tags }}
           sources: |
             ${{ steps.select.outputs.sources }}
