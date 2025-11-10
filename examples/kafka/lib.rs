@@ -1,4 +1,4 @@
-#![cfg(all(target_arch = "wasm32", feature = "messaging"))]
+#![cfg(target_arch = "wasm32")]
 
 use std::thread::sleep;
 use std::time::{Duration, Instant};

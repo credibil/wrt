@@ -1,5 +1,4 @@
-#![cfg(all(target_arch = "wasm32", feature = "websockets"))]
-#![allow(missing_docs)]
+#![cfg(target_arch = "wasm32")]
 
 use std::println;
 

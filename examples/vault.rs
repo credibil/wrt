@@ -1,4 +1,4 @@
-#![cfg(all(target_arch = "wasm32", feature = "vault"))]
+#![cfg(target_arch = "wasm32")]
 
 use anyhow::{Context, anyhow};
 use axum::routing::post;

@@ -124,7 +124,7 @@ required-features = ["blobstore"]
 name = "http"
 path = "examples/http.rs"
 crate-type = ["cdylib"]
-required-features = ["http"]
+required-features = ["http", "otel"]
 
 [[example]]
 name = "proxy"

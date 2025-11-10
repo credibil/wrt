@@ -1,5 +1,4 @@
-#![allow(missing_docs)]
-#![cfg(all(target_arch = "wasm32", feature = "sql"))]
+#![cfg(target_arch = "wasm32")]
 
 //! Minimal example to show a SQL guest that can be used with a Postgres
 //! resource.
