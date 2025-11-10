@@ -1,3 +1,4 @@
+use std::any::Any;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::ops::{Deref, DerefMut};
@@ -12,17 +13,17 @@ use serde::{Deserialize, Serialize};
 use crate::host::generated::wasi::messaging::types;
 
 pub type FutureResult<T> = BoxFuture<'static, Result<T>>;
-pub type Subscriptions = Pin<Box<dyn Stream<Item = Message> + Send>>;
+pub type Subscriptions = Pin<Box<dyn Stream<Item = MessageProxy> + Send>>;
 
 #[allow(unused_variables)]
 pub trait Client: Debug + Send + Sync + 'static {
     fn subscribe(&self) -> FutureResult<Subscriptions>;
 
-    fn send(&self, topic: String, message: Message) -> FutureResult<()>;
+    fn send(&self, topic: String, message: MessageProxy) -> FutureResult<()>;
 
     fn request(
-        &self, topic: String, message: Message, options: Option<RequestOptions>,
-    ) -> FutureResult<Message>;
+        &self, topic: String, message: MessageProxy, options: Option<RequestOptions>,
+    ) -> FutureResult<MessageProxy>;
 }
 
 #[derive(Clone, Debug)]
@@ -36,55 +37,97 @@ impl Deref for ClientProxy {
     }
 }
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
-pub struct Message {
-    pub topic: String,
+/// Providers implement the [`Message`] trait to allow the host to interact with
+/// different backend messaging systems.
+pub trait Message: Debug + Send + Sync + 'static {
+    /// Topic the message is published to.
+    fn topic(&self) -> &'static str;
 
-    /// Payload of the message. Can be any arbitrary data format.
-    pub payload: Vec<u8>,
+    /// Message content.
+    fn payload(&self) -> &[u8];
 
-    /// Optional metadata.
-    pub metadata: Option<Metadata>,
+    /// Headers or metadata associated with the message.
+    fn metadata(&self) -> Option<&Metadata>;
 
-    /// Optional  description.
-    pub description: Option<String>,
+    /// Optional message description.
+    fn description(&self) -> Option<&String>;
 
-    pub length: usize,
+    /// Number of bytes in the payload.
+    fn length(&self) -> usize;
 
-    /// Optional reply topic to which response can be published.
-    pub reply: Option<Reply>,
+    /// Optional reply topic to which a response can be published.
+    fn reply(&self) -> Option<&Reply>;
+
+    /// For downcasting support.
+    fn as_any(&self) -> &dyn Any;
 }
 
-impl Message {
-    #[must_use]
-    pub fn new() -> Self {
-        Self::default()
-    }
+// #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+// pub struct Message {
+//     pub topic: String,
 
-    #[must_use]
-    pub fn payload(mut self, payload: Vec<u8>) -> Self {
-        self.length = payload.len();
-        self.payload = payload;
-        self
-    }
+//     /// Payload of the message. Can be any arbitrary data format.
+//     pub payload: Vec<u8>,
 
-    #[must_use]
-    pub fn metadata(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
-        let metadata = self.metadata.get_or_insert_with(Metadata::new);
-        metadata.insert(key.into(), value.into());
-        self
-    }
+//     /// Optional metadata.
+//     pub metadata: Option<Metadata>,
 
-    #[must_use]
-    pub fn description(mut self, description: String) -> Self {
-        self.description = Some(description);
-        self
-    }
+//     /// Optional  description.
+//     pub description: Option<String>,
 
-    #[must_use]
-    pub fn reply(mut self, reply: Reply) -> Self {
-        self.reply = Some(reply);
-        self
+//     pub length: usize,
+
+//     /// Optional reply topic to which response can be published.
+//     pub reply: Option<Reply>,
+// }
+
+// impl Message {
+//     #[must_use]
+//     pub fn new() -> Self {
+//         Self::default()
+//     }
+
+//     #[must_use]
+//     pub fn payload(mut self, payload: Vec<u8>) -> Self {
+//         self.length = payload.len();
+//         self.payload = payload;
+//         self
+//     }
+
+//     #[must_use]
+//     pub fn metadata(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
+//         let metadata = self.metadata.get_or_insert_with(Metadata::new);
+//         metadata.insert(key.into(), value.into());
+//         self
+//     }
+
+//     #[must_use]
+//     pub fn description(mut self, description: String) -> Self {
+//         self.description = Some(description);
+//         self
+//     }
+
+//     #[must_use]
+//     pub fn reply(mut self, reply: Reply) -> Self {
+//         self.reply = Some(reply);
+//         self
+//     }
+// }
+
+#[derive(Clone, Debug)]
+pub struct MessageProxy(pub Arc<dyn Message>);
+
+impl Deref for MessageProxy {
+    type Target = Arc<dyn Message>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for MessageProxy {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
     }
 }
 
