@@ -55,6 +55,8 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
+          tags: |
+            type=semver,pattern={{version}},value=v${{ needs.publish.outputs.version }}
           images: |
             ghcr.io/${{ github.repository_owner }}/${{ matrix.feature }}
 
@@ -92,7 +94,7 @@ jobs:
   # last image is shown as 'unknown/unknown'.
   manifest:
     name: Manifest
-    needs: package
+    needs: [publish, package]
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -116,7 +118,10 @@ jobs:
         uses: docker/metadata-action@v5
         id: metadata
         with:
-          images: ghcr.io/${{ github.repository_owner }}/${{ matrix.feature }}
+          tags: |
+            type=semver,pattern={{version}},value=v${{ needs.publish.outputs.version }}
+          images: |
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.feature }}
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
