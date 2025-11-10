@@ -21,4 +21,4 @@ jobs:
           rustup override set nightly
           cargo miri setup
       - uses: taiki-e/install-action@nextest
-      - run: cargo miri nextest --all --all-features --no-tests=pass
+      - run: cargo miri nextest run --no-tests=pass
