@@ -146,9 +146,9 @@ required-features = ["http", "otel"]
 
 [[example]]
 name = "pub-sub"
-path = "examples/pub_sub.rs"
+path = "examples/pub_sub/lib.rs"
 crate-type = ["cdylib"]
-required-features = ["messaging"]
+required-features = ["http-default", "messaging-nats", "keyvalue-nats"]
 
 [[example]]
 name = "request-reply"
@@ -172,7 +172,7 @@ required-features = ["keyvalue", "redis"]
 name = "kafka"
 path = "examples/kafka/lib.rs"
 crate-type = ["cdylib"]
-required-features = ["messaging", "kafka"]
+required-features = ["http-default", "messaging-kafka", "keyvalue-redis"]
 
 [[example]]
 name = "websockets"

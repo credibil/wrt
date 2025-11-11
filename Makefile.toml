@@ -79,6 +79,15 @@ cargo +nightly miri setup
 cargo +nightly miri nextest run --no-tests=pass
 '''
 
+[tasks.alt-miri]
+script = '''
+rustup override set nightly
+rustup +nightly component add miri
+rustup +nightly target add aarch64-apple-darwin
+cargo miri setup
+cargo miri nextest run --no-tests=pass
+'''
+
 [tasks.audit]
 command = "cargo"
 args = ["audit"]
@@ -103,4 +112,4 @@ dependencies = ["audit", "fmt", "lint", "outdated", "unused"]
 
 # Emulate CI
 [tasks.ci]
-dependencies = ["lint", "test", "test-doc", "vet", "miri", "deny", "fmt"]
+dependencies = ["lint", "test", "test-doc", "vet", "outdated", "deny", "fmt"]
