@@ -23,8 +23,6 @@ services:
     depends_on:
       init-kafka:
         condition: service_completed_successfully
-      otelcol:
-        condition: service_started
       redis:
         condition: service_started
 

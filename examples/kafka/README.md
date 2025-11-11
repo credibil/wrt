@@ -14,7 +14,7 @@ In a console, build and run the `kafka` example:
 
 ```bash
 # build the guest.
-cargo build --example kafka --target wasm32-wasip2 --release
+cargo build --example kafka --features http-default,messaging-kafka,keyvalue-redis --target wasm32-wasip2 --release
 
 Run the services in Docker containers using docker compose.
 
