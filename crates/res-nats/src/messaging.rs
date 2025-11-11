@@ -1,17 +1,177 @@
+use std::any::Any;
 use std::collections::HashMap;
 use std::sync::Arc;
 
 use anyhow::anyhow;
+use async_nats::HeaderMap;
 use futures::future::FutureExt;
 use futures::stream::{self, StreamExt};
 use wasi_messaging::{
-    Client, FutureResult, Message, Metadata, Reply, RequestOptions, Subscriptions, WasiMessagingCtx,
+    Client, FutureResult, Message, MessageProxy, Metadata, Reply, RequestOptions, Subscriptions,
+    WasiMessagingCtx,
 };
 
 impl WasiMessagingCtx for crate::Client {
     fn connect(&self) -> FutureResult<Arc<dyn Client>> {
         let client = self.clone();
         async move { Ok(Arc::new(client) as Arc<dyn Client>) }.boxed()
+    }
+
+    fn new_message(&self, data: Vec<u8>) -> FutureResult<Arc<dyn Message>> {
+        let length = data.len();
+        async move {
+            let msg = async_nats::Message {
+                subject: String::new().into(),
+                reply: None,
+                payload: data.into(),
+                headers: None,
+                status: None,
+                description: None,
+                length,
+            };
+            Ok(Arc::new(NatsMessage(msg)) as Arc<dyn Message>)
+        }
+        .boxed()
+    }
+
+    fn set_content_type(
+        &self, message: Arc<dyn Message>, content_type: String,
+    ) -> FutureResult<Arc<dyn Message>> {
+        async move {
+            let nats_msg = message
+                .as_any()
+                .downcast_ref::<NatsMessage>()
+                .ok_or_else(|| anyhow!("invalid message type"))?;
+            let mut msg = nats_msg.0.clone();
+            let mut headers = nats_msg.0.headers.clone().unwrap_or_default();
+            headers.insert("content-type".to_string(), content_type.clone());
+            msg.headers = Some(headers);
+            Ok(Arc::new(NatsMessage(msg)) as Arc<dyn Message>)
+        }
+        .boxed()
+    }
+
+    fn set_payload(
+        &self, message: Arc<dyn Message>, data: Vec<u8>,
+    ) -> FutureResult<Arc<dyn Message>> {
+        async move {
+            let nats_msg = message
+                .as_any()
+                .downcast_ref::<NatsMessage>()
+                .ok_or_else(|| anyhow!("invalid message type"))?;
+            let mut msg = nats_msg.0.clone();
+            msg.payload = data.clone().into();
+            msg.length = data.len();
+            Ok(Arc::new(NatsMessage(msg)) as Arc<dyn Message>)
+        }
+        .boxed()
+    }
+
+    fn add_metadata(
+        &self, message: Arc<dyn Message>, key: String, value: String,
+    ) -> FutureResult<Arc<dyn Message>> {
+        async move {
+            let nats_msg = message
+                .as_any()
+                .downcast_ref::<NatsMessage>()
+                .ok_or_else(|| anyhow!("invalid message type"))?;
+            let mut msg = nats_msg.0.clone();
+            let mut headers = nats_msg.0.headers.clone().unwrap_or_default();
+            headers.insert(key.clone(), value.clone());
+            msg.headers = Some(headers);
+            Ok(Arc::new(NatsMessage(msg)) as Arc<dyn Message>)
+        }
+        .boxed()
+    }
+
+    fn set_metadata(
+        &self, message: Arc<dyn Message>, metadata: Metadata,
+    ) -> FutureResult<Arc<dyn Message>> {
+        async move {
+            let nats_msg = message
+                .as_any()
+                .downcast_ref::<NatsMessage>()
+                .ok_or_else(|| anyhow!("invalid message type"))?;
+            let mut msg = nats_msg.0.clone();
+            let mut headers = async_nats::HeaderMap::new();
+            for (k, v) in &metadata.inner {
+                headers.insert(k.as_str(), v.as_str());
+            }
+            msg.headers = Some(headers);
+            Ok(Arc::new(NatsMessage(msg)) as Arc<dyn Message>)
+        }
+        .boxed()
+    }
+
+    fn remove_metadata(
+        &self, message: Arc<dyn Message>, key: String,
+    ) -> FutureResult<Arc<dyn Message>> {
+        async move {
+            let nats_msg = message
+                .as_any()
+                .downcast_ref::<NatsMessage>()
+                .ok_or_else(|| anyhow!("invalid message type"))?;
+            let mut msg = nats_msg.0.clone();
+            if let Some(headers) = nats_msg.0.headers.clone() {
+                let mut updated_headers = HeaderMap::new();
+                for (k, v) in headers.iter() {
+                    if k.to_string() != key {
+                        for iv in v {
+                            updated_headers.insert(k.clone(), iv.clone());
+                        }
+                    }
+                }
+                msg.headers = Some(updated_headers);
+            }
+            Ok(Arc::new(NatsMessage(msg)) as Arc<dyn Message>)
+        }
+        .boxed()
+    }
+}
+
+#[derive(Clone, Debug)]
+struct NatsMessage(async_nats::Message);
+
+impl Message for NatsMessage {
+    fn topic(&self) -> String {
+        self.0.subject.to_string()
+    }
+
+    fn payload(&self) -> Vec<u8> {
+        self.0.payload.to_vec()
+    }
+
+    fn metadata(&self) -> Option<Metadata> {
+        if self.0.headers.is_none() {
+            None
+        } else {
+            let mut md = HashMap::new();
+            for (k, v) in self.0.headers.as_ref().unwrap().iter() {
+                let v_str =
+                    v.iter().map(|val| val.as_str().into()).collect::<Vec<String>>().join(", ");
+                md.insert(k.to_string(), v_str);
+            }
+            Some(Metadata { inner: md })
+        }
+    }
+
+    fn description(&self) -> Option<String> {
+        self.0.description.clone()
+    }
+
+    fn length(&self) -> usize {
+        self.0.length
+    }
+
+    fn reply(&self) -> Option<Reply> {
+        self.0.reply.clone().map(|r| Reply {
+            client_name: String::new(),
+            topic: r.to_string(),
+        })
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }
 
@@ -33,19 +193,20 @@ impl Client for crate::Client {
             tracing::info!("subscribed to {topics:?} topics");
 
             // process messages until terminated
-            let stream = stream::select_all(subscribers).map(into_message);
+            let stream = stream::select_all(subscribers)
+                .map(|msg| MessageProxy(Arc::new(NatsMessage(msg)) as Arc<dyn Message>));
             Ok(Box::pin(stream) as Subscriptions)
         }
         .boxed()
     }
 
-    fn send(&self, topic: String, message: Message) -> FutureResult<()> {
+    fn send(&self, topic: String, message: MessageProxy) -> FutureResult<()> {
         let client = self.inner.clone();
-
         async move {
-            let Some(headers) = message.metadata.clone() else {
+            let payload = message.payload();
+            let Some(headers) = message.metadata() else {
                 client
-                    .publish(topic.clone(), message.payload.into())
+                    .publish(topic.clone(), payload.into())
                     .await
                     .map_err(|e| anyhow!("failed to publish: {e}"))?;
                 return Ok(());
@@ -57,7 +218,7 @@ impl Client for crate::Client {
             }
 
             client
-                .publish_with_headers(topic.clone(), nats_headers, message.payload.into())
+                .publish_with_headers(topic.clone(), nats_headers, payload.into())
                 .await
                 .map_err(|e| anyhow!("failed to publish: {e}"))?;
 
@@ -67,16 +228,18 @@ impl Client for crate::Client {
     }
 
     fn request(
-        &self, topic: String, message: Message, options: Option<RequestOptions>,
-    ) -> FutureResult<Message> {
+        &self, topic: String, message: MessageProxy, options: Option<RequestOptions>,
+    ) -> FutureResult<MessageProxy> {
         let client = self.inner.clone();
 
         async move {
-            let payload = message.payload.clone();
-            let headers = message.metadata.clone().unwrap_or_default();
+            let payload = message.payload();
+            let headers = message.metadata();
             let mut nats_headers = async_nats::HeaderMap::new();
-            for (k, v) in headers.iter() {
-                nats_headers.insert(k.as_str(), v.as_str());
+            if let Some(meta) = headers {
+                for (k, v) in meta.iter() {
+                    nats_headers.insert(k.as_str(), v.as_str());
+                }
             }
             let timeout = options.and_then(|options| options.timeout);
 
@@ -89,34 +252,8 @@ impl Client for crate::Client {
                 .send_request(topic.clone(), request)
                 .await
                 .map_err(|e| anyhow!("failed to send request: {e}"))?;
-
-            Ok(into_message(nats_msg))
+            Ok(MessageProxy(Arc::new(NatsMessage(nats_msg)) as Arc<dyn Message>))
         }
         .boxed()
-    }
-}
-
-fn into_message(nats_msg: async_nats::Message) -> Message {
-    let metadata = nats_msg.headers.map(|headers| {
-        let mut header_map = HashMap::new();
-        for (k, v) in headers.iter() {
-            let v = v.iter().map(ToString::to_string).collect::<Vec<_>>().join(",");
-            header_map.insert(k.to_string(), v);
-        }
-        Metadata { inner: header_map }
-    });
-
-    let reply = nats_msg.reply.map(|reply| Reply {
-        client_name: String::new(),
-        topic: reply.to_string(),
-    });
-
-    Message {
-        topic: nats_msg.subject.to_string(),
-        payload: nats_msg.payload.to_vec(),
-        metadata,
-        description: None,
-        length: nats_msg.payload.len(),
-        reply,
     }
 }

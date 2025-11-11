@@ -4,7 +4,7 @@ use crate::host::generated::wasi::messaging::types;
 pub use crate::host::generated::wasi::messaging::types::{
     Error, Host, HostClient, HostClientWithStore, HostMessage, HostMessageWithStore, Topic,
 };
-use crate::host::resource::{ClientProxy, Message, Metadata};
+use crate::host::resource::{ClientProxy, MessageProxy};
 use crate::host::{Result, WasiMessaging, WasiMessagingCtxView};
 
 impl HostClientWithStore for WasiMessaging {
@@ -31,106 +31,113 @@ impl HostMessageWithStore for WasiMessaging {
     /// Create a new message with the given payload.
     async fn new<T>(
         accessor: &Accessor<T, Self>, data: Vec<u8>,
-    ) -> anyhow::Result<Resource<Message>> {
-        let message = Message::new().payload(data);
-        Ok(accessor.with(|mut store| store.get().table.push(message))?)
+    ) -> anyhow::Result<Resource<MessageProxy>> {
+        let message = accessor.with(|mut store| store.get().ctx.new_message(data)).await?;
+        let proxy = MessageProxy(message);
+        Ok(accessor.with(|mut store| store.get().table.push(proxy))?)
     }
 
     /// The topic/subject/channel this message was received on, if any.
     async fn topic<T>(
-        accessor: &Accessor<T, Self>, self_: Resource<Message>,
+        accessor: &Accessor<T, Self>, self_: Resource<MessageProxy>,
     ) -> anyhow::Result<Option<Topic>> {
         let message = get_message(accessor, &self_)?;
-        let topic = message.topic;
+        let topic = message.topic();
         if topic.is_empty() { Ok(None) } else { Ok(Some(topic)) }
     }
 
     /// An optional content-type describing the format of the data in the
     /// message. This is sometimes described as the "format" type".
     async fn content_type<T>(
-        accessor: &Accessor<T, Self>, self_: Resource<Message>,
+        accessor: &Accessor<T, Self>, self_: Resource<MessageProxy>,
     ) -> anyhow::Result<Option<String>> {
         let message = get_message(accessor, &self_)?;
-        let content_type = message.metadata.as_ref().and_then(|md| md.get("content-type"));
-        Ok(content_type.cloned())
+        if let Some(md) = message.metadata() {
+            if let Some(content_type) = md.get("content-type") {
+                return Ok(Some(content_type.clone()));
+            }
+            return Ok(None);
+        }
+        Ok(None)
     }
 
     /// Set the content-type describing the format of the data in the message.
     /// This is sometimes described as the "format" type.
     async fn set_content_type<T>(
-        accessor: &Accessor<T, Self>, self_: Resource<Message>, content_type: String,
+        accessor: &Accessor<T, Self>, self_: Resource<MessageProxy>, content_type: String,
     ) -> anyhow::Result<()> {
-        accessor.with(|mut store| {
-            let message = store.get().table.get_mut(&self_)?;
-            message
-                .metadata
-                .get_or_insert_with(Metadata::new)
-                .insert("content-type".to_string(), content_type);
-            Ok(())
-        })
+        let message = get_message(accessor, &self_)?;
+        let updated_message = accessor
+            .with(|mut store| store.get().ctx.set_content_type(message.0, content_type))
+            .await?;
+        accessor.with(|mut store| store.get().table.push(updated_message))?;
+        Ok(())
     }
 
     /// An opaque blob of data.
     async fn data<T>(
-        accessor: &Accessor<T, Self>, self_: Resource<Message>,
+        accessor: &Accessor<T, Self>, self_: Resource<MessageProxy>,
     ) -> anyhow::Result<Vec<u8>> {
         let message = get_message(accessor, &self_)?;
-        Ok(message.payload)
+        Ok(message.payload())
     }
 
-    /// Set the opaque blob of data for this message, discarding the old value".
+    /// Set the opaque blob of data for this message, discarding the old value.
     async fn set_data<T>(
-        accessor: &Accessor<T, Self>, self_: Resource<Message>, data: Vec<u8>,
+        accessor: &Accessor<T, Self>, self_: Resource<MessageProxy>, data: Vec<u8>,
     ) -> anyhow::Result<()> {
-        accessor.with(|mut store| {
-            let message = store.get().table.get_mut(&self_)?;
-            message.length = data.len();
-            message.payload = data;
-            Ok(())
-        })
+        let message = get_message(accessor, &self_)?;
+        let updated_message =
+            accessor.with(|mut store| store.get().ctx.set_payload(message.0, data)).await?;
+        accessor.with(|mut store| store.get().table.push(updated_message))?;
+        Ok(())
     }
 
+    /// Get the metadata associated with this message.    
     async fn metadata<T>(
-        accessor: &Accessor<T, Self>, self_: Resource<Message>,
+        accessor: &Accessor<T, Self>, self_: Resource<MessageProxy>,
     ) -> anyhow::Result<Option<types::Metadata>> {
         let message = get_message(accessor, &self_)?;
-        let md = message.metadata.map(Into::into);
+        let md = message.metadata().map(std::convert::Into::into);
         Ok(md)
     }
 
+    /// Append a key-value pair to the metadata of this message.
     async fn add_metadata<T>(
-        accessor: &Accessor<T, Self>, self_: Resource<Message>, key: String, value: String,
+        accessor: &Accessor<T, Self>, self_: Resource<MessageProxy>, key: String, value: String,
     ) -> anyhow::Result<()> {
-        accessor.with(|mut store| {
-            let message = store.get().table.get_mut(&self_)?;
-            message.metadata.get_or_insert_with(Metadata::new).insert(key, value);
-            Ok(())
-        })
+        let message = get_message(accessor, &self_)?;
+        let updated_message =
+            accessor.with(|mut store| store.get().ctx.add_metadata(message.0, key, value)).await?;
+        accessor.with(|mut store| store.get().table.push(updated_message))?;
+        Ok(())
     }
 
+    /// Set all the metadata on this message, replacing any existing metadata.
     async fn set_metadata<T>(
-        accessor: &Accessor<T, Self>, self_: Resource<Message>, meta: types::Metadata,
+        accessor: &Accessor<T, Self>, self_: Resource<MessageProxy>, meta: types::Metadata,
     ) -> anyhow::Result<()> {
-        accessor.with(|mut store| {
-            let message = store.get().table.get_mut(&self_)?;
-            message.metadata = Some(meta.into());
-            Ok(())
-        })
+        let message = get_message(accessor, &self_)?;
+        let updated_message =
+            accessor.with(|mut store| store.get().ctx.set_metadata(message.0, meta.into())).await?;
+        accessor.with(|mut store| store.get().table.push(updated_message))?;
+        Ok(())
     }
 
+    /// Remove a key-value pair from the metadata of a message.
     async fn remove_metadata<T>(
-        accessor: &Accessor<T, Self>, self_: Resource<Message>, key: String,
+        accessor: &Accessor<T, Self>, self_: Resource<MessageProxy>, key: String,
     ) -> anyhow::Result<()> {
-        accessor.with(|mut store| {
-            let message = store.get().table.get_mut(&self_)?;
-            if let Some(existing) = message.metadata.as_mut() {
-                existing.remove(&key);
-            }
-            Ok(())
-        })
+        let message = get_message(accessor, &self_)?;
+        let updated_message =
+            accessor.with(|mut store| store.get().ctx.remove_metadata(message.0, key)).await?;
+        accessor.with(|mut store| store.get().table.push(updated_message))?;
+        Ok(())
     }
 
-    async fn drop<T>(accessor: &Accessor<T, Self>, rep: Resource<Message>) -> anyhow::Result<()> {
+    async fn drop<T>(
+        accessor: &Accessor<T, Self>, rep: Resource<MessageProxy>,
+    ) -> anyhow::Result<()> {
         accessor.with(|mut store| store.get().table.delete(rep).map(|_| Ok(())))?
     }
 }
@@ -153,8 +160,8 @@ pub fn get_client<T>(
 }
 
 pub fn get_message<T>(
-    accessor: &Accessor<T, WasiMessaging>, self_: &Resource<Message>,
-) -> Result<Message> {
+    accessor: &Accessor<T, WasiMessaging>, self_: &Resource<MessageProxy>,
+) -> Result<MessageProxy> {
     accessor.with(|mut store| {
         let message = store.get().table.get(self_)?;
         Ok::<_, Error>(message.clone())

@@ -6,7 +6,7 @@ use wasmtime::Store;
 
 use crate::host::WasiMessagingView;
 use crate::host::generated::Messaging;
-use crate::host::resource::{Message, Subscriptions};
+use crate::host::resource::{MessageProxy, Subscriptions};
 
 pub async fn run<S>(state: &S) -> Result<()>
 where
@@ -61,7 +61,7 @@ where
     }
 
     // Forward message to the wasm guest.
-    async fn send(&self, message: Message) -> Result<()> {
+    async fn send(&self, message: MessageProxy) -> Result<()> {
         let mut store_data = self.state.new_store();
         let res_msg = store_data.messaging().table.push(message.clone())?;
 

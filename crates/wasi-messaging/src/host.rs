@@ -9,7 +9,7 @@ mod generated {
 
     pub use wasi::messaging::types::Error;
 
-    pub use crate::host::resource::{ClientProxy, Message, RequestOptions};
+    pub use crate::host::resource::{ClientProxy, MessageProxy, RequestOptions};
 
     wasmtime::component::bindgen!({
         world: "messaging",
@@ -23,7 +23,7 @@ mod generated {
         with: {
             "wasi:messaging/request-reply/request-options": RequestOptions,
             "wasi:messaging/types/client": ClientProxy,
-            "wasi:messaging/types/message": Message,
+            "wasi:messaging/types/message": MessageProxy,
         },
         trappable_error_type: {
             "wasi:messaging/types/error" => Error,
@@ -72,13 +72,42 @@ impl HasData for WasiMessaging {
     type Data<'a> = WasiMessagingCtxView<'a>;
 }
 
-/// A trait which provides internal WASI Key-Value context.
+/// A trait which provides internal WASI Messaging context.
 ///
-/// This is implemented by the resource-specific provider of Key-Value
-/// functionality. For example, an in-memory store, or a Redis-backed store.
+/// This is implemented by the resource-specific provider of messaging
+/// functionality. For example, a NATS, or a Kafka broker.
 #[allow(unused)]
 pub trait WasiMessagingCtx: Debug + Send + Sync + 'static {
+    /// Connect to the messaging system and return a client proxy.
     fn connect(&self) -> FutureResult<Arc<dyn Client>>;
+
+    /// Create a new message with the given payload.
+    fn new_message(&self, data: Vec<u8>) -> FutureResult<Arc<dyn Message>>;
+
+    /// Set the content-type on a message.
+    fn set_content_type(
+        &self, message: Arc<dyn Message>, content_type: String,
+    ) -> FutureResult<Arc<dyn Message>>;
+
+    /// Set the payload on a message.
+    fn set_payload(
+        &self, message: Arc<dyn Message>, data: Vec<u8>,
+    ) -> FutureResult<Arc<dyn Message>>;
+
+    /// Append a key-value pair to the metadata of a message.
+    fn add_metadata(
+        &self, message: Arc<dyn Message>, key: String, value: String,
+    ) -> FutureResult<Arc<dyn Message>>;
+
+    /// Set all the metadata on a message.
+    fn set_metadata(
+        &self, message: Arc<dyn Message>, metadata: Metadata,
+    ) -> FutureResult<Arc<dyn Message>>;
+
+    /// Remove a key-value pair from the metadata of a message.
+    fn remove_metadata(
+        &self, message: Arc<dyn Message>, key: String,
+    ) -> FutureResult<Arc<dyn Message>>;
 }
 
 /// View into [`WasiMessagingCtx`] implementation and [`ResourceTable`].
