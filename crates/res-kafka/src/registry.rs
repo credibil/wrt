@@ -41,7 +41,7 @@ impl Registry {
     }
 
     /// Serialize payload to JSON with optional schema registry
-    #[instrument("registry-validate-encode-json", skip(self, buffer))]
+    #[instrument(name = "registry-validate-encode-json", skip(self, buffer))]
     pub async fn validate_and_encode_json(&self, topic: &str, buffer: Vec<u8>) -> Vec<u8> {
         // If schema registry is available, use it
         if self.client.is_some() {
@@ -75,7 +75,7 @@ impl Registry {
 
     /// Deserialize payload to JSON with optional schema registry
     #[allow(unused)]
-    #[instrument("registry-validate-decode-json", skip(self, buffer))]
+    #[instrument(name = "registry-validate-decode-json", skip(self, buffer))]
     pub async fn validate_and_decode_json(&self, topic: &str, buffer: &[u8]) -> Vec<u8> {
         if self.client.is_some() {
             let (_id, schema) = match self.get_or_fetch_schema(topic).await {
