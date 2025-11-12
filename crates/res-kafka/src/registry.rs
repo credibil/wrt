@@ -3,19 +3,22 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use jsonschema::validate;
+use schema_registry_client::rest::apis::Error as SchemaRegistryError;
 use schema_registry_client::rest::client_config::ClientConfig as RegistryConfig;
 use schema_registry_client::rest::schema_registry_client::{Client, SchemaRegistryClient};
 use serde_json::Value;
 use tokio::sync::Mutex;
 use tokio::time;
+use tracing::instrument;
 
 use crate::RegistryOptions;
 
+type SchemaMap = HashMap<String, Option<(i32, Value)>>;
 /// Schema Registry client with caching
 #[derive(Clone)]
 pub struct Registry {
     client: Option<SchemaRegistryClient>,
-    schemas: Arc<Mutex<HashMap<String, (i32, Value)>>>,
+    schemas: Arc<Mutex<SchemaMap>>,
 }
 
 /// Endianness byte used in schema registry payloads
@@ -38,11 +41,12 @@ impl Registry {
     }
 
     /// Serialize payload to JSON with optional schema registry
+    #[instrument("registry-validate-encode-json", skip(self, buffer))]
     pub async fn validate_and_encode_json(&self, topic: &str, buffer: Vec<u8>) -> Vec<u8> {
         // If schema registry is available, use it
         if self.client.is_some() {
             match self.get_or_fetch_schema(topic).await {
-                Ok((id, schema)) => {
+                Ok(Some((id, schema))) => {
                     let payload: Value = match serde_json::from_slice(&buffer) {
                         Ok(p) => p,
                         Err(e) => {
@@ -58,6 +62,7 @@ impl Registry {
 
                     Payload::encode(id, buffer)
                 }
+                Ok(None) => buffer,
                 Err(e) => {
                     tracing::error!("Failed to fetch schema for topic {}: {:?}", topic, e);
                     buffer
@@ -70,17 +75,21 @@ impl Registry {
 
     /// Deserialize payload to JSON with optional schema registry
     #[allow(unused)]
+    #[instrument("registry-validate-decode-json", skip(self, buffer))]
     pub async fn validate_and_decode_json(&self, topic: &str, buffer: &[u8]) -> Vec<u8> {
-        if let Some(_sr_client) = &self.client {
-            let Some(decoded) = Payload::decode(buffer) else { return buffer.to_vec() };
-
+        if self.client.is_some() {
             let (_id, schema) = match self.get_or_fetch_schema(topic).await {
-                Ok(s) => s,
+                Ok(Some((id, schema))) => (id, schema),
+                Ok(None) => {
+                    return buffer.to_vec();
+                }
                 Err(e) => {
-                    tracing::error!("Failed to fetch schema: {:?}", e);
-                    return decoded.data.to_vec();
+                    tracing::warn!("Failed to fetch schema: {:?}", e);
+                    return buffer.to_vec();
                 }
             };
+
+            let Some(decoded) = Payload::decode(buffer) else { return buffer.to_vec() };
 
             let payload: Value = match serde_json::from_slice(decoded.data) {
                 Ok(v) => v,
@@ -91,7 +100,7 @@ impl Registry {
             };
 
             if let Err(e) = self.validate_payload_with_schema(&schema, &payload) {
-                tracing::error!("JSON validation failed: {}", e);
+                tracing::error!("Schema validation failed: {}", e);
             }
 
             decoded.data.to_vec()
@@ -111,21 +120,33 @@ impl Registry {
         Ok(())
     }
 
-    async fn get_or_fetch_schema(&self, topic: &str) -> Result<(i32, Value), String> {
+    async fn get_or_fetch_schema(&self, topic: &str) -> Result<Option<(i32, Value)>, String> {
         let sr = self
             .client
             .as_ref()
             .ok_or_else(|| "No schema registry client available".to_string())?;
 
         let mut schemas = self.schemas.lock().await;
-        if let Some((id, value)) = schemas.get(topic) {
-            Ok((*id, value.clone()))
+        if let Some(schema_entry) = schemas.get(topic) {
+            Ok(schema_entry.clone())
         } else {
             let subject = format!("{topic}-value");
-            let schema_response = sr
-                .get_latest_version(&subject, None)
-                .await
-                .map_err(|e| format!("Failed to fetch schema for {subject}: {e:?}"))?;
+            let schema_response = sr.get_latest_version(&subject, None).await;
+            let schema_response = match schema_response {
+                Ok(s) => s,
+                Err(e) => {
+                    tracing::error!("Failed to fetch latest schema for topic {}: {:?}", topic, e);
+                    match e {
+                        SchemaRegistryError::ResponseError(_) => {
+                            schemas.insert(topic.to_string(), None);
+                            return Ok(None);
+                        }
+                        _ => {
+                            return Err(format!("Error fetching schema for topic {topic}: {e:?}"));
+                        }
+                    }
+                }
+            };
 
             let schema_str = schema_response
                 .schema
@@ -139,9 +160,9 @@ impl Registry {
                 .id
                 .ok_or_else(|| format!("Registry ID missing for topic {topic}"))?;
 
-            schemas.insert(topic.to_string(), (registry_id, schema_json.clone()));
+            schemas.insert(topic.to_string(), Some((registry_id, schema_json.clone())));
             drop(schemas);
-            Ok((registry_id, schema_json))
+            Ok(Some((registry_id, schema_json)))
         }
     }
 
