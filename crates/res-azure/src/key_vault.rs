@@ -68,7 +68,7 @@ impl Locker for AzLocker {
                 }
             };
 
-            let secret: Secret = response.into_body().context("issue deserializing secret")?;
+            let secret: Secret = response.into_model().context("issue deserializing secret")?;
             let Some(value) = secret.value else {
                 return Ok(None);
             };
