@@ -67,19 +67,19 @@ version = "0.5.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.azure_core]]
-version = "0.29.1"
+version = "0.30.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.azure_core_macros]]
-version = "0.3.1"
+version = "0.4.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.azure_identity]]
-version = "0.29.0"
+version = "0.30.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.azure_security_keyvault_secrets]]
-version = "0.8.0"
+version = "0.9.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.backon]]
@@ -196,6 +196,10 @@ criteria = "safe-to-deploy"
 
 [[exemptions.crossbeam-utils]]
 version = "0.8.21"
+criteria = "safe-to-deploy"
+
+[[exemptions.crypto-common]]
+version = "0.1.7"
 criteria = "safe-to-deploy"
 
 [[exemptions.csv]]
@@ -351,7 +355,7 @@ version = "0.3.31"
 criteria = "safe-to-deploy"
 
 [[exemptions.generic-array]]
-version = "0.14.9"
+version = "0.14.5"
 criteria = "safe-to-deploy"
 
 [[exemptions.getrandom]]
@@ -459,7 +463,7 @@ version = "0.1.10"
 criteria = "safe-to-deploy"
 
 [[exemptions.libz-sys]]
-version = "1.1.22"
+version = "1.1.23"
 criteria = "safe-to-deploy"
 
 [[exemptions.lru-cache]]
@@ -1019,15 +1023,15 @@ version = "1.19.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.typespec]]
-version = "0.9.1"
+version = "0.10.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.typespec_client_core]]
-version = "0.8.1"
+version = "0.9.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.typespec_macros]]
-version = "0.8.1"
+version = "0.9.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.unarray]]
