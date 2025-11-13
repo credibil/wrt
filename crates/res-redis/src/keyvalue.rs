@@ -6,9 +6,11 @@ use anyhow::anyhow;
 use futures::FutureExt;
 use redis::AsyncCommands;
 use redis::aio::ConnectionManager;
-use wasi_keyvalue::{Bucket, FutureResult, TtlValue, WasiKeyValueCtx};
+use wasi_keyvalue::{Bucket, FutureResult, WasiKeyValueCtx};
 
 use crate::Client;
+
+const TTL_DAY: u64 = 24 * 60 * 60; // 1 day
 
 impl WasiKeyValueCtx for Client {
     fn open_bucket(&self, identifier: String) -> FutureResult<Arc<dyn Bucket>> {
@@ -46,7 +48,7 @@ impl Bucket for RedisBucket {
     }
 
     fn get(&self, key: String) -> FutureResult<Option<Vec<u8>>> {
-        let key = format!("{}:{}", self.identifier, key);
+        let key = format!("{}:{key}", self.identifier);
         let mut conn = self.conn.0.clone();
         async move {
             conn.get(key.clone()).await.map_err(|e| anyhow!("failed to get value for {key}: {e}"))
@@ -55,28 +57,19 @@ impl Bucket for RedisBucket {
     }
 
     fn set(&self, key: String, value: Vec<u8>) -> FutureResult<()> {
-        let key = format!("{}:{}", self.identifier, key);
+        let key = format!("{}:{key}", self.identifier);
         let mut conn = self.conn.0.clone();
-        async move {
-            let ttl =
-                TtlValue::try_from(value.clone()).ok().and_then(|ttl_value| ttl_value.ttl_seconds);
 
-            if let Some(ttl) = ttl {
-                tracing::trace!("setting key with TTL: {key}, {} seconds", ttl);
-                conn.set_ex(key.clone(), value, ttl)
-                    .await
-                    .map_err(|e| anyhow!("failed to set value for {key}: {e}"))
-            } else {
-                conn.set(key.clone(), value)
-                    .await
-                    .map_err(|e| anyhow!("failed to set value for {key}: {e}"))
-            }
+        async move {
+            conn.set_ex(&key, value, TTL_DAY)
+                .await
+                .map_err(|e| anyhow!("failed to set value for {key}: {e}"))
         }
         .boxed()
     }
 
     fn delete(&self, key: String) -> FutureResult<()> {
-        let key = format!("{}:{}", self.identifier, key);
+        let key = format!("{}:{key}", self.identifier);
         let mut conn = self.conn.0.clone();
         async move {
             conn.del(key.clone())
@@ -87,7 +80,7 @@ impl Bucket for RedisBucket {
     }
 
     fn exists(&self, key: String) -> FutureResult<bool> {
-        let key = format!("{}:{}", self.identifier, key);
+        let key = format!("{}:{key}", self.identifier);
         let mut conn = self.conn.0.clone();
         async move {
             conn.exists(key.clone())

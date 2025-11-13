@@ -6,8 +6,6 @@ use bytes::Bytes;
 use http::header::{CACHE_CONTROL, IF_NONE_MATCH};
 use http::{Request, Response};
 use http_body::Body;
-use wasi_keyvalue::{TtlValue, store};
-use wasip3::clocks::wall_clock;
 
 pub const CACHE_BUCKET: &str = "default-cache";
 
@@ -65,29 +63,19 @@ impl Cache {
     /// * deserialization errors
     pub fn get(&self) -> Result<Option<Response<Bytes>>> {
         let ctrl = &self.control;
+
         if ctrl.no_cache || ctrl.no_store || ctrl.etag.is_empty() {
             tracing::debug!("cache is disabled");
             return Ok(None);
         }
 
-        // get data from keyvalue store
-        let bucket = store::open(&self.bucket)
-            .map_err(|e| anyhow!("opening cache bucket `{}`: {e}", &self.bucket))?;
-        let Some(data) = bucket
-            .get(&self.control.etag)
+        tracing::debug!("retrieving cached response with etag `{}`", &ctrl.etag);
+
+        let cache = wasi_keyvalue::cache::open(&self.bucket)?;
+        cache
+            .get(&ctrl.etag)
             .map_err(|e| anyhow!("retrieving cached response: {e}"))?
-        else {
-            return Ok(None);
-        };
-
-        // the data may be wrapped in a TtlValue
-        let data = if let Ok(ttl_value) = TtlValue::try_from(data.clone()) {
-            ttl_value.value
-        } else {
-            data
-        };
-
-        deserialize(&data).map(Some)
+            .map_or(Ok(None), |data| deserialize(&data).map(Some))
     }
 
     /// Put the response into cache.
@@ -101,23 +89,13 @@ impl Cache {
         if ctrl.no_store || ctrl.etag.is_empty() || ctrl.max_age == 0 {
             return Ok(());
         }
+
         tracing::debug!("caching response with etag `{}`", &ctrl.etag);
 
-        let mut value = serialize(response)?;
-        if ctrl.max_age > 0 {
-            let current_time = wall_clock::now();
-            let ttl_value = TtlValue {
-                value,
-                ttl_seconds: Some(ctrl.max_age),
-                timestamp_seconds: Some(current_time.seconds),
-            };
-            value = serde_json::to_vec(&ttl_value)
-                .map_err(|e| anyhow!("serializing TtlValue for cache storage: {e}"))?;
-        }
-
-        let bucket = store::open(&self.bucket)
-            .map_err(|e| anyhow!("opening cache bucket `{}`: {e}", &self.bucket))?;
-        bucket.set(&ctrl.etag, &value).map_err(|e| anyhow!("storing response in cache: {e}"))
+        let cache = wasi_keyvalue::cache::open(&self.bucket)?;
+        cache
+            .set(&ctrl.etag, &serialize(response)?, Some(ctrl.max_age))
+            .map_or_else(|e| Err(anyhow!("caching response: {e}")), |_| Ok(()))
     }
 
     /// Getter for etag
