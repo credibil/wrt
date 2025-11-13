@@ -300,8 +300,8 @@ wasmtime-wasi-io = "38.0.3"
 wit-bindgen = { version = "0.46.0" }
 
 # credibil registry
-credibil-encoding = { version = "0.4.0", registry = "credibil" }
-credibil-otel = { version = "0.4.0", registry = "credibil" }
+credibil-encoding = { version = "0.5.0", registry = "credibil" }
+credibil-otel = { version = "0.5.0", registry = "credibil" }
 
 # interally referenced crates
 res-azure = { path = "crates/res-azure", version = "0.15.0", registry = "credibil" }
