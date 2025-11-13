@@ -222,14 +222,17 @@ impl Client for crate::Client {
                         let sender = sender.clone();
                         let registry = registry.clone();
                         async move {
-                            if let Some(sr) = &registry {
+                            let decoded_payload = if let Some(sr) = &registry {
                                 let topic = msg.topic();
                                 let payload_bytes = msg.payload().unwrap_or_default().to_vec();
-                                sr.validate_and_decode_json(topic, &payload_bytes).await;
-                            }
-                            let message = MessageProxy(
-                                Arc::new(KafkaMessage(msg.detach())) as Arc<dyn Message>
-                            );
+                                sr.validate_and_decode_json(topic, &payload_bytes).await
+                            } else {
+                                msg.payload().unwrap_or_default().to_vec()
+                            };
+                            let message = MessageProxy(Arc::new(KafkaMessage(
+                                msg.detach().set_payload(Some(decoded_payload)),
+                            ))
+                                as Arc<dyn Message>);
                             if let Err(e) = sender.send(message).await {
                                 tracing::error!("failed to send message to subscriber: {e}");
                             }

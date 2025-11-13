@@ -276,6 +276,7 @@ opentelemetry = "0.31.0"
 opentelemetry_sdk = { version = "0.31.0", features = ["experimental_metrics_custom_reader"] }
 proc-macro2 = "1.0.101"
 quote = "1.0.40"
+rand = "0.9.2"
 rdkafka = { version = "0.38", features = ["cmake-build", "ssl-vendored", "tokio"] }
 redis = { version = "0.32.6", features = ["aio", "connection-manager", "tokio-comp"] }
 reqwest = "0.12.24"
