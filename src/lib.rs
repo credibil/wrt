@@ -4,7 +4,7 @@
 // #[cfg(all(feature = "keyvalue", feature = "nats", feature = "redis"))]
 // compile_error!("features \"nats\" and \"redis\" cannot be enabled for keyvalue at the same time");
 
-use std::env::set_var;
+use std::env;
 use std::path::PathBuf;
 
 use anyhow::Result;
@@ -63,14 +63,18 @@ use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiVie
 /// Returns an error if the wasm file cannot be run, or if the runtime fails to
 /// instantiate the component.
 pub async fn run(wasm: PathBuf) -> Result<()> {
-    // link dependencies
-    let mut compiled = Runtime::<RunData>::new(wasm.clone()).compile()?;
-    let path = wasm.as_path();
-    let filename = path.file_stem().unwrap_or_default().to_string_lossy();
-    #[allow(clippy::undocumented_unsafe_blocks)]
+    // SAFETY:
+    // Unsafe is used here to set environment variables at runtime.
+    // This is safe because it is done at the start of the program before any threads are spawned.
     unsafe {
-        set_var("WASM_GUEST_NAME", filename.to_string());
+        // set guest name environment variable used by kafka client
+        let filename =
+            wasm.as_path().file_stem().unwrap_or_else(|| "app".as_ref()).to_string_lossy();
+        env::set_var("WASM_GUEST_NAME", filename.to_string());
     };
+
+    // link dependencies
+    let mut compiled = Runtime::<RunData>::new(wasm).compile()?;
     #[cfg(feature = "blobstore")]
     compiled.link(WasiBlobstore)?;
     #[cfg(feature = "http")]
