@@ -1,7 +1,5 @@
 //! Cache header parsing and cache get/put
 
-use std::time::Duration;
-
 use anyhow::{Result, anyhow, bail};
 use bincode::{Decode, Encode, config};
 use bytes::Bytes;
@@ -66,7 +64,7 @@ impl Cache {
     pub fn get(&self) -> Result<Option<Response<Bytes>>> {
         let ctrl = &self.control;
 
-        if self.control.no_cache || ctrl.no_store || ctrl.etag.is_empty() {
+        if ctrl.no_cache || ctrl.no_store || ctrl.etag.is_empty() {
             tracing::debug!("cache is disabled");
             return Ok(None);
         }
@@ -96,7 +94,7 @@ impl Cache {
 
         let cache = wasi_keyvalue::cache::open(&self.bucket)?;
         cache
-            .set(&ctrl.etag, &serialize(response)?, Some(Duration::from_secs(ctrl.max_age)))
+            .set(&ctrl.etag, &serialize(response)?, Some(ctrl.max_age))
             .map_or_else(|e| Err(anyhow!("caching response: {e}")), |_| Ok(()))
     }
 

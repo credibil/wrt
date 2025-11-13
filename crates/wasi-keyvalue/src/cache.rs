@@ -1,8 +1,6 @@
-use std::time::Duration;
-
 use anyhow::{Context, Result, anyhow};
 use chrono::serde::ts_seconds;
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 
 use crate::guest::store;
@@ -56,11 +54,9 @@ impl Cache {
     /// # Errors
     ///
     /// Returns an error if there is an issue setting the value.
-    pub fn set(
-        &self, key: &str, value: &[u8], expires_in: Option<Duration>,
-    ) -> Result<Option<Vec<u8>>> {
+    pub fn set(&self, key: &str, value: &[u8], ttl_secs: Option<u64>) -> Result<Option<Vec<u8>>> {
         // if TTL, create envelope
-        let value = if let Some(ttl) = expires_in {
+        let value = if let Some(ttl) = ttl_secs.map(|secs| Duration::seconds(secs.cast_signed())) {
             let envelope = Cacheable::new(value, ttl);
             &<Cacheable as TryInto<Vec<u8>>>::try_into(envelope)?
         } else {
@@ -68,10 +64,10 @@ impl Cache {
         };
 
         // return previous value
-        let current = self.get(key)?;
+        let previous = self.get(key)?;
         self.bucket.set(key, value).context("setting state with ttl")?;
 
-        Ok(current)
+        Ok(previous)
     }
 
     /// Delete a value from the cache.
@@ -142,14 +138,15 @@ impl<'a> TryFrom<Cacheable<'a>> for Vec<u8> {
 
 #[cfg(test)]
 mod tests {
-    use chrono::Duration;
+    // use chrono::Duration;
+    use std::time::Duration;
 
     use super::*;
 
     #[test]
     fn valid() {
         let value = vec![1, 2, 3, 4];
-        let expires_at = Utc::now() + Duration::seconds(60);
+        let expires_at = Utc::now() + Duration::from_secs(60);
 
         let cacheable = Cacheable {
             value: &value,

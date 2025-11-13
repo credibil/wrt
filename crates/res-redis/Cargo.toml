@@ -17,7 +17,6 @@ version.workspace = true
 workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-chrono.workspace = true
 anyhow.workspace = true
 fromenv.workspace = true
 futures.workspace = true

@@ -3894,7 +3894,6 @@ name = "res-redis"
 version = "0.15.0"
 dependencies = [
  "anyhow",
- "chrono",
  "fromenv",
  "futures",
  "redis",
