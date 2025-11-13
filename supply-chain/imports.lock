@@ -337,8 +337,8 @@ user-login = "seanmonstar"
 user-name = "Sean McArthur"
 
 [[publisher.hyper]]
-version = "1.8.0"
-when = "2025-11-11"
+version = "1.8.1"
+when = "2025-11-13"
 user-id = 359
 user-login = "seanmonstar"
 user-name = "Sean McArthur"
