@@ -138,15 +138,13 @@ impl<'a> TryFrom<Cacheable<'a>> for Vec<u8> {
 
 #[cfg(test)]
 mod tests {
-    // use chrono::Duration;
-    use std::time::Duration;
 
     use super::*;
 
     #[test]
     fn valid() {
         let value = vec![1, 2, 3, 4];
-        let expires_at = Utc::now() + Duration::from_secs(60);
+        let expires_at = Utc::now() + Duration::seconds(60);
 
         let cacheable = Cacheable {
             value: &value,
