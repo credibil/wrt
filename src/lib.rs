@@ -4,6 +4,7 @@
 // #[cfg(all(feature = "keyvalue", feature = "nats", feature = "redis"))]
 // compile_error!("features \"nats\" and \"redis\" cannot be enabled for keyvalue at the same time");
 
+use std::env::set_var;
 use std::path::PathBuf;
 
 use anyhow::Result;
@@ -63,7 +64,13 @@ use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiVie
 /// instantiate the component.
 pub async fn run(wasm: PathBuf) -> Result<()> {
     // link dependencies
-    let mut compiled = Runtime::<RunData>::new(wasm).compile()?;
+    let mut compiled = Runtime::<RunData>::new(wasm.clone()).compile()?;
+    let path = wasm.as_path();
+    let filename = path.file_stem().unwrap_or_default().to_string_lossy();
+    #[allow(clippy::undocumented_unsafe_blocks)]
+    unsafe {
+        set_var("WASM_GUEST_NAME", filename.to_string());
+    };
     #[cfg(feature = "blobstore")]
     compiled.link(WasiBlobstore)?;
     #[cfg(feature = "http")]

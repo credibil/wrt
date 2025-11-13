@@ -84,6 +84,10 @@ pub struct ConnectOptions {
     pub group_id: Option<String>,
     #[env(from = "KAFKA_PARTITION_COUNT")]
     pub partition_count: Option<i32>,
+    #[env(from = "WASM_GUEST_NAME")]
+    pub guest_name: Option<String>,
+    #[env(from = "ENV", default = "dev")]
+    pub env_var: String,
     #[env(nested)]
     pub registry: Option<RegistryOptions>,
 }
@@ -122,6 +126,13 @@ impl From<&ConnectOptions> for ClientConfig {
 
         if let Some(group_id) = kafka.group_id.clone() {
             config.set("group.id", &group_id);
+        }
+
+        if let Some(guest_name) = &kafka.guest_name {
+            config.set(
+                "client.id",
+                format!("{}-{guest_name}-{}", &kafka.env_var, rand::random_range(1000..9999)),
+            );
         }
 
         config
