@@ -4,5 +4,5 @@
     ],
     "rust-analyzer.check.command": "clippy",
     "rust-analyzer.cargo.target": "wasm32-wasip2",
-    "rust-analyzer.cargo.allTargets": true
+    // "rust-analyzer.cargo.allTargets": true
 }
