@@ -1,4 +1,4 @@
-## 0.15.0
+## 0.16.0
 
 Unreleased
 
@@ -12,6 +12,7 @@ Release notes for previous releases can be found on the respective release
 branches of the repository.
 
 <!-- ARCHIVE_START -->
+* [0.15.x](https://github.com/credibil/wrt/blob/release-0.15.0/RELEASES.md)
 * [0.14.x](https://github.com/credibil/wrt/blob/release-0.14.0/RELEASES.md)
 * [0.13.x](https://github.com/credibil/wrt/blob/release-0.13.0/RELEASES.md)
 * [0.12.x](https://github.com/credibil/wrt/blob/release-0.12.0/RELEASES.md)
