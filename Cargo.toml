@@ -207,7 +207,7 @@ keywords = ["decentralized", "identity"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/credibil/wrt"
 rust-version = "1.91"
-version = "0.15.0"
+version = "0.16.0"
 
 [workspace.lints.rust]
 # https://dirname.github.io/rust-std-doc/rustc/lints/listing/allowed-by-default.html
@@ -305,23 +305,23 @@ credibil-encoding = { version = "0.5.0", registry = "credibil" }
 credibil-otel = { version = "0.5.0", registry = "credibil" }
 
 # interally referenced crates
-res-azure = { path = "crates/res-azure", version = "0.15.0", registry = "credibil" }
-res-kafka = { path = "crates/res-kafka", version = "0.15.0", registry = "credibil" }
-res-mongodb = { path = "crates/res-mongodb", version = "0.15.0", registry = "credibil" }
-res-nats = { path = "crates/res-nats", version = "0.15.0", registry = "credibil" }
-res-postgres = { path = "crates/res-postgres", version = "0.15.0", registry = "credibil" }
-res-redis = { path = "crates/res-redis", version = "0.15.0", registry = "credibil" }
-runtime = { path = "crates/runtime", version = "0.15.0", registry = "credibil" }
-wasi-blobstore = { path = "crates/wasi-blobstore", version = "0.15.0", registry = "credibil" }
-wasi-http = { path = "crates/wasi-http", version = "0.15.0", registry = "credibil" }
-wasi-identity = { path = "crates/wasi-identity", version = "0.15.0", registry = "credibil" }
-wasi-keyvalue = { path = "crates/wasi-keyvalue", version = "0.15.0", registry = "credibil" }
-wasi-messaging = { path = "crates/wasi-messaging", version = "0.15.0", registry = "credibil" }
-wasi-otel = { path = "crates/wasi-otel", version = "0.15.0", registry = "credibil" }
-wasi-otel-attr = { path = "crates/wasi-otel-attr", version = "0.15.0", registry = "credibil" }
-wasi-sql = { path = "crates/wasi-sql", version = "0.15.0", registry = "credibil" }
-wasi-vault = { path = "crates/wasi-vault", version = "0.15.0", registry = "credibil" }
-wasi-websockets = { path = "crates/wasi-websockets", version = "0.15.0", registry = "credibil" }
+res-azure = { path = "crates/res-azure", version = "0.16.0", registry = "credibil" }
+res-kafka = { path = "crates/res-kafka", version = "0.16.0", registry = "credibil" }
+res-mongodb = { path = "crates/res-mongodb", version = "0.16.0", registry = "credibil" }
+res-nats = { path = "crates/res-nats", version = "0.16.0", registry = "credibil" }
+res-postgres = { path = "crates/res-postgres", version = "0.16.0", registry = "credibil" }
+res-redis = { path = "crates/res-redis", version = "0.16.0", registry = "credibil" }
+runtime = { path = "crates/runtime", version = "0.16.0", registry = "credibil" }
+wasi-blobstore = { path = "crates/wasi-blobstore", version = "0.16.0", registry = "credibil" }
+wasi-http = { path = "crates/wasi-http", version = "0.16.0", registry = "credibil" }
+wasi-identity = { path = "crates/wasi-identity", version = "0.16.0", registry = "credibil" }
+wasi-keyvalue = { path = "crates/wasi-keyvalue", version = "0.16.0", registry = "credibil" }
+wasi-messaging = { path = "crates/wasi-messaging", version = "0.16.0", registry = "credibil" }
+wasi-otel = { path = "crates/wasi-otel", version = "0.16.0", registry = "credibil" }
+wasi-otel-attr = { path = "crates/wasi-otel-attr", version = "0.16.0", registry = "credibil" }
+wasi-sql = { path = "crates/wasi-sql", version = "0.16.0", registry = "credibil" }
+wasi-vault = { path = "crates/wasi-vault", version = "0.16.0", registry = "credibil" }
+wasi-websockets = { path = "crates/wasi-websockets", version = "0.16.0", registry = "credibil" }
 
 # [patch."https://github.com/credibil/core.git"]
 # credibil-otel = { path = "../../credibil/core/crates/otel" }

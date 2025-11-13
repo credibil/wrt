@@ -1420,7 +1420,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -2052,7 +2052,7 @@ dependencies = [
  "libc",
  "percent-encoding",
  "pin-project-lite",
- "socket2 0.5.10",
+ "socket2 0.6.1",
  "system-configuration",
  "tokio",
  "tower-service",
@@ -2742,7 +2742,7 @@ version = "0.50.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -3453,7 +3453,7 @@ dependencies = [
  "quinn-udp",
  "rustc-hash",
  "rustls 0.23.35",
- "socket2 0.5.10",
+ "socket2 0.6.1",
  "thiserror 2.0.17",
  "tokio",
  "tracing",
@@ -3490,9 +3490,9 @@ dependencies = [
  "cfg_aliases",
  "libc",
  "once_cell",
- "socket2 0.5.10",
+ "socket2 0.6.1",
  "tracing",
- "windows-sys 0.59.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -3799,7 +3799,7 @@ dependencies = [
 
 [[package]]
 name = "res-azure"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "anyhow",
  "azure_core",
@@ -3818,7 +3818,7 @@ dependencies = [
 
 [[package]]
 name = "res-kafka"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "anyhow",
  "chrono",
@@ -3839,7 +3839,7 @@ dependencies = [
 
 [[package]]
 name = "res-mongodb"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "anyhow",
  "chrono",
@@ -3855,7 +3855,7 @@ dependencies = [
 
 [[package]]
 name = "res-nats"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "anyhow",
  "async-nats",
@@ -3873,7 +3873,7 @@ dependencies = [
 
 [[package]]
 name = "res-postgres"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "anyhow",
  "chrono",
@@ -3892,7 +3892,7 @@ dependencies = [
 
 [[package]]
 name = "res-redis"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "anyhow",
  "fromenv",
@@ -3925,7 +3925,7 @@ dependencies = [
 
 [[package]]
 name = "runtime"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "anyhow",
  "cfg-if",
@@ -3938,7 +3938,7 @@ dependencies = [
 
 [[package]]
 name = "runtime-cli"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "anyhow",
  "axum",
@@ -4025,7 +4025,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys 0.11.0",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -4696,7 +4696,7 @@ dependencies = [
  "getrandom 0.3.4",
  "once_cell",
  "rustix 1.1.2",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -5518,7 +5518,7 @@ checksum = "ccf3ec651a847eb01de73ccad15eb7d99f80485de043efb2f370cd654f4ea44b"
 
 [[package]]
 name = "wasi-blobstore"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "anyhow",
  "bytes",
@@ -5532,7 +5532,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-http"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "anyhow",
  "axum",
@@ -5564,7 +5564,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-identity"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "anyhow",
  "futures",
@@ -5577,7 +5577,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-keyvalue"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "anyhow",
  "async-nats",
@@ -5595,7 +5595,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-messaging"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "anyhow",
  "async-nats",
@@ -5613,7 +5613,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-otel"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "anyhow",
  "cfg-if",
@@ -5638,7 +5638,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-otel-attr"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -5648,7 +5648,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-sql"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "anyhow",
  "base64ct",
@@ -5663,7 +5663,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-vault"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "anyhow",
  "futures",
@@ -5676,7 +5676,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-websockets"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "anyhow",
  "futures",
@@ -6252,7 +6252,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.48.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
