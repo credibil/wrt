@@ -70,7 +70,7 @@ pub async fn run(wasm: PathBuf) -> Result<()> {
         // set guest name environment variable used by kafka client
         let filename =
             wasm.as_path().file_stem().unwrap_or_else(|| "app".as_ref()).to_string_lossy();
-        env::set_var("WASM_GUEST_NAME", filename.to_string());
+        env::set_var("COMPONENT", filename.to_string());
     };
 
     // link dependencies
