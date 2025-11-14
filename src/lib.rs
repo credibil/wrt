@@ -4,6 +4,8 @@
 // #[cfg(all(feature = "keyvalue", feature = "nats", feature = "redis"))]
 // compile_error!("features \"nats\" and \"redis\" cannot be enabled for keyvalue at the same time");
 
+pub mod config;
+
 use std::env;
 use std::path::PathBuf;
 
@@ -74,7 +76,7 @@ pub async fn run(wasm: PathBuf) -> Result<()> {
     };
 
     // link dependencies
-    let mut compiled = Runtime::<RunData>::new(wasm).compile()?;
+    let mut compiled = Runtime::new(wasm).compile::<RunData>()?;
     #[cfg(feature = "blobstore")]
     compiled.link(WasiBlobstore)?;
     #[cfg(feature = "http")]

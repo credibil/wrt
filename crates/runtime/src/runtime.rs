@@ -1,7 +1,6 @@
 //! # WebAssembly Runtime
 
 use std::env;
-use std::marker::PhantomData;
 use std::path::PathBuf;
 
 use anyhow::{Context, Result};
@@ -15,10 +14,9 @@ use wasmtime_wasi::WasiView;
 use crate::traits::Host;
 
 /// Runtime for a wasm component.
-pub struct Runtime<T: WasiView + 'static> {
+pub struct Runtime {
     wasm: PathBuf,
     tracing: bool,
-    _marker: PhantomData<T>,
 }
 
 pub struct Compiled<T: WasiView + 'static> {
@@ -26,18 +24,14 @@ pub struct Compiled<T: WasiView + 'static> {
     pub linker: Linker<T>,
 }
 
-impl<T: WasiView> Runtime<T> {
+impl Runtime {
     /// Create a new Runtime instance from the provided file reference.
     ///
     /// The file can either be a serialized (pre-compiled) wasmtime `Component`
     /// or a standard `wasm32-wasip2` wasm component.
     #[must_use]
     pub const fn new(wasm: PathBuf) -> Self {
-        Self {
-            wasm,
-            tracing: true,
-            _marker: PhantomData,
-        }
+        Self { wasm, tracing: true }
     }
 
     /// Enable or disable OpenTelemetry tracing support.
@@ -55,7 +49,7 @@ impl<T: WasiView> Runtime<T> {
     /// as a `Component` or the `Linker` cannot be initialized with WASI
     /// support.
     #[instrument(skip(self))]
-    pub fn compile(self) -> Result<Compiled<T>> {
+    pub fn compile<T: WasiView + 'static>(self) -> Result<Compiled<T>> {
         if self.tracing {
             self.init_tracing()?;
         }

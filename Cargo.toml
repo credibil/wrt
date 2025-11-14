@@ -20,7 +20,7 @@ doctest = false
 workspace = true
 
 [features]
-default = ["jit", "http-server"]
+default = ["jit", "realtime-messaging"]
 
 # Top-level feature sets that can be used to create a build.
 # Each set contains a unique grouping of component-resource tuples used by wasm
