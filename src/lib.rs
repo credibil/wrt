@@ -4,9 +4,8 @@
 // #[cfg(all(feature = "keyvalue", feature = "nats", feature = "redis"))]
 // compile_error!("features \"nats\" and \"redis\" cannot be enabled for keyvalue at the same time");
 
-pub mod config;
+pub mod env;
 
-use std::env;
 use std::path::PathBuf;
 
 use anyhow::Result;
@@ -82,12 +81,12 @@ pub async fn run(wasm: PathBuf) -> Result<()> {
     // the runtime still starting and no threads have been spawned.
     unsafe {
         let component = wasm.file_stem().and_then(|s| s.to_str()).unwrap_or("unknown");
-        if env::var("COMPONENT").is_err() {
+        if std::env::var("COMPONENT").is_err() {
             config.component = Some(component.to_string());
-            env::set_var("COMPONENT", component);
+            std::env::set_var("COMPONENT", component);
         }
         #[cfg(feature = "kafka")]
-        env::set_var("KAFKA_CLIENT_ID", format!("{component}-{}", &config.environment));
+        std::env::set_var("KAFKA_CLIENT_ID", format!("{component}-{}", &config.environment));
     };
 
     // load or compile wasm component

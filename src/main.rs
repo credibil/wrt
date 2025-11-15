@@ -9,7 +9,7 @@ use runtime::{Cli, Command, Parser};
 async fn main() -> Result<()> {
     match Cli::parse().command {
         Command::Run { wasm } => runtime_cli::run(wasm).await,
-        Command::Env => runtime_cli::config::print(),
+        Command::Env => runtime_cli::env::print(),
         #[cfg(feature = "jit")]
         Command::Compile { wasm, output } => runtime::compile(&wasm, output),
     }
