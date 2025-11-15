@@ -11,6 +11,7 @@ use std::sync::Arc;
 
 use anyhow::{Result, anyhow};
 use fromenv::{FromEnv, ParseResult};
+use rand::random_range;
 use rdkafka::consumer::{Consumer, StreamConsumer};
 use rdkafka::producer::{DeliveryResult, ProducerContext, ThreadedProducer};
 use rdkafka::{ClientConfig, ClientContext, Message as _};
@@ -51,11 +52,14 @@ impl Resource for Client {
         let registry = options.registry.map(Registry::new);
 
         // maybe consumer
-        let consumer = if let Some(topics) = options.topics {
+        let consumer = if let Some(consumer_options) = options.consumer {
             let consumer: StreamConsumer =
                 config.create().map_err(|e| anyhow!("issue creating consumer: {e}"))?;
-            let topics = topics.iter().map(String::as_str).collect::<Vec<_>>();
+
+            // subscribe to topics
+            let topics = consumer_options.topics.iter().map(String::as_str).collect::<Vec<_>>();
             consumer.subscribe(&topics)?;
+
             Some(Arc::new(consumer))
         } else {
             None
@@ -72,24 +76,28 @@ impl Resource for Client {
 
 #[derive(Debug, Clone, FromEnv)]
 pub struct ConnectOptions {
+    #[env(from = "KAFKA_CLIENT_ID")]
+    pub client_id: String,
     #[env(from = "KAFKA_BROKERS")]
     pub brokers: String,
     #[env(from = "KAFKA_USERNAME")]
     pub username: Option<String>,
     #[env(from = "KAFKA_PASSWORD")]
     pub password: Option<String>,
-    #[env(from = "KAFKA_TOPICS", with = split)]
-    pub topics: Option<Vec<String>>,
-    #[env(from = "KAFKA_CONSUMER_GROUP")]
-    pub group_id: Option<String>,
     #[env(from = "KAFKA_PARTITION_COUNT")]
     pub partition_count: Option<i32>,
-    #[env(from = "COMPONENT")]
-    pub component: Option<String>,
-    #[env(from = "ENVIRONMENT", default = "dev")]
-    pub env: String,
+    #[env(nested)]
+    pub consumer: Option<ConsumerOptions>,
     #[env(nested)]
     pub registry: Option<RegistryOptions>,
+}
+
+#[derive(Debug, Clone, FromEnv)]
+pub struct ConsumerOptions {
+    #[env(from = "KAFKA_TOPICS", with = split)]
+    pub topics: Vec<String>,
+    #[env(from = "KAFKA_CONSUMER_GROUP")]
+    pub group_id: Option<String>,
 }
 
 #[derive(Debug, Clone, FromEnv)]
@@ -112,7 +120,9 @@ fn split(s: &str) -> ParseResult<Vec<String>> {
 impl From<&ConnectOptions> for ClientConfig {
     fn from(kafka: &ConnectOptions) -> Self {
         let mut config = Self::new();
-        config.set("bootstrap.servers", kafka.brokers.clone());
+
+        config.set("client.id", format!("{}-{}", &kafka.client_id, random_range(1000..9999)));
+        config.set("bootstrap.servers", &kafka.brokers);
 
         // SASL authentication
         if let Some(user) = &kafka.username
@@ -124,15 +134,11 @@ impl From<&ConnectOptions> for ClientConfig {
             config.set("sasl.password", pass);
         }
 
-        if let Some(group_id) = kafka.group_id.clone() {
-            config.set("group.id", &group_id);
-        }
-
-        if let Some(component) = &kafka.component {
-            config.set(
-                "client.id",
-                format!("{}-{component}-{}", &kafka.env, rand::random_range(1000..9999)),
-            );
+        // consumer settings
+        if let Some(consumer) = &kafka.consumer
+            && let Some(group_id) = &consumer.group_id
+        {
+            config.set("group.id", group_id);
         }
 
         config
