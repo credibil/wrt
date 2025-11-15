@@ -18,7 +18,7 @@ pub use self::compiler::*;
 pub use self::runtime::*;
 pub use self::traits::*;
 
-#[derive(Parser)]
+#[derive(Parser, PartialEq, Eq)]
 #[command(version, about, long_about = None)]
 pub struct Cli {
     /// The command to execute.
@@ -26,7 +26,7 @@ pub struct Cli {
     pub command: Command,
 }
 
-#[derive(Subcommand)]
+#[derive(Subcommand, PartialEq, Eq)]
 pub enum Command {
     /// Run the specified wasm guest.
     Run {
@@ -46,4 +46,7 @@ pub enum Command {
         #[arg(short, long)]
         output: Option<PathBuf>,
     },
+
+    /// Print the runtime environment variable requirements.
+    Env,
 }

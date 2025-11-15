@@ -20,7 +20,7 @@ doctest = false
 workspace = true
 
 [features]
-default = ["jit", "realtime-messaging"]
+default = ["jit", "http-server"]
 
 # Top-level feature sets that can be used to create a build.
 # Each set contains a unique grouping of component-resource tuples used by wasm
@@ -83,6 +83,7 @@ wasi-websockets = { workspace = true, optional = true }
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 base64ct.workspace = true
 bytes.workspace = true
+fromenv.workspace = true
 futures.workspace = true
 http.workspace = true
 http-body-util.workspace = true

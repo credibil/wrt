@@ -1,10 +1,9 @@
 //! # WebAssembly Runtime
 
 use std::env;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
-use anyhow::{Context, Result};
-use cfg_if::cfg_if;
+use anyhow::{Context, Result, anyhow};
 use credibil_otel::Telemetry;
 use tracing::instrument;
 use wasmtime::component::{Component, InstancePre, Linker};
@@ -14,14 +13,9 @@ use wasmtime_wasi::WasiView;
 use crate::traits::Host;
 
 /// Runtime for a wasm component.
+#[derive(Default)]
 pub struct Runtime {
-    wasm: PathBuf,
     tracing: bool,
-}
-
-pub struct Compiled<T: WasiView + 'static> {
-    pub component: Component,
-    pub linker: Linker<T>,
 }
 
 impl Runtime {
@@ -30,8 +24,8 @@ impl Runtime {
     /// The file can either be a serialized (pre-compiled) wasmtime `Component`
     /// or a standard `wasm32-wasip2` wasm component.
     #[must_use]
-    pub const fn new(wasm: PathBuf) -> Self {
-        Self { wasm, tracing: true }
+    pub const fn new() -> Self {
+        Self { tracing: true }
     }
 
     /// Enable or disable OpenTelemetry tracing support.
@@ -49,9 +43,9 @@ impl Runtime {
     /// as a `Component` or the `Linker` cannot be initialized with WASI
     /// support.
     #[instrument(skip(self))]
-    pub fn compile<T: WasiView + 'static>(self) -> Result<Compiled<T>> {
+    pub fn from_file<T: WasiView + 'static>(self, wasm: &PathBuf) -> Result<Compiled<T>> {
         if self.tracing {
-            self.init_tracing()?;
+            init_tracing(wasm)?;
         }
         tracing::info!("initializing runtime");
 
@@ -65,20 +59,16 @@ impl Runtime {
         //  2. Set `Store::epoch_deadline_async_yield_and_update`
         //  3. Call `Engine::increment_epoch` periodically
 
-        // file can be a serialized component or a wasm file
-        cfg_if! {
-            if #[cfg(feature = "jit")] {
-                // SAFETY:
-                // Attempt to load as a serialized component with fallback to wasm
-                let component = match unsafe { Component::deserialize_file(&engine, &self.wasm) } {
-                    Ok(component) => component,
-                    Err(_) => Component::from_file(&engine, &self.wasm)?,
-                };
+        // SAFETY: The caller should ensure only valid pre-compiled wasm files are provided.
+        let component = unsafe { Component::deserialize_file(&engine, wasm) }.or_else(|e| {
+            if cfg!(feature = "jit") {
+                Component::from_file(&engine, wasm)
             } else {
-                // load as a serialized component with no fallback (Cranelift is unavailable)
-                let component = unsafe { Component::deserialize_file(&engine, &self.wasm)? };
+                Err(anyhow!(
+                    "Issue loading component: {e}. Enable `jit` feature to load wasm32 files."
+                ))
             }
-        }
+        })?;
 
         // register services with runtime's Linker
         let mut linker = Linker::new(&engine);
@@ -89,18 +79,12 @@ impl Runtime {
 
         Ok(Compiled { component, linker })
     }
+}
 
-    fn init_tracing(&self) -> Result<()> {
-        let file_name = self.wasm.file_name().and_then(|s| s.to_str()).unwrap_or("unknown");
-        let (prefix, _) = file_name.rsplit_once('.').unwrap_or((file_name, ""));
-
-        // initialize telemetry
-        let mut builder = Telemetry::new(prefix);
-        if let Ok(endpoint) = env::var("OTEL_GRPC_URL") {
-            builder = builder.endpoint(endpoint);
-        }
-        builder.build().context("initializing telemetry")
-    }
+/// A compiled WebAssembly component with its associated Linker.
+pub struct Compiled<T: WasiView + 'static> {
+    component: Component,
+    linker: Linker<T>,
 }
 
 impl<T: WasiView> Compiled<T> {
@@ -121,4 +105,15 @@ impl<T: WasiView> Compiled<T> {
     pub fn pre_instantiate(&mut self) -> Result<InstancePre<T>> {
         self.linker.instantiate_pre(&self.component)
     }
+}
+
+fn init_tracing(wasm: &Path) -> Result<()> {
+    let name = wasm.file_stem().and_then(|s| s.to_str()).unwrap_or("unknown");
+
+    // initialize telemetry
+    let mut builder = Telemetry::new(name);
+    if let Ok(endpoint) = env::var("OTEL_GRPC_URL") {
+        builder = builder.endpoint(endpoint);
+    }
+    builder.build().context("initializing telemetry")
 }

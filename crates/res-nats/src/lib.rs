@@ -61,7 +61,6 @@ pub struct ConnectOptions {
 
 impl runtime::FromEnv for ConnectOptions {
     fn from_env() -> Result<Self> {
-        
         Self::from_env().finalize().map_err(|e| anyhow!("issue loading connection options: {e}"))
     }
 }

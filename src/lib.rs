@@ -10,6 +10,7 @@ use std::env;
 use std::path::PathBuf;
 
 use anyhow::Result;
+use fromenv::FromEnv;
 use futures::future::{BoxFuture, TryJoinAll};
 #[cfg(feature = "azure")]
 use res_azure::Client as AzureCtx;
@@ -58,6 +59,16 @@ use wasi_websockets::{
 use wasmtime::component::InstancePre;
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 
+#[derive(Debug, Clone, FromEnv)]
+pub struct RuntimeConfig {
+    #[env(from = "ENVIRONMENT", default = "dev")]
+    pub environment: String,
+    #[env(from = "COMPONENT")]
+    pub component: Option<String>,
+    #[env(from = "OTEL_GRPC_URL")]
+    pub otel_grpc_url: Option<String>,
+}
+
 /// Run the specified wasm guest using the specified top-level feature set.
 ///
 /// # Errors
@@ -65,18 +76,24 @@ use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiVie
 /// Returns an error if the wasm file cannot be run, or if the runtime fails to
 /// instantiate the component.
 pub async fn run(wasm: PathBuf) -> Result<()> {
-    // SAFETY:
-    // Unsafe is used here to set environment variables at runtime.
-    // This is safe because it is done at the start of the program before any threads are spawned.
+    let mut config = RuntimeConfig::from_env().finalize()?;
+
+    // SAFETY: Setting environment variables is safe at this point because it
+    // the runtime still starting and no threads have been spawned.
     unsafe {
-        // set guest name environment variable used by kafka client
-        let filename =
-            wasm.as_path().file_stem().unwrap_or_else(|| "app".as_ref()).to_string_lossy();
-        env::set_var("COMPONENT", filename.to_string());
+        let component = wasm.file_stem().and_then(|s| s.to_str()).unwrap_or("unknown");
+        if env::var("COMPONENT").is_err() {
+            config.component = Some(component.to_string());
+            env::set_var("COMPONENT", component);
+        }
+        #[cfg(feature = "kafka")]
+        env::set_var("KAFKA_CLIENT_ID", format!("{component}-{}", &config.environment));
     };
 
+    // load or compile wasm component
+    let mut compiled = Runtime::new().from_file::<RunData>(&wasm)?;
+
     // link dependencies
-    let mut compiled = Runtime::new(wasm).compile::<RunData>()?;
     #[cfg(feature = "blobstore")]
     compiled.link(WasiBlobstore)?;
     #[cfg(feature = "http")]
