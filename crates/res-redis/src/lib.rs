@@ -26,7 +26,7 @@ impl Resource for Client {
 
     #[instrument(name = "Redis::connect_with")]
     async fn connect_with(options: Self::ConnectOptions) -> Result<Self> {
-        let client = redis::Client::open(options.address.clone())
+        let client = redis::Client::open(options.url.clone())
             .map_err(|e| anyhow!("failed to create redis client: {e}"))?;
         let config = ConnectionManagerConfig::new()
             .set_number_of_retries(options.max_retries)
@@ -44,8 +44,8 @@ impl Resource for Client {
 
 #[derive(Debug, Clone, FromEnv)]
 pub struct ConnectOptions {
-    #[env(from = "REDIS_ADDR", default = "redis://localhost:6379")]
-    pub address: String,
+    #[env(from = "REDIS_URL", default = "redis://localhost:6379")]
+    pub url: String,
     #[env(from = "REDIS_MAX_RETRIES", default = "3")]
     pub max_retries: usize,
     #[env(from = "REDIS_MAX_DELAY", default = "1000")]
