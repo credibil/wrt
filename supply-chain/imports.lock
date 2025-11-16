@@ -72,8 +72,8 @@ user-login = "fitzgen"
 user-name = "Nick Fitzgerald"
 
 [[publisher.bytes]]
-version = "1.10.1"
-when = "2025-03-05"
+version = "1.11.0"
+when = "2025-11-14"
 user-id = 6741
 user-login = "Darksonn"
 user-name = "Alice Ryhl"
@@ -274,13 +274,6 @@ when = "2025-03-10"
 user-id = 6825
 user-login = "sunfishcode"
 user-name = "Dan Gohman"
-
-[[publisher.find-msvc-tools]]
-version = "0.1.0"
-when = "2025-08-29"
-user-id = 539
-user-login = "cuviper"
-user-name = "Josh Stone"
 
 [[publisher.flate2]]
 version = "1.1.5"
@@ -1897,12 +1890,6 @@ who = "Alex Crichton <alex@alexcrichton.com>"
 criteria = "safe-to-deploy"
 delta = "2.1.1 -> 2.3.0"
 notes = "Minor refactoring, nothing new."
-
-[[audits.bytecode-alliance.audits.find-msvc-tools]]
-who = "Alex Crichton <alex@alexcrichton.com>"
-criteria = "safe-to-deploy"
-delta = "0.1.0 -> 0.1.4"
-notes = "Nothing out of the ordinary for a crate finding MSVC tooling."
 
 [[audits.bytecode-alliance.audits.foldhash]]
 who = "Alex Crichton <alex@alexcrichton.com>"
