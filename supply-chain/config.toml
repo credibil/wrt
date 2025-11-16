@@ -55,7 +55,7 @@ version = "1.1.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.axum]]
-version = "0.8.6"
+version = "0.8.7"
 criteria = "safe-to-deploy"
 
 [[exemptions.axum-core]]
@@ -139,7 +139,7 @@ version = "0.14.2"
 criteria = "safe-to-deploy"
 
 [[exemptions.cc]]
-version = "1.2.45"
+version = "1.2.46"
 criteria = "safe-to-deploy"
 
 [[exemptions.chrono]]
@@ -316,6 +316,10 @@ criteria = "safe-to-deploy"
 
 [[exemptions.fancy-regex]]
 version = "0.16.2"
+criteria = "safe-to-deploy"
+
+[[exemptions.find-msvc-tools]]
+version = "0.1.5"
 criteria = "safe-to-deploy"
 
 [[exemptions.fixedbitset]]
@@ -839,11 +843,11 @@ version = "0.7.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.serde_with]]
-version = "3.15.1"
+version = "3.16.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.serde_with_macros]]
-version = "3.15.1"
+version = "3.16.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.sha-1]]
