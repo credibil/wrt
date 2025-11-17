@@ -36,7 +36,7 @@ jobs:
     runs-on: ${{ matrix.platform == 'linux/amd64' && 'ubuntu-latest' || 'ubuntu-24.04-arm' }}
     strategy:
       matrix:
-        feature: [realtime-http, realtime-messaging, realtime-websockets]
+        feature: [realtime, realtime-http, realtime-websockets]
         platform: [linux/amd64, linux/arm64]
     outputs:
       sources: ${{ steps.source.outputs.json }}
@@ -96,7 +96,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        feature: [realtime-http, realtime-messaging, realtime-websockets]
+        feature: [realtime, realtime-http, realtime-websockets]
     permissions:
       contents: read
       packages: write
