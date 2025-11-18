@@ -21,6 +21,8 @@ use tracing::instrument;
 use crate::partitioner::Partitioner;
 use crate::registry::Registry;
 
+const DEFAULT_GROUP: &str = "wrt-kafka-consumer";
+
 #[derive(Clone)]
 pub struct Client {
     producer: ThreadedProducer<Tracer>,
@@ -40,7 +42,7 @@ impl Resource for Client {
 
     #[instrument]
     async fn connect_with(options: Self::ConnectOptions) -> Result<Self> {
-        let config = ClientConfig::from(&options);
+        let mut config = ClientConfig::from(&options);
 
         // producer
         let producer = config
@@ -53,12 +55,16 @@ impl Resource for Client {
 
         // maybe consumer
         let consumer = if let Some(consumer_options) = options.consumer {
+            let group_id = consumer_options.group_id.as_deref().unwrap_or(DEFAULT_GROUP);
+            config.set("group.id", group_id);
+
             let consumer: StreamConsumer =
                 config.create().map_err(|e| anyhow!("issue creating consumer: {e}"))?;
 
             // subscribe to topics
             let topics = consumer_options.topics.iter().map(String::as_str).collect::<Vec<_>>();
-            consumer.subscribe(&topics)?;
+            consumer.subscribe(&topics).map_err(|e| anyhow!("issue subscribing to topics: {e}"))?;
+            tracing::debug!("subscribed to topics: {topics:?}");
 
             Some(Arc::new(consumer))
         } else {
@@ -123,6 +129,8 @@ impl From<&ConnectOptions> for ClientConfig {
 
         config.set("client.id", format!("{}-{}", &kafka.client_id, random_range(1000..9999)));
         config.set("bootstrap.servers", &kafka.brokers);
+        // config.set("auto.offset.reset", "earliest");
+        // config.set("enable.auto.commit", "true");
 
         // SASL authentication
         if let Some(user) = &kafka.username
@@ -132,13 +140,6 @@ impl From<&ConnectOptions> for ClientConfig {
             config.set("sasl.mechanisms", "PLAIN");
             config.set("sasl.username", user);
             config.set("sasl.password", pass);
-        }
-
-        // consumer settings
-        if let Some(consumer) = &kafka.consumer
-            && let Some(group_id) = &consumer.group_id
-        {
-            config.set("group.id", group_id);
         }
 
         config

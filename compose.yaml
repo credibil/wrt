@@ -1,14 +1,14 @@
 services:
   http:
-    image: ghcr.io/credibil-grid/runtime:latest
+    image: ghcr.io/credibil/wrt:latest
     env_file: .env
     ports:
       - 8080:8080
     command: ["/http.wasm"]
     volumes:
-      - ./target/wasm32-wasip2/release/http_ex.wasm:/http.wasm
-    depends_on:
-      - nats
+      - ./target/wasm32-wasip2/release/examples/http.wasm:/http.wasm
+    # depends_on:
+    #   - nats
 
   # otelcol:
   #   image: otel/opentelemetry-collector-contrib:latest
@@ -39,12 +39,12 @@ services:
   #     - --web.enable-remote-write-receiver
   #     # - --log.level=debug
 
-  nats:
-    image: nats:latest
-    platform: linux/arm64
-    ports:
-      - 4222:4222
-    command: ["-js"]
+  # nats:
+  #   image: nats:latest
+  #   platform: linux/arm64
+  #   ports:
+  #     - 4222:4222
+  #   command: ["-js"]
 
   # http_websockets:
   #   image: ghcr.io/credibil-grid/runtime:latest

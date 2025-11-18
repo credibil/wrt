@@ -27,8 +27,8 @@ default = ["jit", "http-server"]
 # apps.
 http-server = ["http-default", "otel-default"]
 credibil = ["http-default", "otel-default", "blobstore-mongodb", "keyvalue-nats", "messaging-nats", "vault-azure"]
+realtime = ["http-default", "otel-default", "keyvalue-redis", "messaging-kafka", "identity-azure"]
 realtime-http = ["http-default", "otel-default", "keyvalue-redis"]
-realtime-messaging = ["http-default", "otel-default", "messaging-kafka", "identity-azure"]
 realtime-websockets = ["http-default", "messaging-kafka", "otel-default", "websockets-default"]
 
 # Component-Resource tuples (not intended to be used directly)
