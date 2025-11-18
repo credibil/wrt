@@ -1,6 +1,6 @@
 ## 0.17.0
 
-Unreleased
+Released 2025-11-18
 
 ### Changed
 
