@@ -314,6 +314,7 @@ res-nats = { path = "crates/res-nats", version = "0.18.0", registry = "credibil"
 res-postgres = { path = "crates/res-postgres", version = "0.18.0", registry = "credibil" }
 res-redis = { path = "crates/res-redis", version = "0.18.0", registry = "credibil" }
 runtime = { path = "crates/runtime", version = "0.18.0", registry = "credibil" }
+runtime-error = { path = "crates/runtime-error", version = "0.18.0", registry = "credibil" }
 wasi-blobstore = { path = "crates/wasi-blobstore", version = "0.18.0", registry = "credibil" }
 wasi-http = { path = "crates/wasi-http", version = "0.18.0", registry = "credibil" }
 wasi-identity = { path = "crates/wasi-identity", version = "0.18.0", registry = "credibil" }

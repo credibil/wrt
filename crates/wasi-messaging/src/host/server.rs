@@ -1,6 +1,7 @@
 use anyhow::Result;
 use futures::StreamExt;
-use runtime::{Error as RuntimeError, State};
+use runtime::State;
+use runtime_error::Error as RuntimeError;
 use tracing::{Instrument, debug_span, instrument};
 use wasmtime::Store;
 

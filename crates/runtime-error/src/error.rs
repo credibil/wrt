@@ -3,27 +3,27 @@ use serde_json::Value;
 use thiserror::Error;
 use tracing::{error, info, warn};
 
-#[derive(Error, Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Debug, Deserialize, Eq, Error, PartialEq, Serialize)]
 pub enum Error {
-    #[error("code: 503, description: {0}")]
+    #[error("{{\"code\": 503, \"description\": \"{0}\"}}")]
     ApplicationError(String),
 
-    #[error("code: 502, description: {0}")]
+    #[error("{{\"code\": 502, \"description\": \"{0}\"}}")]
     ExternalError(String),
 
-    #[error("code: 400, description: {0}")]
+    #[error("{{\"code\": 400, \"description\": \"{0}\"}}")]
     InvalidInput(String),
 
-    #[error("code: 404, description: {0}")]
+    #[error("{{\"code\": 404, \"description\": \"{0}\"}}")]
     NotFound(String),
 
-    #[error("code: 520, description: {0}")]
+    #[error("{{\"code\": 520, \"description\": \"{0}\"}}")]
     Other(String),
 
-    #[error("code: 410, description: {0}")]
+    #[error("{{\"code\": 410, \"description\": \"{0}\"}}")]
     Outdated(String),
 
-    #[error("code: 500, description: {0}")]
+    #[error("{{\"code\": 500, \"description\": \"{0}\"}}")]
     ServerError(String),
 }
 
@@ -33,19 +33,27 @@ impl Error {
     pub const fn code(&self) -> u64 {
         match self {
             Self::ApplicationError(_) => 503,
+            Self::ExternalError(_) => 502,
             Self::InvalidInput(_) => 400,
             Self::NotFound(_) => 404,
             Self::Other(_) => 520,
             Self::Outdated(_) => 410,
             Self::ServerError(_) => 500,
-            Self::ExternalError(_) => 502,
         }
     }
 
     /// Returns the error description.
     #[must_use]
     pub fn description(&self) -> String {
-        self.to_string()
+        match self {
+            Self::ApplicationError(desc)
+            | Self::ExternalError(desc)
+            | Self::InvalidInput(desc)
+            | Self::NotFound(desc)
+            | Self::Other(desc)
+            | Self::Outdated(desc)
+            | Self::ServerError(desc) => desc.clone(),
+        }
     }
 
     /// Performs tracing and metrics.
@@ -104,13 +112,6 @@ impl Error {
             500 => Self::ServerError(description),
             _ => Self::Other(description),
         }
-    }
-
-    #[must_use]
-    pub fn to_json(&self) -> String {
-        serde_json::to_string(self).unwrap_or_else(|_| {
-            "{\"code\":520,\"description\":\"Serialization Error\"}".to_string()
-        })
     }
 }
 

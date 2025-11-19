@@ -3983,6 +3983,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "runtime-error"
+version = "0.18.0"
+dependencies = [
+ "anyhow",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.17",
+ "tracing",
+ "wasmtime",
+ "wasmtime-wasi",
+]
+
+[[package]]
 name = "rustc-hash"
 version = "2.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5607,6 +5620,7 @@ dependencies = [
  "futures",
  "http",
  "runtime",
+ "runtime-error",
  "serde",
  "time",
  "tokio",
