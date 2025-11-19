@@ -50,7 +50,7 @@ impl Resource for Client {
             .map_err(|e| anyhow!("issue creating producer: {e}"))?;
 
         // maybe custom partitioner and schema registry
-        let partitioner = options.partition_count.map(Partitioner::new);
+        let partitioner = Partitioner::new(options.partition_count);
         let registry = options.registry.map(Registry::new);
 
         // maybe consumer
@@ -73,7 +73,7 @@ impl Resource for Client {
 
         Ok(Self {
             producer,
-            partitioner,
+            partitioner: Some(partitioner),
             registry,
             consumer,
         })
@@ -90,8 +90,8 @@ pub struct ConnectOptions {
     pub username: Option<String>,
     #[env(from = "KAFKA_PASSWORD")]
     pub password: Option<String>,
-    #[env(from = "KAFKA_PARTITION_COUNT")]
-    pub partition_count: Option<i32>,
+    #[env(from = "KAFKA_PARTITION_COUNT", default = "12")]
+    pub partition_count: i32,
     #[env(nested)]
     pub consumer: Option<ConsumerOptions>,
     #[env(nested)]
