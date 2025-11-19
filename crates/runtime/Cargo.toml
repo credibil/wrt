@@ -26,7 +26,10 @@ anyhow.workspace = true
 cfg-if.workspace = true
 clap = { version = "4.5.52", features = ["derive"] }
 credibil-otel.workspace = true
+serde.workspace = true
+serde_json.workspace = true
 fromenv.workspace = true
+thiserror.workspace = true
 tracing.workspace = true
 wasmtime = { workspace = true, features = ["runtime"] }
 wasmtime-wasi.workspace = true

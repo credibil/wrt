@@ -285,6 +285,7 @@ schema-registry-client = "0.4.1"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"
 syn = { version = "2.0.106", features = ["parsing"] }
+thiserror = "2.0.17"
 time = "0.3.44"
 tokio = { version = "1.47.1", default-features = false }
 tokio-tungstenite = "0.28.0"
@@ -313,6 +314,7 @@ res-nats = { path = "crates/res-nats", version = "0.18.0", registry = "credibil"
 res-postgres = { path = "crates/res-postgres", version = "0.18.0", registry = "credibil" }
 res-redis = { path = "crates/res-redis", version = "0.18.0", registry = "credibil" }
 runtime = { path = "crates/runtime", version = "0.18.0", registry = "credibil" }
+runtime-error = { path = "crates/runtime-error", version = "0.18.0", registry = "credibil" }
 wasi-blobstore = { path = "crates/wasi-blobstore", version = "0.18.0", registry = "credibil" }
 wasi-http = { path = "crates/wasi-http", version = "0.18.0", registry = "credibil" }
 wasi-identity = { path = "crates/wasi-identity", version = "0.18.0", registry = "credibil" }

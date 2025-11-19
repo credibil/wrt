@@ -17,6 +17,9 @@ workspace = true
 
 [features]
 
+[dependencies]
+runtime-error = { workspace = true }
+
 # host dependencies
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 anyhow.workspace = true

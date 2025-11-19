@@ -3932,6 +3932,9 @@ dependencies = [
  "clap",
  "credibil-otel",
  "fromenv",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.17",
  "tracing",
  "wasmtime",
  "wasmtime-wasi",
@@ -3977,6 +3980,19 @@ dependencies = [
  "wasmtime-wasi",
  "wasmtime-wasi-http",
  "wit-bindgen",
+]
+
+[[package]]
+name = "runtime-error"
+version = "0.18.0"
+dependencies = [
+ "anyhow",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.17",
+ "tracing",
+ "wasmtime",
+ "wasmtime-wasi",
 ]
 
 [[package]]
@@ -5604,6 +5620,7 @@ dependencies = [
  "futures",
  "http",
  "runtime",
+ "runtime-error",
  "serde",
  "time",
  "tokio",
