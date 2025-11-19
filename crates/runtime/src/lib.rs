@@ -4,6 +4,7 @@
 
 #[cfg(feature = "jit")]
 mod compiler;
+mod error;
 mod runtime;
 mod traits;
 
@@ -15,6 +16,7 @@ pub use {wasmtime, wasmtime_wasi};
 
 #[cfg(feature = "jit")]
 pub use self::compiler::*;
+pub use self::error::Error;
 pub use self::runtime::*;
 pub use self::traits::*;
 
