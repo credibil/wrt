@@ -7,7 +7,7 @@ use std::env;
 use anyhow::{Context, Result, anyhow};
 use bytes::Bytes;
 use http::uri::{PathAndQuery, Uri};
-use http_body_util::combinators::BoxBody;
+use http_body_util::combinators::UnsyncBoxBody;
 use http_body_util::{BodyExt, Full};
 use hyper::body::Incoming;
 use hyper::header::{FORWARDED, HOST};
@@ -23,7 +23,7 @@ use wasmtime_wasi_http::p3::WasiHttpView;
 use wasmtime_wasi_http::p3::bindings::ProxyIndices;
 use wasmtime_wasi_http::p3::bindings::http::types::{self as wasi, ErrorCode};
 
-type OutgoingBody = BoxBody<Bytes, anyhow::Error>;
+type OutgoingBody = UnsyncBoxBody<Bytes, anyhow::Error>;
 
 const DEF_HTTP_URL: &str = "0.0.0.0:8080";
 
@@ -103,8 +103,8 @@ where
         let (sender, receiver) = oneshot::channel();
 
         tokio::spawn(async move {
-            let guest_result = instance
-                .run_concurrent(&mut store, async move |store| {
+            let guest_result = store
+                .run_concurrent(async |store| {
                     // convert hyper::Request to wasi::Request
                     let (parts, body) = request.into_parts();
                     let body = body.map_err(ErrorCode::from_hyper_request_error);
@@ -134,7 +134,7 @@ where
             Ok(())
         });
 
-        let response = receiver.await?.map(|body| body.map_err(Into::into).boxed());
+        let response = receiver.await?.map(|body| body.map_err(Into::into).boxed_unsync());
         tracing::debug!("received response: {response:?}");
 
         Ok(response)
@@ -192,9 +192,11 @@ const BODY: &str = r"<!doctype html>
 </html>";
 
 fn internal_error() -> hyper::Response<OutgoingBody> {
+    let body = Full::new(Bytes::from(BODY)).map_err(Into::into).boxed_unsync();
+
     hyper::Response::builder()
         .status(500)
         .header("Content-Type", "text/html; charset=UTF-8")
-        .body(Full::new(Bytes::from(BODY)).map_err(|e| anyhow!(e)).boxed())
-        .unwrap()
+        .body(body)
+        .expect("should build internal error response")
 }

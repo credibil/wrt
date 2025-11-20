@@ -19,10 +19,10 @@ mod generated {
             default: async | store | tracing | trappable,
         },
         with: {
-            "wasi:identity/credentials/identity": IdentityProxy,
+            "wasi:identity/credentials.identity": IdentityProxy,
         },
         trappable_error_type: {
-            "wasi:identity/types/error" => Error,
+            "wasi:identity/types.error" => Error,
         },
     });
 }

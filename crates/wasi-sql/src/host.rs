@@ -20,12 +20,12 @@ mod generated {
             default: async | store | tracing | trappable,
         },
         with: {
-            "wasi:sql/types/connection": ConnectionProxy,
-            "wasi:sql/types/statement": Statement,
-            "wasi:sql/types/error": Error,
+            "wasi:sql/types.connection": ConnectionProxy,
+            "wasi:sql/types.statement": Statement,
+            "wasi:sql/types.error": Error,
         },
         trappable_error_type: {
-            "wasi:sql/types/error" => Error,
+            "wasi:sql/types.error" => Error,
         },
     });
 }

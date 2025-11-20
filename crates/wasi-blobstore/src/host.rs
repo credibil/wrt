@@ -19,13 +19,13 @@ mod generated {
         with: {
             "wasi:io": wasmtime_wasi::p2::bindings::io,
 
-            "wasi:blobstore/types/incoming-value": IncomingValue,
-            "wasi:blobstore/types/outgoing-value": OutgoingValue,
-            "wasi:blobstore/container/container": ContainerProxy,
-            "wasi:blobstore/container/stream-object-names": StreamObjectNames,
+            "wasi:blobstore/types.incoming-value": IncomingValue,
+            "wasi:blobstore/types.outgoing-value": OutgoingValue,
+            "wasi:blobstore/container.container": ContainerProxy,
+            "wasi:blobstore/container.stream-object-names": StreamObjectNames,
         },
         trappable_error_type: {
-            "wasi:blobstore/types/error" => anyhow::Error,
+            "wasi:blobstore/types.error" => anyhow::Error,
         },
     });
 }
