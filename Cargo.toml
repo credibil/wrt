@@ -164,7 +164,7 @@ crate-type = ["cdylib"]
 required-features = ["vault"]
 
 [[example]]
-name = "redis"
+name = "cache-redis"
 path = "examples/redis/lib.rs"
 crate-type = ["cdylib"]
 required-features = ["keyvalue", "redis"]
@@ -311,5 +311,6 @@ wasi-sql = { path = "crates/wasi-sql", version = "0.18.0", registry = "credibil"
 wasi-vault = { path = "crates/wasi-vault", version = "0.18.0", registry = "credibil" }
 wasi-websockets = { path = "crates/wasi-websockets", version = "0.18.0", registry = "credibil" }
 
-# [patch."https://github.com/credibil/core.git"]
-# credibil-otel = { path = "../../credibil/core/crates/otel" }
+[patch.crates-io]
+# wasip3 = { path = "../wasi-rs/crates/wasip3", features = ["http-compat"] }
+# wasip3 = { git = "https://github.com/credibil/wasi-rs" }

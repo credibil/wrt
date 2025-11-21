@@ -1,0 +1,39 @@
+name: redis-cache
+
+services:
+  redis-keyvalue:
+    image: redis-keyvalue:latest
+    env_file: ../../.env
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+      args:
+        FEATURES: keyvalue,redis
+    volumes:
+      - ../../target/wasm32-wasip2/release/examples/redis.wasm:/app.wasm
+    ports:
+      - 8080:8080
+    depends_on:
+      - redis
+      - otelcol
+
+  redis:
+    image: redis:latest
+    command: redis-server --save "" --appendonly no --loglevel warning
+    ports:
+      - 6379:6379
+
+  otelcol:
+    extends:
+      file: ../docker/otel-services.yaml
+      service: otelcol
+
+  jaeger:
+    extends:
+      file: ../docker/otel-services.yaml
+      service: jaeger
+
+  prometheus:
+    extends:
+      file: ../docker/otel-services.yaml
+      service: prometheus
