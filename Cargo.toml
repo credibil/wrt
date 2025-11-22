@@ -70,15 +70,6 @@ jit = ["runtime/jit"]
 [dependencies]
 anyhow.workspace = true
 tracing.workspace = true
-wasi-blobstore = { workspace = true, optional = true }
-wasi-http = { workspace = true, optional = true }
-wasi-identity = { workspace = true, optional = true }
-wasi-keyvalue = { workspace = true, optional = true }
-wasi-messaging = { workspace = true, optional = true }
-wasi-otel = { workspace = true, optional = true }
-wasi-sql = { workspace = true, optional = true }
-wasi-vault = { workspace = true, optional = true }
-wasi-websockets = { workspace = true, optional = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 base64ct.workspace = true
@@ -96,6 +87,15 @@ res-postgres = { workspace = true, optional = true }
 res-redis = { workspace = true, optional = true }
 runtime.workspace = true
 tokio = { workspace = true, features = ["macros"] }
+wasi-blobstore = { workspace = true, optional = true }
+wasi-http = { workspace = true, optional = true }
+wasi-identity = { workspace = true, optional = true }
+wasi-keyvalue = { workspace = true, optional = true }
+wasi-messaging = { workspace = true, optional = true }
+wasi-otel = { workspace = true, optional = true }
+wasi-sql = { workspace = true, optional = true }
+wasi-vault = { workspace = true, optional = true }
+wasi-websockets = { workspace = true, optional = true }
 wasmtime.workspace = true
 wasmtime-wasi.workspace = true
 wasmtime-wasi-http = { workspace = true, optional = true }
@@ -112,62 +112,71 @@ http-body-util.workspace = true
 opentelemetry.workspace = true
 serde_json.workspace = true
 tower-http.workspace = true
+wasi-blobstore.workspace = true
+wasi-http.workspace = true
+wasi-identity.workspace = true
+wasi-keyvalue.workspace = true
+wasi-messaging.workspace = true
+wasi-otel.workspace = true
+wasi-sql.workspace = true
+wasi-vault.workspace = true
+wasi-websockets.workspace = true
 wasip3.workspace = true
 wit-bindgen.workspace = true
 
 [[example]]
 name = "blobstore"
-path = "examples/blobstore.rs"
+path = "examples/blobstore/lib.rs"
 crate-type = ["cdylib"]
-required-features = ["blobstore"]
+# required-features = ["blobstore"]
 
 [[example]]
 name = "http"
 path = "examples/http/lib.rs"
 crate-type = ["cdylib"]
-required-features = ["http", "otel", "keyvalue", "redis", "nats"]
+# required-features = ["http", "otel"]
+
+[[example]]
+name = "http-proxy"
+path = "examples/http-proxy/lib.rs"
+crate-type = ["cdylib"]
+# required-features = ["http", "otel", "keyvalue", "redis", "nats"]
 
 [[example]]
 name = "keyvalue"
 path = "examples/keyvalue/lib.rs"
 crate-type = ["cdylib"]
-required-features = ["http", "otel", "keyvalue", "redis", "nats"]
+# required-features = ["http", "otel", "keyvalue", "redis", "nats"]
 
 [[example]]
-name = "pubsub"
-path = "examples/pubsub/lib.rs"
+name = "messaging"
+path = "examples/messaging/lib.rs"
 crate-type = ["cdylib"]
-required-features = ["http", "otel", "messaging", "kafka", "nats"]
+# required-features = ["http", "otel", "messaging", "kafka", "nats"]
 
 [[example]]
 name = "sql"
 path = "examples/sql/lib.rs"
 crate-type = ["cdylib"]
-required-features = ["http", "otel", "sql", "postgres"]
+# required-features = ["http", "otel", "sql", "postgres"]
 
 [[example]]
 name = "otel"
 path = "examples/otel.rs"
 crate-type = ["cdylib"]
-required-features = ["http", "otel"]
-
-[[example]]
-name = "request-reply"
-path = "examples/request_reply.rs"
-crate-type = ["cdylib"]
-required-features = ["messaging"]
+# required-features = ["http", "otel"]
 
 [[example]]
 name = "vault"
 path = "examples/vault.rs"
 crate-type = ["cdylib"]
-required-features = ["vault"]
+# required-features = ["vault"]
 
 [[example]]
 name = "websockets"
 path = "examples/websockets.rs"
 crate-type = ["cdylib"]
-required-features = ["websockets"]
+# required-features = ["websockets"]
 
 [profile.release]
 lto = true

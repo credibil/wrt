@@ -1,21 +1,21 @@
-name: pubsub
+name: blobstore
 
 services:
-  pubsub:
+  blobstore:
     extends:
       file: ../docker/resources.yaml
       service: wasm32
     build:
       args:
-        FEATURES: http,otel,messaging,nats
+        FEATURES: http,otel,blobstore,redis
     depends_on:
-      - nats
+      - redis
       - otelcol
 
-  nats:
+  redis:
     extends:
       file: ../docker/resources.yaml
-      service: nats
+      service: redis
 
 include:
   - ../docker/opentelemetry.yaml

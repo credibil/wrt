@@ -1,7 +1,7 @@
-name: pubsub
+name: messaging
 
 services:
-  pubsub:
+  messaging:
     extends:
       file: ../docker/resources.yaml
       service: wasm32
@@ -16,8 +16,8 @@ services:
     image: apache/kafka:latest
     command: |
       sh -c '
-        /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:29092 --create --if-not-exists --topic a.v1;
-        /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:29092 --create --if-not-exists --topic b.v1;
+        /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:29092 --create --if-not-exists --topic a;
+        /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:29092 --create --if-not-exists --topic b;
       '
     depends_on:
       kafka:

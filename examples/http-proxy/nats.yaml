@@ -1,4 +1,4 @@
-name: proxy
+name: http_proxy
 
 services:
   proxy:
@@ -7,15 +7,15 @@ services:
       service: wasm32
     build:
       args:
-        FEATURES: keyvalue,redis
+        FEATURES: http,otel,keyvalue,nats
     depends_on:
-      - redis
+      - nats
       - otelcol
 
-  redis:
+  nats:
     extends:
       file: ../docker/resources.yaml
-      service: redis
+      service: nats
 
 include:
   - ../docker/opentelemetry.yaml

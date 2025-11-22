@@ -1,23 +1,21 @@
-name: sql
+name: http_proxy
 
 services:
-  sql:
+  proxy:
     extends:
       file: ../docker/resources.yaml
       service: wasm32
     build:
       args:
-        FEATURES: http,otel,sql,azurets
-    volumes:
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+        FEATURES: http,otel,keyvalue,redis
     depends_on:
-      - azurets
+      - redis
       - otelcol
 
-  azurets:
+  redis:
     extends:
       file: ../docker/resources.yaml
-      service: azurets
+      service: redis
 
 include:
   - ../docker/opentelemetry.yaml

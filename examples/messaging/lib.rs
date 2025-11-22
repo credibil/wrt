@@ -8,8 +8,8 @@ use axum::{Json, Router};
 use bytes::Bytes;
 use serde_json::{Value, json};
 use wasi_http::Result;
-use wasi_messaging::producer;
 use wasi_messaging::types::{Client, Error, Message};
+use wasi_messaging::{producer, request_reply};
 use wasip3::exports::http::handler::Guest;
 use wasip3::http::types::{ErrorCode, Request, Response};
 
@@ -17,14 +17,16 @@ pub struct Http;
 wasip3::http::proxy::export!(Http);
 
 impl Guest for Http {
+    #[wasi_otel::instrument]
     async fn handle(request: Request) -> Result<Response, ErrorCode> {
-        let router = Router::new().route("/", post(handler));
+        let router = Router::new()
+            .route("/pub-sub", post(pub_sub))
+            .route("/request-reply", post(request_reply));
         wasi_http::serve(router, request).await
     }
 }
 
-#[axum::debug_handler]
-async fn handler(Json(body): Json<Value>) -> Result<Json<Value>> {
+async fn pub_sub(Json(body): Json<Value>) -> Result<Json<Value>> {
     let client = Client::connect("kafka").unwrap();
 
     let message = Message::new(&Bytes::from(body.to_string()));
@@ -34,13 +36,28 @@ async fn handler(Json(body): Json<Value>) -> Result<Json<Value>> {
     // TODO: really want spawn here but handler returns and the guest is
     // dropped before the async task completes. Needs investigation.
     wit_bindgen::block_on(async move {
-        if let Err(e) = producer::send(&client, "a.v1".to_string(), message).await {
-            tracing::error!("error sending message to topic 'a.v1': {e}");
+        if let Err(e) = producer::send(&client, "a".to_string(), message).await {
+            tracing::error!("error sending message to topic 'a': {e}");
         }
-        println!("handler: message published to topic 'a.v1'");
+        println!("handler: message published to topic 'a'");
     });
 
     Ok(Json(json!({"message": "message published"})))
+}
+
+async fn request_reply(body: Bytes) -> Json<Value> {
+    let client = Client::connect("nats").unwrap();
+    let message = Message::new(&body);
+    let reply = wit_bindgen::block_on(async move {
+        request_reply::request(&client, "a".to_string(), &message, None).await
+    })
+    .expect("should reply");
+
+    // process first reply
+    let data = reply[0].data();
+    let data_str = String::from_utf8_lossy(&data);
+
+    Json(json!({"reply": data_str}))
 }
 
 pub struct Messaging;
@@ -57,11 +74,11 @@ impl wasi_messaging::incoming_handler::Guest for Messaging {
         let msg = String::from_utf8(data).unwrap_or_default();
 
         match topic.as_str() {
-            "a.v1" => {
-                tracing::debug!("handling topic a.v1");
+            "a" => {
+                tracing::debug!("handling topic a");
 
-                // send message to topic `b.v1`
-                let mut resp = b"topic a.v1 says: ".to_vec();
+                // send message to topic `b`
+                let mut resp = b"topic a says: ".to_vec();
                 resp.extend(message.data());
 
                 let pubmsg = Message::new(&resp);
@@ -74,7 +91,6 @@ impl wasi_messaging::incoming_handler::Guest for Messaging {
 
                 let timer = Instant::now();
 
-                // *** WASIP3 ***
                 // use `spawn` to avoid blocking for non-blocking execution
                 for i in 0..1000 {
                     wit_bindgen::spawn(async move {
@@ -88,8 +104,8 @@ impl wasi_messaging::incoming_handler::Guest for Messaging {
                         let message = Message::new(data.as_bytes());
                         message.add_metadata("key", &format!("key-{i}"));
 
-                        if let Err(e) = producer::send(&client, "b.v1".to_string(), message).await {
-                            tracing::error!("error sending message to topic 'b.v1': {e}");
+                        if let Err(e) = producer::send(&client, "b".to_string(), message).await {
+                            tracing::error!("error sending message to topic 'b': {e}");
                         }
                         tracing::debug!("message iteration {i} sent");
 
@@ -102,11 +118,24 @@ impl wasi_messaging::incoming_handler::Guest for Messaging {
                 }
                 println!("sent 100 messages in {} milliseconds", timer.elapsed().as_millis());
             }
-            "b.v1" => {
-                tracing::debug!("handling topic b.v1");
+            "b" => {
+                tracing::debug!("handling topic b");
+            }
+            "c" => {
+                let data = message.data();
+                let data_str = String::from_utf8(data.clone())
+                    .map_err(|e| Error::Other(format!("not utf8: {e}")))?;
+                tracing::debug!("message received on topic 'c': {data_str}");
+
+                // reply
+                let mut resp = b"Hello from topic c: ".to_vec();
+                resp.extend(data);
+
+                let reply = Message::new(&resp);
+                request_reply::reply(&message, reply)?;
             }
             _ => {
-                tracing::debug!("unknown topic: {}", topic);
+                tracing::debug!("unknown topic: {topic}");
             }
         }
 

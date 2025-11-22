@@ -7,7 +7,7 @@ services:
       service: wasm32
     build:
       args:
-        FEATURES: sql,postgres
+        FEATURES: http,otel,sql,postgres
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     depends_on:

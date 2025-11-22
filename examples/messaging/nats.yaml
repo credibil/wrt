@@ -1,13 +1,13 @@
-name: proxy
+name: messaging
 
 services:
-  proxy:
+  messaging:
     extends:
       file: ../docker/resources.yaml
       service: wasm32
     build:
       args:
-        FEATURES: keyvalue,nats
+        FEATURES: http,otel,messaging,nats
     depends_on:
       - nats
       - otelcol

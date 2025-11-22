@@ -1,6 +1,7 @@
 # Key-Value Example
 
-This example demonstrates using a key-value store with Redis or NATS.
+This example implements a simple key-value store using `wasi-keyvalue` backed by either Redis or
+NATS JetStream.
 
 ## Quick Start
 
@@ -9,11 +10,7 @@ To get started add a `.env` file to the workspace root. See `.env.example` for a
 #### Build
 
 ```bash
-# NATS
-cargo build --example keyvalue --features http,keyvalue,nats --target wasm32-wasip2 --release
-
-# Redis
-cargo build --example keyvalue --features http,keyvalue,redis --target wasm32-wasip2 --release
+cargo build --example keyvalue --target wasm32-wasip2 --release
 ```
 
 #### Run
@@ -22,13 +19,13 @@ cargo build --example keyvalue --features http,keyvalue,redis --target wasm32-wa
 set -a && source .env && set +a
 
 # NATS
-cargo run --features http,keyvalue,nats -- run ./target/wasm32-wasip2/release/examples/keyvalue.wasm
+cargo run --features http,otel,keyvalue,nats -- run ./target/wasm32-wasip2/release/examples/keyvalue.wasm
 
 # Redis
-cargo run --features http,keyvalue,redis -- run ./target/wasm32-wasip2/release/examples/keyvalue.wasm
+cargo run --features http,otel,keyvalue,redis -- run ./target/wasm32-wasip2/release/examples/keyvalue.wasm
 ```
 
-Docker Compose can also be used to run the service:
+Alternatively, using Docker Compose:
 
 ```bash
 # NATS

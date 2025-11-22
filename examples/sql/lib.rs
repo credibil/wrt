@@ -66,8 +66,7 @@ async fn insert(body: Bytes) -> Result<Json<Value>> {
 
     tracing::debug!("opening connection");
 
-    let pool =
-        Connection::open("db").map_err(|e| anyhow!("failed to open connection: {e:?}"))?;
+    let pool = Connection::open("db").map_err(|e| anyhow!("failed to open connection: {e:?}"))?;
     let stmt = Statement::prepare(insert, &params)
         .map_err(|e| anyhow!("failed to prepare statement: {e:?}"))?;
 

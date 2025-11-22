@@ -1,6 +1,7 @@
 # SQL Example
 
-This example demonstrates SQL queries on a Postgres server.
+This example implements a simple key-value store using `wasi-sql` backed by either Postgres or
+Azure Table Storage.
 
 An HTTP POST request will insert a (hard-coded) row into the database, while HTTP GET will query
 and return all rows from a sample table.
@@ -12,8 +13,7 @@ To get started add a `.env` file to the workspace root. See the `.env.example` f
 #### Build
 
 ```bash
-# Postgres
-cargo build --example sql --features http,sql,postgres --target wasm32-wasip2 --release
+cargo build --example sql --target wasm32-wasip2 --release
 ```
 
 #### Run
@@ -22,10 +22,10 @@ cargo build --example sql --features http,sql,postgres --target wasm32-wasip2 --
 set -a && source .env && set +a
 
 # Postgres
-cargo run --features http,sql,postgres -- run ./target/wasm32-wasip2/release/examples/sql.wasm
+cargo run --features http,otel,sql,postgres -- run ./target/wasm32-wasip2/release/examples/sql.wasm
 
 # Azure Table Storage
-cargo run --features http,sql,azurets -- run ./target/wasm32-wasip2/release/examples/sql.wasm
+cargo run --features http,otel,sql,azurets -- run ./target/wasm32-wasip2/release/examples/sql.wasm
 ```
 
 Docker Compose can also be used to run the service:
@@ -44,7 +44,7 @@ docker compose --file ./examples/sql/azurets.yaml up
 # 1. INSERT
 curl -X POST --header 'Content-Type: application/json' -d '{}' http://localhost:8080/
 
-# 2. QUERY
+# 2. SELECT
 curl http://localhost:8080/
 ```
 
