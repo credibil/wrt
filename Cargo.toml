@@ -128,55 +128,46 @@ wit-bindgen.workspace = true
 name = "blobstore"
 path = "examples/blobstore/lib.rs"
 crate-type = ["cdylib"]
-# required-features = ["blobstore"]
 
 [[example]]
 name = "http"
 path = "examples/http/lib.rs"
 crate-type = ["cdylib"]
-# required-features = ["http", "otel"]
 
 [[example]]
 name = "http-proxy"
 path = "examples/http-proxy/lib.rs"
 crate-type = ["cdylib"]
-# required-features = ["http", "otel", "keyvalue", "redis", "nats"]
 
 [[example]]
 name = "keyvalue"
 path = "examples/keyvalue/lib.rs"
 crate-type = ["cdylib"]
-# required-features = ["http", "otel", "keyvalue", "redis", "nats"]
 
 [[example]]
 name = "messaging"
 path = "examples/messaging/lib.rs"
 crate-type = ["cdylib"]
-# required-features = ["http", "otel", "messaging", "kafka", "nats"]
+
+[[example]]
+name = "otel"
+path = "examples/otel/lib.rs"
+crate-type = ["cdylib"]
 
 [[example]]
 name = "sql"
 path = "examples/sql/lib.rs"
 crate-type = ["cdylib"]
-# required-features = ["http", "otel", "sql", "postgres"]
-
-[[example]]
-name = "otel"
-path = "examples/otel.rs"
-crate-type = ["cdylib"]
-# required-features = ["http", "otel"]
 
 [[example]]
 name = "vault"
-path = "examples/vault.rs"
+path = "examples/vault/lib.rs"
 crate-type = ["cdylib"]
-# required-features = ["vault"]
 
 [[example]]
 name = "websockets"
-path = "examples/websockets.rs"
+path = "examples/websockets/lib.rs"
 crate-type = ["cdylib"]
-# required-features = ["websockets"]
 
 [profile.release]
 lto = true

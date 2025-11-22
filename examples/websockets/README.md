@@ -1,6 +1,6 @@
-# HTTP Server Example
+# Websockets Server Example
 
-This example implements a simple HTTP server using `wasi-http`. 
+This example implements a simple websockets server using `wasi-websockets`. 
 
 ## Quick Start
 
@@ -9,20 +9,20 @@ To get started add a `.env` file to the workspace root. See `.env.example` for a
 #### Build
 
 ```bash
-cargo build --example http --target wasm32-wasip2 --release
+cargo build --example websockets --target wasm32-wasip2 --release
 ```
 
 #### Run
 
 ```bash
 set -a && source .env && set +a
-cargo run --features http-server -- run ./target/wasm32-wasip2/release/examples/http.wasm
+cargo run --features http,otel,websockets -- run ./target/wasm32-wasip2/release/examples/websockets.wasm
 ```
 
 Docker Compose can also be used to run the service:
 
 ```bash
-docker compose --file ./examples/http/http.yaml up
+docker compose --file ./examples/websockets/websockets.yaml up
 ```
 
 #### Test

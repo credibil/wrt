@@ -1,7 +1,8 @@
 #![cfg(target_arch = "wasm32")]
 
-use std::thread::sleep;
-use std::time::{Duration, Instant};
+// use std::thread::sleep;
+// use std::time::{Duration, Instant};
+use std::time::Instant;
 
 use axum::routing::post;
 use axum::{Json, Router};
@@ -69,9 +70,6 @@ impl wasi_messaging::incoming_handler::Guest for Messaging {
 
         let topic = message.topic().unwrap_or_default();
         tracing::debug!("message received for: {topic}");
-
-        let data = message.data();
-        let msg = String::from_utf8(data).unwrap_or_default();
 
         match topic.as_str() {
             "a" => {

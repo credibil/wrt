@@ -47,7 +47,7 @@ async fn query() -> Result<Json<Value>> {
 
 #[axum::debug_handler]
 #[wasi_otel::instrument]
-async fn insert(body: Bytes) -> Result<Json<Value>> {
+async fn insert(_body: Bytes) -> Result<Json<Value>> {
     tracing::info!("insert data");
 
     let insert = "insert into mytable (feed_id, agency_id, agency_name, agency_url, agency_timezone, created_at) values ($1, $2, $3, $4, $5, $6);";
