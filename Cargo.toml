@@ -134,6 +134,12 @@ crate-type = ["cdylib"]
 required-features = ["http", "keyvalue"]
 
 [[example]]
+name = "proxy-redis"
+path = "examples/proxy-redis/lib.rs"
+crate-type = ["cdylib"]
+required-features = ["keyvalue", "redis"]
+
+[[example]]
 name = "keyvalue"
 path = "examples/keyvalue.rs"
 crate-type = ["cdylib"]
@@ -146,10 +152,16 @@ crate-type = ["cdylib"]
 required-features = ["http", "otel"]
 
 [[example]]
-name = "pub-sub"
-path = "examples/pub_sub/lib.rs"
+name = "pubsub-kafka"
+path = "examples/pubsub-kafka/lib.rs"
 crate-type = ["cdylib"]
-required-features = ["http-default", "messaging-nats", "keyvalue-nats"]
+required-features = ["http-default", "messaging-kafka", "keyvalue-redis"]
+
+[[example]]
+name = "pubsub-nats"
+path = "examples/pubsub-nats/lib.rs"
+crate-type = ["cdylib"]
+required-features = ["http-default", "messaging-nats"]
 
 [[example]]
 name = "request-reply"
@@ -164,28 +176,16 @@ crate-type = ["cdylib"]
 required-features = ["vault"]
 
 [[example]]
-name = "cache-redis"
-path = "examples/redis/lib.rs"
-crate-type = ["cdylib"]
-required-features = ["keyvalue", "redis"]
-
-[[example]]
-name = "kafka"
-path = "examples/kafka/lib.rs"
-crate-type = ["cdylib"]
-required-features = ["http-default", "messaging-kafka", "keyvalue-redis"]
-
-[[example]]
 name = "websockets"
 path = "examples/websockets.rs"
 crate-type = ["cdylib"]
 required-features = ["websockets"]
 
 [[example]]
-name = "postgres"
-path = "examples/postgres/lib.rs"
+name = "sql-postgres"
+path = "examples/sql-postgres/lib.rs"
 crate-type = ["cdylib"]
-required-features = ["sql", "postgres"]
+required-features = ["sql-postgres"]
 
 [profile.release]
 lto = true
@@ -286,7 +286,7 @@ wasmtime = { version = "39.0.0", default-features = false, features = ["componen
 wasmtime-wasi = { version = "39.0.0", features = ["p3"] }
 wasmtime-wasi-http = { version = "39.0.0", features = ["p3"] }
 wasmtime-wasi-io = "39.0.0"
-wit-bindgen = { version = "0.48.0", features = ["async-spawn"] }
+wit-bindgen = { version = "0.48.1", features = ["async-spawn"] }
 
 # credibil registry
 credibil-encoding = { version = "0.5.0", registry = "credibil" }
@@ -313,4 +313,4 @@ wasi-websockets = { path = "crates/wasi-websockets", version = "0.18.0", registr
 
 [patch.crates-io]
 # wasip3 = { path = "../wasi-rs/crates/wasip3", features = ["http-compat"] }
-# wasip3 = { git = "https://github.com/credibil/wasi-rs" }
+wasip3 = { git = "https://github.com/credibil/wasi-rs" }

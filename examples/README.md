@@ -11,10 +11,10 @@ To get started add a `.env` file to the root of the project (see `.env.example`)
 In a console, build and run the `http` example (or any other example):
 
 ```bash
-# build the guest
+# build
 cargo build --example http --target wasm32-wasip2 --release
 
-# run the guest
+# run
 set -a && source .env && set +a
 cargo run --features "realtime-http" -- run ./target/wasm32-wasip2/release/examples/http.wasm
 ```

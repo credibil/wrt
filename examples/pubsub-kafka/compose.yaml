@@ -1,0 +1,29 @@
+name: pubsub_kafka
+
+services:
+  pubsub:
+    extends:
+      file: ../docker/resources.yaml
+      service: wasm32
+    build:
+      args:
+        FEATURES: http-default,messaging-kafka
+    depends_on:
+      - topics
+
+  topics:
+    image: apache/kafka:latest
+    command: |
+      sh -c '
+        /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:29092 --create --if-not-exists --topic a.v1;
+        /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:29092 --create --if-not-exists --topic b.v1;
+      '
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+  kafka:
+    extends:
+      file: ../docker/resources.yaml
+      service: kafka
+

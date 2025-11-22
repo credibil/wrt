@@ -1,0 +1,24 @@
+name: proxy_redis
+
+# x-vars: &vars
+#   FEATURES: keyvalue,redis
+
+services:
+  cache-redis:
+    extends:
+      file: ../docker/resources.yaml
+      service: wasm32
+    build:
+      args:
+        FEATURES: keyvalue-redis
+    depends_on:
+      - redis
+      - otelcol
+
+  redis:
+    extends:
+      file: ../docker/resources.yaml
+      service: redis
+
+include:
+  - ../docker/opentelemetry.yaml

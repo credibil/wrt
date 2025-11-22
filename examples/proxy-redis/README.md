@@ -1,25 +1,30 @@
-# Redis Key Value Example
+# HTTP Proxy Redis Example
 
-This demonstrates using Redis as a cache for HTTP responses.
+This example demonstrates using Redis to cache responses for proxied HTTP requests.
 
-A simple HTTP server receives requests as a trigger (with examples for GET and POST). Outgoing
-requests are made with `Cache-Control` and `If-None-Match` headers to demonstrate how caching is
-controlled. (See [*Cache Control*](#cache-control) below).
+HTTP GET and POST requests are made to the proxy which subsequently makes outgoing
+requests using `Cache-Control` and `If-None-Match` headers. 
+
+See [*Cache Control*](#cache-control) below.
 
 ## Quick Start
 
-To get started add a `.env` file to the workspace root. See the `.env.example` file for a template.
+To get started add a `.env` file to the workspace root. See `.env.example` for a template.
 
 #### Build
 
 ```bash
-cargo build --example cache-redis --features keyvalue,redis --target wasm32-wasip2 --release
+cargo build --example proxy-redis --features keyvalue-redis --target wasm32-wasip2 --release
 ```
 
 #### Run
 
 ```bash
-docker compose --file ./examples/cache-redis/compose.yaml up
+set -a && source .env && set +a
+cargo run --features keyvalue-redis -- run ./target/wasm32-wasip2/release/examples/proxy_redis.wasm
+
+# OR
+docker compose --file ./examples/proxy-redis/compose.yaml up
 ```
 
 #### Test
@@ -28,15 +33,10 @@ docker compose --file ./examples/cache-redis/compose.yaml up
 curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://localhost:8080
 ```
 
-## Explanation
+## Implementing Caching
 
-Using POST should cause an error: the [If-None-Match] header is omitted to demonstrate that the 
-caching implementation requires the guest to set this header alongside the [Cache-Control] header.
-
-## Cache Control
-
-Use the [Cache-Control] header to influence the use of a pass-through cache. The following directives
-are currently supported:
+Use the [Cache-Control] header to influence the use of a pass-through cache. The following 
+directives are currently supported:
 
 * `no-cache` - make a request to the resource and then cache the result for future requests.
   Usually used alongside `max-age` for key-value stores that support ttl.
@@ -55,9 +55,13 @@ Multiple directives can be combined in a comma-delimited list:
 Cache-Control: max-age=86400,forward=https://example.com/api/v1/records/2934875
 ```
 
-> [!IMPORTANT]
+> [!WARNING]
 > Currently, the [Cache-Control] header requires a corresponding [If-None-Match] header with a 
-> single `<etag_value>` to use as the cache key. 
+> single `<etag_value>` to use as the cache key.
+
+In the example guest an HTTP POST will cause an error: the [If-None-Match] header has been omitted
+to demonstrate that the caching implementation requires the guest to set this header alongside the
+[Cache-Control] header.
 
 [Cache-Control]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cache-Control
 [If-None-Match]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/If-None-Match
