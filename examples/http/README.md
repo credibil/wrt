@@ -1,9 +1,10 @@
-# HTTP Proxy Redis Example
+# HTTP Example
 
-This example demonstrates using Redis to cache responses for proxied HTTP requests.
+This example demonstrates using a `wasi-http` including a cache (Redis or NATS) to cache responses
+for proxied HTTP requests.
 
-HTTP GET and POST requests are made to the proxy which subsequently makes outgoing
-requests using `Cache-Control` and `If-None-Match` headers. 
+HTTP GET and POST requests are made to the http service which subsequently makes outgoing requests 
+using `Cache-Control` and `If-None-Match` headers. 
 
 See [*Cache Control*](#cache-control) below.
 
@@ -14,17 +15,33 @@ To get started add a `.env` file to the workspace root. See `.env.example` for a
 #### Build
 
 ```bash
-cargo build --example proxy-redis --features keyvalue-redis --target wasm32-wasip2 --release
+# NATS
+cargo build --example http --features http,keyvalue,nats --target wasm32-wasip2 --release
+
+# Redis
+cargo build --example http --features http,keyvalue,redis --target wasm32-wasip2 --release
 ```
 
 #### Run
 
 ```bash
 set -a && source .env && set +a
-cargo run --features keyvalue-redis -- run ./target/wasm32-wasip2/release/examples/proxy_redis.wasm
 
-# OR
-docker compose --file ./examples/proxy-redis/compose.yaml up
+# NATS
+cargo run --features http,keyvalue,nats -- run ./target/wasm32-wasip2/release/examples/http.wasm
+
+# Redis
+cargo run --features http,keyvalue,redis -- run ./target/wasm32-wasip2/release/examples/http.wasm
+```
+
+Docker Compose can also be used to run the service:
+
+```bash
+# NATS
+docker compose --file ./examples/http/nats.yaml up
+
+# Redis
+docker compose --file ./examples/http/redis.yaml up
 ```
 
 #### Test

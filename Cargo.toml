@@ -123,45 +123,33 @@ required-features = ["blobstore"]
 
 [[example]]
 name = "http"
-path = "examples/http.rs"
+path = "examples/http/lib.rs"
 crate-type = ["cdylib"]
-required-features = ["http", "otel"]
-
-[[example]]
-name = "proxy"
-path = "examples/proxy.rs"
-crate-type = ["cdylib"]
-required-features = ["http", "keyvalue"]
-
-[[example]]
-name = "proxy-redis"
-path = "examples/proxy-redis/lib.rs"
-crate-type = ["cdylib"]
-required-features = ["keyvalue", "redis"]
+required-features = ["http", "otel", "keyvalue", "redis", "nats"]
 
 [[example]]
 name = "keyvalue"
-path = "examples/keyvalue.rs"
+path = "examples/keyvalue/lib.rs"
 crate-type = ["cdylib"]
-required-features = ["keyvalue"]
+required-features = ["http", "otel", "keyvalue", "redis", "nats"]
+
+[[example]]
+name = "pubsub"
+path = "examples/pubsub/lib.rs"
+crate-type = ["cdylib"]
+required-features = ["http", "otel", "messaging", "kafka", "nats"]
+
+[[example]]
+name = "sql"
+path = "examples/sql/lib.rs"
+crate-type = ["cdylib"]
+required-features = ["http", "otel", "sql", "postgres"]
 
 [[example]]
 name = "otel"
 path = "examples/otel.rs"
 crate-type = ["cdylib"]
 required-features = ["http", "otel"]
-
-[[example]]
-name = "pubsub-kafka"
-path = "examples/pubsub-kafka/lib.rs"
-crate-type = ["cdylib"]
-required-features = ["http-default", "messaging-kafka", "keyvalue-redis"]
-
-[[example]]
-name = "pubsub-nats"
-path = "examples/pubsub-nats/lib.rs"
-crate-type = ["cdylib"]
-required-features = ["http-default", "messaging-nats"]
 
 [[example]]
 name = "request-reply"
@@ -180,12 +168,6 @@ name = "websockets"
 path = "examples/websockets.rs"
 crate-type = ["cdylib"]
 required-features = ["websockets"]
-
-[[example]]
-name = "sql-postgres"
-path = "examples/sql-postgres/lib.rs"
-crate-type = ["cdylib"]
-required-features = ["sql-postgres"]
 
 [profile.release]
 lto = true

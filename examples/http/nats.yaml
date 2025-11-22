@@ -1,0 +1,21 @@
+name: proxy
+
+services:
+  proxy:
+    extends:
+      file: ../docker/resources.yaml
+      service: wasm32
+    build:
+      args:
+        FEATURES: keyvalue,nats
+    depends_on:
+      - nats
+      - otelcol
+
+  nats:
+    extends:
+      file: ../docker/resources.yaml
+      service: nats
+
+include:
+  - ../docker/opentelemetry.yaml

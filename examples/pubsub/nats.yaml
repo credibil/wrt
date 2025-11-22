@@ -1,4 +1,4 @@
-name: pubsub_nats
+name: pubsub
 
 services:
   pubsub:
@@ -7,11 +7,15 @@ services:
       service: wasm32
     build:
       args:
-        FEATURES: http-default,messaging-nats
+        FEATURES: http,otel,messaging,nats
     depends_on:
       - nats
+      - otelcol
 
   nats:
     extends:
       file: ../docker/resources.yaml
       service: nats
+
+include:
+  - ../docker/opentelemetry.yaml

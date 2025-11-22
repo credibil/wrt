@@ -1,4 +1,4 @@
-# SQL with Postgres Example
+# SQL Example
 
 This example demonstrates SQL queries on a Postgres server.
 
@@ -12,17 +12,30 @@ To get started add a `.env` file to the workspace root. See the `.env.example` f
 #### Build
 
 ```bash
-cargo build --example sql-postgres --features sql-postgres --target wasm32-wasip2 --release
+# Postgres
+cargo build --example sql --features http,sql,postgres --target wasm32-wasip2 --release
 ```
 
 #### Run
 
 ```bash
 set -a && source .env && set +a
-cargo run --features sql-postgres -- run ./target/wasm32-wasip2/release/examples/sql_postgres.wasm
 
-# OR
-docker compose --file ./examples/sql-postgres/compose.yaml up
+# Postgres
+cargo run --features http,sql,postgres -- run ./target/wasm32-wasip2/release/examples/sql.wasm
+
+# Azure Table Storage
+cargo run --features http,sql,azurets -- run ./target/wasm32-wasip2/release/examples/sql.wasm
+```
+
+Docker Compose can also be used to run the service:
+
+```bash
+# Postgres
+docker compose --file ./examples/sql/postgres.yaml up
+
+# Azure Table Storage
+docker compose --file ./examples/sql/azurets.yaml up
 ```
 
 #### Test

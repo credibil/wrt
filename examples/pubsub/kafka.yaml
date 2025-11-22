@@ -1,4 +1,4 @@
-name: pubsub_kafka
+name: pubsub
 
 services:
   pubsub:
@@ -7,9 +7,10 @@ services:
       service: wasm32
     build:
       args:
-        FEATURES: http-default,messaging-kafka
+        FEATURES: http,otel,messaging,kafka
     depends_on:
       - topics
+      - otelcol
 
   topics:
     image: apache/kafka:latest
@@ -27,3 +28,5 @@ services:
       file: ../docker/resources.yaml
       service: kafka
 
+include:
+  - ../docker/opentelemetry.yaml

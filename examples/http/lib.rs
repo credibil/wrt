@@ -30,22 +30,26 @@ impl Guest for HttpGuest {
     #[wasi_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
     async fn handle(request: Request) -> Result<Response, ErrorCode> {
         let router = Router::new()
-            .route("/", get(get_handler))
-            .layer(
-                CorsLayer::new()
-                    .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
-                    .allow_headers(Any)
-                    .allow_origin(Any),
-            )
-            .route("/", post(post_handler));
-
+            .route("/echo", get(echo))
+            .route("/cache", get(cache))
+            .route("/origin", post(origin))
+            .route("/client-cert", post(client_cert));
         wasi_http::serve(router, request).await
     }
 }
 
+// Simple handler that echoes back the request body with a greeting
+#[wasi_otel::instrument]
+async fn echo(Json(body): Json<Value>) -> Result<Json<Value>> {
+    Ok(Json(json!({
+        "message": "Hello, World!",
+        "request": body
+    })))
+}
+
 // Forward request to external service and return the response
 #[wasi_otel::instrument]
-async fn get_handler() -> Result<impl IntoResponse, Infallible> {
+async fn cache() -> Result<impl IntoResponse, Infallible> {
     let request = http::Request::builder()
         .method(Method::GET)
         .uri("https://jsonplaceholder.cypress.io/posts/1")
@@ -56,27 +60,25 @@ async fn get_handler() -> Result<impl IntoResponse, Infallible> {
         })
         .body(Empty::<Bytes>::new())
         .expect("failed to build request");
+
     let response = wasi_http::handle(request).await.unwrap();
-    println!("response from wasi_http: {response:?}");
     let (parts, body) = response.into_parts();
     let http_response = http::Response::from_parts(parts, Body::from(body));
-    println!("constructed http_response: {http_response:?}");
+
     Ok(http_response)
 }
 
 // Forward request to external service and return the response.
 //
-// This handler demonstrates caching a POST request response but will create an
-// error: The Cache-Control header is set but the If-None-Match header is
-// missing.
+// While the proxy will cache the response, an error will be returned as the
+// `If-None-Match` header is missing.
 #[wasi_otel::instrument]
-async fn post_handler(Json(body): Json<Value>) -> Result<Json<Value>> {
-    let body = serde_json::to_vec(&body).context("issue serializing request body")?;
-    let body = Bytes::from(body);
+async fn origin(body: Bytes) -> Result<Json<Value>> {
     let request = http::Request::builder()
         .method(Method::POST)
         .uri("https://jsonplaceholder.cypress.io/posts")
-        .header(CACHE_CONTROL, "no-cache, max-age=300") // Go to origin for every request, but cache the response for 5 minutes
+        // go to origin for every request, but cache response for 5 minutes
+        .header(CACHE_CONTROL, "no-cache, max-age=300") 
         .body(Full::new(body))
         .expect("failed to build request");
 
@@ -87,8 +89,33 @@ async fn post_handler(Json(body): Json<Value>) -> Result<Json<Value>> {
     Ok(Json(body))
 }
 
-// Handle preflight OPTIONS requests for CORS.
 #[wasi_otel::instrument]
-async fn handle_options() -> Result<()> {
-    Ok(())
+async fn client_cert() -> Result<Json<Value>> {
+    // PEM-encoded private key and certificate
+    let auth_cert = "
+        -----BEGIN CERTIFICATE-----
+        ...Your Certificate Here...
+        -----END CERTIFICATE----- 
+        -----BEGIN PRIVATE KEY-----
+        ...Your Private Key Here...
+        -----END PRIVATE KEY-----";
+    let encoded_cert = Base64::encode_string(auth_cert.as_bytes());
+
+    let request = http::Request::builder()
+        .method(Method::GET)
+        .uri("https://jsonplaceholder.cypress.io/posts/1")
+        .header("Client-Cert", &encoded_cert)
+        .extension(CacheOptions {
+            bucket_name: "example-bucket".to_string(),
+        })
+        .body(Empty::<Bytes>::new())
+        .expect("Failed to build request");
+
+    let response = wasi_http::handle(request).await?;
+    let body = response.into_body();
+    let body_str = Base64::encode_string(&body);
+
+    Ok(Json(serde_json::json!({
+        "cached_response": body_str
+    })))
 }

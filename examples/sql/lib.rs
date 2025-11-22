@@ -33,7 +33,7 @@ impl Guest for Http {
 #[axum::debug_handler]
 #[wasi_otel::instrument]
 async fn query() -> Result<Json<Value>> {
-    tracing::info!("query postgres");
+    tracing::info!("query database");
 
     let pool =
         Connection::open("postgres").map_err(|e| anyhow!("failed to open connection: {e:?}"))?;
@@ -48,7 +48,7 @@ async fn query() -> Result<Json<Value>> {
 #[axum::debug_handler]
 #[wasi_otel::instrument]
 async fn insert(body: Bytes) -> Result<Json<Value>> {
-    tracing::info!("insert data postgres");
+    tracing::info!("insert data");
 
     let insert = "insert into mytable (feed_id, agency_id, agency_name, agency_url, agency_timezone, created_at) values ($1, $2, $3, $4, $5, $6);";
     let params: Vec<DataType> = [
@@ -64,10 +64,10 @@ async fn insert(body: Bytes) -> Result<Json<Value>> {
     ]
     .to_vec();
 
-    tracing::debug!("opening connection to postgres");
+    tracing::debug!("opening connection");
 
     let pool =
-        Connection::open("postgres").map_err(|e| anyhow!("failed to open connection: {e:?}"))?;
+        Connection::open("db").map_err(|e| anyhow!("failed to open connection: {e:?}"))?;
     let stmt = Statement::prepare(insert, &params)
         .map_err(|e| anyhow!("failed to prepare statement: {e:?}"))?;
 
