@@ -30,6 +30,15 @@ services:
       timeout: 10s
       retries: 5
 
+  mongodb:
+    image: mongo:latest
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+    ports:
+      - 27017:27017
+
   nats:
     image: nats:latest
     ports:

@@ -7,15 +7,15 @@ services:
       service: wasm32
     build:
       args:
-        FEATURES: http,otel,blobstore,redis
+        FEATURES: http,otel,blobstore,mongodb
     depends_on:
-      - redis
+      - mongodb
       - otelcol
 
-  redis:
+  mongodb:
     extends:
       file: ../docker/resources.yaml
-      service: redis
+      service: mongodb
 
 include:
   - ../docker/opentelemetry.yaml
