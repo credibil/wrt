@@ -19,7 +19,7 @@ use crate::types::{DataType, Row};
 ///
 /// # Errors
 /// Transforms into JSON value types fail.
-pub fn json_rows(rows: Vec<Row>) -> Result<Value> {
+pub fn into_json(rows: Vec<Row>) -> Result<Value> {
     let json_rows: Vec<Value> = rows
         .into_iter()
         .map(|row| {

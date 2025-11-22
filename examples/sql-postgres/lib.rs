@@ -14,7 +14,7 @@ use serde_json::{Value, json};
 use tracing::Level;
 use wasi_http::Result;
 use wasi_sql::types::{Connection, DataType, FormattedValue, Statement};
-use wasi_sql::{json_rows, readwrite};
+use wasi_sql::{into_json, readwrite};
 use wasip3::exports::http::handler::Guest;
 use wasip3::http::types::{ErrorCode, Request, Response};
 
@@ -25,35 +25,32 @@ impl Guest for Http {
     #[wasi_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
     async fn handle(request: Request) -> Result<Response, ErrorCode> {
         tracing::debug!("received request: {:?}", request);
-        let router = Router::new().route("/", get(select)).route("/", post(insert));
+        let router = Router::new().route("/", get(query)).route("/", post(insert));
         wasi_http::serve(router, request).await
     }
 }
 
 #[axum::debug_handler]
 #[wasi_otel::instrument]
-async fn select(body: Bytes) -> Result<Json<Value>> {
-    tracing::info!("handling request with body: {:?}", body);
-    let query = "SELECT * from mytable;";
-    let params = &[];
+async fn query() -> Result<Json<Value>> {
+    tracing::info!("query postgres");
+
     let pool =
         Connection::open("postgres").map_err(|e| anyhow!("failed to open connection: {e:?}"))?;
-
-    let stmt = Statement::prepare(query, params)
+    let stmt = Statement::prepare("SELECT * from mytable;", &[])
         .map_err(|e| anyhow!("failed to prepare statement: {e:?}"))?;
 
     let res = readwrite::query(&pool, &stmt).map_err(|e| anyhow!("query failed: {e:?}"))?;
 
-    let serialized_rows = json_rows(res)?;
-
-    Ok(Json(serialized_rows))
+    Ok(Json(into_json(res)?))
 }
 
 #[axum::debug_handler]
 #[wasi_otel::instrument]
 async fn insert(body: Bytes) -> Result<Json<Value>> {
-    tracing::info!("handling request with body: {:?}", body);
-    let query = "insert into mytable (feed_id, agency_id, agency_name, agency_url, agency_timezone, created_at) values ($1, $2, $3, $4, $5, $6);";
+    tracing::info!("insert data postgres");
+
+    let insert = "insert into mytable (feed_id, agency_id, agency_name, agency_url, agency_timezone, created_at) values ($1, $2, $3, $4, $5, $6);";
     let params: Vec<DataType> = [
         DataType::Int32(Some(1224)),
         DataType::Str(Some("test1".to_string())),
@@ -68,10 +65,10 @@ async fn insert(body: Bytes) -> Result<Json<Value>> {
     .to_vec();
 
     tracing::debug!("opening connection to postgres");
+
     let pool =
         Connection::open("postgres").map_err(|e| anyhow!("failed to open connection: {e:?}"))?;
-    tracing::debug!("preparing statement");
-    let stmt = Statement::prepare(query, &params)
+    let stmt = Statement::prepare(insert, &params)
         .map_err(|e| anyhow!("failed to prepare statement: {e:?}"))?;
 
     let res = readwrite::exec(&pool, &stmt).map_err(|e| anyhow!("query failed: {e:?}"))?;
