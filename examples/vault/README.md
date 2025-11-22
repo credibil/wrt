@@ -4,7 +4,7 @@ This example implements a simple key-value store using `wasi-vault` backed by Az
 
 ## Quick Start
 
-To get started add a `.env` file to the workspace root. See `.env.example` for a template.
+To get started add a `.env` file to the workspace root. See [`.env.example`](.env.example) for a template.
 
 #### Build
 

@@ -15,7 +15,7 @@ replies to each message received by publishing to `rep.v1`.
 
 ## Quick Start
 
-To get started add a `.env` file to the workspace root. See `.env.example` for a template.
+To get started add a `.env` file to the workspace root. See [`.env.example`](.env.example) for a template.
 
 #### Build
 

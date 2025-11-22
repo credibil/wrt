@@ -4,7 +4,7 @@ This example implements opentelemetry for wasm32 guests using `wasi-otel`.
 
 ## Quick Start
 
-To get started add a `.env` file to the workspace root. See `.env.example` for a template.
+To get started add a `.env` file to the workspace root. See [`.env.example`](.env.example) for a template.
 
 #### Build
 
