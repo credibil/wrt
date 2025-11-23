@@ -5,37 +5,48 @@ NATS JetStream.
 
 ## Quick Start
 
-To get started add a `.env` file to the workspace root. See [`.env.example`](.env.example) for a template.
+To get started add a `.env` file to the workspace root. See [`.env.example`](.env.example) for a
+template.
 
-#### Build
+### Build the WASI guest
 
 ```bash
 cargo build --example keyvalue --target wasm32-wasip2 --release
 ```
 
-#### Run
+### Run with Cargo
+
+Start the OpenTelemetry Collector in a separate console:
+
+```bash
+docker compose --file ./examples/docker/opentelemetry.yaml up
+```
+
+Run the guest using either NATS or Redis:
 
 ```bash
 set -a && source .env && set +a
 
-# NATS
+# with NATS
 cargo run --features http,otel,keyvalue,nats -- run ./target/wasm32-wasip2/release/examples/keyvalue.wasm
 
-# Redis
+# with Redis
 cargo run --features http,otel,keyvalue,redis -- run ./target/wasm32-wasip2/release/examples/keyvalue.wasm
 ```
 
-Alternatively, using Docker Compose:
+### Run with Docker Compose
+
+Docker Compose provides an easy way to run the example with all dependencies.
 
 ```bash
-# NATS
+# with NATS
 docker compose --file ./examples/keyvalue/nats.yaml up
 
-# Redis
+# with Redis
 docker compose --file ./examples/keyvalue/redis.yaml up
 ```
 
-#### Test
+### Test
 
 ```bash
 curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://localhost:8080

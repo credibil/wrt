@@ -15,37 +15,48 @@ replies to each message received by publishing to `rep.v1`.
 
 ## Quick Start
 
-To get started add a `.env` file to the workspace root. See [`.env.example`](.env.example) for a template.
+To get started add a `.env` file to the workspace root. See [`.env.example`](.env.example) for a
+template.
 
-#### Build
+### Build the WASI guest
 
 ```bash
 cargo build --example messaging --target wasm32-wasip2 --release
 ```
 
-#### Run
+### Run with Cargo
+
+Start the OpenTelemetry Collector in a separate console:
+
+```bash
+docker compose --file ./examples/docker/opentelemetry.yaml up
+```
+
+Run the guest using either Kafka or NATS:
 
 ```bash
 set -a && source .env && set +a
 
-# Kafka
+# with Kafka
 cargo run --features http,otel,messaging,kafka -- run ./target/wasm32-wasip2/release/examples/messaging.wasm
 
-# NATS
+# with NATS
 cargo run --features http,otel,messaging,nats -- run ./target/wasm32-wasip2/release/examples/messaging.wasm
 ```
 
-Docker Compose can also be used to run the service:
+### Run with Docker Compose
+
+Docker Compose provides an easy way to run the example with all dependencies.
 
 ```bash
-# Kafka
+# with Kafka
 docker compose --file ./examples/messaging/kafka.yaml up
 
-# NATS
+# with NATS
 docker compose --file ./examples/messaging/nats.yaml up
 ```
 
-#### Test
+### Test
 
 ```bash
 # pub-sub
