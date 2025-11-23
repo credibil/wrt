@@ -353,6 +353,10 @@ criteria = "safe-to-deploy"
 version = "0.3.2"
 criteria = "safe-to-deploy"
 
+[[exemptions.fluent-uri]]
+version = "0.4.1"
+criteria = "safe-to-deploy"
+
 [[exemptions.fraction]]
 version = "0.15.3"
 criteria = "safe-to-deploy"
@@ -478,7 +482,7 @@ version = "0.30.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.jsonschema]]
-version = "0.33.0"
+version = "0.37.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.libredox]]
@@ -774,7 +778,7 @@ version = "0.30.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.referencing]]
-version = "0.33.0"
+version = "0.37.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.regex-lite]]
@@ -1055,6 +1059,10 @@ criteria = "safe-to-deploy"
 
 [[exemptions.unarray]]
 version = "0.1.4"
+criteria = "safe-to-deploy"
+
+[[exemptions.unicode-general-category]]
+version = "1.1.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.untrusted]]
