@@ -1,3 +1,6 @@
+# Publish to GitHub Container Registry:
+# docker compose -f examples/docker/opentelemetry.yaml publish ghcr.io/credibil/otel-compose:latest
+
 services:
   otelcol:
     image: otel/opentelemetry-collector-contrib:latest
@@ -69,7 +72,7 @@ configs:
           logs:
             receivers: [otlp]
             exporters: [otlp/jaeger, debug]
-  
+
   prometheus:
     content: |
       remote_write:
