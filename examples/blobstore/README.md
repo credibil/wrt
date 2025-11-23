@@ -14,7 +14,7 @@ template.
 cargo build --example blobstore --target wasm32-wasip2 --release
 ```
 
-### Run with Cargo
+### Run using Cargo
 
 Start the OpenTelemetry Collector in a separate console:
 
@@ -35,7 +35,7 @@ cargo run --features http,otel,blobstore,nats -- run ./target/wasm32-wasip2/rele
 cargo run --features http,otel,blobstore,mongodb -- run ./target/wasm32-wasip2/release/examples/blobstore.wasm
 ```
 
-### Run with Docker Compose
+### Run using Docker Compose
 
 Docker Compose provides an easy way to run the example with all dependencies.
 

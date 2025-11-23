@@ -13,7 +13,7 @@ template.
 cargo build --example vault --target wasm32-wasip2 --release
 ```
 
-### Run with Cargo
+### Run using Cargo
 
 Start the OpenTelemetry Collector in a separate console:
 

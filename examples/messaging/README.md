@@ -24,7 +24,7 @@ template.
 cargo build --example messaging --target wasm32-wasip2 --release
 ```
 
-### Run with Cargo
+### Run using Cargo
 
 Start the OpenTelemetry Collector in a separate console:
 
@@ -44,7 +44,7 @@ cargo run --features http,otel,messaging,kafka -- run ./target/wasm32-wasip2/rel
 cargo run --features http,otel,messaging,nats -- run ./target/wasm32-wasip2/release/examples/messaging.wasm
 ```
 
-### Run with Docker Compose
+### Run using Docker Compose
 
 Docker Compose provides an easy way to run the example with all dependencies.
 

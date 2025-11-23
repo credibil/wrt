@@ -16,7 +16,7 @@ To get started add a `.env` file to the workspace root. See the `.env.example` f
 cargo build --example sql --target wasm32-wasip2 --release
 ```
 
-### Run with Cargo
+### Run using Cargo
 
 Start the OpenTelemetry Collector in a separate console:
 
@@ -36,7 +36,7 @@ cargo run --features http,otel,sql,postgres -- run ./target/wasm32-wasip2/releas
 cargo run --features http,otel,sql,azurets -- run ./target/wasm32-wasip2/release/examples/sql.wasm
 ```
 
-### Run with Docker Compose
+### Run using Docker Compose
 
 Docker Compose provides an easy way to run the example with all dependencies.
 
