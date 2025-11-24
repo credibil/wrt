@@ -1,4 +1,18 @@
 services:
+  kafka-topics:
+    image: apache/kafka:latest
+    command: |
+      bash -c '
+        for topic in $${KAFKA_TOPICS//,/ }; do
+          /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:29092 --create --if-not-exists --topic $$topic;
+        done
+      '
+    environment:
+      KAFKA_TOPICS: ${KAFKA_TOPICS}
+    depends_on:
+      kafka:
+        condition: service_healthy
+
   kafka:
     image: apache/kafka:latest
     ports:

@@ -13,15 +13,9 @@ services:
       - otelcol
 
   topics:
-    image: apache/kafka:latest
-    command: |
-      sh -c '
-        /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:29092 --create --if-not-exists --topic a;
-        /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:29092 --create --if-not-exists --topic b;
-      '
-    depends_on:
-      kafka:
-        condition: service_healthy
+    extends:
+      file: oci://ghcr.io/credibil/compose-resources:latest
+      service: kafka-topics
 
   kafka:
     extends:
