@@ -194,6 +194,14 @@ criteria = "safe-to-deploy"
 version = "0.5.4"
 criteria = "safe-to-deploy"
 
+[[exemptions.crossbeam-deque]]
+version = "0.8.6"
+criteria = "safe-to-deploy"
+
+[[exemptions.crossbeam-epoch]]
+version = "0.9.8"
+criteria = "safe-to-deploy"
+
 [[exemptions.crossbeam-utils]]
 version = "0.8.21"
 criteria = "safe-to-deploy"
