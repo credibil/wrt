@@ -39,7 +39,7 @@ version = "1.7.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.async-compression]]
-version = "0.4.33"
+version = "0.4.34"
 criteria = "safe-to-deploy"
 
 [[exemptions.async-lock]]
@@ -139,7 +139,7 @@ version = "0.14.2"
 criteria = "safe-to-deploy"
 
 [[exemptions.cc]]
-version = "1.2.46"
+version = "1.2.47"
 criteria = "safe-to-deploy"
 
 [[exemptions.chrono]]
@@ -155,11 +155,11 @@ version = "4.6.7"
 criteria = "safe-to-deploy"
 
 [[exemptions.compression-codecs]]
-version = "0.4.32"
+version = "0.4.33"
 criteria = "safe-to-deploy"
 
 [[exemptions.compression-core]]
-version = "0.4.30"
+version = "0.4.31"
 criteria = "safe-to-deploy"
 
 [[exemptions.concurrent-queue]]
@@ -188,6 +188,10 @@ criteria = "safe-to-deploy"
 
 [[exemptions.crc32fast]]
 version = "1.5.0"
+criteria = "safe-to-deploy"
+
+[[exemptions.critical-section]]
+version = "1.2.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.crossbeam-channel]]
@@ -280,6 +284,10 @@ criteria = "safe-to-deploy"
 
 [[exemptions.derive-where]]
 version = "1.6.0"
+criteria = "safe-to-deploy"
+
+[[exemptions.derive_more-impl]]
+version = "2.0.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.digest]]
@@ -387,11 +395,11 @@ version = "0.3.3"
 criteria = "safe-to-deploy"
 
 [[exemptions.hickory-proto]]
-version = "0.24.4"
+version = "0.25.2"
 criteria = "safe-to-deploy"
 
 [[exemptions.hickory-resolver]]
-version = "0.24.4"
+version = "0.25.2"
 criteria = "safe-to-deploy"
 
 [[exemptions.hkdf]]
@@ -478,10 +486,6 @@ criteria = "safe-to-deploy"
 version = "1.1.23"
 criteria = "safe-to-deploy"
 
-[[exemptions.lru-cache]]
-version = "0.1.2"
-criteria = "safe-to-deploy"
-
 [[exemptions.lru-slab]]
 version = "0.1.2"
 criteria = "safe-to-deploy"
@@ -522,20 +526,24 @@ criteria = "safe-to-deploy"
 version = "0.10.3"
 criteria = "safe-to-deploy"
 
+[[exemptions.moka]]
+version = "0.12.11"
+criteria = "safe-to-deploy"
+
 [[exemptions.mongocrypt]]
-version = "0.3.1"
+version = "0.3.2"
 criteria = "safe-to-deploy"
 
 [[exemptions.mongocrypt-sys]]
-version = "0.1.4+1.12.0"
+version = "0.1.5+1.15.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.mongodb]]
-version = "3.3.0"
+version = "3.4.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.mongodb-internal-macros]]
-version = "3.3.0"
+version = "3.4.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.multimap]]
@@ -627,7 +635,7 @@ version = "2.2.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.pbkdf2]]
-version = "0.11.0"
+version = "0.12.2"
 criteria = "safe-to-deploy"
 
 [[exemptions.pem-rfc7468]]
@@ -771,7 +779,7 @@ version = "0.1.8"
 criteria = "safe-to-deploy"
 
 [[exemptions.resolv-conf]]
-version = "0.7.5"
+version = "0.7.6"
 criteria = "safe-to-deploy"
 
 [[exemptions.ring]]
@@ -822,14 +830,6 @@ criteria = "safe-to-deploy"
 version = "0.4.1"
 criteria = "safe-to-deploy"
 
-[[exemptions.schemars]]
-version = "0.9.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.schemars]]
-version = "1.1.0"
-criteria = "safe-to-deploy"
-
 [[exemptions.security-framework]]
 version = "2.11.1"
 criteria = "safe-to-deploy"
@@ -859,7 +859,7 @@ version = "0.10.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.signal-hook-registry]]
-version = "1.4.6"
+version = "1.4.7"
 criteria = "safe-to-deploy"
 
 [[exemptions.signatory]]
@@ -1019,11 +1019,11 @@ version = "0.28.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.typed-builder]]
-version = "0.20.1"
+version = "0.22.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.typed-builder-macro]]
-version = "0.20.1"
+version = "0.22.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.typenum]]
@@ -1155,11 +1155,11 @@ version = "0.8.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.zerocopy]]
-version = "0.8.27"
+version = "0.8.28"
 criteria = "safe-to-deploy"
 
 [[exemptions.zerocopy-derive]]
-version = "0.8.27"
+version = "0.8.28"
 criteria = "safe-to-deploy"
 
 [[exemptions.zerotrie]]
