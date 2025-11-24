@@ -3,7 +3,7 @@ name: messaging
 services:
   messaging:
     extends:
-      file: ../docker/resources.yaml
+      file: ../../docker/service.yaml
       service: wasm32
     build:
       args:
@@ -25,8 +25,8 @@ services:
 
   kafka:
     extends:
-      file: ../docker/resources.yaml
+      file: oci://ghcr.io/credibil/compose-resources:latest
       service: kafka
 
 include:
-  - ../docker/opentelemetry.yaml
+  - oci://ghcr.io/credibil/compose-opentelemetry:latest

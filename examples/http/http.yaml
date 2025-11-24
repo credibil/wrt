@@ -3,7 +3,7 @@ name: http
 services:
   http:
     extends:
-      file: ../docker/resources.yaml
+      file: ../../docker/service.yaml
       service: wasm32
     build:
       args:
@@ -12,4 +12,4 @@ services:
       - otelcol
 
 include:
-  - ../docker/opentelemetry.yaml
+  - oci://ghcr.io/credibil/compose-opentelemetry:latest

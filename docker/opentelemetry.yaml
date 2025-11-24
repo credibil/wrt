@@ -59,7 +59,7 @@ configs:
           resource_to_telemetry_conversion:
             enabled: true
         debug:
-          verbosity: detailed
+          verbosity: basic
       service:
         pipelines:
           traces:

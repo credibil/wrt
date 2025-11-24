@@ -1,14 +1,4 @@
 services:
-  wasm32:
-    env_file: ../../.env
-    build:
-      context: ../..
-    command: ["/${COMPOSE_PROJECT_NAME}.wasm"]
-    volumes:
-      - ../../target/wasm32-wasip2/release/examples/${COMPOSE_PROJECT_NAME}.wasm:/${COMPOSE_PROJECT_NAME}.wasm
-    ports:
-      - 8080:8080
-
   kafka:
     image: apache/kafka:latest
     ports:
@@ -54,8 +44,10 @@ services:
       PGDATA: /data/postgres
       POSTGRES_DB: postgres
     volumes:
-      - pgdata:/data/postgres
+      - ./db-data:/data/postgres
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      # - ${PWD}/db-data/:/var/lib/postgresql/data/
+      # - ${PWD}/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - 5432:5432
     restart: always
@@ -71,5 +63,3 @@ services:
     ports:
       - 6379:6379
 
-volumes:
-  pgdata:

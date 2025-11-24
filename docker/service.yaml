@@ -1,0 +1,10 @@
+services:
+    wasm32:
+    env_file: ../.env
+    build:
+      context: ..
+    command: ["/${COMPOSE_PROJECT_NAME}.wasm"]
+    volumes:
+      - ../target/wasm32-wasip2/release/examples/${COMPOSE_PROJECT_NAME}.wasm:/${COMPOSE_PROJECT_NAME}.wasm
+    ports:
+      - 8080:8080
