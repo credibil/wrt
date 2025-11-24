@@ -295,7 +295,7 @@ tracing-opentelemetry = "0.32.0"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter", "fmt"] }
 tungstenite = "0.28.0"
 wasip3 = { version = "0.2.1", features = ["http-compat"] }
-wasmtime = { version = "38.0.4", default-features = false, features = ["component-model-async"] }
+wasmtime = { version = "38.0.4", default-features = false, features = ["component-model-async", "parallel-compilation"] }
 wasmtime-wasi = { version = "38.0.4", features = ["p3"] }
 wasmtime-wasi-http = { version = "38.0.4", features = ["p3"] }
 wasmtime-wasi-io = "38.0.4"
