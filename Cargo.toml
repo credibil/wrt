@@ -263,7 +263,7 @@ tower-http = { version = "0.6.6", features = ["cors", "trace"] }
 tracing = "0.1.41"
 tracing-opentelemetry = "0.32.0"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter", "fmt"] }
-wasip3 = { version = "0.3.0", features = ["http-compat"] }
+# wasip3 = { version = "0.3.0", features = ["http-compat"] }
 # wasmtime = { version = "39.0.0", default-features = false, features = ["component-model-async"] }
 # wasmtime-wasi = { version = "39.0.0", features = ["p3"] }
 # wasmtime-wasi-http = { version = "39.0.0", features = ["p3"] }
@@ -295,7 +295,7 @@ wasi-websockets = { path = "crates/wasi-websockets", version = "0.18.0", registr
 
 # [patch.crates-io]
 # wasip3 = { path = "../wasi-rs/crates/wasip3", features = ["http-compat"] }
-# wasip3 = { git = "https://github.com/credibil/wasi-rs", features = ["http-compat"] }
+wasip3 = { git = "https://github.com/credibil/wasi-rs", features = ["http-compat"] }
 
 wasmtime = { git = "https://github.com/bytecodealliance/wasmtime", default-features = false, features = ["component-model-async"] }
 wasmtime-wasi = { git = "https://github.com/bytecodealliance/wasmtime", features = ["p3"] }
