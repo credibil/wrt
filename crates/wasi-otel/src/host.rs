@@ -14,7 +14,7 @@ mod generated {
             default: async | store | tracing | trappable,
         },
         trappable_error_type: {
-            "wasi:otel/types/error" => Error,
+            "wasi:otel/types.error" => Error,
         }
     });
 }

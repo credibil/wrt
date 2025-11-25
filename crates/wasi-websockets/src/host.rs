@@ -19,7 +19,7 @@ mod generated {
             default: async | store | tracing,
         },
         with: {
-            "wasi:websockets/store/server": WebSocketProxy,
+            "wasi:websockets/store.server": WebSocketProxy,
         },
     });
 }

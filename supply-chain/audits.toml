@@ -597,6 +597,12 @@ user-id = 1 # Alex Crichton (alexcrichton)
 start = "2020-06-03"
 end = "2026-09-11"
 
+[[trusted.wasip3]]
+criteria = "safe-to-deploy"
+user-id = 1 # Alex Crichton (alexcrichton)
+start = "2025-09-09"
+end = "2026-11-23"
+
 [[trusted.wasm-bindgen]]
 criteria = "safe-to-deploy"
 user-id = 1 # Alex Crichton (alexcrichton)

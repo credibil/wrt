@@ -49,12 +49,10 @@ where
         let instance_pre = self.state.instance_pre();
         let store_data = self.state.new_store();
         let mut store = Store::new(instance_pre.engine(), store_data);
-        let instance = instance_pre.instantiate_async(&mut store).await?;
 
-        instance
-            .run_concurrent(&mut store, async |accessor| {
-                let client =
-                    accessor.with(|mut store| store.get().messaging().ctx.connect()).await?;
+        store
+            .run_concurrent(async |store| {
+                let client = store.with(|mut store| store.get().messaging().ctx.connect()).await?;
                 client.subscribe().await
             })
             .await?
@@ -70,10 +68,10 @@ where
         let instance = instance_pre.instantiate_async(&mut store).await?;
         let messaging = Messaging::new(&mut store, &instance)?;
 
-        instance
-            .run_concurrent(&mut store, async |accessor| {
+        store
+            .run_concurrent(async |store| {
                 let guest = messaging.wasi_messaging_incoming_handler();
-                Ok(guest.call_handle(accessor, res_msg).await??)
+                Ok(guest.call_handle(store, res_msg).await??)
             })
             .instrument(debug_span!("messaging-handle"))
             .await

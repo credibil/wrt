@@ -17,3 +17,14 @@ See [examples/README.md](./examples/README.md) for more details.
 
 Example guests can be found in the [examples](./examples) directory. Instructions for building and 
 running each example can be found in the respective README files.
+
+## Docker Build
+
+```bash
+export CARGO_REGISTRIES_CREDIBIL_TOKEN="<registry token>"
+
+docker build \
+  --build-arg FEATURES=http-server \
+  --secret id=credibil,env=CARGO_REGISTRIES_CREDIBIL_TOKEN \
+  --tag ghcr.io/credibil/wrt .
+```
