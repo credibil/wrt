@@ -12,10 +12,6 @@ services:
       - nats
       - otelcol
 
-  nats:
-    extends:
-      file: oci://ghcr.io/credibil/compose-resources:latest
-      service: nats
-
 include:
+  - oci://ghcr.io/credibil/compose-nats:latest
   - oci://ghcr.io/credibil/compose-opentelemetry:latest

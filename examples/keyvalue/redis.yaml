@@ -12,10 +12,6 @@ services:
       - redis
       - otelcol
 
-  redis:
-    extends:
-      file: oci://ghcr.io/credibil/compose-resources:latest
-      service: redis
-
 include:
+  - oci://ghcr.io/credibil/compose-redis:latest
   - oci://ghcr.io/credibil/compose-opentelemetry:latest

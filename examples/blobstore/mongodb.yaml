@@ -12,10 +12,6 @@ services:
       - mongodb
       - otelcol
 
-  mongodb:
-    extends:
-      file: oci://ghcr.io/credibil/compose-resources:latest
-      service: mongodb
-
 include:
+  - oci://ghcr.io/credibil/compose-mongodb:latest
   - oci://ghcr.io/credibil/compose-opentelemetry:latest

@@ -9,18 +9,9 @@ services:
       args:
         FEATURES: http,otel,messaging,kafka
     depends_on:
-      - topics
+      - kafka
       - otelcol
 
-  topics:
-    extends:
-      file: oci://ghcr.io/credibil/compose-resources:latest
-      service: kafka-topics
-
-  kafka:
-    extends:
-      file: oci://ghcr.io/credibil/compose-resources:latest
-      service: kafka
-
 include:
+  - oci://ghcr.io/credibil/compose-kafka:latest
   - oci://ghcr.io/credibil/compose-opentelemetry:latest

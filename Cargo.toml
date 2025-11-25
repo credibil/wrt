@@ -20,7 +20,7 @@ doctest = false
 workspace = true
 
 [features]
-default = ["jit", "http-server", "realtime"]
+default = ["jit", "http-server"]
 
 # Top-level feature sets that can be used to create a build.
 # Each set contains a unique grouping of component-resource tuples used by wasm
@@ -263,11 +263,11 @@ tower-http = { version = "0.6.6", features = ["cors", "trace"] }
 tracing = "0.1.41"
 tracing-opentelemetry = "0.32.0"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter", "fmt"] }
-wasip3 = { version = "0.2.2", features = ["http-compat"] }
-wasmtime = { version = "39.0.0", default-features = false, features = ["component-model-async"] }
-wasmtime-wasi = { version = "39.0.0", features = ["p3"] }
-wasmtime-wasi-http = { version = "39.0.0", features = ["p3"] }
-wasmtime-wasi-io = "39.0.0"
+wasip3 = { version = "0.3.0", features = ["http-compat"] }
+# wasmtime = { version = "39.0.0", default-features = false, features = ["component-model-async"] }
+# wasmtime-wasi = { version = "39.0.0", features = ["p3"] }
+# wasmtime-wasi-http = { version = "39.0.0", features = ["p3"] }
+# wasmtime-wasi-io = "39.0.0"
 wit-bindgen = { version = "0.48.1", features = ["async-spawn"] }
 
 # credibil registry
@@ -293,6 +293,11 @@ wasi-sql = { path = "crates/wasi-sql", version = "0.18.0", registry = "credibil"
 wasi-vault = { path = "crates/wasi-vault", version = "0.18.0", registry = "credibil" }
 wasi-websockets = { path = "crates/wasi-websockets", version = "0.18.0", registry = "credibil" }
 
-[patch.crates-io]
+# [patch.crates-io]
 # wasip3 = { path = "../wasi-rs/crates/wasip3", features = ["http-compat"] }
-wasip3 = { git = "https://github.com/credibil/wasi-rs" }
+# wasip3 = { git = "https://github.com/credibil/wasi-rs", features = ["http-compat"] }
+
+wasmtime = { git = "https://github.com/bytecodealliance/wasmtime", default-features = false, features = ["component-model-async"] }
+wasmtime-wasi = { git = "https://github.com/bytecodealliance/wasmtime", features = ["p3"] }
+wasmtime-wasi-http = { git = "https://github.com/bytecodealliance/wasmtime", features = ["p3"] }
+wasmtime-wasi-io = { git = "https://github.com/bytecodealliance/wasmtime" }

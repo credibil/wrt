@@ -14,10 +14,6 @@ services:
       - postgres
       - otelcol
 
-  postgres:
-    extends:
-      file: oci://ghcr.io/credibil/compose-resources:latest
-      service: postgres
-
 include:
+  - oci://ghcr.io/credibil/compose-postgres:latest
   - oci://ghcr.io/credibil/compose-opentelemetry:latest

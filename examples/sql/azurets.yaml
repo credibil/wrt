@@ -14,10 +14,6 @@ services:
       - azurets
       - otelcol
 
-  azurets:
-    extends:
-      file: oci://ghcr.io/credibil/compose-resources:latest
-      service: azurets
-
 include:
+  - oci://ghcr.io/credibil/compose-azurets:latest
   - oci://ghcr.io/credibil/compose-opentelemetry:latest
