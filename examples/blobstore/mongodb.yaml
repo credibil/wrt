@@ -14,4 +14,4 @@ services:
 
 include:
   - oci://ghcr.io/credibil/compose-mongodb:latest
-  - oci://ghcr.io/credibil/compose-opentelemetry:latest
+  - oci://ghcr.io/credibil/compose-otelcol:latest

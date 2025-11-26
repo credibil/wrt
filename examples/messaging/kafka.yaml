@@ -14,4 +14,4 @@ services:
 
 include:
   - oci://ghcr.io/credibil/compose-kafka:latest
-  - oci://ghcr.io/credibil/compose-opentelemetry:latest
+  - oci://ghcr.io/credibil/compose-otelcol:latest
