@@ -29,7 +29,9 @@ cargo build --example messaging --target wasm32-wasip2
 Start the OpenTelemetry Collector in a separate console:
 
 ```bash
-docker compose --file ./docker/otelcol.yaml up
+docker compose --file ./examples/messaging/nats-server.yaml up
+# OR
+docker compose --file ./examples/messaging/kafka-broker.yaml up
 ```
 
 Run the guest using either Kafka or NATS:

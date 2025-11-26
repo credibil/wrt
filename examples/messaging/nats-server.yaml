@@ -1,0 +1,5 @@
+name: nats-server
+
+include:
+  - oci://ghcr.io/credibil/compose-nats:latest
+  - oci://ghcr.io/credibil/compose-otelcol:latest
