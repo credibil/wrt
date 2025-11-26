@@ -36,8 +36,8 @@ impl Cache {
 
         // check for ttl envelope
         let Ok(ttl_val) = Cacheable::try_from(&entry) else {
-            tracing::error!("Failed to deserialize to Cacheable");
-            return Ok(None);
+            tracing::debug!("Not serialized using Cacheable");
+            return Ok(Some(entry));
         };
 
         // check expiration

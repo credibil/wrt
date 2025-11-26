@@ -4,8 +4,6 @@
 //! (<https://github.com/WebAssembly/wasi-keyvalue>).
 
 #[cfg(target_arch = "wasm32")]
-pub mod cache;
-#[cfg(target_arch = "wasm32")]
 mod guest;
 #[cfg(target_arch = "wasm32")]
 pub use guest::*;
