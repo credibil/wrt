@@ -4,6 +4,7 @@
 services:
   otelcol:
     image: otel/opentelemetry-collector-contrib:latest
+    container_name: otelcol
     configs:
       - source: otel
         target: /etc/otelcol-contrib/config.yaml
@@ -15,6 +16,7 @@ services:
       - prometheus
 
   jaeger:
+    container_name: jaeger
     image: jaegertracing/jaeger:latest
     ports:
       - 16686:16686
