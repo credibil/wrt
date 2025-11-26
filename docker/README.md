@@ -12,10 +12,7 @@
 ### Publish
 
 ```bash
-# OpenTelemetry
-docker compose -f docker/opentelemetry.yaml publish ghcr.io/credibil/compose-opentelemetry:latest
-
-# Resources
+docker compose -f docker/otelcol.yaml publish ghcr.io/credibil/compose-otelcol:latest
 docker compose -f docker/kafka.yaml publish --with-env ghcr.io/credibil/compose-kafka:latest
 docker compose -f docker/mongodb.yaml publish --with-env ghcr.io/credibil/compose-mongodb:latest
 docker compose -f docker/nats.yaml publish --with-env ghcr.io/credibil/compose-nats:latest

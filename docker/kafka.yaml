@@ -1,5 +1,7 @@
 services:
-  kafka-topics:
+  # Create Kafka topics from the KAFKA_TOPICS environment variable
+  # N.B. named "kafka" so users can infer the dependency from the compose file name
+  kafka:
     image: apache/kafka:latest
     command: |
       bash -c '
@@ -10,11 +12,13 @@ services:
     environment:
       KAFKA_TOPICS: ${KAFKA_TOPICS}
     depends_on:
-      kafka:
+      broker:
         condition: service_healthy
 
-  kafka:
+  # Kafka broker and controller configuration
+  broker:
     image: apache/kafka:latest
+    container_name: kafka
     ports:
       - 9092:9092
     environment:
