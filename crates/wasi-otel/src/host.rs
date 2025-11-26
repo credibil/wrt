@@ -64,23 +64,15 @@ pub trait WasiOtelCtx: Debug + Send + Sync + 'static {
         async move {
             use opentelemetry_proto::tonic::collector::trace::v1::trace_service_client::TraceServiceClient;
 
-            let endpoint = std::env::var("OTEL_GRPC_URL")
-                .unwrap_or_else(|_| DEF_GRPC_ENDPOINT.to_string());
-
-            match Channel::from_shared(endpoint.clone()) {
-                Ok(channel) => match channel.connect().await {
-                    Ok(conn) => {
-                        let mut client = TraceServiceClient::new(conn);
-                        if let Err(e) = client.export(request).await {
-                            tracing::error!("failed to send traces via gRPC: {e}");
-                        }
+            match connect_grpc().await {
+                Ok(channel) => {
+                    let mut client = TraceServiceClient::new(channel);
+                    if let Err(e) = client.export(request).await {
+                        tracing::error!("failed to send traces via gRPC: {e}");
                     }
-                    Err(e) => {
-                        tracing::error!("failed to connect to gRPC endpoint {endpoint}: {e}");
-                    }
-                },
+                }
                 Err(e) => {
-                    tracing::error!("invalid gRPC endpoint {endpoint}: {e}");
+                    tracing::error!("failed to connect to gRPC endpoint: {e}");
                 }
             }
 
@@ -97,23 +89,15 @@ pub trait WasiOtelCtx: Debug + Send + Sync + 'static {
         async move {
             use opentelemetry_proto::tonic::collector::metrics::v1::metrics_service_client::MetricsServiceClient;
 
-            let endpoint = std::env::var("OTEL_GRPC_URL")
-                .unwrap_or_else(|_| DEF_GRPC_ENDPOINT.to_string());
-
-            match Channel::from_shared(endpoint.clone()) {
-                Ok(channel) => match channel.connect().await {
-                    Ok(conn) => {
-                        let mut client = MetricsServiceClient::new(conn);
-                        if let Err(e) = client.export(request).await {
-                            tracing::error!("failed to send metrics via gRPC: {e}");
-                        }
+            match connect_grpc().await {
+                Ok(channel) => {
+                    let mut client = MetricsServiceClient::new(channel);
+                    if let Err(e) = client.export(request).await {
+                        tracing::error!("failed to send metrics via gRPC: {e}");
                     }
-                    Err(e) => {
-                        tracing::error!("failed to connect to gRPC endpoint {endpoint}: {e}");
-                    }
-                },
+                }
                 Err(e) => {
-                    tracing::error!("invalid gRPC endpoint {endpoint}: {e}");
+                    tracing::error!("failed to connect to gRPC endpoint: {e}");
                 }
             }
 
@@ -121,6 +105,24 @@ pub trait WasiOtelCtx: Debug + Send + Sync + 'static {
         }
         .boxed()
     }
+}
+
+/// Connect to the OpenTelemetry gRPC endpoint.
+///
+/// Reads the endpoint from `OTEL_GRPC_URL` environment variable or uses default.
+/// Note: tonic's `Channel` internally manages connection pooling and is designed
+/// to be cloned cheaply, so creating clients on-demand is acceptable.
+async fn connect_grpc() -> Result<Channel> {
+    let endpoint =
+        std::env::var("OTEL_GRPC_URL").unwrap_or_else(|_| DEF_GRPC_ENDPOINT.to_string());
+
+    let channel = Channel::from_shared(endpoint.clone())
+        .map_err(|e| anyhow::anyhow!("invalid gRPC endpoint {endpoint}: {e}"))?;
+
+    channel
+        .connect()
+        .await
+        .map_err(|e| anyhow::anyhow!("failed to connect to gRPC endpoint {endpoint}: {e}"))
 }
 
 /// View into [`WasiOtelCtx`] implementation and [`ResourceTable`].
