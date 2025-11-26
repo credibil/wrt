@@ -253,6 +253,64 @@ mod tests {
     use super::*;
 
     #[test]
+    fn serializing_and_deserializing_response_is_symmetrical() {
+        let response = Response::builder()
+            .status(200)
+            .header("Content-Type", "text/plain")
+            .header("x-dns-prefetch-control", "off")
+            .header("x-download-options", "noopen")
+            .header("x-frame-options", "SAMEORIGIN")
+            .header("x-permitted-cross-domain-policies", "none")
+            .header("x-xss-protection", 0)
+            .body(Bytes::from("Hello, world!"))
+            .expect("failed to build response");
+
+        let serialized = serialize(&response).expect("failed to serialize response");
+        let deserialized = deserialize(&serialized).expect("failed to deserialize response");
+
+        assert_eq!(response.status(), deserialized.status());
+    }
+
+    #[test]
+    fn putting_and_getting_cache_is_symmetrical() {
+        let cache = Cache {
+            bucket: "test-bucket".to_string(),
+            control: Control {
+                no_cache: false,
+                no_store: false,
+                max_age: 60,
+                etag: "test-etag".to_string(),
+            },
+        };
+
+        let response = Response::builder()
+            .status(200)
+            .header("Content-Type", "text/plain")
+            .header("x-dns-prefetch-control", "off")
+            .header("x-download-options", "noopen")
+            .header("x-frame-options", "SAMEORIGIN")
+            .header("x-permitted-cross-domain-policies", "none")
+            .header("x-xss-protection", 0)
+            .body(Bytes::from("Hello, world!"))
+            .expect("failed to build response");
+
+        cache.put(&response).expect("failed to put cache");
+
+        let cached_response = cache.get().expect("failed to get cache");
+        assert!(cached_response.is_some());
+
+        let cached_response = cached_response.unwrap();
+        assert_eq!(cached_response.status(), 200);
+        assert_eq!(cached_response.headers().get("Content-Type").unwrap(), "text/plain");
+        assert_eq!(cached_response.headers().get("x-dns-prefetch-control").unwrap(), "off");
+        assert_eq!(cached_response.headers().get("x-download-options").unwrap(), "noopen");
+        assert_eq!(cached_response.headers().get("x-frame-options").unwrap(), "SAMEORIGIN");
+        assert_eq!(cached_response.headers().get("x-permitted-cross-domain-policies").unwrap(), "none");
+        assert_eq!(cached_response.headers().get("x-xss-protection").unwrap(), "0");
+        assert_eq!(cached_response.body(), &Bytes::from("Hello, world!"));
+    }
+
+    #[test]
     fn returns_none_when_header_missing() {
         let headers = HeaderMap::new();
         let control = Control::try_from(&headers).expect("should parse");
