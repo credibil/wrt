@@ -36,7 +36,8 @@ impl Cache {
 
         // check for ttl envelope
         let Ok(ttl_val) = Cacheable::try_from(&entry) else {
-            return Ok(Some(entry));
+            tracing::error!("Failed to deserialize to Cacheable");
+            return Ok(None);
         };
 
         // check expiration
@@ -45,7 +46,7 @@ impl Cache {
             return Ok(None);
         }
 
-        Ok(Some(ttl_val.value.to_vec()))
+        Ok(Some(ttl_val.value))
     }
 
     /// Set a value in the cache, optionally with an expiration duration.
@@ -87,21 +88,21 @@ impl Cache {
 /// If the underlying store does not support a key-level TTL, the timestamp
 /// could be used by a guest to implement expiration behavior.
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct Cacheable<'a> {
+pub struct Cacheable {
     /// The value to cache, in bytes.
-    pub value: &'a [u8],
+    pub value: Vec<u8>,
 
     /// Time the cached value expires at.
     #[serde(with = "ts_seconds")]
     pub expires_at: DateTime<Utc>,
 }
 
-impl<'a> Cacheable<'a> {
+impl Cacheable {
     /// Create a new Cacheable with a value and duration until expiration.
     #[must_use]
-    pub fn new(value: &'a [u8], expires_in: Duration) -> Self {
+    pub fn new(value: &[u8], expires_in: Duration) -> Self {
         Self {
-            value,
+            value: value.to_vec(),
             expires_at: Utc::now() + expires_in,
         }
     }
@@ -112,26 +113,18 @@ impl<'a> Cacheable<'a> {
     }
 }
 
-impl<'a> TryFrom<&'a [u8]> for Cacheable<'a> {
+impl TryFrom<&Vec<u8>> for Cacheable {
     type Error = anyhow::Error;
 
-    fn try_from(value: &'a [u8]) -> Result<Self, Self::Error> {
+    fn try_from(value: &Vec<u8>) -> Result<Self, Self::Error> {
         serde_json::from_slice(value).context("issue deserializing Cacheable")
     }
 }
 
-impl<'a> TryFrom<&'a Vec<u8>> for Cacheable<'a> {
+impl TryFrom<Cacheable> for Vec<u8> {
     type Error = anyhow::Error;
 
-    fn try_from(value: &'a Vec<u8>) -> Result<Self, Self::Error> {
-        Self::try_from(value.as_slice())
-    }
-}
-
-impl<'a> TryFrom<Cacheable<'a>> for Vec<u8> {
-    type Error = anyhow::Error;
-
-    fn try_from(value: Cacheable<'a>) -> Result<Self, Self::Error> {
+    fn try_from(value: Cacheable) -> Result<Self, Self::Error> {
         serde_json::to_vec(&value).map_err(|e| anyhow!("issue serializing Cacheable: {e}"))
     }
 }
@@ -147,7 +140,7 @@ mod tests {
         let expires_at = Utc::now() + Duration::seconds(60);
 
         let cacheable = Cacheable {
-            value: &value,
+            value: value.clone(),
             expires_at,
         };
 
@@ -164,7 +157,7 @@ mod tests {
         let result = Cacheable::try_from(&invalid);
         assert!(result.is_err());
         let err = result.unwrap_err().to_string();
-        assert!(err.contains("failed to deserialize Cacheable"));
+        assert!(err.contains("issue deserializing Cacheable"));
     }
 
     #[test]
