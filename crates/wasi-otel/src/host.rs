@@ -57,7 +57,10 @@ impl HasData for WasiOtel {
 /// This is implemented by the resource-specific provider of OpenTelemetry
 /// functionality.
 pub trait WasiOtelCtx: Debug + Send + Sync + 'static {
-    /// Export traces using gRPC
+    /// Export traces using gRPC.
+    ///
+    /// Errors are logged but not propagated to prevent telemetry failures
+    /// from affecting application logic.
     fn export_traces(
         &self, request: opentelemetry_proto::tonic::collector::trace::v1::ExportTraceServiceRequest,
     ) -> FutureResult<()> {
@@ -81,7 +84,10 @@ pub trait WasiOtelCtx: Debug + Send + Sync + 'static {
         .boxed()
     }
 
-    /// Export metrics using gRPC
+    /// Export metrics using gRPC.
+    ///
+    /// Errors are logged but not propagated to prevent telemetry failures
+    /// from affecting application logic.
     fn export_metrics(
         &self,
         request: opentelemetry_proto::tonic::collector::metrics::v1::ExportMetricsServiceRequest,
@@ -110,8 +116,12 @@ pub trait WasiOtelCtx: Debug + Send + Sync + 'static {
 /// Connect to the OpenTelemetry gRPC endpoint.
 ///
 /// Reads the endpoint from `OTEL_GRPC_URL` environment variable or uses default.
-/// Note: tonic's `Channel` internally manages connection pooling and is designed
-/// to be cloned cheaply, so creating clients on-demand is acceptable.
+///
+/// Note: In tonic, `Channel` is a cheaply-cloneable handle that manages an
+/// internal connection pool. However, `connect()` may still attempt to establish
+/// an initial connection. For better performance in production, consider
+/// implementing a shared channel that is created once and reused across exports.
+/// The current implementation prioritizes simplicity and correctness.
 async fn connect_grpc() -> Result<Channel> {
     let endpoint =
         std::env::var("OTEL_GRPC_URL").unwrap_or_else(|_| DEF_GRPC_ENDPOINT.to_string());
