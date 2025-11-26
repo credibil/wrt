@@ -32,10 +32,9 @@ tracing-opentelemetry = { workspace = true, optional = true }
 credibil-otel.workspace = true
 futures.workspace = true
 hex = "0.4.3"
-http.workspace = true
-opentelemetry-proto = "0.31.0"
+opentelemetry-proto = { version = "0.31.0", features = ["gen-tonic"] }
 prost = "0.14.1"
-reqwest.workspace = true
+tonic = "0.12.3"
 runtime.workspace = true
 wasmtime.workspace = true
 

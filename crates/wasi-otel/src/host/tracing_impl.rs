@@ -1,21 +1,17 @@
 //! # WASI Tracing
 
 use std::collections::HashMap;
-use std::env;
 
 use anyhow::Result;
-use http::header::CONTENT_TYPE;
 use opentelemetry::trace::{self as otel, TraceContextExt};
 use opentelemetry_proto::tonic::collector::trace::v1::ExportTraceServiceRequest;
 use opentelemetry_proto::tonic::resource::v1::Resource;
 use opentelemetry_proto::tonic::trace::v1::span::{Event, Link};
 use opentelemetry_proto::tonic::trace::v1::status::StatusCode;
 use opentelemetry_proto::tonic::trace::v1::{ResourceSpans, ScopeSpans, Span, Status};
-use prost::Message;
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 use wasmtime::component::Accessor;
 
-use crate::host::DEF_HTTP_URL;
 use crate::host::generated::wasi::otel::tracing::{self as wasi, HostWithStore};
 use crate::{WasiOtel, WasiOtelCtxView};
 
@@ -45,20 +41,11 @@ impl HostWithStore for WasiOtel {
         // convert to opentelemetry export format
         let resource_spans = resource_spans(span_data, resource);
         let export = ExportTraceServiceRequest { resource_spans };
-        let body = Message::encode_to_vec(&export);
 
-        // build request to send to collector
-        let addr = env::var("OTEL_HTTP_URL").unwrap_or_else(|_| DEF_HTTP_URL.to_string());
-        let request = http::Request::builder()
-            .method("POST")
-            .uri(format!("{addr}/v1/traces"))
-            .header(CONTENT_TYPE, "application/x-protobuf")
-            .body(body)
-            .map_err(|e| {
-                tracing::error!("failed to build metrics export request: {e}");
-                wasi::Error::InternalFailure(e.to_string())
-            })?;
-        accessor.with(|mut store| store.get().ctx.export(request)).await?;
+        // export via gRPC
+        accessor
+            .with(|mut store| store.get().ctx.export_traces(export))
+            .await?;
 
         Ok(())
     }
