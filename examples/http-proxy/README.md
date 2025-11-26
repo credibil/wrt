@@ -16,7 +16,7 @@ template.
 ### Build the WASI guest
 
 ```bash
-cargo build --example http-proxy --target wasm32-wasip2 --release
+cargo build --example http-proxy --target wasm32-wasip2
 ```
 
 ### Run using Cargo
@@ -24,7 +24,7 @@ cargo build --example http-proxy --target wasm32-wasip2 --release
 Start the OpenTelemetry Collector in a separate console:
 
 ```bash
-docker compose --file ./examples/docker/opentelemetry.yaml up
+docker compose --file ./docker/otelcol.yaml up
 ```
 
 Run the guest using either NATS or Redis:
@@ -33,10 +33,10 @@ Run the guest using either NATS or Redis:
 set -a && source .env && set +a
 
 # with NATS
-cargo run --features http,otel,keyvalue,nats -- run ./target/wasm32-wasip2/release/examples/http_proxy.wasm
+cargo run --features http,otel,keyvalue,nats -- run ./target/wasm32-wasip2/debug/examples/http_proxy.wasm
 
 # with Redis
-cargo run --features http,otel,keyvalue,redis -- run ./target/wasm32-wasip2/release/examples/http_proxy.wasm
+cargo run --features http,otel,keyvalue,redis -- run ./target/wasm32-wasip2/debug/examples/http_proxy.wasm
 ```
 
 ### Run using Docker Compose

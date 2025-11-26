@@ -21,7 +21,7 @@ template.
 ### Build the WASI guest
 
 ```bash
-cargo build --example messaging --target wasm32-wasip2 --release
+cargo build --example messaging --target wasm32-wasip2
 ```
 
 ### Run using Cargo
@@ -29,7 +29,7 @@ cargo build --example messaging --target wasm32-wasip2 --release
 Start the OpenTelemetry Collector in a separate console:
 
 ```bash
-docker compose --file ./examples/docker/opentelemetry.yaml up
+docker compose --file ./docker/otelcol.yaml up
 ```
 
 Run the guest using either Kafka or NATS:
@@ -38,10 +38,10 @@ Run the guest using either Kafka or NATS:
 set -a && source .env && set +a
 
 # with Kafka
-cargo run --features http,otel,messaging,kafka -- run ./target/wasm32-wasip2/release/examples/messaging.wasm
+cargo run --features http,otel,messaging,kafka -- run ./target/wasm32-wasip2/debug/examples/messaging.wasm
 
 # with NATS
-cargo run --features http,otel,messaging,nats -- run ./target/wasm32-wasip2/release/examples/messaging.wasm
+cargo run --features http,otel,messaging,nats -- run ./target/wasm32-wasip2/debug/examples/messaging.wasm
 ```
 
 ### Run using Docker Compose

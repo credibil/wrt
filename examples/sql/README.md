@@ -13,7 +13,7 @@ To get started add a `.env` file to the workspace root. See the `.env.example` f
 ### Build the WASI guest
 
 ```bash
-cargo build --example sql --target wasm32-wasip2 --release
+cargo build --example sql --target wasm32-wasip2
 ```
 
 ### Run using Cargo
@@ -21,7 +21,7 @@ cargo build --example sql --target wasm32-wasip2 --release
 Start the OpenTelemetry Collector in a separate console:
 
 ```bash
-docker compose --file ./examples/docker/opentelemetry.yaml up
+docker compose --file ./docker/otelcol.yaml up
 ```
 
 Run the guest using either Postgres or Azure Table Storage:
@@ -30,10 +30,10 @@ Run the guest using either Postgres or Azure Table Storage:
 set -a && source .env && set +a
 
 # with Postgres
-cargo run --features http,otel,sql,postgres -- run ./target/wasm32-wasip2/release/examples/sql.wasm
+cargo run --features http,otel,sql,postgres -- run ./target/wasm32-wasip2/debug/examples/sql.wasm
 
 # with Azure Table Storage
-cargo run --features http,otel,sql,azurets -- run ./target/wasm32-wasip2/release/examples/sql.wasm
+cargo run --features http,otel,sql,azurets -- run ./target/wasm32-wasip2/debug/examples/sql.wasm
 ```
 
 ### Run using Docker Compose
