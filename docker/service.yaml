@@ -2,7 +2,6 @@ services:
     wasm32:
     environment:
       - OTEL_GRPC_URL=http://otelcol:4317
-      - OTEL_HTTP_URL=http://otelcol:4318
     env_file: ../.env
     build:
       context: ..

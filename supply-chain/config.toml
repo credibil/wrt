@@ -150,7 +150,7 @@ version = "1.7.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.async-compression]]
-version = "0.4.33"
+version = "0.4.34"
 criteria = "safe-to-deploy"
 
 [[exemptions.async-lock]]
@@ -266,11 +266,11 @@ version = "4.6.7"
 criteria = "safe-to-deploy"
 
 [[exemptions.compression-codecs]]
-version = "0.4.32"
+version = "0.4.33"
 criteria = "safe-to-deploy"
 
 [[exemptions.compression-core]]
-version = "0.4.30"
+version = "0.4.31"
 criteria = "safe-to-deploy"
 
 [[exemptions.concurrent-queue]]
@@ -1446,11 +1446,11 @@ version = "0.8.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.zerocopy]]
-version = "0.8.28"
+version = "0.8.30"
 criteria = "safe-to-deploy"
 
 [[exemptions.zerocopy-derive]]
-version = "0.8.28"
+version = "0.8.30"
 criteria = "safe-to-deploy"
 
 [[exemptions.zerotrie]]
