@@ -43,9 +43,7 @@ impl HostWithStore for WasiOtel {
         let export = ExportTraceServiceRequest { resource_spans };
 
         // export via gRPC
-        accessor
-            .with(|mut store| store.get().ctx.export_traces(export))
-            .await?;
+        accessor.with(|mut store| store.get().ctx.export_traces(export)).await?;
 
         Ok(())
     }

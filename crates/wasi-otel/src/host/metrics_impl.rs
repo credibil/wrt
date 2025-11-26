@@ -35,9 +35,7 @@ impl HostWithStore for WasiOtel {
         let request = ExportMetricsServiceRequest::from(rm);
 
         // export via gRPC
-        accessor
-            .with(|mut store| store.get().ctx.export_metrics(request))
-            .await?;
+        accessor.with(|mut store| store.get().ctx.export_metrics(request)).await?;
 
         Ok(())
     }

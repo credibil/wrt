@@ -29,7 +29,8 @@ use res_redis::Client as RedisCtx;
     feature = "mongodb",
     feature = "nats",
     feature = "redis",
-    feature = "postgres"
+    feature = "postgres",
+    feature = "otel"
 ))]
 use runtime::Resource;
 #[cfg(any(feature = "http", feature = "messaging", feature = "websockets"))]
@@ -46,7 +47,7 @@ use wasi_keyvalue::{WasiKeyValue, WasiKeyValueCtxView, WasiKeyValueView};
 #[cfg(feature = "messaging")]
 use wasi_messaging::{WasiMessaging, WasiMessagingCtxView, WasiMessagingView};
 #[cfg(feature = "otel")]
-use wasi_otel::{DefaultOtelCtx, WasiOtel, WasiOtelCtxView, WasiOtelView};
+use wasi_otel::{GrpcOtelCtx, WasiOtel, WasiOtelCtxView, WasiOtelView};
 #[cfg(feature = "sql")]
 use wasi_sql::{WasiSql, WasiSqlCtxView, WasiSqlView};
 #[cfg(feature = "vault")]
@@ -128,6 +129,8 @@ pub async fn run(wasm: PathBuf) -> Result<()> {
         postgres_ctx: PostgresCtx::connect().await?,
         #[cfg(feature = "redis")]
         redis_ctx: RedisCtx::connect().await?,
+        #[cfg(feature = "otel")]
+        otel_ctx: GrpcOtelCtx::connect().await?,
     };
 
     // start server(s)
@@ -160,6 +163,8 @@ pub struct RunState {
     postgres_ctx: PostgresCtx,
     #[cfg(feature = "redis")]
     redis_ctx: RedisCtx,
+    #[cfg(feature = "otel")]
+    otel_ctx: GrpcOtelCtx,
 }
 
 impl State for RunState {
@@ -199,7 +204,7 @@ impl State for RunState {
             #[cfg(all(feature = "messaging", feature = "nats"))]
             messaging_ctx: self.nats_ctx.clone(),
             #[cfg(feature = "otel")]
-            otel_ctx: DefaultOtelCtx,
+            otel_ctx: self.otel_ctx.clone(),
             #[cfg(all(feature = "sql", feature = "postgres"))]
             sql_ctx: self.postgres_ctx.clone(),
             #[cfg(all(feature = "vault", feature = "azure"))]
@@ -232,7 +237,7 @@ pub struct RunData {
     #[cfg(all(feature = "messaging", feature = "nats"))]
     pub messaging_ctx: NatsCtx,
     #[cfg(feature = "otel")]
-    pub otel_ctx: DefaultOtelCtx,
+    pub otel_ctx: GrpcOtelCtx,
     #[cfg(all(feature = "sql", feature = "postgres"))]
     pub sql_ctx: PostgresCtx,
     #[cfg(all(feature = "vault", feature = "azure"))]
