@@ -6,9 +6,8 @@ use opentelemetry_proto::tonic::collector::metrics::v1::metrics_service_client::
 use opentelemetry_proto::tonic::collector::trace::v1::ExportTraceServiceRequest;
 use opentelemetry_proto::tonic::collector::trace::v1::trace_service_client::TraceServiceClient;
 use runtime::Resource;
-use tonic::transport::Channel;
+use tonic::transport::{Channel, Endpoint};
 use tracing::instrument;
-use tonic::transport::Endpoint;
 
 use crate::host::{FutureResult, WasiOtelCtx};
 

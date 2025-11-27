@@ -29,8 +29,8 @@ use opentelemetry_proto::tonic::collector::trace::v1::ExportTraceServiceRequest;
 use runtime::Host;
 use wasmtime::component::{HasData, Linker, ResourceTable};
 
-use self::generated::wasi::otel as wasi;
 pub use self::exporter::GrpcOtelCtx;
+use self::generated::wasi::otel as wasi;
 
 pub type FutureResult<T> = BoxFuture<'static, Result<T>>;
 
