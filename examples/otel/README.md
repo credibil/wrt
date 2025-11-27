@@ -10,30 +10,22 @@ template.
 ### Build the WASI guest
 
 ```bash
-cargo build --example otel --target wasm32-wasip2 --release
+cargo build --example otel --target wasm32-wasip2
 ```
 
-### Run using Cargo
+### Run
 
 Start the OpenTelemetry Collector in a separate console:
 
 ```bash
-docker compose --file ./examples/docker/opentelemetry.yaml up
+docker compose --file ./docker/otelcol.yaml up
 ```
 
 Run the guest:
 
 ```bash
 set -a && source .env && set +a
-cargo run --features http-server -- run ./target/wasm32-wasip2/release/examples/otel.wasm
-```
-
-### Run using Docker Compose
-
-Docker Compose provides an easy way to run the example with all dependencies.
-
-```bash
-docker compose --file ./examples/otel/otel.yaml up
+cargo run --features http-server -- run ./target/wasm32-wasip2/debug/examples/otel.wasm
 ```
 
 ### Test

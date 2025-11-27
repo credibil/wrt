@@ -11,7 +11,7 @@ template.
 ### Build the WASI guest
 
 ```bash
-cargo build --example blobstore --target wasm32-wasip2 --release
+cargo build --example blobstore --target wasm32-wasip2
 ```
 
 ### Run using Cargo
@@ -19,7 +19,7 @@ cargo build --example blobstore --target wasm32-wasip2 --release
 Start the OpenTelemetry Collector in a separate console:
 
 ```bash
-docker compose --file ./examples/docker/opentelemetry.yaml up
+docker compose --file ./docker/otelcol.yaml up
 ```
 
 Run the guest using either NATS or MongoDB:
@@ -29,10 +29,10 @@ Run the guest using either NATS or MongoDB:
 set -a && source .env && set +a
 
 # with NATS
-cargo run --features http,otel,blobstore,nats -- run ./target/wasm32-wasip2/release/examples/blobstore.wasm
+cargo run --features http,otel,blobstore,nats -- run ./target/wasm32-wasip2/debug/examples/blobstore.wasm
 
 # with MongoDB
-cargo run --features http,otel,blobstore,mongodb -- run ./target/wasm32-wasip2/release/examples/blobstore.wasm
+cargo run --features http,otel,blobstore,mongodb -- run ./target/wasm32-wasip2/debug/examples/blobstore.wasm
 ```
 
 ### Run using Docker Compose

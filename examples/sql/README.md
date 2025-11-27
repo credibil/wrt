@@ -13,39 +13,37 @@ To get started add a `.env` file to the workspace root. See the `.env.example` f
 ### Build the WASI guest
 
 ```bash
-cargo build --example sql --target wasm32-wasip2 --release
+cargo build --example sql --target wasm32-wasip2
 ```
 
-### Run using Cargo
+### Run Postgres
 
-Start the OpenTelemetry Collector in a separate console:
+Start the Postgres server and Otel Collector in a separate console:
 
 ```bash
-docker compose --file ./examples/docker/opentelemetry.yaml up
+docker compose --file ./examples/sql/postgres.yaml up
 ```
 
-Run the guest using either Postgres or Azure Table Storage:
+Run the guest:
 
 ```bash
 set -a && source .env && set +a
-
-# with Postgres
-cargo run --features http,otel,sql,postgres -- run ./target/wasm32-wasip2/release/examples/sql.wasm
-
-# with Azure Table Storage
-cargo run --features http,otel,sql,azurets -- run ./target/wasm32-wasip2/release/examples/sql.wasm
+cargo run --features http,otel,sql,postgres -- run ./target/wasm32-wasip2/debug/examples/sql.wasm
 ```
 
-### Run using Docker Compose
+### Run Azure Table Storage
 
-Docker Compose provides an easy way to run the example with all dependencies.
+Start the Azure Table Storage server and Otel Collector in a separate console:
 
 ```bash
-# with Postgres
-docker compose --file ./examples/sql/postgres.yaml up
-
-# with Azure Table Storage
 docker compose --file ./examples/sql/azurets.yaml up
+```
+
+Run the guest using:
+
+```bash
+set -a && source .env && set +a
+cargo run --features http,otel,sql,azure -- run ./target/wasm32-wasip2/debug/examples/sql.wasm
 ```
 
 ### Test

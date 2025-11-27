@@ -11,40 +11,39 @@ template.
 ### Build the WASI guest
 
 ```bash
-cargo build --example keyvalue --target wasm32-wasip2 --release
+cargo build --example keyvalue --target wasm32-wasip2
 ```
 
-### Run using Cargo
+### Run NATS
 
-Start the OpenTelemetry Collector in a separate console:
+Start the NATS server and Otel Collector in a separate console:
 
 ```bash
-docker compose --file ./examples/docker/opentelemetry.yaml up
+docker compose --file ./examples/keyvalue/nats.yaml up
 ```
 
-Run the guest using either NATS or Redis:
+Run the guest:
 
 ```bash
 set -a && source .env && set +a
-
-# with NATS
-cargo run --features http,otel,keyvalue,nats -- run ./target/wasm32-wasip2/release/examples/keyvalue.wasm
-
-# with Redis
-cargo run --features http,otel,keyvalue,redis -- run ./target/wasm32-wasip2/release/examples/keyvalue.wasm
+cargo run --features http,otel,keyvalue,nats -- run ./target/wasm32-wasip2/debug/examples/keyvalue.wasm
 ```
 
-### Run using Docker Compose
+### Run Redis
 
-Docker Compose provides an easy way to run the example with all dependencies.
+Start the Redis server and Otel Collector in a separate console:
 
 ```bash
-# with NATS
-docker compose --file ./examples/keyvalue/nats.yaml up
-
-# with Redis
 docker compose --file ./examples/keyvalue/redis.yaml up
 ```
+
+Run the guest using:
+
+```bash
+set -a && source .env && set +a
+cargo run --features http,otel,keyvalue,redis -- run ./target/wasm32-wasip2/debug/examples/keyvalue.wasm
+```
+
 
 ### Test
 

@@ -1,17 +1,5 @@
 name: keyvalue
 
-services:
-  keyvalue:
-    extends:
-      file: ../../docker/service.yaml
-      service: wasm32
-    build:
-      args:
-        FEATURES: http,otel,keyvalue,redis
-    depends_on:
-      - redis
-      - otelcol
-
 include:
   - oci://ghcr.io/credibil/compose-redis:latest
   - oci://ghcr.io/credibil/compose-otelcol:latest

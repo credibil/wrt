@@ -10,28 +10,22 @@ template.
 ### Build the WASI guest
 
 ```bash
-cargo build --example vault --target wasm32-wasip2 --release
+cargo build --example vault --target wasm32-wasip2
 ```
 
-### Run using Cargo
+### Run
 
 Start the OpenTelemetry Collector in a separate console:
 
 ```bash
-docker compose --file ./examples/docker/opentelemetry.yaml up
+docker compose --file ./docker/otelcol.yaml up
 ```
 
 Run the guest:
 
 ```bash
 set -a && source .env && set +a
-cargo run --features http,otel,vault,azure -- run ./target/wasm32-wasip2/release/examples/vault.wasm
-```
-
-Alternatively, using Docker Compose:
-
-```bash
-docker compose --file ./examples/vault/azurekv.yaml up
+cargo run --features http,otel,vault,azure -- run ./target/wasm32-wasip2/debug/examples/vault.wasm
 ```
 
 ### Test

@@ -1,8 +1,7 @@
 #![cfg(target_arch = "wasm32")]
 
-// use std::thread::sleep;
-// use std::time::{Duration, Instant};
-use std::time::Instant;
+use std::thread::sleep;
+use std::time::{Duration, Instant};
 
 use axum::routing::post;
 use axum::{Json, Router};
@@ -109,12 +108,14 @@ impl wasi_messaging::incoming_handler::Guest for Messaging {
 
                         // HACK: yield to host
                         if i % 100 == 0 {
-                            // sleep(Duration::from_nanos(1));
-                            wit_bindgen::yield_async().await;
+                            // wit_bindgen::yield_async().await;
+                            sleep(Duration::from_nanos(1));
+                            println!("sent 100 messages");
                         }
                     });
                 }
-                println!("sent 100 messages in {} milliseconds", timer.elapsed().as_millis());
+
+                println!("sent 1000 messages in {} milliseconds", timer.elapsed().as_millis());
             }
             "b" => {
                 tracing::debug!("handling topic b");
