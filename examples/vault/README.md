@@ -13,7 +13,7 @@ template.
 cargo build --example vault --target wasm32-wasip2
 ```
 
-### Run using Cargo
+### Run
 
 Start the OpenTelemetry Collector in a separate console:
 
@@ -26,12 +26,6 @@ Run the guest:
 ```bash
 set -a && source .env && set +a
 cargo run --features http,otel,vault,azure -- run ./target/wasm32-wasip2/debug/examples/vault.wasm
-```
-
-Alternatively, using Docker Compose:
-
-```bash
-docker compose --file ./examples/vault/azurekv.yaml up
 ```
 
 ### Test

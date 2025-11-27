@@ -1,5 +1,0 @@
-name: kafka-broker
-
-include:
-  - oci://ghcr.io/credibil/compose-kafka:latest
-  - oci://ghcr.io/credibil/compose-otelcol:latest

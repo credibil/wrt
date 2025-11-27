@@ -1,16 +1,4 @@
-name: messaging
-
-services:
-  messaging:
-    extends:
-      file: ../../docker/service.yaml
-      service: wasm32
-    build:
-      args:
-        FEATURES: http,otel,messaging,kafka
-    depends_on:
-      - kafka
-      - otelcol
+name: kafka-broker
 
 include:
   - oci://ghcr.io/credibil/compose-kafka:latest

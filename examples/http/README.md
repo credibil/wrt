@@ -13,7 +13,7 @@ template.
 cargo build --example http --target wasm32-wasip2
 ```
 
-### Run using Cargo
+### Run
 
 Start the OpenTelemetry Collector in a separate console:
 
@@ -24,14 +24,6 @@ docker compose --file ./docker/otelcol.yaml up
 ```bash
 set -a && source .env && set +a
 cargo run --features http-server -- run ./target/wasm32-wasip2/debug/examples/http.wasm
-```
-
-### Run using Docker Compose
-
-Docker Compose provides an easy way to run the example with all dependencies.
-
-```bash
-docker compose --file ./examples/http/http.yaml up
 ```
 
 ### Test

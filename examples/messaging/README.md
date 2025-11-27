@@ -24,38 +24,34 @@ template.
 cargo build --example messaging --target wasm32-wasip2
 ```
 
-### Run using Cargo
+### Run NATS
 
-Start the OpenTelemetry Collector in a separate console:
+Start the NATS server and Otel Collector in a separate console:
 
 ```bash
-docker compose --file ./examples/messaging/nats-server.yaml up
-# OR
-docker compose --file ./examples/messaging/kafka-broker.yaml up
+docker compose --file ./examples/messaging/nats.yaml up
 ```
 
-Run the guest using either Kafka or NATS:
+Run the guest:
 
 ```bash
 set -a && source .env && set +a
-
-# with Kafka
-cargo run --features http,otel,messaging,kafka -- run ./target/wasm32-wasip2/debug/examples/messaging.wasm
-
-# with NATS
 cargo run --features http,otel,messaging,nats -- run ./target/wasm32-wasip2/debug/examples/messaging.wasm
 ```
 
-### Run using Docker Compose
+### Run Kafka
 
-Docker Compose provides an easy way to run the example with all dependencies.
+Start the Kafka broker and Otel Collector in a separate console:
 
 ```bash
-# with Kafka
 docker compose --file ./examples/messaging/kafka.yaml up
+```
 
-# with NATS
-docker compose --file ./examples/messaging/nats.yaml up
+Run the guest using:
+
+```bash
+set -a && source .env && set +a
+cargo run --features http,otel,messaging,kafka -- run ./target/wasm32-wasip2/debug/examples/messaging.wasm
 ```
 
 ### Test
