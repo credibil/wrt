@@ -263,11 +263,11 @@ tower-http = { version = "0.6.6", features = ["cors", "trace"] }
 tracing = "0.1.41"
 tracing-opentelemetry = "0.32.0"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter", "fmt"] }
-# wasip3 = { version = "0.3.0", features = ["http-compat"] }
-wasmtime = { version = "39.0.0", default-features = false, features = ["component-model-async"] }
-wasmtime-wasi = { version = "39.0.0", features = ["p3"] }
-wasmtime-wasi-http = { version = "39.0.0", features = ["p3"] }
-wasmtime-wasi-io = "39.0.0"
+wasip3 = { version = "0.3.0", features = ["http-compat"] }
+wasmtime = { version = "40.0.0", default-features = false, features = ["component-model-async"] }
+wasmtime-wasi = { version = "40.0.0", features = ["p3"] }
+wasmtime-wasi-http = { version = "40.0.0", features = ["p3"] }
+wasmtime-wasi-io = "40.0.0"
 wit-bindgen = { version = "0.48.1", features = ["async-spawn"] }
 
 # credibil registry
@@ -293,9 +293,9 @@ wasi-sql = { path = "crates/wasi-sql", version = "0.19.0", registry = "credibil"
 wasi-vault = { path = "crates/wasi-vault", version = "0.19.0", registry = "credibil" }
 wasi-websockets = { path = "crates/wasi-websockets", version = "0.19.0", registry = "credibil" }
 
-# [patch.crates-io]
-wasip3 = { version = "0.3.0", git = "https://github.com/bytecodealliance/wasi-rs", features = ["http-compat"] }
-# wasmtime = { git = "https://github.com/bytecodealliance/wasmtime", default-features = false, features = ["component-model-async"] }
-# wasmtime-wasi = { git = "https://github.com/bytecodealliance/wasmtime", features = ["p3"] }
-# wasmtime-wasi-http = { git = "https://github.com/bytecodealliance/wasmtime", features = ["p3"] }
-# wasmtime-wasi-io = { git = "https://github.com/bytecodealliance/wasmtime" }
+[patch.crates-io]
+wasip3 = { git = "https://github.com/bytecodealliance/wasi-rs" }
+wasmtime = { git = "https://github.com/bytecodealliance/wasmtime" }
+wasmtime-wasi = { git = "https://github.com/bytecodealliance/wasmtime" }
+wasmtime-wasi-http = { git = "https://github.com/bytecodealliance/wasmtime" }
+wasmtime-wasi-io = { git = "https://github.com/bytecodealliance/wasmtime" }
