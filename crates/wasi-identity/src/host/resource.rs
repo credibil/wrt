@@ -5,7 +5,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use futures::future::BoxFuture;
 
-pub use crate::host::generated::wasi::identity::credentials::{AccessToken, Datetime};
+pub use crate::host::generated::wasi::identity::credentials::AccessToken;
 
 pub type FutureResult<T> = BoxFuture<'static, Result<T>>;
 

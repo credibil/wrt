@@ -47,7 +47,7 @@ use wasi_keyvalue::{WasiKeyValue, WasiKeyValueCtxView, WasiKeyValueView};
 #[cfg(feature = "messaging")]
 use wasi_messaging::{WasiMessaging, WasiMessagingCtxView, WasiMessagingView};
 #[cfg(feature = "otel")]
-use wasi_otel::{GrpcOtelCtx, WasiOtel, WasiOtelCtxView, WasiOtelView};
+use wasi_otel::{DefaultOtelCtx as OtelCtx, WasiOtel, WasiOtelCtxView, WasiOtelView};
 #[cfg(feature = "sql")]
 use wasi_sql::{WasiSql, WasiSqlCtxView, WasiSqlView};
 #[cfg(feature = "vault")]
@@ -61,7 +61,7 @@ use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiVie
 
 #[derive(Debug, Clone, FromEnv)]
 pub struct RuntimeConfig {
-    #[env(from = "ENVIRONMENT", default = "dev")]
+    #[env(from = "ENV", default = "dev")]
     pub environment: String,
     #[env(from = "COMPONENT")]
     pub component: Option<String>,
@@ -130,7 +130,7 @@ pub async fn run(wasm: PathBuf) -> Result<()> {
         #[cfg(feature = "redis")]
         redis_ctx: RedisCtx::connect().await?,
         #[cfg(feature = "otel")]
-        otel_ctx: GrpcOtelCtx::connect().await?,
+        otel_ctx: OtelCtx::connect().await?,
     };
 
     // start server(s)
@@ -164,7 +164,7 @@ pub struct RunState {
     #[cfg(feature = "redis")]
     redis_ctx: RedisCtx,
     #[cfg(feature = "otel")]
-    otel_ctx: GrpcOtelCtx,
+    otel_ctx: OtelCtx,
 }
 
 impl State for RunState {
@@ -237,7 +237,7 @@ pub struct RunData {
     #[cfg(all(feature = "messaging", feature = "nats"))]
     pub messaging_ctx: NatsCtx,
     #[cfg(feature = "otel")]
-    pub otel_ctx: GrpcOtelCtx,
+    pub otel_ctx: OtelCtx,
     #[cfg(all(feature = "sql", feature = "postgres"))]
     pub sql_ctx: PostgresCtx,
     #[cfg(all(feature = "vault", feature = "azure"))]
