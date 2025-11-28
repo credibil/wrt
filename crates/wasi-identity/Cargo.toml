@@ -20,7 +20,6 @@ workspace = true
 # host dependencies
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 anyhow.workspace = true
-chrono.workspace = true
 fromenv.workspace = true
 futures.workspace = true
 oauth2 = "5.0.0"

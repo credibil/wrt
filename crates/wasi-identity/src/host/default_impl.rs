@@ -1,25 +1,26 @@
 use std::sync::Arc;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
-use anyhow::{Context, Result, anyhow};
-use chrono::Utc;
+use anyhow::{Result, anyhow};
 use fromenv::FromEnv;
 use futures::FutureExt;
 use futures::lock::Mutex;
 use oauth2::basic::{BasicClient, BasicTokenType};
 use oauth2::reqwest::{self, redirect};
 use oauth2::{
-    ClientId, ClientSecret, EmptyExtraTokenFields, Scope, StandardTokenResponse, TokenResponse,
-    TokenUrl,
+    ClientId, ClientSecret, EmptyExtraTokenFields, Scope, StandardTokenResponse,
+    TokenResponse as _, TokenUrl,
 };
 use runtime::Resource;
 use tracing::instrument;
 
 use crate::host::WasiIdentityCtx;
-pub use crate::host::generated::wasi::identity::credentials::{AccessToken, Datetime};
+pub use crate::host::generated::wasi::identity::credentials::AccessToken;
 use crate::host::resource::{FutureResult, Identity};
 
 // "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token"
+
+type TokenResponse = StandardTokenResponse<EmptyExtraTokenFields, BasicTokenType>;
 
 #[derive(Debug, Clone, FromEnv)]
 pub struct ConnectOptions {
@@ -63,50 +64,29 @@ impl WasiIdentityCtx for DefaultIdentityCtx {
 #[derive(Debug, Clone)]
 struct TokenManager {
     options: Arc<ConnectOptions>,
-    token: Arc<Mutex<CachedToken>>,
+    token: Arc<Mutex<AccessToken>>,
+    expiry: Instant,
 }
 
-#[derive(Debug, Clone)]
-struct CachedToken(AccessToken);
-
-impl CachedToken {
-    const fn new(token: AccessToken) -> Self {
-        Self(token)
-    }
-
-    fn is_expired(&self) -> bool {
-        let now = Utc::now().timestamp().cast_unsigned();
-        self.0.expiration.seconds <= now
-    }
-}
-
-impl Default for CachedToken {
+#[allow(clippy::derivable_impls)]
+impl Default for AccessToken {
     fn default() -> Self {
-        Self(AccessToken {
+        Self {
             token: String::new(),
-            expiration: Datetime {
-                seconds: 0,
-                nanoseconds: 0,
-            },
-        })
+            expires_in: 0,
+        }
     }
 }
 
-impl From<StandardTokenResponse<EmptyExtraTokenFields, BasicTokenType>> for CachedToken {
-    fn from(token_resp: StandardTokenResponse<EmptyExtraTokenFields, BasicTokenType>) -> Self {
+impl From<TokenResponse> for AccessToken {
+    fn from(token_resp: TokenResponse) -> Self {
         let token = token_resp.access_token().secret().clone();
         let expires_in = token_resp.expires_in().unwrap_or(Duration::from_secs(3600));
-        let expires = Utc::now()
-            + chrono::Duration::from_std(expires_in)
-                .unwrap_or_else(|_| chrono::Duration::seconds(3600));
 
-        Self::new(AccessToken {
+        Self {
             token,
-            expiration: Datetime {
-                seconds: expires.timestamp().cast_unsigned(),
-                nanoseconds: 0,
-            },
-        })
+            expires_in: expires_in.as_secs(),
+        }
     }
 }
 
@@ -121,15 +101,17 @@ impl TokenManager {
     fn new(options: ConnectOptions) -> Self {
         Self {
             options: Arc::new(options),
-            token: Arc::new(Mutex::new(CachedToken::default())),
+            token: Arc::new(Mutex::new(AccessToken::default())),
+            expiry: Instant::now(),
         }
     }
 
     async fn token(&self, scopes: &[String]) -> Result<AccessToken> {
         // use cached token
-        let cached_token = self.token.lock().await;
-        if !cached_token.is_expired() {
-            return Ok(cached_token.0.clone());
+        if self.expiry > Instant::now() {
+            let mut token = self.token.lock().await.clone();
+            token.expires_in = self.expiry.duration_since(Instant::now()).as_secs();
+            return Ok(token);
         }
 
         // fetch actual token
@@ -147,9 +129,9 @@ impl TokenManager {
         let token_resp = token_req.request_async(&http_client).await?;
 
         // cache new token
-        let cached_token = CachedToken::from(token_resp);
-        self.token.lock().await.clone_from(&cached_token);
+        let token = AccessToken::from(token_resp);
+        self.token.lock().await.clone_from(&token);
 
-        Ok(cached_token.0)
+        Ok(token)
     }
 }
