@@ -6,7 +6,7 @@ use opentelemetry_proto::tonic::collector::metrics::v1::metrics_service_client::
 use opentelemetry_proto::tonic::collector::trace::v1::ExportTraceServiceRequest;
 use opentelemetry_proto::tonic::collector::trace::v1::trace_service_client::TraceServiceClient;
 use runtime::Resource;
-use tonic::transport::{Channel, Endpoint};
+use tonic::transport::Channel;
 use tracing::instrument;
 
 use crate::host::{FutureResult, WasiOtelCtx};
@@ -38,9 +38,9 @@ impl Resource for DefaultOtelCtx {
             ConnectOptions::from_env().finalize().context("loading connection options")?;
         tracing::debug!("connecting to OpenTelemetry gRPC endpoint at: {}", options.grpc_url);
 
-        let endpoint = Endpoint::from_shared(options.grpc_url)?;
-        let traces_client = TraceServiceClient::connect(endpoint.clone()).await?;
-        let metrics_client = MetricsServiceClient::connect(endpoint).await?;
+        let channel = Channel::from_shared(options.grpc_url)?.connect().await?;
+        let traces_client = TraceServiceClient::new(channel.clone());
+        let metrics_client = MetricsServiceClient::new(channel);
 
         Ok(Self {
             traces_client,
