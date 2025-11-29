@@ -41,7 +41,9 @@ use wasi_blobstore::{WasiBlobstore, WasiBlobstoreCtxView, WasiBlobstoreView};
 #[cfg(feature = "http")]
 use wasi_http::{WasiHttp, WasiHttpCtx, WasiHttpCtxView, WasiHttpView};
 #[cfg(feature = "identity")]
-use wasi_identity::{WasiIdentity, WasiIdentityCtxView, WasiIdentityView};
+use wasi_identity::{
+    DefaultIdentityCtx as IdentityCtx, WasiIdentity, WasiIdentityCtxView, WasiIdentityView,
+};
 #[cfg(feature = "keyvalue")]
 use wasi_keyvalue::{WasiKeyValue, WasiKeyValueCtxView, WasiKeyValueView};
 #[cfg(feature = "messaging")]
@@ -193,6 +195,8 @@ impl State for RunState {
             blobstore_ctx: self.mongodb_ctx.clone(),
             #[cfg(feature = "http")]
             http_ctx: WasiHttpCtx,
+            #[cfg(all(feature = "identity", feature = "azure"))]
+            identity_ctx: self.azure_ctx.clone(),
             #[cfg(all(feature = "identity", feature = "azure"))]
             identity_ctx: self.azure_ctx.clone(),
             #[cfg(all(feature = "keyvalue", all(feature = "nats", not(feature = "redis"))))]
