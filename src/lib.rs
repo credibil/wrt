@@ -34,17 +34,17 @@ use fromenv::FromEnv;
 use futures::future::{BoxFuture, try_join_all};
 // Backend clients
 #[cfg(feature = "azure")]
-use res_azure::Client as AzureCtx;
+use res_azure::Client as Azure;
 #[cfg(all(feature = "kafka", not(feature = "nats")))]
-use res_kafka::Client as KafkaCtx;
+use res_kafka::Client as Kafka;
 #[cfg(feature = "mongodb")]
-use res_mongodb::Client as MongoDbCtx;
+use res_mongodb::Client as MongoDb;
 #[cfg(feature = "nats")]
-use res_nats::Client as NatsCtx;
+use res_nats::Client as Nats;
 #[cfg(feature = "postgres")]
-use res_postgres::Client as PostgresCtx;
+use res_postgres::Client as Postgres;
 #[cfg(all(feature = "redis", not(feature = "nats")))]
-use res_redis::Client as RedisCtx;
+use res_redis::Client as Redis;
 #[cfg(any(
     feature = "azure",
     feature = "kafka",
@@ -62,14 +62,14 @@ use wasi_blobstore::{WasiBlobstore, WasiBlobstoreCtxView, WasiBlobstoreView};
 use wasi_http::{WasiHttp, WasiHttpCtx, WasiHttpCtxView, WasiHttpView};
 #[cfg(feature = "identity")]
 use wasi_identity::{
-    DefaultIdentityCtx as IdentityCtx, WasiIdentity, WasiIdentityCtxView, WasiIdentityView,
+    DefaultIdentityCtx as Identity, WasiIdentity, WasiIdentityCtxView, WasiIdentityView,
 };
 #[cfg(feature = "keyvalue")]
 use wasi_keyvalue::{WasiKeyValue, WasiKeyValueCtxView, WasiKeyValueView};
 #[cfg(feature = "messaging")]
 use wasi_messaging::{WasiMessaging, WasiMessagingCtxView, WasiMessagingView};
 #[cfg(feature = "otel")]
-use wasi_otel::{DefaultOtelCtx as OtelCtx, WasiOtel, WasiOtelCtxView, WasiOtelView};
+use wasi_otel::{DefaultOtelCtx as Otel, WasiOtel, WasiOtelCtxView, WasiOtelView};
 #[cfg(feature = "sql")]
 use wasi_sql::{WasiSql, WasiSqlCtxView, WasiSqlView};
 #[cfg(feature = "vault")]
@@ -94,31 +94,6 @@ pub async fn run(wasm: PathBuf) -> Result<()> {
         Runtime::new().build(&wasm).with_context(|| format!("compiling {}", wasm.display()))?;
     let run_state = Context::new(&mut compiled).await.context("preparing runtime state")?;
     run_state.start().await.context("starting runtime services")
-}
-
-/// Implements a WASI view trait for `StoreCtx`.
-///
-/// This macro generates the boilerplate for connecting WASI interface traits
-/// to their corresponding context fields in `StoreCtx`. Each WASI interface
-/// requires a view trait that provides access to the interface context and
-/// the resource table.
-///
-/// # Arguments
-/// - `$trait` - The view trait to implement (e.g., `WasiHttpView`)
-/// - `$method` - The method name that returns the context view
-/// - `$ctx_view` - The context view type to construct
-/// - `$field` - The field in `StoreCtx` holding the context
-macro_rules! wasi_view {
-    ($trait:ident, $method:ident, $ctx_view:ident, $field:ident) => {
-        impl $trait for StoreCtx {
-            fn $method(&mut self) -> $ctx_view<'_> {
-                $ctx_view {
-                    ctx: &mut self.$field,
-                    table: &mut self.table,
-                }
-            }
-        }
-    };
 }
 
 /// Runtime configuration loaded from environment variables.
@@ -175,21 +150,21 @@ struct Context {
     instance_pre: InstancePre<StoreCtx>,
 
     #[cfg(feature = "azure")]
-    azure_ctx: AzureCtx,
+    azure_ctx: Azure,
     #[cfg(feature = "identity")]
-    identity_ctx: IdentityCtx,
+    identity: Identity,
     #[cfg(all(feature = "kafka", not(feature = "nats")))]
-    kafka_ctx: KafkaCtx,
+    kafka: Kafka,
     #[cfg(feature = "mongodb")]
-    mongodb_ctx: MongoDbCtx,
+    mongodb: MongoDb,
     #[cfg(feature = "nats")]
-    nats_ctx: NatsCtx,
+    nats: Nats,
     #[cfg(feature = "postgres")]
-    postgres_ctx: PostgresCtx,
+    postgres: Postgres,
     #[cfg(all(feature = "redis", not(feature = "nats")))]
-    redis_ctx: RedisCtx,
+    redis: Redis,
     #[cfg(feature = "otel")]
-    otel_ctx: OtelCtx,
+    otel: Otel,
 }
 
 impl Context {
@@ -218,21 +193,21 @@ impl Context {
         Ok(Self {
             instance_pre: compiled.pre_instantiate()?,
             #[cfg(feature = "azure")]
-            azure_ctx: AzureCtx::connect().await?,
+            azure: Azure::connect().await?,
             #[cfg(feature = "identity")]
-            identity_ctx: IdentityCtx::connect().await?,
+            identity: Identity::connect().await?,
             #[cfg(all(feature = "kafka", not(feature = "nats")))]
-            kafka_ctx: KafkaCtx::connect().await?,
+            kafka: Kafka::connect().await?,
             #[cfg(feature = "mongodb")]
-            mongodb_ctx: MongoDbCtx::connect().await?,
+            mongodb: MongoDb::connect().await?,
             #[cfg(feature = "nats")]
-            nats_ctx: NatsCtx::connect().await?,
+            nats: Nats::connect().await?,
             #[cfg(feature = "postgres")]
-            postgres_ctx: PostgresCtx::connect().await?,
+            postgres: Postgres::connect().await?,
             #[cfg(all(feature = "redis", not(feature = "nats")))]
-            redis_ctx: RedisCtx::connect().await?,
+            redis: Redis::connect().await?,
             #[cfg(feature = "otel")]
-            otel_ctx: OtelCtx::connect().await?,
+            otel: Otel::connect().await?,
         })
     }
 
@@ -276,36 +251,36 @@ impl State for Context {
 
             // Blobstore: prefer MongoDB over NATS
             #[cfg(all(feature = "blobstore", feature = "nats", not(feature = "mongodb")))]
-            blobstore_ctx: self.nats_ctx.clone(),
+            blobstore_ctx: self.nats.clone(),
             #[cfg(all(feature = "blobstore", feature = "mongodb"))]
-            blobstore_ctx: self.mongodb_ctx.clone(),
+            blobstore_ctx: self.mongodb.clone(),
 
             #[cfg(feature = "http")]
             http_ctx: WasiHttpCtx,
 
             #[cfg(feature = "identity")]
-            identity_ctx: self.identity_ctx.clone(),
+            identity_ctx: self.identity.clone(),
 
             // Key-value: prefer NATS over Redis
             #[cfg(all(feature = "keyvalue", feature = "redis", not(feature = "nats")))]
-            keyvalue_ctx: self.redis_ctx.clone(),
+            keyvalue_ctx: self.redis.clone(),
             #[cfg(all(feature = "keyvalue", feature = "nats"))]
-            keyvalue_ctx: self.nats_ctx.clone(),
+            keyvalue_ctx: self.nats.clone(),
 
             // Messaging: prefer NATS over Kafka
             #[cfg(all(feature = "messaging", feature = "kafka", not(feature = "nats")))]
-            messaging_ctx: self.kafka_ctx.clone(),
+            messaging_ctx: self.kafka.clone(),
             #[cfg(all(feature = "messaging", feature = "nats"))]
-            messaging_ctx: self.nats_ctx.clone(),
+            messaging_ctx: self.nats.clone(),
 
             #[cfg(feature = "otel")]
-            otel_ctx: self.otel_ctx.clone(),
+            otel_ctx: self.otel.clone(),
 
             #[cfg(all(feature = "sql", feature = "postgres"))]
-            sql_ctx: self.postgres_ctx.clone(),
+            sql_ctx: self.postgres.clone(),
 
             #[cfg(all(feature = "vault", feature = "azure"))]
-            vault_ctx: self.azure_ctx.clone(),
+            vault_ctx: self.azure.clone(),
 
             #[cfg(feature = "websockets")]
             websockets_ctx: DefaultWebSocketsCtx,
@@ -327,9 +302,9 @@ pub struct StoreCtx {
 
     /// Blobstore context (NATS or MongoDB backend).
     #[cfg(all(feature = "blobstore", feature = "nats", not(feature = "mongodb")))]
-    pub blobstore_ctx: NatsCtx,
+    pub blobstore_ctx: Nats,
     #[cfg(all(feature = "blobstore", feature = "mongodb"))]
-    pub blobstore_ctx: MongoDbCtx,
+    pub blobstore_ctx: MongoDb,
 
     /// HTTP client/server context.
     #[cfg(feature = "http")]
@@ -337,31 +312,31 @@ pub struct StoreCtx {
 
     /// Identity/authentication context.
     #[cfg(feature = "identity")]
-    pub identity_ctx: IdentityCtx,
+    pub identity_ctx: Identity,
 
     /// Key-value storage context (NATS or Redis backend).
     #[cfg(all(feature = "keyvalue", feature = "redis", not(feature = "nats")))]
-    pub keyvalue_ctx: RedisCtx,
+    pub keyvalue_ctx: Redis,
     #[cfg(all(feature = "keyvalue", feature = "nats"))]
-    pub keyvalue_ctx: NatsCtx,
+    pub keyvalue_ctx: Nats,
 
     /// Messaging context (Kafka or NATS backend).
     #[cfg(all(feature = "messaging", feature = "kafka", not(feature = "nats")))]
-    pub messaging_ctx: KafkaCtx,
+    pub messaging_ctx: Kafka,
     #[cfg(all(feature = "messaging", feature = "nats"))]
-    pub messaging_ctx: NatsCtx,
+    pub messaging_ctx: Nats,
 
     /// OpenTelemetry observability context.
     #[cfg(feature = "otel")]
-    pub otel_ctx: OtelCtx,
+    pub otel_ctx: Otel,
 
     /// SQL database context (`PostgreSQL` backend).
     #[cfg(all(feature = "sql", feature = "postgres"))]
-    pub sql_ctx: PostgresCtx,
+    pub sql_ctx: Postgres,
 
     /// Secrets vault context (Azure Key Vault backend).
     #[cfg(all(feature = "vault", feature = "azure"))]
-    pub vault_ctx: AzureCtx,
+    pub vault_ctx: Azure,
 
     /// `WebSocket` context.
     #[cfg(feature = "websockets")]
@@ -373,6 +348,31 @@ pub struct StoreCtx {
 // ============================================================================
 // Generate the trait implementations to connect WASI interfaces to their
 // corresponding context in `StoreCtx`.
+
+/// Implements a WASI view trait for `StoreCtx`.
+///
+/// This macro generates the boilerplate for connecting WASI interface traits
+/// to their corresponding context fields in `StoreCtx`. Each WASI interface
+/// requires a view trait that provides access to the interface context and
+/// the resource table.
+///
+/// # Arguments
+/// - `$trait` - The view trait to implement (e.g., `WasiHttpView`)
+/// - `$method` - The method name that returns the context view
+/// - `$ctx_view` - The context view type to construct
+/// - `$field` - The field in `StoreCtx` holding the context
+macro_rules! wasi_view {
+    ($trait:ident, $method:ident, $ctx_view:ident, $field:ident) => {
+        impl $trait for StoreCtx {
+            fn $method(&mut self) -> $ctx_view<'_> {
+                $ctx_view {
+                    ctx: &mut self.$field,
+                    table: &mut self.table,
+                }
+            }
+        }
+    };
+}
 
 wasi_view!(WasiView, ctx, WasiCtxView, wasi_ctx);
 
