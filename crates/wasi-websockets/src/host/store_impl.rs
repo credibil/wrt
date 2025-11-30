@@ -1,13 +1,11 @@
 use anyhow::anyhow;
-use futures::future::BoxFuture;
+pub use runtime::FutureResult;
 use wasmtime::component::{Accessor, Resource};
 
 use crate::host::generated::wasi::websockets::store::{HostServerWithStore, HostWithStore};
 use crate::host::generated::wasi::websockets::types::{Error, Peer};
 use crate::host::resource::WebSocketProxy;
 use crate::host::{Result, WasiWebSockets};
-
-pub type FutureResult<T> = BoxFuture<'static, Result<T>>;
 
 impl HostWithStore for WasiWebSockets {
     async fn get_server<T>(

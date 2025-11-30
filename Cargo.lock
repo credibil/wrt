@@ -3965,6 +3965,7 @@ dependencies = [
  "clap",
  "credibil-otel",
  "fromenv",
+ "futures",
  "tracing",
  "wasmtime",
  "wasmtime-wasi",

@@ -27,6 +27,7 @@ cfg-if.workspace = true
 clap = { version = "4.5.53", features = ["derive"] }
 credibil-otel.workspace = true
 fromenv.workspace = true
+futures.workspace = true
 tracing.workspace = true
 wasmtime = { workspace = true, features = ["runtime"] }
 wasmtime-wasi.workspace = true

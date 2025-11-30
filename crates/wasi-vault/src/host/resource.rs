@@ -2,10 +2,7 @@ use std::fmt::Debug;
 use std::ops::Deref;
 use std::sync::Arc;
 
-use anyhow::Result;
-use futures::future::BoxFuture;
-
-pub type FutureResult<T> = BoxFuture<'static, Result<T>>;
+pub use runtime::FutureResult;
 
 /// Providers implement the [`Locker`] trait to allow the host to
 /// interact with different backend lockers (stores).

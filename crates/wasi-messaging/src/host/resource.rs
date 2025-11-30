@@ -5,14 +5,11 @@ use std::ops::{Deref, DerefMut};
 use std::pin::Pin;
 use std::sync::Arc;
 
-use anyhow::Result;
 use futures::Stream;
-use futures::future::BoxFuture;
+pub use runtime::FutureResult;
 use serde::{Deserialize, Serialize};
 
 use crate::host::generated::wasi::messaging::types;
-
-pub type FutureResult<T> = BoxFuture<'static, Result<T>>;
 pub type Subscriptions = Pin<Box<dyn Stream<Item = MessageProxy> + Send>>;
 
 #[allow(unused_variables)]

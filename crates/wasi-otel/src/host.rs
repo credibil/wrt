@@ -22,17 +22,13 @@ mod generated {
 
 use std::fmt::Debug;
 
-use anyhow::Result;
-use futures::future::BoxFuture;
 use opentelemetry_proto::tonic::collector::metrics::v1::ExportMetricsServiceRequest;
 use opentelemetry_proto::tonic::collector::trace::v1::ExportTraceServiceRequest;
-use runtime::Host;
+use runtime::{FutureResult, Host};
 use wasmtime::component::{HasData, Linker, ResourceTable};
 
 pub use self::default_impl::DefaultOtelCtx;
 use self::generated::wasi::otel as wasi;
-
-pub type FutureResult<T> = BoxFuture<'static, Result<T>>;
 
 impl<T> Host<T> for WasiOtel
 where

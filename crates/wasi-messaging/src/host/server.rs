@@ -11,7 +11,7 @@ use crate::host::resource::{MessageProxy, Subscriptions};
 pub async fn run<S>(state: &S) -> Result<()>
 where
     S: State,
-    <S as State>::StoreData: WasiMessagingView,
+    <S as State>::StoreCtx: WasiMessagingView,
 {
     tracing::info!("starting messaging server");
 
@@ -34,7 +34,7 @@ where
 struct Handler<S>
 where
     S: State,
-    <S as State>::StoreData: WasiMessagingView,
+    <S as State>::StoreCtx: WasiMessagingView,
 {
     state: S,
 }
@@ -42,7 +42,7 @@ where
 impl<S> Handler<S>
 where
     S: State,
-    <S as State>::StoreData: WasiMessagingView,
+    <S as State>::StoreCtx: WasiMessagingView,
 {
     // Get subscriptions for the topics configured in the wasm component.
     async fn subscriptions(&self) -> Result<Subscriptions> {
