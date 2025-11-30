@@ -286,11 +286,11 @@ impl State for RunState {
             #[cfg(feature = "identity")]
             identity_ctx: self.identity_ctx.clone(),
 
-            // Key-value: prefer Redis over NATS
-            #[cfg(all(feature = "keyvalue", feature = "nats", not(feature = "redis")))]
-            keyvalue_ctx: self.nats_ctx.clone(),
-            #[cfg(all(feature = "keyvalue", feature = "redis"))]
+            // Key-value: prefer NATS over Redis
+            #[cfg(all(feature = "keyvalue", feature = "redis", not(feature = "nats")))]
             keyvalue_ctx: self.redis_ctx.clone(),
+            #[cfg(all(feature = "keyvalue", feature = "nats"))]
+            keyvalue_ctx: self.nats_ctx.clone(),
 
             // Messaging: prefer NATS over Kafka
             #[cfg(all(feature = "messaging", feature = "kafka", not(feature = "nats")))]
