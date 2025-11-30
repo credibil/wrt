@@ -642,7 +642,7 @@ version = "0.30.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.jsonschema]]
-version = "0.37.3"
+version = "0.37.4"
 criteria = "safe-to-deploy"
 
 [[exemptions.libredox]]
@@ -950,7 +950,7 @@ version = "0.30.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.referencing]]
-version = "0.37.3"
+version = "0.37.4"
 criteria = "safe-to-deploy"
 
 [[exemptions.regex-lite]]
@@ -1458,11 +1458,11 @@ version = "0.8.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.zerocopy]]
-version = "0.8.30"
+version = "0.8.31"
 criteria = "safe-to-deploy"
 
 [[exemptions.zerocopy-derive]]
-version = "0.8.30"
+version = "0.8.31"
 criteria = "safe-to-deploy"
 
 [[exemptions.zerotrie]]
