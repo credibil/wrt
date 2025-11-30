@@ -70,8 +70,8 @@ use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiVie
 pub async fn run(wasm: PathBuf) -> Result<()> {
     RuntimeConfig::from_wasm(&wasm)?;
 
-    let mut compiled = Runtime::new().build::<RunData>(&wasm)?;
-    let run_state = RunState::from_compiled(&mut compiled).await?;
+    let mut compiled = Runtime::new().build(&wasm)?;
+    let run_state = RunState::new(&mut compiled).await?;
     run_state.start().await
 }
 
@@ -142,7 +142,7 @@ pub struct RunState {
 }
 
 impl RunState {
-    async fn from_compiled(compiled: &mut Compiled<RunData>) -> Result<Self> {
+    async fn new(compiled: &mut Compiled<RunData>) -> Result<Self> {
         #[cfg(feature = "blobstore")]
         compiled.link(WasiBlobstore)?;
         #[cfg(feature = "http")]
@@ -278,14 +278,7 @@ pub struct RunData {
     pub websockets_ctx: DefaultWebSocketsCtx,
 }
 
-impl WasiView for RunData {
-    fn ctx(&mut self) -> WasiCtxView<'_> {
-        WasiCtxView {
-            ctx: &mut self.wasi_ctx,
-            table: &mut self.table,
-        }
-    }
-}
+wasi_view!(WasiView, ctx, WasiCtxView, wasi_ctx);
 
 #[cfg(feature = "blobstore")]
 wasi_view!(WasiBlobstoreView, blobstore, WasiBlobstoreCtxView, blobstore_ctx);
