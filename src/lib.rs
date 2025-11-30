@@ -61,6 +61,20 @@ use wasi_websockets::{
 use wasmtime::component::InstancePre;
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 
+// Helper macro to implement the `WasiView` trait for a given feature.
+macro_rules! wasi_view {
+    ($trait:ident, $method:ident, $ctx_view:ident, $field:ident) => {
+        impl $trait for RunData {
+            fn $method(&mut self) -> $ctx_view<'_> {
+                $ctx_view {
+                    ctx: &mut self.$field,
+                    table: &mut self.table,
+                }
+            }
+        }
+    };
+}
+
 #[derive(Debug, Clone, FromEnv)]
 pub struct RuntimeConfig {
     #[env(from = "ENV", default = "dev")]
@@ -121,6 +135,8 @@ pub async fn run(wasm: PathBuf) -> Result<()> {
 
         #[cfg(feature = "azure")]
         azure_ctx: AzureCtx::connect().await?,
+        #[cfg(feature = "identity")]
+        identity_ctx: IdentityCtx::connect().await?,
         #[cfg(all(feature = "kafka", not(feature = "nats")))]
         kafka_ctx: KafkaCtx::connect().await?,
         #[cfg(feature = "mongodb")]
@@ -155,6 +171,8 @@ pub struct RunState {
 
     #[cfg(feature = "azure")]
     azure_ctx: AzureCtx,
+    #[cfg(feature = "identity")]
+    identity_ctx: IdentityCtx,
     #[cfg(all(feature = "kafka", not(feature = "nats")))]
     kafka_ctx: KafkaCtx,
     #[cfg(feature = "mongodb")]
@@ -189,21 +207,19 @@ impl State for RunState {
         RunData {
             table: ResourceTable::new(),
             wasi_ctx,
-            #[cfg(all(feature = "blobstore", all(feature = "nats", not(feature = "mongodb"))))]
+            #[cfg(all(feature = "blobstore", feature = "nats", not(feature = "mongodb")))]
             blobstore_ctx: self.nats_ctx.clone(),
             #[cfg(all(feature = "blobstore", feature = "mongodb"))]
             blobstore_ctx: self.mongodb_ctx.clone(),
             #[cfg(feature = "http")]
             http_ctx: WasiHttpCtx,
-            #[cfg(all(feature = "identity", feature = "azure"))]
-            identity_ctx: self.azure_ctx.clone(),
-            #[cfg(all(feature = "identity", feature = "azure"))]
-            identity_ctx: self.azure_ctx.clone(),
-            #[cfg(all(feature = "keyvalue", all(feature = "nats", not(feature = "redis"))))]
+            #[cfg(feature = "identity")]
+            identity_ctx: self.identity_ctx.clone(),
+            #[cfg(all(feature = "keyvalue", feature = "nats", not(feature = "redis")))]
             keyvalue_ctx: self.nats_ctx.clone(),
             #[cfg(all(feature = "keyvalue", feature = "redis"))]
             keyvalue_ctx: self.redis_ctx.clone(),
-            #[cfg(all(feature = "messaging", all(feature = "kafka", not(feature = "nats"))))]
+            #[cfg(all(feature = "messaging", feature = "kafka", not(feature = "nats")))]
             messaging_ctx: self.kafka_ctx.clone(),
             #[cfg(all(feature = "messaging", feature = "nats"))]
             messaging_ctx: self.nats_ctx.clone(),
@@ -224,19 +240,19 @@ impl State for RunState {
 pub struct RunData {
     pub table: ResourceTable,
     pub wasi_ctx: WasiCtx,
-    #[cfg(all(feature = "blobstore", all(feature = "nats", not(feature = "mongodb"))))]
+    #[cfg(all(feature = "blobstore", feature = "nats", not(feature = "mongodb")))]
     pub blobstore_ctx: NatsCtx,
     #[cfg(all(feature = "blobstore", feature = "mongodb"))]
     pub blobstore_ctx: MongoDbCtx,
     #[cfg(feature = "http")]
     pub http_ctx: WasiHttpCtx,
-    #[cfg(all(feature = "identity", feature = "azure"))]
-    pub identity_ctx: AzureCtx,
-    #[cfg(all(feature = "keyvalue", all(feature = "nats", not(feature = "redis"))))]
+    #[cfg(feature = "identity")]
+    pub identity_ctx: IdentityCtx,
+    #[cfg(all(feature = "keyvalue", feature = "nats", not(feature = "redis")))]
     pub keyvalue_ctx: NatsCtx,
     #[cfg(all(feature = "keyvalue", feature = "redis"))]
     pub keyvalue_ctx: RedisCtx,
-    #[cfg(all(feature = "messaging", all(feature = "kafka", not(feature = "nats"))))]
+    #[cfg(all(feature = "messaging", feature = "kafka", not(feature = "nats")))]
     pub messaging_ctx: KafkaCtx,
     #[cfg(all(feature = "messaging", feature = "nats"))]
     pub messaging_ctx: NatsCtx,
@@ -260,91 +276,28 @@ impl WasiView for RunData {
 }
 
 #[cfg(feature = "blobstore")]
-impl WasiBlobstoreView for RunData {
-    fn blobstore(&mut self) -> WasiBlobstoreCtxView<'_> {
-        WasiBlobstoreCtxView {
-            ctx: &mut self.blobstore_ctx,
-            table: &mut self.table,
-        }
-    }
-}
+wasi_view!(WasiBlobstoreView, blobstore, WasiBlobstoreCtxView, blobstore_ctx);
 
 #[cfg(feature = "http")]
-impl WasiHttpView for RunData {
-    fn http(&mut self) -> WasiHttpCtxView<'_> {
-        WasiHttpCtxView {
-            ctx: &mut self.http_ctx,
-            table: &mut self.table,
-        }
-    }
-}
+wasi_view!(WasiHttpView, http, WasiHttpCtxView, http_ctx);
 
 #[cfg(feature = "identity")]
-impl WasiIdentityView for RunData {
-    fn identity(&mut self) -> WasiIdentityCtxView<'_> {
-        WasiIdentityCtxView {
-            ctx: &mut self.identity_ctx,
-            table: &mut self.table,
-        }
-    }
-}
+wasi_view!(WasiIdentityView, identity, WasiIdentityCtxView, identity_ctx);
 
 #[cfg(feature = "keyvalue")]
-impl WasiKeyValueView for RunData {
-    fn keyvalue(&mut self) -> WasiKeyValueCtxView<'_> {
-        WasiKeyValueCtxView {
-            ctx: &mut self.keyvalue_ctx,
-            table: &mut self.table,
-        }
-    }
-}
+wasi_view!(WasiKeyValueView, keyvalue, WasiKeyValueCtxView, keyvalue_ctx);
 
 #[cfg(feature = "messaging")]
-impl WasiMessagingView for RunData {
-    fn messaging(&mut self) -> WasiMessagingCtxView<'_> {
-        WasiMessagingCtxView {
-            ctx: &mut self.messaging_ctx,
-            table: &mut self.table,
-        }
-    }
-}
+wasi_view!(WasiMessagingView, messaging, WasiMessagingCtxView, messaging_ctx);
 
 #[cfg(feature = "otel")]
-impl WasiOtelView for RunData {
-    fn otel(&mut self) -> WasiOtelCtxView<'_> {
-        WasiOtelCtxView {
-            ctx: &mut self.otel_ctx,
-            table: &mut self.table,
-        }
-    }
-}
+wasi_view!(WasiOtelView, otel, WasiOtelCtxView, otel_ctx);
 
 #[cfg(feature = "sql")]
-impl WasiSqlView for RunData {
-    fn sql(&mut self) -> WasiSqlCtxView<'_> {
-        WasiSqlCtxView {
-            ctx: &mut self.sql_ctx,
-            table: &mut self.table,
-        }
-    }
-}
+wasi_view!(WasiSqlView, sql, WasiSqlCtxView, sql_ctx);
 
 #[cfg(feature = "vault")]
-impl WasiVaultView for RunData {
-    fn vault(&mut self) -> WasiVaultCtxView<'_> {
-        WasiVaultCtxView {
-            ctx: &mut self.vault_ctx,
-            table: &mut self.table,
-        }
-    }
-}
+wasi_view!(WasiVaultView, vault, WasiVaultCtxView, vault_ctx);
 
 #[cfg(feature = "websockets")]
-impl WebSocketsView for RunData {
-    fn start(&mut self) -> WasiWebSocketsCtxView<'_> {
-        WasiWebSocketsCtxView {
-            ctx: &mut self.websockets_ctx,
-            table: &mut self.table,
-        }
-    }
-}
+wasi_view!(WebSocketsView, start, WasiWebSocketsCtxView, websockets_ctx);
