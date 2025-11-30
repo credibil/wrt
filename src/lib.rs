@@ -29,9 +29,9 @@ pub mod env;
 
 use std::path::{Path, PathBuf};
 
-use anyhow::{Context, Result};
+use anyhow::{Context as _, Result};
 use fromenv::FromEnv;
-use futures::future::try_join_all;
+use futures::future::{BoxFuture, try_join_all};
 // Backend clients
 #[cfg(feature = "azure")]
 use res_azure::Client as AzureCtx;
@@ -43,7 +43,7 @@ use res_mongodb::Client as MongoDbCtx;
 use res_nats::Client as NatsCtx;
 #[cfg(feature = "postgres")]
 use res_postgres::Client as PostgresCtx;
-#[cfg(feature = "redis")]
+#[cfg(all(feature = "redis", not(feature = "nats")))]
 use res_redis::Client as RedisCtx;
 #[cfg(any(
     feature = "azure",
@@ -92,14 +92,14 @@ pub async fn run(wasm: PathBuf) -> Result<()> {
 
     let mut compiled =
         Runtime::new().build(&wasm).with_context(|| format!("compiling {}", wasm.display()))?;
-    let run_state = RunState::new(&mut compiled).await.context("preparing runtime state")?;
+    let run_state = Context::new(&mut compiled).await.context("preparing runtime state")?;
     run_state.start().await.context("starting runtime services")
 }
 
-/// Implements a WASI view trait for `RunData`.
+/// Implements a WASI view trait for `StoreCtx`.
 ///
 /// This macro generates the boilerplate for connecting WASI interface traits
-/// to their corresponding context fields in `RunData`. Each WASI interface
+/// to their corresponding context fields in `StoreCtx`. Each WASI interface
 /// requires a view trait that provides access to the interface context and
 /// the resource table.
 ///
@@ -107,10 +107,10 @@ pub async fn run(wasm: PathBuf) -> Result<()> {
 /// - `$trait` - The view trait to implement (e.g., `WasiHttpView`)
 /// - `$method` - The method name that returns the context view
 /// - `$ctx_view` - The context view type to construct
-/// - `$field` - The field in `RunData` holding the context
+/// - `$field` - The field in `StoreCtx` holding the context
 macro_rules! wasi_view {
     ($trait:ident, $method:ident, $ctx_view:ident, $field:ident) => {
-        impl $trait for RunData {
+        impl $trait for StoreCtx {
             fn $method(&mut self) -> $ctx_view<'_> {
                 $ctx_view {
                     ctx: &mut self.$field,
@@ -171,8 +171,8 @@ impl RuntimeConfig {
 /// This struct is cloneable and shared across request handlers. Each backend
 /// context is connected during initialization and cloned for each request.
 #[derive(Clone)]
-pub struct RunState {
-    instance_pre: InstancePre<RunData>,
+struct Context {
+    instance_pre: InstancePre<StoreCtx>,
 
     #[cfg(feature = "azure")]
     azure_ctx: AzureCtx,
@@ -186,15 +186,15 @@ pub struct RunState {
     nats_ctx: NatsCtx,
     #[cfg(feature = "postgres")]
     postgres_ctx: PostgresCtx,
-    #[cfg(feature = "redis")]
+    #[cfg(all(feature = "redis", not(feature = "nats")))]
     redis_ctx: RedisCtx,
     #[cfg(feature = "otel")]
     otel_ctx: OtelCtx,
 }
 
-impl RunState {
+impl Context {
     /// Creates a new runtime state by linking WASI interfaces and connecting to backends.
-    async fn new(compiled: &mut Compiled<RunData>) -> Result<Self> {
+    async fn new(compiled: &mut Compiled<StoreCtx>) -> Result<Self> {
         // Link all enabled WASI interfaces to the component
         #[cfg(feature = "blobstore")]
         compiled.link(WasiBlobstore)?;
@@ -229,7 +229,7 @@ impl RunState {
             nats_ctx: NatsCtx::connect().await?,
             #[cfg(feature = "postgres")]
             postgres_ctx: PostgresCtx::connect().await?,
-            #[cfg(feature = "redis")]
+            #[cfg(all(feature = "redis", not(feature = "nats")))]
             redis_ctx: RedisCtx::connect().await?,
             #[cfg(feature = "otel")]
             otel_ctx: OtelCtx::connect().await?,
@@ -241,27 +241,27 @@ impl RunState {
     /// All servers run concurrently and the function returns when any server fails.
     #[allow(clippy::vec_init_then_push)]
     async fn start(&self) -> Result<()> {
-        try_join_all(vec![
+        let futures: Vec<BoxFuture<'_, Result<()>>> = vec![
             #[cfg(feature = "http")]
             Box::pin(WasiHttp.run(self)),
             #[cfg(feature = "messaging")]
             Box::pin(WasiMessaging.run(self)),
             #[cfg(feature = "websockets")]
             Box::pin(WasiWebSockets.run(self)),
-        ])
-        .await?;
+        ];
+        try_join_all(futures).await?;
         Ok(())
     }
 }
 
-impl State for RunState {
-    type StoreData = RunData;
+impl State for Context {
+    type StoreCtx = StoreCtx;
 
-    fn instance_pre(&self) -> &InstancePre<Self::StoreData> {
+    fn instance_pre(&self) -> &InstancePre<Self::StoreCtx> {
         &self.instance_pre
     }
 
-    fn new_store(&self) -> Self::StoreData {
+    fn new_store(&self) -> Self::StoreCtx {
         let wasi_ctx = WasiCtxBuilder::new()
             .inherit_args()
             .inherit_env()
@@ -270,7 +270,7 @@ impl State for RunState {
             .stderr(tokio::io::stderr())
             .build();
 
-        RunData {
+        StoreCtx {
             table: ResourceTable::new(),
             wasi_ctx,
 
@@ -315,10 +315,10 @@ impl State for RunState {
 
 /// Per-request data shared between the WebAssembly runtime and host functions.
 ///
-/// Each component instantiation receives its own `RunData` with cloned backend
+/// Each component instantiation receives its own `StoreCtx` with cloned backend
 /// contexts. The `table` field manages WASI resource handles, while individual
 /// `*_ctx` fields provide access to the corresponding WASI interface backends.
-pub struct RunData {
+pub struct StoreCtx {
     /// Resource table for managing WASI handles.
     pub table: ResourceTable,
 
@@ -340,10 +340,10 @@ pub struct RunData {
     pub identity_ctx: IdentityCtx,
 
     /// Key-value storage context (NATS or Redis backend).
-    #[cfg(all(feature = "keyvalue", feature = "nats", not(feature = "redis")))]
-    pub keyvalue_ctx: NatsCtx,
-    #[cfg(all(feature = "keyvalue", feature = "redis"))]
+    #[cfg(all(feature = "keyvalue", feature = "redis", not(feature = "nats")))]
     pub keyvalue_ctx: RedisCtx,
+    #[cfg(all(feature = "keyvalue", feature = "nats"))]
+    pub keyvalue_ctx: NatsCtx,
 
     /// Messaging context (Kafka or NATS backend).
     #[cfg(all(feature = "messaging", feature = "kafka", not(feature = "nats")))]
@@ -355,7 +355,7 @@ pub struct RunData {
     #[cfg(feature = "otel")]
     pub otel_ctx: OtelCtx,
 
-    /// SQL database context (PostgreSQL backend).
+    /// SQL database context (`PostgreSQL` backend).
     #[cfg(all(feature = "sql", feature = "postgres"))]
     pub sql_ctx: PostgresCtx,
 
@@ -363,7 +363,7 @@ pub struct RunData {
     #[cfg(all(feature = "vault", feature = "azure"))]
     pub vault_ctx: AzureCtx,
 
-    /// WebSocket context.
+    /// `WebSocket` context.
     #[cfg(feature = "websockets")]
     pub websockets_ctx: DefaultWebSocketsCtx,
 }
@@ -371,8 +371,8 @@ pub struct RunData {
 // ============================================================================
 // WASI View Implementations
 // ============================================================================
-// Generate the trait implementations to connect WASI interfaces to their 
-// corresponding context in `RunData`.
+// Generate the trait implementations to connect WASI interfaces to their
+// corresponding context in `StoreCtx`.
 
 wasi_view!(WasiView, ctx, WasiCtxView, wasi_ctx);
 
