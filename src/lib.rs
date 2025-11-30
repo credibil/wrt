@@ -313,7 +313,7 @@ impl State for Context {
     }
 }
 
-/// Per-request data shared between the WebAssembly runtime and host functions.
+/// Per-instance data shared between the WebAssembly runtime and host functions.
 ///
 /// Each component instantiation receives its own `StoreCtx` with cloned backend
 /// contexts. The `table` field manages WASI resource handles, while individual
