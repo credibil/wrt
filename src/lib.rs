@@ -8,9 +8,9 @@ pub mod env;
 
 use std::path::{Path, PathBuf};
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use fromenv::FromEnv;
-use futures::future::{BoxFuture, TryJoinAll};
+use futures::future::try_join_all;
 #[cfg(feature = "azure")]
 use res_azure::Client as AzureCtx;
 #[cfg(all(feature = "kafka", not(feature = "nats")))]
@@ -70,9 +70,10 @@ use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiVie
 pub async fn run(wasm: PathBuf) -> Result<()> {
     RuntimeConfig::from_wasm(&wasm)?;
 
-    let mut compiled = Runtime::new().build(&wasm)?;
-    let run_state = RunState::new(&mut compiled).await?;
-    run_state.start().await
+    let mut compiled =
+        Runtime::new().build(&wasm).with_context(|| format!("compiling {}", wasm.display()))?;
+    let run_state = RunState::new(&mut compiled).await.context("preparing runtime state")?;
+    run_state.start().await.context("starting runtime services")
 }
 
 // Helper macro to implement the `WasiView` trait for a given feature.
@@ -166,9 +167,9 @@ impl RunState {
             instance_pre: compiled.pre_instantiate()?,
 
             #[cfg(feature = "azure")]
-            azure_ctx: AzureCtx::connect().await?,
+            azure_ctx,
             #[cfg(feature = "identity")]
-            identity_ctx: IdentityCtx::connect().await?,
+            identity_ctx,
             #[cfg(all(feature = "kafka", not(feature = "nats")))]
             kafka_ctx: KafkaCtx::connect().await?,
             #[cfg(feature = "mongodb")]
@@ -185,16 +186,15 @@ impl RunState {
     }
 
     async fn start(&self) -> Result<()> {
-        let futures: Vec<BoxFuture<'_, Result<()>>> = vec![
+        try_join_all(vec![
             #[cfg(feature = "http")]
             Box::pin(WasiHttp.run(self)),
             #[cfg(feature = "messaging")]
             Box::pin(WasiMessaging.run(self)),
             #[cfg(feature = "websockets")]
             Box::pin(WasiWebSockets.run(self)),
-        ];
-
-        futures.into_iter().collect::<TryJoinAll<_>>().await?;
+        ])
+        .await?;
         Ok(())
     }
 }
