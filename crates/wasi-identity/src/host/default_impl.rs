@@ -61,13 +61,6 @@ impl WasiIdentityCtx for DefaultIdentityCtx {
     }
 }
 
-#[derive(Debug, Clone)]
-struct TokenManager {
-    options: Arc<ConnectOptions>,
-    token: Arc<Mutex<AccessToken>>,
-    expiry: Instant,
-}
-
 #[allow(clippy::derivable_impls)]
 impl Default for AccessToken {
     fn default() -> Self {
@@ -90,6 +83,30 @@ impl From<TokenResponse> for AccessToken {
     }
 }
 
+#[derive(Debug, Clone)]
+struct CachedToken {
+    access_token: AccessToken,
+    expires_at: Instant,
+}
+
+impl CachedToken {
+    fn new(access_token: AccessToken) -> Self {
+        let ttl = Duration::from_secs(access_token.expires_in);
+        let expires_at = Instant::now() + ttl;
+
+        Self {
+            access_token,
+            expires_at,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+struct TokenManager {
+    options: Arc<ConnectOptions>,
+    cache: Arc<Mutex<CachedToken>>,
+}
+
 impl Identity for TokenManager {
     fn get_token(&self, scopes: Vec<String>) -> FutureResult<AccessToken> {
         let token_manager = self.clone();
@@ -101,24 +118,28 @@ impl TokenManager {
     fn new(options: ConnectOptions) -> Self {
         Self {
             options: Arc::new(options),
-            token: Arc::new(Mutex::new(AccessToken::default())),
-            expiry: Instant::now(),
+            cache: Arc::new(Mutex::new(CachedToken {
+                access_token: AccessToken::default(),
+                expires_at: Instant::now(),
+            })),
         }
     }
 
     async fn token(&self, scopes: &[String]) -> Result<AccessToken> {
-        // use cached token
-        if self.expiry > Instant::now() {
-            let mut token = self.token.lock().await.clone();
-            token.expires_in = self.expiry.duration_since(Instant::now()).as_secs();
-            return Ok(token);
+        let now = Instant::now();
+
+        // use cached token if still valid
+        {
+            let cache = self.cache.lock().await;
+            if cache.expires_at > now {
+                return Ok(cache.access_token.clone());
+            }
         }
 
-        // fetch actual token
+        // fetch new token
         let oauth2_client = BasicClient::new(ClientId::new(self.options.client_id.clone()))
             .set_client_secret(ClientSecret::new(self.options.client_secret.clone()))
             .set_token_uri(TokenUrl::new(self.options.token_url.clone())?);
-
         let http_client =
             reqwest::ClientBuilder::new().redirect(redirect::Policy::none()).build()?;
 
@@ -129,9 +150,40 @@ impl TokenManager {
         let token_resp = token_req.request_async(&http_client).await?;
 
         // cache new token
-        let token = AccessToken::from(token_resp);
-        self.token.lock().await.clone_from(&token);
+        let access_token = AccessToken::from(token_resp);
+        {
+            let cached_token = CachedToken::new(access_token.clone());
+            *self.cache.lock().await = cached_token;
+        };
 
-        Ok(token)
+        Ok(access_token)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn uses_cached_token_when_not_expired() {
+        let manager = TokenManager::new(ConnectOptions {
+            client_id: "test-client".to_string(),
+            client_secret: "test-secret".to_string(),
+            token_url: "https://example.com/token".to_string(),
+        });
+
+        // seed cache
+        {
+            let mut cache = manager.cache.lock().await;
+            cache.access_token = AccessToken {
+                token: "cached-token".to_string(),
+                expires_in: 60,
+            };
+            cache.expires_at = Instant::now() + Duration::from_secs(60);
+        };
+
+        let token = manager.token(&[]).await.expect("token from cache");
+        assert_eq!(token.token, "cached-token");
+        assert!(token.expires_in > 0);
     }
 }

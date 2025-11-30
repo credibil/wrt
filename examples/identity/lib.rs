@@ -27,7 +27,7 @@ async fn handler() -> Result<Json<Value>> {
     let identity = block_on(get_identity("identity".to_string())).context("gettting identity")?;
     let access_token = block_on(async move { identity.get_token(vec![]).await })
         .context("getting access token")?;
-    
+
     println!("{}", access_token.token);
 
     Ok(Json(json!({
