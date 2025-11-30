@@ -247,43 +247,43 @@ impl State for Context {
 
         StoreCtx {
             table: ResourceTable::new(),
-            wasi_ctx,
+            wasi: wasi_ctx,
 
-            // Blobstore: prefer MongoDB over NATS
+            // Blobstore (favouring MongoDB over NATS)
             #[cfg(all(feature = "blobstore", feature = "nats", not(feature = "mongodb")))]
-            blobstore_ctx: self.nats.clone(),
+            blobstore: self.nats.clone(),
             #[cfg(all(feature = "blobstore", feature = "mongodb"))]
-            blobstore_ctx: self.mongodb.clone(),
+            blobstore: self.mongodb.clone(),
 
             #[cfg(feature = "http")]
-            http_ctx: WasiHttpCtx,
+            http: WasiHttpCtx,
 
             #[cfg(feature = "identity")]
-            identity_ctx: self.identity.clone(),
+            identity: self.identity.clone(),
 
-            // Key-value: prefer NATS over Redis
+            // Key-value (favouring NATS over Redis)
             #[cfg(all(feature = "keyvalue", feature = "redis", not(feature = "nats")))]
-            keyvalue_ctx: self.redis.clone(),
+            keyvalue: self.redis.clone(),
             #[cfg(all(feature = "keyvalue", feature = "nats"))]
-            keyvalue_ctx: self.nats.clone(),
+            keyvalue: self.nats.clone(),
 
-            // Messaging: prefer NATS over Kafka
+            // Messaging (favouring NATS over Kafka)
             #[cfg(all(feature = "messaging", feature = "kafka", not(feature = "nats")))]
-            messaging_ctx: self.kafka.clone(),
+            messaging: self.kafka.clone(),
             #[cfg(all(feature = "messaging", feature = "nats"))]
-            messaging_ctx: self.nats.clone(),
+            messaging: self.nats.clone(),
 
             #[cfg(feature = "otel")]
-            otel_ctx: self.otel.clone(),
+            otel: self.otel.clone(),
 
             #[cfg(all(feature = "sql", feature = "postgres"))]
-            sql_ctx: self.postgres.clone(),
+            sql: self.postgres.clone(),
 
             #[cfg(all(feature = "vault", feature = "azure"))]
-            vault_ctx: self.azure.clone(),
+            vault: self.azure.clone(),
 
             #[cfg(feature = "websockets")]
-            websockets_ctx: DefaultWebSocketsCtx,
+            websockets: DefaultWebSocketsCtx,
         }
     }
 }
@@ -298,49 +298,46 @@ pub struct StoreCtx {
     pub table: ResourceTable,
 
     /// Core WASI context (filesystem, environment, stdio).
-    pub wasi_ctx: WasiCtx,
+    pub wasi: WasiCtx,
 
     /// Blobstore context (NATS or MongoDB backend).
     #[cfg(all(feature = "blobstore", feature = "nats", not(feature = "mongodb")))]
-    pub blobstore_ctx: Nats,
+    pub blobstore: Nats,
     #[cfg(all(feature = "blobstore", feature = "mongodb"))]
-    pub blobstore_ctx: MongoDb,
+    pub blobstore: MongoDb,
 
     /// HTTP client/server context.
     #[cfg(feature = "http")]
-    pub http_ctx: WasiHttpCtx,
+    pub http: WasiHttpCtx,
 
     /// Identity/authentication context.
     #[cfg(feature = "identity")]
-    pub identity_ctx: Identity,
-
+    pub identity: Identity,
     /// Key-value storage context (NATS or Redis backend).
     #[cfg(all(feature = "keyvalue", feature = "redis", not(feature = "nats")))]
-    pub keyvalue_ctx: Redis,
+    pub keyvalue: Redis,
     #[cfg(all(feature = "keyvalue", feature = "nats"))]
-    pub keyvalue_ctx: Nats,
+    pub keyvalue: Nats,
 
     /// Messaging context (Kafka or NATS backend).
     #[cfg(all(feature = "messaging", feature = "kafka", not(feature = "nats")))]
-    pub messaging_ctx: Kafka,
+    pub messaging: Kafka,
     #[cfg(all(feature = "messaging", feature = "nats"))]
-    pub messaging_ctx: Nats,
+    pub messaging: Nats,
 
     /// OpenTelemetry observability context.
     #[cfg(feature = "otel")]
-    pub otel_ctx: Otel,
-
+    pub otel: Otel,
     /// SQL database context (`PostgreSQL` backend).
     #[cfg(all(feature = "sql", feature = "postgres"))]
-    pub sql_ctx: Postgres,
+    pub sql: Postgres,
 
     /// Secrets vault context (Azure Key Vault backend).
     #[cfg(all(feature = "vault", feature = "azure"))]
-    pub vault_ctx: Azure,
-
+    pub vault: Azure,
     /// `WebSocket` context.
     #[cfg(feature = "websockets")]
-    pub websockets_ctx: DefaultWebSocketsCtx,
+    pub websockets: DefaultWebSocketsCtx,
 }
 
 // ============================================================================
@@ -374,23 +371,23 @@ macro_rules! wasi_view {
     };
 }
 
-wasi_view!(WasiView, ctx, WasiCtxView, wasi_ctx);
+wasi_view!(WasiView, ctx, WasiCtxView, wasi);
 
 #[cfg(feature = "blobstore")]
-wasi_view!(WasiBlobstoreView, blobstore, WasiBlobstoreCtxView, blobstore_ctx);
+wasi_view!(WasiBlobstoreView, blobstore, WasiBlobstoreCtxView, blobstore);
 #[cfg(feature = "http")]
-wasi_view!(WasiHttpView, http, WasiHttpCtxView, http_ctx);
+wasi_view!(WasiHttpView, http, WasiHttpCtxView, http);
 #[cfg(feature = "identity")]
-wasi_view!(WasiIdentityView, identity, WasiIdentityCtxView, identity_ctx);
+wasi_view!(WasiIdentityView, identity, WasiIdentityCtxView, identity);
 #[cfg(feature = "keyvalue")]
-wasi_view!(WasiKeyValueView, keyvalue, WasiKeyValueCtxView, keyvalue_ctx);
+wasi_view!(WasiKeyValueView, keyvalue, WasiKeyValueCtxView, keyvalue);
 #[cfg(feature = "messaging")]
-wasi_view!(WasiMessagingView, messaging, WasiMessagingCtxView, messaging_ctx);
+wasi_view!(WasiMessagingView, messaging, WasiMessagingCtxView, messaging);
 #[cfg(feature = "otel")]
-wasi_view!(WasiOtelView, otel, WasiOtelCtxView, otel_ctx);
+wasi_view!(WasiOtelView, otel, WasiOtelCtxView, otel);
 #[cfg(feature = "sql")]
-wasi_view!(WasiSqlView, sql, WasiSqlCtxView, sql_ctx);
+wasi_view!(WasiSqlView, sql, WasiSqlCtxView, sql);
 #[cfg(feature = "vault")]
-wasi_view!(WasiVaultView, vault, WasiVaultCtxView, vault_ctx);
+wasi_view!(WasiVaultView, vault, WasiVaultCtxView, vault);
 #[cfg(feature = "websockets")]
-wasi_view!(WebSocketsView, start, WasiWebSocketsCtxView, websockets_ctx);
+wasi_view!(WebSocketsView, start, WasiWebSocketsCtxView, websockets);
