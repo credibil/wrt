@@ -1,6 +1,6 @@
 # HTTP Server Example
 
-This example implements a simple HTTP server using `wasi-http`. 
+This example implements a simple HTTP server using `wasi-http`.
 
 ## Quick Start
 

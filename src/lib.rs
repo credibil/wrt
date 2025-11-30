@@ -6,7 +6,7 @@
 
 pub mod env;
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use anyhow::Result;
 use fromenv::FromEnv;
@@ -35,7 +35,7 @@ use res_redis::Client as RedisCtx;
 use runtime::Resource;
 #[cfg(any(feature = "http", feature = "messaging", feature = "websockets"))]
 use runtime::Server;
-use runtime::{Runtime, State};
+use runtime::{Compiled, Runtime, State};
 #[cfg(feature = "blobstore")]
 use wasi_blobstore::{WasiBlobstore, WasiBlobstoreCtxView, WasiBlobstoreView};
 #[cfg(feature = "http")]
@@ -61,6 +61,20 @@ use wasi_websockets::{
 use wasmtime::component::InstancePre;
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 
+/// Run the specified wasm guest using the specified top-level feature set.
+///
+/// # Errors
+///
+/// Returns an error if the wasm file cannot be run, or if the runtime fails to
+/// instantiate the component.
+pub async fn run(wasm: PathBuf) -> Result<()> {
+    RuntimeConfig::from_wasm(&wasm)?;
+
+    let mut compiled = Runtime::new().build::<RunData>(&wasm)?;
+    let run_state = RunState::from_compiled(&mut compiled).await?;
+    run_state.start().await
+}
+
 // Helper macro to implement the `WasiView` trait for a given feature.
 macro_rules! wasi_view {
     ($trait:ident, $method:ident, $ctx_view:ident, $field:ident) => {
@@ -85,84 +99,24 @@ pub struct RuntimeConfig {
     pub otel_grpc_url: Option<String>,
 }
 
-/// Run the specified wasm guest using the specified top-level feature set.
-///
-/// # Errors
-///
-/// Returns an error if the wasm file cannot be run, or if the runtime fails to
-/// instantiate the component.
-pub async fn run(wasm: PathBuf) -> Result<()> {
-    let mut config = RuntimeConfig::from_env().finalize()?;
+impl RuntimeConfig {
+    fn from_wasm(wasm: &Path) -> Result<Self> {
+        let mut config = Self::from_env().finalize()?;
+        let component = wasm.file_stem().and_then(|s| s.to_str()).unwrap_or("unknown").to_string();
 
-    // SAFETY: Setting environment variables is safe at this point because it
-    // the runtime still starting and no threads have been spawned.
-    unsafe {
-        let component = wasm.file_stem().and_then(|s| s.to_str()).unwrap_or("unknown");
-        if std::env::var("COMPONENT").is_err() {
-            config.component = Some(component.to_string());
-            std::env::set_var("COMPONENT", component);
-        }
-        #[cfg(feature = "kafka")]
-        std::env::set_var("KAFKA_CLIENT_ID", format!("{component}-{}", &config.environment));
-    };
+        // SAFETY: Setting environment variables is safe at this point because the
+        // runtime is still starting and no threads have been spawned.
+        unsafe {
+            if std::env::var("COMPONENT").is_err() {
+                config.component = Some(component.clone());
+                std::env::set_var("COMPONENT", &component);
+            }
+            #[cfg(feature = "kafka")]
+            std::env::set_var("KAFKA_CLIENT_ID", format!("{component}-{}", &config.environment));
+        };
 
-    // load or compile wasm component
-    let mut compiled = Runtime::new().from_file::<RunData>(&wasm)?;
-
-    // link dependencies
-    #[cfg(feature = "blobstore")]
-    compiled.link(WasiBlobstore)?;
-    #[cfg(feature = "http")]
-    compiled.link(WasiHttp)?;
-    #[cfg(feature = "identity")]
-    compiled.link(WasiIdentity)?;
-    #[cfg(feature = "keyvalue")]
-    compiled.link(WasiKeyValue)?;
-    #[cfg(feature = "messaging")]
-    compiled.link(WasiMessaging)?;
-    #[cfg(feature = "otel")]
-    compiled.link(WasiOtel)?;
-    #[cfg(feature = "sql")]
-    compiled.link(WasiSql)?;
-    #[cfg(feature = "vault")]
-    compiled.link(WasiVault)?;
-    #[cfg(feature = "websockets")]
-    compiled.link(WasiWebSockets)?;
-
-    // prepare state
-    let run_state = RunState {
-        instance_pre: compiled.pre_instantiate()?,
-
-        #[cfg(feature = "azure")]
-        azure_ctx: AzureCtx::connect().await?,
-        #[cfg(feature = "identity")]
-        identity_ctx: IdentityCtx::connect().await?,
-        #[cfg(all(feature = "kafka", not(feature = "nats")))]
-        kafka_ctx: KafkaCtx::connect().await?,
-        #[cfg(feature = "mongodb")]
-        mongodb_ctx: MongoDbCtx::connect().await?,
-        #[cfg(feature = "nats")]
-        nats_ctx: NatsCtx::connect().await?,
-        #[cfg(feature = "postgres")]
-        postgres_ctx: PostgresCtx::connect().await?,
-        #[cfg(feature = "redis")]
-        redis_ctx: RedisCtx::connect().await?,
-        #[cfg(feature = "otel")]
-        otel_ctx: OtelCtx::connect().await?,
-    };
-
-    // start server(s)
-    let futures: Vec<BoxFuture<'_, Result<()>>> = vec![
-        #[cfg(feature = "http")]
-        Box::pin(WasiHttp.run(&run_state)),
-        #[cfg(feature = "messaging")]
-        Box::pin(WasiMessaging.run(&run_state)),
-        #[cfg(feature = "websockets")]
-        Box::pin(WasiWebSockets.run(&run_state)),
-    ];
-    futures.into_iter().collect::<TryJoinAll<_>>().await?;
-
-    Ok(())
+        Ok(config)
+    }
 }
 
 #[derive(Clone)]
@@ -185,6 +139,64 @@ pub struct RunState {
     redis_ctx: RedisCtx,
     #[cfg(feature = "otel")]
     otel_ctx: OtelCtx,
+}
+
+impl RunState {
+    async fn from_compiled(compiled: &mut Compiled<RunData>) -> Result<Self> {
+        #[cfg(feature = "blobstore")]
+        compiled.link(WasiBlobstore)?;
+        #[cfg(feature = "http")]
+        compiled.link(WasiHttp)?;
+        #[cfg(feature = "identity")]
+        compiled.link(WasiIdentity)?;
+        #[cfg(feature = "keyvalue")]
+        compiled.link(WasiKeyValue)?;
+        #[cfg(feature = "messaging")]
+        compiled.link(WasiMessaging)?;
+        #[cfg(feature = "otel")]
+        compiled.link(WasiOtel)?;
+        #[cfg(feature = "sql")]
+        compiled.link(WasiSql)?;
+        #[cfg(feature = "vault")]
+        compiled.link(WasiVault)?;
+        #[cfg(feature = "websockets")]
+        compiled.link(WasiWebSockets)?;
+
+        Ok(Self {
+            instance_pre: compiled.pre_instantiate()?,
+
+            #[cfg(feature = "azure")]
+            azure_ctx: AzureCtx::connect().await?,
+            #[cfg(feature = "identity")]
+            identity_ctx: IdentityCtx::connect().await?,
+            #[cfg(all(feature = "kafka", not(feature = "nats")))]
+            kafka_ctx: KafkaCtx::connect().await?,
+            #[cfg(feature = "mongodb")]
+            mongodb_ctx: MongoDbCtx::connect().await?,
+            #[cfg(feature = "nats")]
+            nats_ctx: NatsCtx::connect().await?,
+            #[cfg(feature = "postgres")]
+            postgres_ctx: PostgresCtx::connect().await?,
+            #[cfg(feature = "redis")]
+            redis_ctx: RedisCtx::connect().await?,
+            #[cfg(feature = "otel")]
+            otel_ctx: OtelCtx::connect().await?,
+        })
+    }
+
+    async fn start(&self) -> Result<()> {
+        let futures: Vec<BoxFuture<'_, Result<()>>> = vec![
+            #[cfg(feature = "http")]
+            Box::pin(WasiHttp.run(self)),
+            #[cfg(feature = "messaging")]
+            Box::pin(WasiMessaging.run(self)),
+            #[cfg(feature = "websockets")]
+            Box::pin(WasiWebSockets.run(self)),
+        ];
+
+        futures.into_iter().collect::<TryJoinAll<_>>().await?;
+        Ok(())
+    }
 }
 
 impl State for RunState {
