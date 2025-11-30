@@ -371,8 +371,8 @@ pub struct RunData {
 // ============================================================================
 // WASI View Implementations
 // ============================================================================
-// These macro invocations generate the trait implementations that connect
-// each WASI interface to its corresponding context in RunData.
+// Generate the trait implementations to connect WASI interfaces to their 
+// corresponding context in `RunData`.
 
 wasi_view!(WasiView, ctx, WasiCtxView, wasi_ctx);
 
