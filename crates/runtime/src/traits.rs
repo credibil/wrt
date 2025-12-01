@@ -14,7 +14,7 @@ use wasmtime::component::{InstancePre, Linker};
 pub type FutureResult<T> = BoxFuture<'static, Result<T>>;
 
 pub trait State: Clone + Send + Sync + 'static {
-    type StoreCtx: Send + 'static;
+    type StoreCtx: Send;
 
     #[must_use]
     fn new_store(&self) -> Self::StoreCtx;
