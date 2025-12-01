@@ -18,11 +18,11 @@ mod generated {
             default: async | store | tracing | trappable,
         },
         with: {
-            "wasi:keyvalue/store/bucket": BucketProxy,
-            "wasi:keyvalue/atomics/cas": Cas,
+            "wasi:keyvalue/store.bucket": BucketProxy,
+            "wasi:keyvalue/atomics.cas": Cas,
         },
         trappable_error_type: {
-            "wasi:keyvalue/store/error" => Error,
+            "wasi:keyvalue/store.error" => Error,
         },
     });
 }

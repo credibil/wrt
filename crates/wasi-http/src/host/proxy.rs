@@ -2,7 +2,7 @@ use base64ct::{Base64, Encoding};
 use bytes::Bytes;
 use futures::Future;
 use http_body_util::BodyExt;
-use http_body_util::combinators::BoxBody;
+use http_body_util::combinators::UnsyncBoxBody;
 use wasmtime_wasi::TrappableError;
 use wasmtime_wasi_http::p3::bindings::http::types::ErrorCode;
 use wasmtime_wasi_http::p3::{self, RequestOptions};
@@ -19,13 +19,13 @@ pub struct WasiHttpCtx;
 
 impl p3::WasiHttpCtx for WasiHttpCtx {
     fn send_request(
-        &mut self, request: http::Request<BoxBody<Bytes, ErrorCode>>,
+        &mut self, request: http::Request<UnsyncBoxBody<Bytes, ErrorCode>>,
         _options: Option<RequestOptions>,
         fut: Box<dyn Future<Output = Result<(), ErrorCode>> + Send>,
     ) -> Box<
         dyn Future<
                 Output = HttpResult<(
-                    http::Response<BoxBody<Bytes, ErrorCode>>,
+                    http::Response<UnsyncBoxBody<Bytes, ErrorCode>>,
                     Box<dyn Future<Output = Result<(), ErrorCode>> + Send>,
                 )>,
             > + Send,
@@ -62,7 +62,7 @@ impl p3::WasiHttpCtx for WasiHttpCtx {
 
             let converted: http::Response<reqwest::Body> = resp.into();
             let (parts, body) = converted.into_parts();
-            let body = body.map_err(into_error).boxed();
+            let body = body.map_err(into_error).boxed_unsync();
             let response = http::Response::from_parts(parts, body);
 
             Ok((response, fut))

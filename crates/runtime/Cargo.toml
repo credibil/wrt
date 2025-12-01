@@ -24,9 +24,10 @@ jit = ["wasmtime/cranelift"]
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 anyhow.workspace = true
 cfg-if.workspace = true
-clap = { version = "4.5.52", features = ["derive"] }
+clap = { version = "4.5.53", features = ["derive"] }
 credibil-otel.workspace = true
 fromenv.workspace = true
+futures.workspace = true
 tracing.workspace = true
 wasmtime = { workspace = true, features = ["runtime"] }
 wasmtime-wasi.workspace = true

@@ -2,12 +2,9 @@ use std::fmt::Debug;
 use std::ops::Deref;
 use std::sync::Arc;
 
-use anyhow::Result;
-use futures::future::BoxFuture;
+pub use runtime::FutureResult;
 
 use crate::host::generated::wasi::blobstore::container::{ContainerMetadata, ObjectMetadata};
-
-pub type FutureResult<T> = BoxFuture<'static, Result<T>>;
 
 /// Providers implement the [`Container`] trait to allow the host to
 /// interact with different backend containers.

@@ -22,10 +22,10 @@ impl HostWithStore for WasiIdentity {
 
 impl HostIdentityWithStore for WasiIdentity {
     async fn get_token<T>(
-        accessor: &Accessor<T, Self>, self_: Resource<IdentityProxy>, scope: Vec<String>,
+        accessor: &Accessor<T, Self>, self_: Resource<IdentityProxy>, scopes: Vec<String>,
     ) -> Result<AccessToken> {
         let identity = get_identity(accessor, &self_)?;
-        let token = identity.0.get_token(scope).await.context("issue getting access token")?;
+        let token = identity.0.get_token(scopes).await.context("issue getting access token")?;
         Ok(token)
     }
 

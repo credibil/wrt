@@ -43,7 +43,7 @@ impl Runtime {
     /// as a `Component` or the `Linker` cannot be initialized with WASI
     /// support.
     #[instrument(skip(self))]
-    pub fn from_file<T: WasiView + 'static>(self, wasm: &PathBuf) -> Result<Compiled<T>> {
+    pub fn build<T: WasiView + 'static>(self, wasm: &PathBuf) -> Result<Compiled<T>> {
         if self.tracing {
             init_tracing(wasm)?;
         }

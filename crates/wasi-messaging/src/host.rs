@@ -21,12 +21,12 @@ mod generated {
             default: async | store | tracing | trappable,
         },
         with: {
-            "wasi:messaging/request-reply/request-options": RequestOptions,
-            "wasi:messaging/types/client": ClientProxy,
-            "wasi:messaging/types/message": MessageProxy,
+            "wasi:messaging/request-reply.request-options": RequestOptions,
+            "wasi:messaging/types.client": ClientProxy,
+            "wasi:messaging/types.message": MessageProxy,
         },
         trappable_error_type: {
-            "wasi:messaging/types/error" => Error,
+            "wasi:messaging/types.error" => Error,
         },
     });
 }
@@ -59,7 +59,7 @@ where
 impl<S> Server<S> for WasiMessaging
 where
     S: State,
-    <S as State>::StoreData: WasiMessagingView,
+    <S as State>::StoreCtx: WasiMessagingView,
 {
     async fn run(&self, state: &S) -> anyhow::Result<()> {
         server::run(state).await

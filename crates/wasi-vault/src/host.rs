@@ -18,10 +18,10 @@ mod generated {
             default: async | store | tracing | trappable,
         },
         with: {
-            "wasi:vault/vault/locker": LockerProxy,
+            "wasi:vault/vault.locker": LockerProxy,
         },
         trappable_error_type: {
-            "wasi:vault/vault/error" => Error,
+            "wasi:vault/vault.error" => Error,
         },
     });
 }
