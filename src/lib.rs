@@ -150,7 +150,7 @@ struct Context {
     instance_pre: InstancePre<StoreCtx>,
 
     #[cfg(feature = "azure")]
-    azure_ctx: Azure,
+    azure: Azure,
     #[cfg(feature = "identity")]
     identity: Identity,
     #[cfg(all(feature = "kafka", not(feature = "nats")))]
