@@ -142,17 +142,12 @@ impl Message for NatsMessage {
     }
 
     fn metadata(&self) -> Option<Metadata> {
-        if self.0.headers.is_none() {
-            None
-        } else {
-            let mut md = HashMap::new();
-            for (k, v) in self.0.headers.as_ref().unwrap().iter() {
-                let v_str =
-                    v.iter().map(|val| val.as_str().into()).collect::<Vec<String>>().join(", ");
-                md.insert(k.to_string(), v_str);
-            }
-            Some(Metadata { inner: md })
+        let mut md = HashMap::new();
+        for (k, v) in self.0.headers.as_ref()?.iter() {
+            let v_str = v.iter().map(ToString::to_string).collect::<Vec<String>>().join(", ");
+            md.insert(k.to_string(), v_str);
         }
+        Some(Metadata { inner: md })
     }
 
     fn description(&self) -> Option<String> {
