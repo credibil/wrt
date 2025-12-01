@@ -18,8 +18,6 @@ use crate::host::WasiIdentityCtx;
 pub use crate::host::generated::wasi::identity::credentials::AccessToken;
 use crate::host::resource::{FutureResult, Identity};
 
-// "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token"
-
 type TokenResponse = StandardTokenResponse<EmptyExtraTokenFields, BasicTokenType>;
 
 #[derive(Debug, Clone, FromEnv)]
@@ -129,14 +127,12 @@ impl TokenManager {
         let now = Instant::now();
 
         // use cached token if still valid
-        {
-            let cache = self.cache.lock().await;
-            if cache.expires_at > now {
-                return Ok(cache.access_token.clone());
-            }
+        let cache = self.cache.lock().await;
+        if cache.expires_at > now {
+            return Ok(cache.access_token.clone());
         }
 
-        // fetch new token
+        // if we drop through we need to fetch a new token
         let oauth2_client = BasicClient::new(ClientId::new(self.options.client_id.clone()))
             .set_client_secret(ClientSecret::new(self.options.client_secret.clone()))
             .set_token_uri(TokenUrl::new(self.options.token_url.clone())?);
@@ -149,15 +145,15 @@ impl TokenManager {
         }
 
         let token_resp = token_req.request_async(&http_client).await?;
-
-        // cache new token
         let access_token = AccessToken::from(token_resp);
-        {
-            let cached_token = CachedToken::new(access_token.clone());
-            *self.cache.lock().await = cached_token;
-        };
 
-        Ok(access_token)
+        // double-check locking as another thread may have refreshed the token
+        let mut cache = self.cache.lock().await;
+        if cache.expires_at <= now {
+            *cache = CachedToken::new(access_token.clone());
+        }
+
+        Ok(cache.access_token.clone())
     }
 }
 
