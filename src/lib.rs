@@ -60,8 +60,10 @@ use runtime::{Compiled, Runtime, Server, State};
 use wasi_blobstore::{WasiBlobstore, WasiBlobstoreCtxView, WasiBlobstoreView};
 #[cfg(feature = "http")]
 use wasi_http::{WasiHttp, WasiHttpCtx, WasiHttpCtxView, WasiHttpView};
+#[cfg(all(feature = "identity", not(feature = "azure")))]
+use wasi_identity::DefaultIdentity;
 #[cfg(feature = "identity")]
-use wasi_identity::{DefaultIdentity, WasiIdentity, WasiIdentityCtxView, WasiIdentityView};
+use wasi_identity::{WasiIdentity, WasiIdentityCtxView, WasiIdentityView};
 #[cfg(feature = "keyvalue")]
 use wasi_keyvalue::{WasiKeyValue, WasiKeyValueCtxView, WasiKeyValueView};
 #[cfg(feature = "messaging")]
