@@ -315,7 +315,7 @@ pub struct StoreCtx {
     #[cfg(all(feature = "identity", not(feature = "azure")))]
     pub identity: DefaultIdentity,
     #[cfg(all(feature = "identity", feature = "azure"))]
-    pub azure: Azure,
+    pub identity: Azure,
 
     /// Key-value storage context (NATS or Redis backend).
     #[cfg(all(feature = "keyvalue", feature = "redis", not(feature = "nats")))]
