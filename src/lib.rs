@@ -328,6 +328,7 @@ pub struct StoreCtx {
     /// OpenTelemetry observability context.
     #[cfg(feature = "otel")]
     pub otel: Otel,
+
     /// SQL database context (`PostgreSQL` backend).
     #[cfg(all(feature = "sql", feature = "postgres"))]
     pub sql: Postgres,
@@ -335,6 +336,7 @@ pub struct StoreCtx {
     /// Secrets vault context (Azure Key Vault backend).
     #[cfg(all(feature = "vault", feature = "azure"))]
     pub vault: Azure,
+
     /// `WebSocket` context.
     #[cfg(feature = "websockets")]
     pub websockets: DefaultWebSocketsCtx,
