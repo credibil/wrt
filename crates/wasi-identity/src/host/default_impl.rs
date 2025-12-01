@@ -102,6 +102,7 @@ impl CachedToken {
 #[derive(Debug, Clone)]
 struct TokenManager {
     options: Arc<ConnectOptions>,
+    // TODO: change to use wasi-keyvalue for distributed caching
     cache: Arc<Mutex<CachedToken>>,
 }
 
