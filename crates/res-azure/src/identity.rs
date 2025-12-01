@@ -1,10 +1,11 @@
 use std::fmt::Debug;
 use std::sync::Arc;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use azure_core::credentials::TokenCredential;
 use azure_identity::{ManagedIdentityCredential, ManagedIdentityCredentialOptions, UserAssignedId};
 use futures::future::FutureExt;
-use wasi_identity::{AccessToken, Datetime, FutureResult, Identity, WasiIdentityCtx};
+use wasi_identity::{AccessToken, FutureResult, Identity, WasiIdentityCtx};
 
 use crate::Client;
 
@@ -44,15 +45,13 @@ impl Identity for AzIdentity {
             let scope = scopes.iter().map(AsRef::as_ref).collect::<Vec<_>>();
             let access_token = credential.get_token(&scope, None).await?;
 
-            let expiration = Datetime {
-                #[allow(clippy::cast_sign_loss)]
-                seconds: access_token.expires_on.to_utc().unix_timestamp() as u64,
-                nanoseconds: 0,
-            };
+            let now_ts = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
+            let expires_ts = access_token.expires_on.to_utc().unix_timestamp().unsigned_abs();
+            let expires_in = expires_ts.saturating_sub(now_ts);
 
             Ok(AccessToken {
                 token: access_token.token.secret().into(),
-                expiration,
+                expires_in,
             })
         }
         .boxed()

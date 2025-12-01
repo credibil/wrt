@@ -26,7 +26,7 @@ where
 impl<S> Server<S> for WasiHttp
 where
     S: State,
-    <S as State>::StoreData: WasiHttpView,
+    <S as State>::StoreCtx: WasiHttpView,
 {
     async fn run(&self, state: &S) -> Result<()> {
         server::serve(state).await

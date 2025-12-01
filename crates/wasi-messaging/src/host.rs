@@ -59,7 +59,7 @@ where
 impl<S> Server<S> for WasiMessaging
 where
     S: State,
-    <S as State>::StoreData: WasiMessagingView,
+    <S as State>::StoreCtx: WasiMessagingView,
 {
     async fn run(&self, state: &S) -> anyhow::Result<()> {
         server::run(state).await

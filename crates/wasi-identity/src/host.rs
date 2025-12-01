@@ -3,6 +3,7 @@
 //! This module implements the host-side logic for the WASI Identity service.
 
 mod credentials_impl;
+mod default_impl;
 mod resource;
 mod types_impl;
 
@@ -35,6 +36,7 @@ use wasmtime::component::{HasData, Linker};
 use wasmtime_wasi::ResourceTable;
 
 use self::generated::wasi::identity::credentials;
+pub use crate::host::default_impl::*;
 pub use crate::host::resource::*;
 
 impl<T> Host<T> for WasiIdentity

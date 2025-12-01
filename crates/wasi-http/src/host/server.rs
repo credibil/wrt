@@ -30,7 +30,7 @@ const DEF_HTTP_URL: &str = "0.0.0.0:8080";
 pub async fn serve<S>(state: &S) -> Result<()>
 where
     S: State,
-    <S as State>::StoreData: WasiHttpView,
+    <S as State>::StoreCtx: WasiHttpView,
 {
     let addr = env::var("HTTP_ADDR").unwrap_or_else(|_| DEF_HTTP_URL.into());
     let listener = TcpListener::bind(&addr).await?;
@@ -73,7 +73,7 @@ where
 struct Handler<S>
 where
     S: State,
-    <S as State>::StoreData: WasiHttpView,
+    <S as State>::StoreCtx: WasiHttpView,
 {
     state: S,
 }
@@ -81,7 +81,7 @@ where
 impl<S> Handler<S>
 where
     S: State,
-    <S as State>::StoreData: WasiHttpView,
+    <S as State>::StoreCtx: WasiHttpView,
 {
     // Forward request to the wasm Guest.
     async fn handle(
