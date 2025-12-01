@@ -31,5 +31,5 @@ cargo run --features http,otel,identity -- run ./target/wasm32-wasip2/debug/exam
 ### Test
 
 ```bash
-curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://localhost:8080
+curl http://localhost:8080
 ```

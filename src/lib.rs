@@ -61,9 +61,7 @@ use wasi_blobstore::{WasiBlobstore, WasiBlobstoreCtxView, WasiBlobstoreView};
 #[cfg(feature = "http")]
 use wasi_http::{WasiHttp, WasiHttpCtx, WasiHttpCtxView, WasiHttpView};
 #[cfg(feature = "identity")]
-use wasi_identity::{
-    DefaultIdentityCtx as Identity, WasiIdentity, WasiIdentityCtxView, WasiIdentityView,
-};
+use wasi_identity::{DefaultIdentity, WasiIdentity, WasiIdentityCtxView, WasiIdentityView};
 #[cfg(feature = "keyvalue")]
 use wasi_keyvalue::{WasiKeyValue, WasiKeyValueCtxView, WasiKeyValueView};
 #[cfg(feature = "messaging")]
@@ -151,8 +149,8 @@ struct Context {
 
     #[cfg(feature = "azure")]
     azure: Azure,
-    #[cfg(feature = "identity")]
-    identity: Identity,
+    #[cfg(all(feature = "identity", not(feature = "azure")))]
+    identity: DefaultIdentity,
     #[cfg(all(feature = "kafka", not(feature = "nats")))]
     kafka: Kafka,
     #[cfg(feature = "mongodb")]
@@ -194,8 +192,8 @@ impl Context {
             instance_pre: compiled.pre_instantiate()?,
             #[cfg(feature = "azure")]
             azure: Azure::connect().await?,
-            #[cfg(feature = "identity")]
-            identity: Identity::connect().await?,
+            #[cfg(all(feature = "identity", not(feature = "azure")))]
+            identity: DefaultIdentity::connect().await?,
             #[cfg(all(feature = "kafka", not(feature = "nats")))]
             kafka: Kafka::connect().await?,
             #[cfg(feature = "mongodb")]
@@ -258,8 +256,11 @@ impl State for Context {
             #[cfg(feature = "http")]
             http: WasiHttpCtx,
 
-            #[cfg(feature = "identity")]
+            // Identity (favouring Azure over default)
+            #[cfg(all(feature = "identity", not(feature = "azure")))]
             identity: self.identity.clone(),
+            #[cfg(all(feature = "identity", feature = "azure"))]
+            identity: self.azure.clone(),
 
             // Key-value (favouring NATS over Redis)
             #[cfg(all(feature = "keyvalue", feature = "redis", not(feature = "nats")))]
@@ -311,8 +312,11 @@ pub struct StoreCtx {
     pub http: WasiHttpCtx,
 
     /// Identity/authentication context.
-    #[cfg(feature = "identity")]
-    pub identity: Identity,
+    #[cfg(all(feature = "identity", not(feature = "azure")))]
+    pub identity: DefaultIdentity,
+    #[cfg(all(feature = "identity", feature = "azure"))]
+    pub azure: Azure,
+
     /// Key-value storage context (NATS or Redis backend).
     #[cfg(all(feature = "keyvalue", feature = "redis", not(feature = "nats")))]
     pub keyvalue: Redis,

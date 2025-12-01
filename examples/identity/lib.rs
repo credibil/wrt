@@ -11,6 +11,8 @@ use wasip3::exports::http::handler::Guest;
 use wasip3::http::types::{ErrorCode, Request, Response};
 use wit_bindgen::block_on;
 
+const SCOPE: &str = "https://management.azure.com/.default";
+
 struct Http;
 wasip3::http::proxy::export!(Http);
 
@@ -24,11 +26,13 @@ impl Guest for Http {
 
 #[wasi_otel::instrument]
 async fn handler() -> Result<Json<Value>> {
-    let identity = block_on(get_identity("identity".to_string())).context("gettting identity")?;
-    let access_token = block_on(async move { identity.get_token(vec![]).await })
+    let identity = block_on(get_identity("identity".to_string())).context("getting identity")?;
+
+    let scopes = vec![SCOPE.to_string()];
+    let access_token = block_on(async move { identity.get_token(scopes).await })
         .context("getting access token")?;
 
-    println!("{}", access_token.token);
+    println!("access token: {}", access_token.token);
 
     Ok(Json(json!({
         "message": "Hello, World!"

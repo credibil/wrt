@@ -39,11 +39,11 @@ impl runtime::FromEnv for ConnectOptions {
 }
 
 #[derive(Debug, Clone)]
-pub struct DefaultIdentityCtx {
+pub struct DefaultIdentity {
     token_manager: TokenManager,
 }
 
-impl Resource for DefaultIdentityCtx {
+impl Resource for DefaultIdentity {
     type ConnectOptions = ConnectOptions;
 
     #[instrument]
@@ -53,7 +53,7 @@ impl Resource for DefaultIdentityCtx {
     }
 }
 
-impl WasiIdentityCtx for DefaultIdentityCtx {
+impl WasiIdentityCtx for DefaultIdentity {
     fn get_identity(&self, _name: String) -> FutureResult<Arc<dyn Identity>> {
         let token_manager = self.token_manager.clone();
 
@@ -147,6 +147,7 @@ impl TokenManager {
         for scope in scopes {
             token_req = token_req.add_scope(Scope::new(scope.clone()));
         }
+
         let token_resp = token_req.request_async(&http_client).await?;
 
         // cache new token
