@@ -365,6 +365,10 @@ criteria = "safe-to-deploy"
 version = "0.5.4"
 criteria = "safe-to-deploy"
 
+[[exemptions.crossbeam-deque]]
+version = "0.8.6"
+criteria = "safe-to-deploy"
+
 [[exemptions.crossbeam-epoch]]
 version = "0.9.8"
 criteria = "safe-to-deploy"
@@ -1282,7 +1286,7 @@ version = "2.5.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.wasip3]]
-version = "0.3.0+wasi-0.3.0-rc-2025-09-16@git:f8693c2ce2b87ef25104b6d431a330ba2b9358cd"
+version = "0.3.1+wasi-0.3.0-rc-2025-09-16@git:79b1ddf41a7cc3d3f82e20980281fe8491879905"
 criteria = "safe-to-deploy"
 
 [[exemptions.wasite]]
