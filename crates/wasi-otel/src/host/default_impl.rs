@@ -32,7 +32,7 @@ pub struct DefaultOtelCtx {
 impl Resource for DefaultOtelCtx {
     type ConnectOptions = ConnectOptions;
 
-    #[instrument(name = "GrpcOtel::connect_with")]
+    #[instrument]
     async fn connect_with(options: Self::ConnectOptions) -> Result<Self> {
         let options =
             ConnectOptions::from_env().finalize().context("loading connection options")?;
