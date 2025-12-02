@@ -2,12 +2,9 @@ use std::fmt::Debug;
 use std::ops::Deref;
 use std::sync::Arc;
 
-use anyhow::Result;
-use futures::future::BoxFuture;
+pub use runtime::FutureResult;
 
-pub use crate::host::generated::wasi::identity::credentials::{AccessToken, Datetime};
-
-pub type FutureResult<T> = BoxFuture<'static, Result<T>>;
+pub use crate::host::generated::wasi::identity::credentials::AccessToken;
 
 /// Providers implement the [`Identity`] trait to allow the host to
 /// interact with different backend identity providers.

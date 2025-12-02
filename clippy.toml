@@ -18,6 +18,8 @@ allowed-duplicate-crates = [
   "embedded-io",
   "fallible-iterator",
   "fancy-regex",
+  "foldhash",
+  "fluent-uri",
   "getrandom",
   "gimli",
   "hashbrown",

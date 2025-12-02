@@ -1,0 +1,5 @@
+name: sql
+
+include:
+  - oci://ghcr.io/credibil/compose-postgres:latest
+  - oci://ghcr.io/credibil/compose-otelcol:latest

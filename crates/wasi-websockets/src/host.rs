@@ -19,7 +19,7 @@ mod generated {
             default: async | store | tracing,
         },
         with: {
-            "wasi:websockets/store/server": WebSocketProxy,
+            "wasi:websockets/store.server": WebSocketProxy,
         },
     });
 }
@@ -53,7 +53,7 @@ where
 impl<S> Server<S> for WasiWebSockets
 where
     S: State,
-    <S as State>::StoreData: WebSocketsView,
+    <S as State>::StoreCtx: WebSocketsView,
 {
     /// Provide http proxy service the specified wasm component.
     /// ``state`` will be used at a later time to provide resource access to guest handlers

@@ -1,9 +1,6 @@
 //! # WASI Tracing
 
-use std::env;
-
 use anyhow::Result;
-use http::header::CONTENT_TYPE;
 use opentelemetry_proto::tonic::collector::metrics::v1::ExportMetricsServiceRequest;
 use opentelemetry_proto::tonic::common::v1::any_value::Value;
 use opentelemetry_proto::tonic::common::v1::{
@@ -19,11 +16,10 @@ use opentelemetry_proto::tonic::metrics::v1::{
 };
 use opentelemetry_proto::tonic::resource::v1::Resource;
 use opentelemetry_sdk::error::OTelSdkError;
-use prost::Message;
 use wasmtime::component::Accessor;
 
 use crate::host::generated::wasi::otel::metrics::{self as wasi, HostWithStore};
-use crate::host::{DEF_HTTP_URL, WasiOtel, WasiOtelCtxView};
+use crate::host::{WasiOtel, WasiOtelCtxView};
 
 impl HostWithStore for WasiOtel {
     async fn export<T>(
@@ -37,20 +33,9 @@ impl HostWithStore for WasiOtel {
 
         // convert to opentelemetry export format
         let request = ExportMetricsServiceRequest::from(rm);
-        let body = Message::encode_to_vec(&request);
 
-        // build request to send to collector
-        let addr = env::var("OTEL_HTTP_URL").unwrap_or_else(|_| DEF_HTTP_URL.to_string());
-        let request = http::Request::builder()
-            .method("POST")
-            .uri(format!("{addr}/v1/metrics"))
-            .header(CONTENT_TYPE, "application/x-protobuf")
-            .body(body)
-            .map_err(|e| {
-                tracing::error!("failed to build metrics export request: {e}");
-                wasi::Error::InternalFailure(e.to_string())
-            })?;
-        accessor.with(|mut store| store.get().ctx.export(request)).await?;
+        // export via gRPC
+        accessor.with(|mut store| store.get().ctx.export_metrics(request)).await?;
 
         Ok(())
     }

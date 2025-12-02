@@ -50,6 +50,3 @@ serde_json.workspace = true
 tower.workspace = true
 wasi-keyvalue.workspace = true
 wasip3.workspace = true
-wit-bindgen.workspace = true
-
-serde_urlencoded = "0.7.1"

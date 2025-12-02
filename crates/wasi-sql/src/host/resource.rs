@@ -2,12 +2,9 @@ use std::fmt::Debug;
 use std::ops::Deref;
 use std::sync::Arc;
 
-use anyhow::Result;
-use futures::future::BoxFuture;
+pub use runtime::FutureResult;
 
 use crate::host::{DataType, Row};
-
-pub type FutureResult<T> = BoxFuture<'static, Result<T>>;
 
 /// SQL providers implement the [`Connection`] trait to allow the host to
 /// connect to a backend (Azure Table Storage, Postgres, etc) and execute SQL

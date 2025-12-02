@@ -8,4 +8,6 @@ wit_bindgen::generate!({
     generate_all,
 });
 
+pub mod cache;
+
 pub use self::wasi::keyvalue::*;

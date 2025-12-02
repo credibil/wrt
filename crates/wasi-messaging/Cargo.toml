@@ -23,7 +23,6 @@ runtime-error = { workspace = true }
 # host dependencies
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 anyhow.workspace = true
-async-nats.workspace = true
 futures.workspace = true
 http.workspace = true
 runtime.workspace = true

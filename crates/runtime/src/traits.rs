@@ -8,15 +8,18 @@
 use std::fmt::Debug;
 
 use anyhow::Result;
+use futures::future::BoxFuture;
 use wasmtime::component::{InstancePre, Linker};
 
+pub type FutureResult<T> = BoxFuture<'static, Result<T>>;
+
 pub trait State: Clone + Send + Sync + 'static {
-    type StoreData: Send + 'static;
+    type StoreCtx: Send;
 
     #[must_use]
-    fn new_store(&self) -> Self::StoreData;
+    fn new_store(&self) -> Self::StoreCtx;
 
-    fn instance_pre(&self) -> &InstancePre<Self::StoreData>;
+    fn instance_pre(&self) -> &InstancePre<Self::StoreCtx>;
 }
 
 /// Implemented by all WASI hosts in order to allow the runtime to link their

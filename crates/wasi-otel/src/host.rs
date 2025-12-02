@@ -1,3 +1,4 @@
+mod default_impl;
 mod metrics_impl;
 mod resource_impl;
 mod tracing_impl;
@@ -14,24 +15,20 @@ mod generated {
             default: async | store | tracing | trappable,
         },
         trappable_error_type: {
-            "wasi:otel/types/error" => Error,
+            "wasi:otel/types.error" => Error,
         }
     });
 }
 
 use std::fmt::Debug;
 
-use anyhow::Result;
-use futures::FutureExt;
-use futures::future::BoxFuture;
-use runtime::Host;
+use opentelemetry_proto::tonic::collector::metrics::v1::ExportMetricsServiceRequest;
+use opentelemetry_proto::tonic::collector::trace::v1::ExportTraceServiceRequest;
+use runtime::{FutureResult, Host};
 use wasmtime::component::{HasData, Linker, ResourceTable};
 
+pub use self::default_impl::DefaultOtelCtx;
 use self::generated::wasi::otel as wasi;
-
-pub type FutureResult<T> = BoxFuture<'static, Result<T>>;
-
-const DEF_HTTP_URL: &str = "http://localhost:4318";
 
 impl<T> Host<T> for WasiOtel
 where
@@ -56,24 +53,17 @@ impl HasData for WasiOtel {
 /// This is implemented by the resource-specific provider of OpenTelemetry
 /// functionality.
 pub trait WasiOtelCtx: Debug + Send + Sync + 'static {
-    fn export(&self, request: http::Request<Vec<u8>>) -> FutureResult<()> {
-        async move {
-            let (parts, body) = request.into_parts();
+    /// Export traces using gRPC.
+    ///
+    /// Errors are logged but not propagated to prevent telemetry failures
+    /// from affecting application logic.
+    fn export_traces(&self, request: ExportTraceServiceRequest) -> FutureResult<()>;
 
-            if let Err(e) = reqwest::Client::new()
-                .post(parts.uri.to_string())
-                .headers(parts.headers)
-                .body(body)
-                .send()
-                .await
-            {
-                tracing::error!("failed to send traces: {e}");
-            }
-
-            Ok(())
-        }
-        .boxed()
-    }
+    /// Export metrics using gRPC.
+    ///
+    /// Errors are logged but not propagated to prevent telemetry failures
+    /// from affecting application logic.
+    fn export_metrics(&self, request: ExportMetricsServiceRequest) -> FutureResult<()>;
 }
 
 /// View into [`WasiOtelCtx`] implementation and [`ResourceTable`].
@@ -93,7 +83,3 @@ pub trait WasiOtelView: Send {
     /// Return a [`WasiOtelCtxView`] from mutable reference to self.
     fn otel(&mut self) -> WasiOtelCtxView<'_>;
 }
-
-#[derive(Debug)]
-pub struct DefaultOtelCtx;
-impl WasiOtelCtx for DefaultOtelCtx {}

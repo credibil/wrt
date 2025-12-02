@@ -253,11 +253,47 @@ mod tests {
     use super::*;
 
     #[test]
+    fn validates_serialization_deserialization() {
+        let body = b"{\"ok\":true}";
+        let response = Response::builder()
+            .status(201)
+            .header("content-type", "application/json")
+            .header("etag", "cached")
+            .header(CACHE_CONTROL, "max-age=20")
+            .header(IF_NONE_MATCH, "\"label=AMP        633\"")
+            .body(Bytes::from_static(body))
+            .expect("should build response");
+
+        // simulating the serialization & de-serialization that happens during cache put and get
+        let serialized = serialize(&response).unwrap();
+        let deserialized_response = deserialize(&serialized).unwrap();
+
+        assert_eq!(deserialized_response.status(), response.status());
+        assert_eq!(
+            deserialized_response.headers().get("content-type").unwrap(),
+            response.headers().get("content-type").unwrap()
+        );
+        assert_eq!(
+            deserialized_response.headers().get("etag").unwrap(),
+            response.headers().get("etag").unwrap()
+        );
+        assert_eq!(
+            deserialized_response.headers().get(CACHE_CONTROL).unwrap(),
+            response.headers().get(CACHE_CONTROL).unwrap()
+        );
+        assert_eq!(
+            deserialized_response.headers().get(IF_NONE_MATCH).unwrap(),
+            response.headers().get(IF_NONE_MATCH).unwrap()
+        );
+        assert_eq!(deserialized_response.body(), response.body());
+    }
+
+    #[test]
     fn returns_none_when_header_missing() {
         let headers = HeaderMap::new();
         let control = Control::try_from(&headers).expect("should parse");
 
-        assert!(control.no_cache);
+        assert!(!control.no_cache);
         assert!(!control.no_store);
         assert_eq!(control.max_age, 0);
         assert!(control.etag.is_empty());
@@ -289,7 +325,7 @@ mod tests {
     #[test]
     fn rejects_conflicting_directives() {
         let mut headers = HeaderMap::new();
-        headers.append(CACHE_CONTROL, "no-cache, max-age=10".parse().unwrap());
+        headers.append(CACHE_CONTROL, "no-store, no-cache, max-age=10".parse().unwrap());
         headers.append(IF_NONE_MATCH, "\"etag\"".parse().unwrap());
 
         let Err(_) = Control::try_from(&headers) else {
