@@ -85,7 +85,8 @@ impl ComponentInfo {
 
     /// Returns true if this interface requires a backend connection
     fn needs_backend(&self) -> bool {
-        !matches!(self.name.as_str(), "http" | "websockets")
+        // !matches!(self.name.as_str(), "http" | "websockets")
+        true
     }
 }
 
