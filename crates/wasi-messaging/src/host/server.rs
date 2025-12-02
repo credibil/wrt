@@ -1,8 +1,10 @@
+use std::str::FromStr;
+
 use anyhow::Result;
 use futures::StreamExt;
 use runtime::State;
 use runtime_error::Error as RuntimeError;
-use tracing::{Instrument, debug_span, instrument};
+use tracing::{Instrument, debug_span, error, instrument, warn};
 use wasmtime::Store;
 
 use crate::host::WasiMessagingView;
@@ -80,12 +82,90 @@ where
         let instance = instance_pre.instantiate_async(&mut store).await?;
         let messaging = Messaging::new(&mut store, &instance)?;
 
-        store
+        match store
             .run_concurrent(async |store| {
                 let guest = messaging.wasi_messaging_incoming_handler();
-                Ok(guest.call_handle(store, res_msg).await??)
+                let guest_result = guest.call_handle(store, res_msg).await;
+                match guest_result {
+                    Ok(_) => Ok(()),
+                    Err(e) => Err(RuntimeError::from(e)),
+                }
             })
             .instrument(debug_span!("messaging-handle"))
             .await
+        {
+            Ok(_) => {
+                tracing::info!(monotonic_counter.messages_processed = 1, service = %self.service, topic = %message.topic());
+                Ok(())
+            }
+            Err(e) => match RuntimeError::from_str(e.to_string().as_str()) {
+                Ok(err) | Err(err) => {
+                    Self::trace(&err, &self.service, &message.topic());
+                    Err(err)
+                }
+            },
+        }
+    }
+
+    fn trace(err: &RuntimeError, service: &str, topic: &str) {
+        match err {
+            RuntimeError::ServiceUnavailable(description) => {
+                error!(
+                    monotonic_counter.processing_errors = 1,
+                    service = %service,
+                    topic = %topic,
+                    description
+                );
+            }
+            RuntimeError::BadGateway(description) => {
+                error!(
+                    monotonic_counter.external_errors = 1,
+                    service = %service,
+                    topic = %topic,
+                    description
+                );
+            }
+            RuntimeError::ServerError(description) => {
+                error!(monotonic_counter.runtime_errors = 1,
+                    service = %service,
+                    description
+                );
+            }
+            RuntimeError::BadRequest(description) => {
+                warn!(
+                    monotonic_counter.parsing_errors = 1,
+                    service = %service,
+                    topic = %topic,
+                    description
+                );
+            }
+            RuntimeError::Unauthorized(description) => {
+                warn!(
+                    monotonic_counter.authorization_errors = 1,
+                    service = %service,
+                    description);
+            }
+            RuntimeError::NotFound(description) => {
+                warn!(
+                    monotonic_counter.not_found_errors = 1,
+                    service = %service,
+                    description);
+            }
+            RuntimeError::Gone(description) => {
+                warn!(
+                    monotonic_counter.stale_data = 1,
+                    service = %service,
+                    topic = %topic,
+                    description
+                );
+            }
+            RuntimeError::ImATeaPot(description) => {
+                warn!(
+                    monotonic_counter.other_errors = 1,
+                    service = %service,
+                    description
+                );
+            }
+        }
     }
 }

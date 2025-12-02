@@ -1,7 +1,8 @@
+use std::str::FromStr;
+
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use thiserror::Error;
-use tracing::{error, warn};
 
 /// HTTP status code for "I'm a teapot"
 /// Used as a default for unknown errors
@@ -80,88 +81,20 @@ impl Error {
             | Self::ServiceUnavailable(desc) => desc,
         }
     }
+}
 
-    /// Performs tracing and metrics.
-    pub fn trace(&self, service: &str, topic: &str) {
-        match self {
-            Self::ServiceUnavailable(description) => {
-                error!(
-                    monotonic_counter.processing_errors = 1,
-                    service = %service,
-                    topic = %topic,
-                    description
-                );
-            }
-            Self::BadGateway(description) => {
-                error!(
-                    monotonic_counter.external_errors = 1,
-                    service = %service,
-                    topic = %topic,
-                    description
-                );
-            }
-            Self::ServerError(description) => {
-                error!(monotonic_counter.runtime_errors = 1,
-                    service = %service,
-                    description
-                );
-            }
-            Self::BadRequest(description) => {
-                warn!(
-                    monotonic_counter.parsing_errors = 1,
-                    service = %service,
-                    topic = %topic,
-                    description
-                );
-            }
-            Self::Unauthorized(description) => {
-                warn!(
-                    monotonic_counter.authorization_errors = 1,
-                    service = %service,
-                    description);
-            }
-            Self::NotFound(description) => {
-                warn!(
-                    monotonic_counter.not_found_errors = 1,
-                    service = %service,
-                    description);
-            }
-            Self::Gone(description) => {
-                warn!(
-                    monotonic_counter.stale_data = 1,
-                    service = %service,
-                    topic = %topic,
-                    description
-                );
-            }
-            Self::ImATeaPot(description) => {
-                warn!(
-                    monotonic_counter.other_errors = 1,
-                    service = %service,
-                    description
-                );
-            }
-        }
-    }
+impl FromStr for Error {
+    type Err = Self;
 
-    /// Parses a string into an `Error` variant.
-    ///
-    /// The expected input format is a JSON string containing a `code` (u64) and a `description` (string) field.
-    /// For example: `{"code": 400, "description": "Invalid input"}`
-    ///
-    /// If parsing fails or the input does not match the expected format, returns the `ImATeaPot` variant
-    /// with the raw string as the description.
-    pub fn from_string(raw: String) -> Self {
-        let obj: serde_json::Value = match serde_json::from_str(&raw) {
-            Ok(v) => v,
-            Err(_) => return Self::ImATeaPot(raw),
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let Ok(Value::Object(obj)) = serde_json::from_str(s) else {
+            return Ok(Self::ImATeaPot(s.to_string()));
         };
 
         let code = obj.get("code").and_then(Value::as_u64).unwrap_or(TEA_POT);
-        let description =
-            obj.get("description").and_then(Value::as_str).unwrap_or(&raw).to_string();
+        let description = obj.get("description").and_then(Value::as_str).unwrap_or(s).to_string();
 
-        match code {
+        let error = match code {
             400 => Self::BadRequest(description),
             401 => Self::Unauthorized(description),
             404 => Self::NotFound(description),
@@ -170,13 +103,19 @@ impl Error {
             503 => Self::ServiceUnavailable(description),
             500 => Self::ServerError(description),
             _ => Self::ImATeaPot(description),
-        }
+        };
+
+        Ok(error)
     }
 }
 
 impl From<anyhow::Error> for Error {
     fn from(err: anyhow::Error) -> Self {
-        Self::from_string(err.root_cause().to_string())
+        Self::from_str(err.root_cause().to_string().as_str()).unwrap_or_else(|_| {
+            let stack = err.chain().fold(String::new(), |cause, e| format!("{cause} -> {e}"));
+            let stack = stack.trim_start_matches(" -> ").to_string();
+            Self::ServiceUnavailable(stack)
+        })
     }
 }
 
