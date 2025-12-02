@@ -305,6 +305,7 @@ wit-bindgen = { version = "0.46.0" }
 # credibil registry
 credibil-encoding = { version = "0.5.0", registry = "credibil" }
 credibil-otel = { version = "0.5.0", registry = "credibil" }
+#credibil-error = { version = "0.6.0", registry = "credibil" }
 
 # interally referenced crates
 res-azure = { path = "crates/res-azure", version = "0.18.0", registry = "credibil" }

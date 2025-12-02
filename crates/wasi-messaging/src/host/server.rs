@@ -71,7 +71,11 @@ where
     // Forward message to the wasm guest.
     async fn send(&self, message: MessageProxy) -> Result<(), RuntimeError> {
         let mut store_data = self.state.new_store();
-        let res_msg = store_data.messaging().table.push(message.clone())?;
+        let res_msg = store_data
+            .messaging()
+            .table
+            .push(message.clone())
+            .map_err(|e| RuntimeError::ServerError(e.to_string()))?;
 
         let instance_pre = self.state.instance_pre();
         let mut store = Store::new(instance_pre.engine(), store_data);
