@@ -19,7 +19,7 @@ where
 {
     tracing::info!("starting messaging server");
 
-    let service = std::env::var("COMPONENT").unwrap_or_else(|_| "unknown".to_string());
+    let service = std::env::var("COMPONENT").unwrap_or_else(|_| "unknown".into());
 
     let handler = Handler {
         state: state.clone(),
@@ -85,11 +85,7 @@ where
         match store
             .run_concurrent(async |store| {
                 let guest = messaging.wasi_messaging_incoming_handler();
-                let guest_result = guest.call_handle(store, res_msg).await;
-                match guest_result {
-                    Ok(_) => Ok(()),
-                    Err(e) => Err(RuntimeError::from(e)),
-                }
+                guest.call_handle(store, res_msg).await.map(|_| ()).map_err(RuntimeError::from)
             })
             .instrument(debug_span!("messaging-handle"))
             .await

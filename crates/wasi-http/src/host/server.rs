@@ -36,7 +36,7 @@ where
     let listener = TcpListener::bind(&addr).await?;
     tracing::info!("http server listening on: {}", listener.local_addr()?);
 
-    let service = env::var("COMPONENT").unwrap_or_else(|_| "unknown".to_string());
+    let service = std::env::var("COMPONENT").unwrap_or_else(|_| "unknown".into());
 
     let handler: Handler<S> = Handler {
         state: state.clone(),
