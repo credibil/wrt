@@ -22,7 +22,7 @@ use buildgen::runtime;
 
 // Import the backend types you want to use
 use wasi_http::WasiHttpCtx;
-use wasi_otel::DefaultOtelCtx;
+use wasi_otel::DefaultOtel;
 use res_mongodb::Client as MongoDb;
 use res_nats::Client as Nats;
 use res_azure::Client as Azure;
@@ -30,7 +30,7 @@ use res_azure::Client as Azure;
 // Generate runtime infrastructure
 runtime!({
     "http": WasiHttpCtx,
-    "otel": DefaultOtelCtx,
+    "otel": DefaultOtel,
     "blobstore": MongoDb,
     "keyvalue": Nats,
     "messaging": Nats,
@@ -62,7 +62,7 @@ runtime!({
   - Backend: `WasiHttpCtx` (marker type, no backend connection needed)
   
 - **`otel`**: OpenTelemetry observability
-  - Backend: `DefaultOtelCtx` (connects to OTEL collector)
+  - Backend: `DefaultOtel` (connects to OTEL collector)
   
 - **`blobstore`**: Object/blob storage
   - Backends: `MongoDb` or `Nats`
@@ -147,12 +147,12 @@ mod http_runtime {
 // Full-featured runtime
 mod full_runtime {
     use wasi_http::WasiHttpCtx;
-    use wasi_otel::DefaultOtelCtx;
+    use wasi_otel::DefaultOtel;
     use res_nats::Client as Nats;
     
     buildgen::runtime!({
         "http": WasiHttpCtx,
-        "otel": DefaultOtelCtx,
+        "otel": DefaultOtel,
         "keyvalue": Nats,
         "messaging": Nats,
         "blobstore": Nats
@@ -176,7 +176,7 @@ Now you can declaratively specify your configuration:
 mod credibil_runtime {
     buildgen::runtime!({
         "http": WasiHttpCtx,
-        "otel": DefaultOtelCtx,
+        "otel": DefaultOtel,
         "blobstore": MongoDb,
         "keyvalue": Nats,
         "messaging": Nats,

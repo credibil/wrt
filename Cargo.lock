@@ -5617,6 +5617,7 @@ dependencies = [
  "bincode",
  "bytes",
  "credibil-encoding",
+ "fromenv",
  "futures",
  "http",
  "http-body",

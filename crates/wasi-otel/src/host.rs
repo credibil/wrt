@@ -27,7 +27,7 @@ use opentelemetry_proto::tonic::collector::trace::v1::ExportTraceServiceRequest;
 use runtime::{FutureResult, Host};
 use wasmtime::component::{HasData, Linker, ResourceTable};
 
-pub use self::default_impl::DefaultOtelCtx;
+pub use self::default_impl::DefaultOtel;
 use self::generated::wasi::otel as wasi;
 
 impl<T> Host<T> for WasiOtel

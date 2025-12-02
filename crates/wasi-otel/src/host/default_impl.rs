@@ -24,12 +24,12 @@ impl runtime::FromEnv for ConnectOptions {
 }
 
 #[derive(Debug, Clone)]
-pub struct DefaultOtelCtx {
+pub struct DefaultOtel {
     traces_client: TraceServiceClient<Channel>,
     metrics_client: MetricsServiceClient<Channel>,
 }
 
-impl Resource for DefaultOtelCtx {
+impl Resource for DefaultOtel {
     type ConnectOptions = ConnectOptions;
 
     #[instrument]
@@ -49,7 +49,7 @@ impl Resource for DefaultOtelCtx {
     }
 }
 
-impl WasiOtelCtx for DefaultOtelCtx {
+impl WasiOtelCtx for DefaultOtel {
     /// Export traces using gRPC.
     ///
     /// Errors are logged but not propagated to prevent telemetry failures

@@ -1,8 +1,12 @@
+use anyhow::{Result, anyhow};
 use base64ct::{Base64, Encoding};
 use bytes::Bytes;
+use fromenv::FromEnv;
 use futures::Future;
 use http_body_util::BodyExt;
 use http_body_util::combinators::UnsyncBoxBody;
+use runtime::Resource;
+use tracing::instrument;
 use wasmtime_wasi::TrappableError;
 use wasmtime_wasi_http::p3::bindings::http::types::ErrorCode;
 use wasmtime_wasi_http::p3::{self, RequestOptions};
@@ -15,9 +19,31 @@ pub type HttpError = TrappableError<ErrorCode>;
 // pub type RequestOptionsResult<T> = Result<T, RequestOptionsError>;
 // pub type RequestOptionsError = TrappableError<types::RequestOptionsError>;
 
-pub struct WasiHttpCtx;
+#[derive(Debug, Clone, FromEnv)]
+pub struct ConnectOptions {
+    #[env(from = "HTTP_ADDR", default = "http://localhost:8080")]
+    pub addr: String,
+}
 
-impl p3::WasiHttpCtx for WasiHttpCtx {
+impl runtime::FromEnv for ConnectOptions {
+    fn from_env() -> Result<Self> {
+        Self::from_env().finalize().map_err(|e| anyhow!("issue loading connection options: {e}"))
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct DefaultHttp;
+
+impl Resource for DefaultHttp {
+    type ConnectOptions = ConnectOptions;
+
+    #[instrument]
+    async fn connect_with(options: Self::ConnectOptions) -> Result<Self> {
+        Ok(Self)
+    }
+}
+
+impl p3::WasiHttpCtx for DefaultHttp {
     fn send_request(
         &mut self, request: http::Request<UnsyncBoxBody<Bytes, ErrorCode>>,
         _options: Option<RequestOptions>,

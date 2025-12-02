@@ -63,7 +63,7 @@ async fn main() -> Result<()> {
 mod credibil_runtime {
     buildgen::runtime!({
         "http": WasiHttpCtx,
-        "otel": DefaultOtelCtx,
+        "otel": DefaultOtel,
         "blobstore": MongoDb,
         "keyvalue": Nats,
         "messaging": Nats,
@@ -96,7 +96,7 @@ Instead of managing complex feature flag combinations, you now declare exactly w
 ```rust
 runtime!({
     "http": WasiHttpCtx,
-    "otel": DefaultOtelCtx,
+    "otel": DefaultOtel,
     "keyvalue": Nats
 });
 ```

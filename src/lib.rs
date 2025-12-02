@@ -12,7 +12,7 @@
 //!
 //! runtime!({
 //!     wasi_http: WasiHttpCtx,
-//!     wasi_otel: DefaultOtelCtx,
+//!     wasi_otel: DefaultOtel,
 //!     wasi_blobstore: MongoDb,
 //!     wasi_keyvalue: Nats,
 //!     wasi_messaging: Nats,

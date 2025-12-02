@@ -26,27 +26,19 @@ impl Parse for RuntimeConfig {
 
         let mut wasi_tuple = HashMap::new();
 
+        // parse WASI component:backend pairs
         while !content.is_empty() {
-            // Parse identifier (e.g., wasi_http, wasi_otel, etc.)
+            // LHS: wasi component (e.g., wasi_http, wasi_otel, etc.)
             let wasi_ident: Ident = content.parse()?;
             let wasi_str = wasi_ident.to_string();
+            let component = wasi_str.strip_prefix("wasi_").unwrap_or(&wasi_str);
 
-            // Extract the component name by removing "wasi_" prefix if present
-            let component = if let Some(name) = wasi_str.strip_prefix("wasi_") {
-                name.to_string()
-            } else {
-                wasi_str
-            };
-
-            // Parse ":"
+            // RHS: backend
             content.parse::<Token![:]>()?;
-
-            // Parse BackendType
             let backend: syn::Type = content.parse()?;
 
-            wasi_tuple.insert(component, backend);
+            wasi_tuple.insert(component.to_string(), backend);
 
-            // Parse optional comma
             if content.peek(Token![,]) {
                 content.parse::<Token![,]>()?;
             }
@@ -57,7 +49,7 @@ impl Parse for RuntimeConfig {
 }
 
 /// Information about a WASI interface and its configuration.
-struct ComponentInfo {
+struct WasiImpl {
     name: String,
     backend_type: syn::Type,
     view_trait: syn::Ident,
@@ -66,7 +58,7 @@ struct ComponentInfo {
     is_server: bool,
 }
 
-impl ComponentInfo {
+impl WasiImpl {
     fn new(name: &str, backend_type: syn::Type) -> Self {
         let view_trait = syn::parse_str(&format!("Wasi{}View", capitalize(name))).unwrap();
         let view_method = syn::parse_str(name).unwrap();
@@ -82,19 +74,12 @@ impl ComponentInfo {
             is_server,
         }
     }
-
-    /// Returns true if this interface requires a backend connection
-    fn needs_backend(&self) -> bool {
-        // !matches!(self.name.as_str(), "http" | "websockets")
-        true
-    }
 }
 
 fn capitalize(s: &str) -> String {
-    // Handle special cases for multi-word interface names
+    // special cases for multi-word interface names
     match s {
         "keyvalue" => "KeyValue".to_string(),
-        "blobstore" => "Blobstore".to_string(),
         "websockets" => "WebSockets".to_string(),
         _ => {
             let mut chars = s.chars();
@@ -133,16 +118,16 @@ pub fn runtime(input: TokenStream) -> TokenStream {
 
     // Collect unique backends (only for interfaces that need them)
     let mut unique_backends = HashMap::<String, syn::Type>::new();
-    let mut components = Vec::<ComponentInfo>::new();
+    let mut components = Vec::<WasiImpl>::new();
 
     for (component_name, backend_type) in &config.wasi_tuple {
-        let component = ComponentInfo::new(component_name, backend_type.clone());
+        let component = WasiImpl::new(component_name, backend_type.clone());
 
         // Track unique backend types only for interfaces that need backend connections
-        if component.needs_backend() {
-            let backend_key = quote!(#backend_type).to_string();
-            unique_backends.insert(backend_key.clone(), backend_type.clone());
-        }
+        // if component.needs_backend() {
+        let backend_key = quote!(#backend_type).to_string();
+        unique_backends.insert(backend_key.clone(), backend_type.clone());
+        // }
 
         components.push(component);
     }
@@ -189,9 +174,6 @@ pub fn runtime(input: TokenStream) -> TokenStream {
 
             // Special handling for different context types
             match component.name.as_str() {
-                "http" => quote! {
-                    #field_name: wasi_http::WasiHttpCtx
-                },
                 "websockets" => quote! {
                     #field_name: wasi_websockets::DefaultWebSocketsCtx
                 },

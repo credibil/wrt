@@ -6,7 +6,7 @@ mod proxy;
 mod server;
 
 use anyhow::Result;
-pub use proxy::WasiHttpCtx;
+pub use proxy::DefaultHttp;
 use runtime::{Host, Server, State};
 use wasmtime::component::Linker;
 pub use wasmtime_wasi_http::p3::{WasiHttpCtxView, WasiHttpView};
