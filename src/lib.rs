@@ -8,15 +8,15 @@
 //! ## Usage
 //!
 //! ```ignore
-//! use wrt_codegen::runtime;
+//! use buildgen::runtime;
 //!
 //! runtime!({
-//!     "http": WasiHttpCtx,
-//!     "otel": DefaultOtelCtx,
-//!     "blobstore": MongoDb,
-//!     "keyvalue": Nats,
-//!     "messaging": Nats,
-//!     "vault": Azure
+//!     wasi_http: WasiHttpCtx,
+//!     wasi_otel: DefaultOtelCtx,
+//!     wasi_blobstore: MongoDb,
+//!     wasi_keyvalue: Nats,
+//!     wasi_messaging: Nats,
+//!     wasi_vault: Azure
 //! });
 //! ```
 //!

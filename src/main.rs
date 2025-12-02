@@ -4,20 +4,20 @@
 
 use anyhow::Result;
 use runtime::{Cli, Command, Parser};
-use wasi_http::WasiHttpCtx;
 // Import backend types for the credibil feature set
 #[cfg(feature = "credibil")]
 // use res_azure::Client as Azure;
 // use res_mongodb::Client as MongoDb;
 // use res_nats::Client as Nats;
+use wasi_http::WasiHttpCtx;
 use wasi_identity::DefaultIdentity;
 use wasi_otel::DefaultOtelCtx;
 
 // Generate runtime infrastructure for the credibil feature set
-wrt_codegen::runtime!({
-    "http": WasiHttpCtx,
-    "otel": DefaultOtelCtx,
-    "identity": DefaultIdentity,
+buildgen::runtime!({
+    wasi_http: WasiHttpCtx,
+    wasi_otel: DefaultOtelCtx,
+    wasi_identity: DefaultIdentity,
     // "keyvalue": Nats,
     // "messaging": Nats,
     // "vault": Azure

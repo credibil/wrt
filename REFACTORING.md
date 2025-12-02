@@ -6,9 +6,9 @@ Refactored the WebAssembly Component Runtime from a feature-flag-based system to
 
 ## Changes Made
 
-### 1. Created `wrt-codegen` Proc Macro Crate
+### 1. Created `buildgen` Proc Macro Crate
 
-**Location**: `crates/wrt-codegen/`
+**Location**: `crates/buildgen/`
 
 A new procedural macro crate that provides the `runtime!` macro for generating runtime infrastructure.
 
@@ -61,7 +61,7 @@ async fn main() -> Result<()> {
 ```rust
 #[cfg(feature = "credibil")]
 mod credibil_runtime {
-    wrt_codegen::runtime!({
+    buildgen::runtime!({
         "http": WasiHttpCtx,
         "otel": DefaultOtelCtx,
         "blobstore": MongoDb,
@@ -83,9 +83,9 @@ async fn main() -> Result<()> {
 ### 4. Updated `Cargo.toml`
 
 **Changes**:
-- Added `wrt-codegen` to workspace members
-- Added `wrt-codegen` to workspace dependencies
-- Added `wrt-codegen` to package dependencies
+- Added `buildgen` to workspace members
+- Added `buildgen` to workspace dependencies
+- Added `buildgen` to package dependencies
 
 ## Benefits
 
@@ -154,7 +154,7 @@ use res_nats::Client as Nats;
 
 2. **Define your runtime**:
 ```rust
-wrt_codegen::runtime!({
+buildgen::runtime!({
     "http": WasiHttpCtx,
     "keyvalue": Nats,
     // ... other interfaces
@@ -176,7 +176,7 @@ mod my_runtime {
     use wasi_http::WasiHttpCtx;
     use res_nats::Client as Nats;
     
-    wrt_codegen::runtime!({
+    buildgen::runtime!({
         "http": WasiHttpCtx,
         "messaging": Nats
     });
@@ -217,7 +217,7 @@ All existing tests pass with the new implementation:
 
 ```bash
 # Check the codegen crate
-cargo check -p wrt-codegen
+cargo check -p buildgen
 
 # Check the main binary with credibil features
 cargo check --bin runtime-cli --features credibil

@@ -1,4 +1,4 @@
-# wrt-codegen
+# buildgen
 
 Procedural macros for generating WebAssembly Component Runtime infrastructure.
 
@@ -8,17 +8,17 @@ This crate provides the `runtime!` macro that generates the necessary runtime in
 
 ## Usage
 
-Add `wrt-codegen` to your dependencies:
+Add `buildgen` to your dependencies:
 
 ```toml
 [dependencies]
-wrt-codegen = { workspace = true }
+buildgen = { workspace = true }
 ```
 
 Then use the `runtime!` macro to generate your runtime infrastructure:
 
 ```rust
-use wrt_codegen::runtime;
+use buildgen::runtime;
 
 // Import the backend types you want to use
 use wasi_http::WasiHttpCtx;
@@ -139,7 +139,7 @@ You can create different runtime configurations for different use cases:
 mod http_runtime {
     use wasi_http::WasiHttpCtx;
     
-    wrt_codegen::runtime!({
+    buildgen::runtime!({
         "http": WasiHttpCtx
     });
 }
@@ -150,7 +150,7 @@ mod full_runtime {
     use wasi_otel::DefaultOtelCtx;
     use res_nats::Client as Nats;
     
-    wrt_codegen::runtime!({
+    buildgen::runtime!({
         "http": WasiHttpCtx,
         "otel": DefaultOtelCtx,
         "keyvalue": Nats,
@@ -174,7 +174,7 @@ Now you can declaratively specify your configuration:
 ```rust
 #[cfg(feature = "credibil")]
 mod credibil_runtime {
-    wrt_codegen::runtime!({
+    buildgen::runtime!({
         "http": WasiHttpCtx,
         "otel": DefaultOtelCtx,
         "blobstore": MongoDb,

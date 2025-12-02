@@ -99,7 +99,7 @@ wasi-websockets = { workspace = true, optional = true }
 wasmtime.workspace = true
 wasmtime-wasi.workspace = true
 wasmtime-wasi-http = { workspace = true, optional = true }
-wrt-codegen.workspace = true
+buildgen.workspace = true
 
 # required for azure_identity, etc.
 openssl = { version = "0.10.75", features = ["vendored"] }
@@ -281,6 +281,7 @@ credibil-encoding = { version = "0.5.0", registry = "credibil" }
 credibil-otel = { version = "0.5.0", registry = "credibil" }
 
 # interally referenced crates
+buildgen = { path = "crates/buildgen", version = "0.19.0" }
 res-azure = { path = "crates/res-azure", version = "0.19.0", registry = "credibil" }
 res-kafka = { path = "crates/res-kafka", version = "0.19.0", registry = "credibil" }
 res-mongodb = { path = "crates/res-mongodb", version = "0.19.0", registry = "credibil" }
@@ -298,7 +299,6 @@ wasi-otel-attr = { path = "crates/wasi-otel-attr", version = "0.19.0", registry 
 wasi-sql = { path = "crates/wasi-sql", version = "0.19.0", registry = "credibil" }
 wasi-vault = { path = "crates/wasi-vault", version = "0.19.0", registry = "credibil" }
 wasi-websockets = { path = "crates/wasi-websockets", version = "0.19.0", registry = "credibil" }
-wrt-codegen = { path = "crates/codegen", version = "0.19.0" }
 
 [patch.crates-io]
 # wasip3 = { git = "https://github.com/bytecodealliance/wasi-rs" }

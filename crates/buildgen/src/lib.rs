@@ -1,22 +1,22 @@
+use std::collections::HashMap;
+
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, LitStr, Token};
 use syn::parse::{Parse, ParseStream};
-use std::collections::HashMap;
+use syn::{Ident, Token, parse_macro_input};
 
 /// Configuration for the runtime macro.
 ///
 /// Parses input in the format:
 /// ```ignore
 /// {
-///     "interface1": BackendType1,
-///     "interface2": BackendType2,
+///     wasi_http: WasiHttpCtx,
+///     wasi_otel: DefaultOtelCtx,
 ///     ...
 /// }
 /// ```
 struct RuntimeConfig {
-    /// Map from interface name to backend type
-    interface_to_backend: HashMap<String, syn::Type>,
+    wasi_tuple: HashMap<String, syn::Type>,
 }
 
 impl Parse for RuntimeConfig {
@@ -24,12 +24,19 @@ impl Parse for RuntimeConfig {
         let content;
         syn::braced!(content in input);
 
-        let mut interface_to_backend = HashMap::new();
+        let mut wasi_tuple = HashMap::new();
 
         while !content.is_empty() {
-            // Parse "interface"
-            let interface_lit: LitStr = content.parse()?;
-            let interface = interface_lit.value();
+            // Parse identifier (e.g., wasi_http, wasi_otel, etc.)
+            let wasi_ident: Ident = content.parse()?;
+            let wasi_str = wasi_ident.to_string();
+
+            // Extract the component name by removing "wasi_" prefix if present
+            let component = if let Some(name) = wasi_str.strip_prefix("wasi_") {
+                name.to_string()
+            } else {
+                wasi_str
+            };
 
             // Parse ":"
             content.parse::<Token![:]>()?;
@@ -37,7 +44,7 @@ impl Parse for RuntimeConfig {
             // Parse BackendType
             let backend: syn::Type = content.parse()?;
 
-            interface_to_backend.insert(interface, backend);
+            wasi_tuple.insert(component, backend);
 
             // Parse optional comma
             if content.peek(Token![,]) {
@@ -45,47 +52,37 @@ impl Parse for RuntimeConfig {
             }
         }
 
-        Ok(Self {
-            interface_to_backend,
-        })
+        Ok(Self { wasi_tuple })
     }
 }
 
 /// Information about a WASI interface and its configuration.
-struct InterfaceInfo {
+struct ComponentInfo {
     name: String,
     backend_type: syn::Type,
-    ctx_type: syn::Type,
     view_trait: syn::Ident,
     view_method: syn::Ident,
     ctx_view_type: syn::Ident,
     is_server: bool,
 }
 
-impl InterfaceInfo {
+impl ComponentInfo {
     fn new(name: &str, backend_type: syn::Type) -> Self {
-        let ctx_type = match name {
-            "http" => syn::parse_quote!(wasi_http::WasiHttpCtx),
-            "websockets" => syn::parse_quote!(wasi_websockets::DefaultWebSocketsCtx),
-            _ => backend_type.clone(),
-        };
-
         let view_trait = syn::parse_str(&format!("Wasi{}View", capitalize(name))).unwrap();
         let view_method = syn::parse_str(name).unwrap();
         let ctx_view_type = syn::parse_str(&format!("Wasi{}CtxView", capitalize(name))).unwrap();
         let is_server = matches!(name, "http" | "messaging" | "websockets");
-        
+
         Self {
             name: name.to_string(),
             backend_type,
-            ctx_type,
             view_trait,
             view_method,
             ctx_view_type,
             is_server,
         }
     }
-    
+
     /// Returns true if this interface requires a backend connection
     fn needs_backend(&self) -> bool {
         !matches!(self.name.as_str(), "http" | "websockets")
@@ -113,13 +110,13 @@ fn capitalize(s: &str) -> String {
 /// # Example
 ///
 /// ```ignore
-/// codegen::runtime!({
-///     "http": WasiHttpCtx,
-///     "otel": DefaultOtelCtx,
-///     "blobstore": MongoDb,
-///     "keyvalue": Nats,
-///     "messaging": Nats,
-///     "vault": Azure
+/// buildgen::runtime!({
+///     wasi_http: WasiHttpCtx,
+///     wasi_otel: DefaultOtelCtx,
+///     wasi_blobstore: MongoDb,
+///     wasi_keyvalue: Nats,
+///     wasi_messaging: Nats,
+///     wasi_vault: Azure
 /// });
 /// ```
 ///
@@ -132,191 +129,213 @@ fn capitalize(s: &str) -> String {
 #[proc_macro]
 pub fn runtime(input: TokenStream) -> TokenStream {
     let config = parse_macro_input!(input as RuntimeConfig);
-    
+
     // Collect unique backends (only for interfaces that need them)
     let mut unique_backends = HashMap::<String, syn::Type>::new();
-    let mut interfaces = Vec::new();
-    
-    for (interface_name, backend_type) in &config.interface_to_backend {
-        let interface = InterfaceInfo::new(interface_name, backend_type.clone());
-        
+    let mut components = Vec::<ComponentInfo>::new();
+
+    for (component_name, backend_type) in &config.wasi_tuple {
+        let component = ComponentInfo::new(component_name, backend_type.clone());
+
         // Track unique backend types only for interfaces that need backend connections
-        if interface.needs_backend() {
+        if component.needs_backend() {
             let backend_key = quote!(#backend_type).to_string();
             unique_backends.insert(backend_key.clone(), backend_type.clone());
         }
-        
-        interfaces.push(interface);
+
+        components.push(component);
     }
-    
+
     // Generate Context struct fields
-    let context_fields: Vec<_> = unique_backends.values().map(|backend_type| {
-        let field_name = backend_field_name(backend_type);
-        quote! {
-            #field_name: #backend_type
-        }
-    }).collect();
-    
+    let context_fields: Vec<_> = unique_backends
+        .values()
+        .map(|backend_type| {
+            let field_name = backend_field_name(backend_type);
+            quote! {
+                #field_name: #backend_type
+            }
+        })
+        .collect();
+
     // Generate Context initialization in new()
-    let context_inits: Vec<_> = unique_backends.values().map(|backend_type| {
-        let field_name = backend_field_name(backend_type);
-        quote! {
-            #field_name: #backend_type::connect().await?
-        }
-    }).collect();
-    
+    let context_inits: Vec<_> = unique_backends
+        .values()
+        .map(|backend_type| {
+            let field_name = backend_field_name(backend_type);
+            quote! {
+                #field_name: #backend_type::connect().await?
+            }
+        })
+        .collect();
+
     // Generate StoreCtx fields
-    let store_ctx_fields: Vec<_> = interfaces.iter().map(|iface| {
-        let field_name = syn::parse_str::<syn::Ident>(&iface.name).unwrap();
-        let ctx_type = &iface.ctx_type;
-        quote! {
-            pub #field_name: #ctx_type
-        }
-    }).collect();
-    
+    let store_ctx_fields: Vec<_> = components
+        .iter()
+        .map(|component| {
+            let field_name = syn::parse_str::<syn::Ident>(&component.name).unwrap();
+            let ctx_type = &component.backend_type;
+            quote! {
+                pub #field_name: #ctx_type
+            }
+        })
+        .collect();
+
     // Generate StoreCtx initialization in new_store()
-    let store_ctx_inits: Vec<_> = interfaces.iter().map(|iface| {
-        let field_name = syn::parse_str::<syn::Ident>(&iface.name).unwrap();
-        
-        // Special handling for different context types
-        match iface.name.as_str() {
-            "http" => quote! {
-                #field_name: wasi_http::WasiHttpCtx
-            },
-            "websockets" => quote! {
-                #field_name: wasi_websockets::DefaultWebSocketsCtx
-            },
-            _ => {
-                let backend_field = backend_field_name(&iface.backend_type);
-                quote! {
-                    #field_name: self.#backend_field.clone()
+    let store_ctx_inits: Vec<_> = components
+        .iter()
+        .map(|component| {
+            let field_name = syn::parse_str::<syn::Ident>(&component.name).unwrap();
+
+            // Special handling for different context types
+            match component.name.as_str() {
+                "http" => quote! {
+                    #field_name: wasi_http::WasiHttpCtx
+                },
+                "websockets" => quote! {
+                    #field_name: wasi_websockets::DefaultWebSocketsCtx
+                },
+                _ => {
+                    let backend_field = backend_field_name(&component.backend_type);
+                    quote! {
+                        #field_name: self.#backend_field.clone()
+                    }
                 }
             }
-        }
-    }).collect();
-    
+        })
+        .collect();
+
     // Generate WASI interface linking
-    let link_interfaces: Vec<_> = interfaces.iter().map(|iface| {
-        let name = &iface.name;
-        match name.as_str() {
-            "http" => quote! {
-                compiled.link(wasi_http::WasiHttp)?;
-            },
-            "otel" => quote! {
-                compiled.link(wasi_otel::WasiOtel)?;
-            },
-            "blobstore" => quote! {
-                compiled.link(wasi_blobstore::WasiBlobstore)?;
-            },
-            "keyvalue" => quote! {
-                compiled.link(wasi_keyvalue::WasiKeyValue)?;
-            },
-            "messaging" => quote! {
-                compiled.link(wasi_messaging::WasiMessaging)?;
-            },
-            "vault" => quote! {
-                compiled.link(wasi_vault::WasiVault)?;
-            },
-            "sql" => quote! {
-                compiled.link(wasi_sql::WasiSql)?;
-            },
-            "identity" => quote! {
-                compiled.link(wasi_identity::WasiIdentity)?;
-            },
-            "websockets" => quote! {
-                compiled.link(wasi_websockets::WasiWebSockets)?;
-            },
-            _ => quote! {},
-        }
-    }).collect();
-    
+    let link_interfaces: Vec<_> = components
+        .iter()
+        .map(|component| {
+            let name = &component.name;
+            match name.as_str() {
+                "http" => quote! {
+                    compiled.link(wasi_http::WasiHttp)?;
+                },
+                "otel" => quote! {
+                    compiled.link(wasi_otel::WasiOtel)?;
+                },
+                "blobstore" => quote! {
+                    compiled.link(wasi_blobstore::WasiBlobstore)?;
+                },
+                "keyvalue" => quote! {
+                    compiled.link(wasi_keyvalue::WasiKeyValue)?;
+                },
+                "messaging" => quote! {
+                    compiled.link(wasi_messaging::WasiMessaging)?;
+                },
+                "vault" => quote! {
+                    compiled.link(wasi_vault::WasiVault)?;
+                },
+                "sql" => quote! {
+                    compiled.link(wasi_sql::WasiSql)?;
+                },
+                "identity" => quote! {
+                    compiled.link(wasi_identity::WasiIdentity)?;
+                },
+                "websockets" => quote! {
+                    compiled.link(wasi_websockets::WasiWebSockets)?;
+                },
+                _ => quote! {},
+            }
+        })
+        .collect();
+
     // Generate server start calls
-    let server_starts: Vec<_> = interfaces.iter().filter(|iface| iface.is_server).map(|iface| {
-        let name = &iface.name;
-        match name.as_str() {
-            "http" => quote! {
-                Box::pin(wasi_http::WasiHttp.run(self))
-            },
-            "messaging" => quote! {
-                Box::pin(wasi_messaging::WasiMessaging.run(self))
-            },
-            "websockets" => quote! {
-                Box::pin(wasi_websockets::WasiWebSockets.run(self))
-            },
-            _ => quote! {},
-        }
-    }).collect();
-    
+    let server_starts: Vec<_> = components
+        .iter()
+        .filter(|component| component.is_server)
+        .map(|component| {
+            let name = &component.name;
+            match name.as_str() {
+                "http" => quote! {
+                    Box::pin(wasi_http::WasiHttp.run(self))
+                },
+                "messaging" => quote! {
+                    Box::pin(wasi_messaging::WasiMessaging.run(self))
+                },
+                "websockets" => quote! {
+                    Box::pin(wasi_websockets::WasiWebSockets.run(self))
+                },
+                _ => quote! {},
+            }
+        })
+        .collect();
+
     // Generate WASI view implementations
-    let view_impls: Vec<_> = interfaces.iter().map(|iface| {
-        let view_trait = &iface.view_trait;
-        let view_method = &iface.view_method;
-        let ctx_view_type = &iface.ctx_view_type;
-        let field_name = syn::parse_str::<syn::Ident>(&iface.name).unwrap();
-        
-        let module_prefix = match iface.name.as_str() {
-            "http" => quote!(wasi_http),
-            "otel" => quote!(wasi_otel),
-            "blobstore" => quote!(wasi_blobstore),
-            "keyvalue" => quote!(wasi_keyvalue),
-            "messaging" => quote!(wasi_messaging),
-            "vault" => quote!(wasi_vault),
-            "sql" => quote!(wasi_sql),
-            "identity" => quote!(wasi_identity),
-            "websockets" => {
-                // Special case for websockets which has a different trait name
-                return quote! {
-                    impl wasi_websockets::WebSocketsView for RuntimeStoreCtx {
-                        fn start(&mut self) -> wasi_websockets::WasiWebSocketsCtxView<'_> {
-                            wasi_websockets::WasiWebSocketsCtxView {
-                                ctx: &mut self.websockets,
-                                table: &mut self.table,
+    let view_impls: Vec<_> = components
+        .iter()
+        .map(|component| {
+            let view_trait = &component.view_trait;
+            let view_method = &component.view_method;
+            let ctx_view_type = &component.ctx_view_type;
+            let field_name = syn::parse_str::<syn::Ident>(&component.name).unwrap();
+
+            let module_prefix = match component.name.as_str() {
+                "http" => quote!(wasi_http),
+                "otel" => quote!(wasi_otel),
+                "blobstore" => quote!(wasi_blobstore),
+                "keyvalue" => quote!(wasi_keyvalue),
+                "messaging" => quote!(wasi_messaging),
+                "vault" => quote!(wasi_vault),
+                "sql" => quote!(wasi_sql),
+                "identity" => quote!(wasi_identity),
+                "websockets" => {
+                    // Special case for websockets which has a different trait name
+                    return quote! {
+                        impl wasi_websockets::WebSocketsView for RuntimeStoreCtx {
+                            fn start(&mut self) -> wasi_websockets::WasiWebSocketsCtxView<'_> {
+                                wasi_websockets::WasiWebSocketsCtxView {
+                                    ctx: &mut self.websockets,
+                                    table: &mut self.table,
+                                }
                             }
                         }
-                    }
-                };
-            },
-            _ => return quote! {},
-        };
-        
-        quote! {
-            impl #module_prefix::#view_trait for RuntimeStoreCtx {
-                fn #view_method(&mut self) -> #module_prefix::#ctx_view_type<'_> {
-                    #module_prefix::#ctx_view_type {
-                        ctx: &mut self.#field_name,
-                        table: &mut self.table,
+                    };
+                }
+                _ => return quote! {},
+            };
+
+            quote! {
+                impl #module_prefix::#view_trait for RuntimeStoreCtx {
+                    fn #view_method(&mut self) -> #module_prefix::#ctx_view_type<'_> {
+                        #module_prefix::#ctx_view_type {
+                            ctx: &mut self.#field_name,
+                            table: &mut self.table,
+                        }
                     }
                 }
             }
-        }
-    }).collect();
-    
+        })
+        .collect();
+
     let expanded = quote! {
         use runtime::{Resource, Server};
-        
+
         /// Runtime state holding pre-instantiated components and backend connections.
         #[derive(Clone)]
         struct RuntimeContext {
             instance_pre: wasmtime::component::InstancePre<RuntimeStoreCtx>,
             #(#context_fields,)*
         }
-        
+
         impl RuntimeContext {
             /// Creates a new runtime state by linking WASI interfaces and connecting to backends.
             async fn new(compiled: &mut runtime::Compiled<RuntimeStoreCtx>) -> anyhow::Result<Self> {
                 // Link all enabled WASI interfaces to the component
                 #(#link_interfaces)*
-                
+
                 Ok(Self {
                     instance_pre: compiled.pre_instantiate()?,
                     #(#context_inits,)*
                 })
             }
-            
+
             /// Starts all enabled server interfaces (HTTP, messaging, websockets).
             async fn start(&self) -> anyhow::Result<()> {
                 use futures::future::{BoxFuture, try_join_all};
-                
+
                 let futures: Vec<BoxFuture<'_, anyhow::Result<()>>> = vec![
                     #(#server_starts,)*
                 ];
@@ -324,17 +343,17 @@ pub fn runtime(input: TokenStream) -> TokenStream {
                 Ok(())
             }
         }
-        
+
         impl runtime::State for RuntimeContext {
             type StoreCtx = RuntimeStoreCtx;
-            
+
             fn instance_pre(&self) -> &wasmtime::component::InstancePre<Self::StoreCtx> {
                 &self.instance_pre
             }
-            
+
             fn new_store(&self) -> Self::StoreCtx {
                 use wasmtime_wasi::{WasiCtxBuilder, ResourceTable};
-                
+
                 let wasi_ctx = WasiCtxBuilder::new()
                     .inherit_args()
                     .inherit_env()
@@ -342,7 +361,7 @@ pub fn runtime(input: TokenStream) -> TokenStream {
                     .stdout(tokio::io::stdout())
                     .stderr(tokio::io::stderr())
                     .build();
-                
+
                 RuntimeStoreCtx {
                     table: ResourceTable::new(),
                     wasi: wasi_ctx,
@@ -350,14 +369,14 @@ pub fn runtime(input: TokenStream) -> TokenStream {
                 }
             }
         }
-        
+
         /// Per-instance data shared between the WebAssembly runtime and host functions.
         pub struct RuntimeStoreCtx {
             pub table: wasmtime_wasi::ResourceTable,
             pub wasi: wasmtime_wasi::WasiCtx,
             #(#store_ctx_fields,)*
         }
-        
+
         // WASI View Implementations
         impl wasmtime_wasi::WasiView for RuntimeStoreCtx {
             fn ctx(&mut self) -> wasmtime_wasi::WasiCtxView<'_> {
@@ -367,15 +386,15 @@ pub fn runtime(input: TokenStream) -> TokenStream {
                 }
             }
         }
-        
+
         #(#view_impls)*
-        
+
         /// Run the specified wasm guest using the configured runtime.
         pub async fn runtime_run(wasm: std::path::PathBuf) -> anyhow::Result<()> {
             use anyhow::Context as _;
-            
+
             runtime_cli::RuntimeConfig::from_wasm(&wasm)?;
-            
+
             let mut compiled = runtime::Runtime::new()
                 .build(&wasm)
                 .with_context(|| format!("compiling {}", wasm.display()))?;
@@ -385,7 +404,7 @@ pub fn runtime(input: TokenStream) -> TokenStream {
             run_state.start().await.context("starting runtime services")
         }
     };
-    
+
     TokenStream::from(expanded)
 }
 
@@ -401,7 +420,6 @@ fn backend_field_name(backend_type: &syn::Type) -> syn::Ident {
     } else {
         "backend".to_string()
     };
-    
+
     syn::parse_str(&name).unwrap()
 }
-
