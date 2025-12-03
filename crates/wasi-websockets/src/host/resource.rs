@@ -2,11 +2,12 @@ use std::fmt::Debug;
 use std::ops::Deref;
 use std::sync::Arc;
 
+use credibil_error::Error;
 use futures::FutureExt;
 use futures_util::SinkExt;
 use tokio_tungstenite::tungstenite::{Bytes, Message};
 
-use crate::host::generated::wasi::websockets::types::{Error, Peer};
+use crate::host::generated::wasi::websockets::types::Peer;
 use crate::host::server::{get_peer_map, send_socket_message, service_client};
 use crate::host::store_impl::FutureResult;
 use crate::host::types::PublishMessage;
@@ -52,9 +53,7 @@ pub trait WebSocketServer: Debug + Send + Sync + 'static {
                 peers: peers.join(","),
                 content: message,
             })
-            .map_err(|e| Error {
-                message: format!("Failed to serialize PublishMessage: {e}"),
-            })?;
+            .unwrap(); // Safe unwrap
             send_socket_message(&msg)
         }
         .boxed()
@@ -78,9 +77,12 @@ pub trait WebSocketServer: Debug + Send + Sync + 'static {
     fn health_check(&self) -> FutureResult<String> {
         async move {
             let ws_client = service_client().await;
-            ws_client.lock().await.send(Message::Ping(Bytes::new())).await.map_err(|e| Error {
-                message: format!("Websocket service is unhealthy: {e}"),
-            })?;
+            ws_client
+                .lock()
+                .await
+                .send(Message::Ping(Bytes::new()))
+                .await
+                .map_err(|e| Error::ServerError(format!("Websocket service is unhealthy: {e}")))?;
             Ok("websockets service is healthy".into())
         }
         .boxed()

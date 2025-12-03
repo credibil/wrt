@@ -19,6 +19,7 @@ workspace = true
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 anyhow.workspace = true
 chrono.workspace = true
+credibil-error.workspace = true
 fromenv.workspace = true
 futures.workspace = true
 jsonschema = "0.37.4"
@@ -26,7 +27,6 @@ rand.workspace = true
 rdkafka = { version = "0.38", features = ["cmake-build", "ssl-vendored", "tokio"] }
 reqwest.workspace = true
 runtime.workspace = true
-runtime-error.workspace = true
 schema-registry-client = "0.4.1"
 serde_json.workspace = true
 tokio.workspace = true

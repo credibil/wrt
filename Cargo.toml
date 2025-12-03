@@ -277,9 +277,9 @@ wasmtime-wasi-io = "40.0.0"
 wit-bindgen = { version = "0.48.1", features = ["async-spawn"] }
 
 # credibil registry
-credibil-encoding = { version = "0.5.0", registry = "credibil" }
-credibil-otel = { version = "0.5.0", registry = "credibil" }
-#credibil-error = { version = "0.6.0", registry = "credibil" }
+credibil-encoding = { version = "0.6.0", registry = "credibil" }
+credibil-otel = { version = "0.6.0", registry = "credibil" }
+credibil-error = { version = "0.6.0", registry = "credibil" }
 
 # interally referenced crates
 res-azure = { path = "crates/res-azure", version = "0.19.0", registry = "credibil" }
@@ -289,7 +289,6 @@ res-nats = { path = "crates/res-nats", version = "0.19.0", registry = "credibil"
 res-postgres = { path = "crates/res-postgres", version = "0.19.0", registry = "credibil" }
 res-redis = { path = "crates/res-redis", version = "0.19.0", registry = "credibil" }
 runtime = { path = "crates/runtime", version = "0.19.0", registry = "credibil" }
-runtime-error = { path = "crates/runtime-error", version = "0.19.0", registry = "credibil" }
 wasi-blobstore = { path = "crates/wasi-blobstore", version = "0.19.0", registry = "credibil" }
 wasi-http = { path = "crates/wasi-http", version = "0.19.0", registry = "credibil" }
 wasi-identity = { path = "crates/wasi-identity", version = "0.19.0", registry = "credibil" }

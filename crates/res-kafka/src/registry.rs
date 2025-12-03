@@ -2,9 +2,9 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 
+use credibil_error::Error as CredibilError;
 use jsonschema::validate;
 use reqwest::StatusCode;
-use runtime_error::Error as RuntimeError;
 use schema_registry_client::rest::apis::Error as SchemaRegistryError;
 use schema_registry_client::rest::client_config::ClientConfig as RegistryConfig;
 use schema_registry_client::rest::schema_registry_client::{Client, SchemaRegistryClient};
@@ -123,9 +123,11 @@ impl Registry {
         Ok(())
     }
 
-    async fn get_or_fetch_schema(&self, topic: &str) -> Result<Option<(i32, Value)>, RuntimeError> {
+    async fn get_or_fetch_schema(
+        &self, topic: &str,
+    ) -> Result<Option<(i32, Value)>, CredibilError> {
         let sr = self.client.as_ref().ok_or_else(|| {
-            RuntimeError::ServerError("No schema registry client available".to_string())
+            CredibilError::ServerError("No schema registry client available".to_string())
         })?;
 
         let mut schemas = self.schemas.lock().await;
@@ -140,17 +142,17 @@ impl Registry {
                     SchemaRegistryError::ResponseError(e) => {
                         if e.status == StatusCode::NOT_FOUND {
                             schemas.insert(topic.to_string(), None);
-                            return Err(RuntimeError::NotFound(format!(
+                            return Err(CredibilError::NotFound(format!(
                                 "Schema not found for topic {topic}"
                             )));
                         }
-                        return Err(RuntimeError::BadGateway(format!(
+                        return Err(CredibilError::BadGateway(format!(
                             "Error fetching schema for topic {topic}: {}",
                             e.content
                         )));
                     }
                     _ => {
-                        return Err(RuntimeError::ServerError(format!(
+                        return Err(CredibilError::ServerError(format!(
                             "Error fetching schema for topic {topic}: {e:?}"
                         )));
                     }
@@ -160,13 +162,13 @@ impl Registry {
             let schema_str = schema_response
                 .schema
                 .as_ref()
-                .ok_or_else(|| RuntimeError::BadGateway("Schema string is missing".to_string()))?;
+                .ok_or_else(|| CredibilError::BadGateway("Schema string is missing".to_string()))?;
 
             let schema_json: Value = serde_json::from_str(schema_str)
-                .map_err(|e| RuntimeError::BadGateway(format!("Invalid schema JSON: {e:?}")))?;
+                .map_err(|e| CredibilError::BadGateway(format!("Invalid schema JSON: {e:?}")))?;
 
             let registry_id = schema_response.id.ok_or_else(|| {
-                RuntimeError::BadGateway(format!("Registry ID missing for topic {topic}"))
+                CredibilError::BadGateway(format!("Registry ID missing for topic {topic}"))
             })?;
             schemas.insert(topic.to_string(), Some((registry_id, schema_json.clone())));
             drop(schemas);
@@ -189,9 +191,9 @@ impl Registry {
 }
 
 /// Performs tracing and metrics.
-fn trace(err: RuntimeError, service: &str, topic: &str) {
+fn trace(err: CredibilError, service: &str, topic: &str) {
     match err {
-        RuntimeError::ServiceUnavailable(description) => {
+        CredibilError::ServiceUnavailable(description) => {
             error!(
                 monotonic_counter.processing_errors = 1,
                 service = %service,
@@ -199,7 +201,7 @@ fn trace(err: RuntimeError, service: &str, topic: &str) {
                 description
             );
         }
-        RuntimeError::BadGateway(description) => {
+        CredibilError::BadGateway(description) => {
             error!(
                 monotonic_counter.external_errors = 1,
                 service = %service,
@@ -207,13 +209,13 @@ fn trace(err: RuntimeError, service: &str, topic: &str) {
                 description
             );
         }
-        RuntimeError::ServerError(description) => {
+        CredibilError::ServerError(description) => {
             error!(monotonic_counter.runtime_errors = 1,
                 service = %service,
                 description
             );
         }
-        RuntimeError::BadRequest(description) => {
+        CredibilError::BadRequest(description) => {
             warn!(
                 monotonic_counter.parsing_errors = 1,
                 service = %service,
@@ -221,26 +223,26 @@ fn trace(err: RuntimeError, service: &str, topic: &str) {
                 description
             );
         }
-        RuntimeError::Unauthorized(description) => {
+        CredibilError::Unauthorized(description) => {
             warn!(
                     monotonic_counter.authorization_errors = 1,
                     service = %service,
                     description);
         }
-        RuntimeError::NotFound(description) => {
+        CredibilError::NotFound(description) => {
             warn!(
                     monotonic_counter.not_found_errors = 1,
                     service = %service,
                     description);
         }
-        RuntimeError::Gone(description) => {
+        CredibilError::Gone(description) => {
             warn!(
                 monotonic_counter.deprecated_errors = 1,
                 service = %service,
                 description
             );
         }
-        RuntimeError::ImATeaPot(description) => {
+        CredibilError::ImATeaPot(description) => {
             warn!(
                 monotonic_counter.other_errors = 1,
                 service = %service,

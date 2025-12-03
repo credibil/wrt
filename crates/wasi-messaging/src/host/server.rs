@@ -1,9 +1,9 @@
 use std::str::FromStr;
 
 use anyhow::Result;
+use credibil_error::Error as CredibilError;
 use futures::StreamExt;
 use runtime::State;
-use runtime_error::Error as RuntimeError;
 use tracing::{Instrument, debug_span, error, instrument, warn};
 use wasmtime::Store;
 
@@ -69,13 +69,13 @@ where
     }
 
     // Forward message to the wasm guest.
-    async fn send(&self, message: MessageProxy) -> Result<(), RuntimeError> {
+    async fn send(&self, message: MessageProxy) -> Result<(), CredibilError> {
         let mut store_data = self.state.new_store();
         let res_msg = store_data
             .messaging()
             .table
             .push(message.clone())
-            .map_err(|e| RuntimeError::ServerError(e.to_string()))?;
+            .map_err(|e| CredibilError::ServerError(e.to_string()))?;
 
         let instance_pre = self.state.instance_pre();
         let mut store = Store::new(instance_pre.engine(), store_data);
@@ -85,7 +85,7 @@ where
         match store
             .run_concurrent(async |store| {
                 let guest = messaging.wasi_messaging_incoming_handler();
-                guest.call_handle(store, res_msg).await.map(|_| ()).map_err(RuntimeError::from)
+                guest.call_handle(store, res_msg).await.map(|_| ()).map_err(CredibilError::from)
             })
             .instrument(debug_span!("messaging-handle"))
             .await
@@ -94,7 +94,7 @@ where
                 tracing::info!(monotonic_counter.messages_processed = 1, service = %self.service, topic = %message.topic());
                 Ok(())
             }
-            Err(e) => match RuntimeError::from_str(e.to_string().as_str()) {
+            Err(e) => match CredibilError::from_str(e.to_string().as_str()) {
                 Ok(err) | Err(err) => {
                     Self::trace(&err, &self.service, &message.topic());
                     Err(err)
@@ -103,9 +103,9 @@ where
         }
     }
 
-    fn trace(err: &RuntimeError, service: &str, topic: &str) {
+    fn trace(err: &CredibilError, service: &str, topic: &str) {
         match err {
-            RuntimeError::ServiceUnavailable(description) => {
+            CredibilError::ServiceUnavailable(description) => {
                 error!(
                     monotonic_counter.processing_errors = 1,
                     service = %service,
@@ -113,7 +113,7 @@ where
                     description
                 );
             }
-            RuntimeError::BadGateway(description) => {
+            CredibilError::BadGateway(description) => {
                 error!(
                     monotonic_counter.external_errors = 1,
                     service = %service,
@@ -121,13 +121,13 @@ where
                     description
                 );
             }
-            RuntimeError::ServerError(description) => {
+            CredibilError::ServerError(description) => {
                 error!(monotonic_counter.runtime_errors = 1,
                     service = %service,
                     description
                 );
             }
-            RuntimeError::BadRequest(description) => {
+            CredibilError::BadRequest(description) => {
                 warn!(
                     monotonic_counter.parsing_errors = 1,
                     service = %service,
@@ -135,19 +135,19 @@ where
                     description
                 );
             }
-            RuntimeError::Unauthorized(description) => {
+            CredibilError::Unauthorized(description) => {
                 warn!(
                     monotonic_counter.authorization_errors = 1,
                     service = %service,
                     description);
             }
-            RuntimeError::NotFound(description) => {
+            CredibilError::NotFound(description) => {
                 warn!(
                     monotonic_counter.not_found_errors = 1,
                     service = %service,
                     description);
             }
-            RuntimeError::Gone(description) => {
+            CredibilError::Gone(description) => {
                 warn!(
                     monotonic_counter.stale_data = 1,
                     service = %service,
@@ -155,7 +155,7 @@ where
                     description
                 );
             }
-            RuntimeError::ImATeaPot(description) => {
+            CredibilError::ImATeaPot(description) => {
                 warn!(
                     monotonic_counter.other_errors = 1,
                     service = %service,
