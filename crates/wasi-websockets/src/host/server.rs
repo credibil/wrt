@@ -113,8 +113,9 @@ async fn accept_connection(
         if is_service {
             if Message::Ping(Bytes::new()) == msg {
                 tracing::info!("Received ping from service peer {}", peer);
-                return future::ok(());
             }
+            // Ignore all other messages from service peers
+            return future::ok(());
         } else if let Message::Text(text) = msg {
             // Handle client filter subscription
             let json_msg: Result<serde_json::Value, _> = serde_json::from_str(&text);

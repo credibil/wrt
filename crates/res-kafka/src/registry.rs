@@ -226,15 +226,17 @@ fn log_with_metrics(err: CredibilError, service: &str, topic: &str) {
         }
         CredibilError::Unauthorized(description) => {
             warn!(
-                    monotonic_counter.authorization_errors = 1,
-                    service = %service,
-                    description);
+                monotonic_counter.authorization_errors = 1,
+                service = %service,
+                description
+            );
         }
         CredibilError::NotFound(description) => {
             warn!(
-                    monotonic_counter.not_found_errors = 1,
-                    service = %service,
-                    description);
+                monotonic_counter.not_found_errors = 1,
+                service = %service,
+                description
+            );
         }
         CredibilError::Gone(description) => {
             warn!(

@@ -54,7 +54,7 @@ pub trait WebSocketServer: Debug + Send + Sync + 'static {
                 peers: peers.join(","),
                 content: message,
             })
-            .unwrap(); // Safe unwrap
+            .map_err(|e| anyhow!(Error::from(e)))?;
             send_socket_message(&msg).map_err(|e| anyhow!(Error::ServerError(e.to_string())))?;
             Ok(())
         }
@@ -69,7 +69,7 @@ pub trait WebSocketServer: Debug + Send + Sync + 'static {
                 peers: "all".into(),
                 content: message,
             })
-            .unwrap(); // Safe unwrap
+            .map_err(|e| anyhow!(Error::from(e)))?;
             send_socket_message(&msg).map_err(|e| anyhow!(Error::ServerError(e.to_string())))?;
             Ok(())
         }

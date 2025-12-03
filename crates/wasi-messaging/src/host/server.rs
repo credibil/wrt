@@ -95,6 +95,8 @@ where
                 Ok(())
             }
             Err(e) => match CredibilError::from_str(e.to_string().as_str()) {
+                // Both Ok and Err arms do the same thing, but this way we ensure
+                // that we only log known CredibilErrors in a structured way.
                 Ok(err) | Err(err) => {
                     Self::log_with_metrics(&err, &self.service, &message.topic());
                     Err(err)
@@ -140,13 +142,15 @@ where
                 warn!(
                     monotonic_counter.authorization_errors = 1,
                     service = %service,
-                    description);
+                    description
+                );
             }
             CredibilError::NotFound(description) => {
                 warn!(
                     monotonic_counter.not_found_errors = 1,
                     service = %service,
-                    description);
+                    description
+                );
             }
             CredibilError::Gone(description) => {
                 warn!(

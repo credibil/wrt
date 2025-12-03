@@ -28,33 +28,21 @@ impl HostServerWithStore for WasiWebSockets {
         peers: Vec<String>,
     ) -> Result<()> {
         let ws_server = use_server(accessor, &self_)?;
-        let result = ws_server.send_peers(message, peers).await;
-        match result {
-            Ok(()) => Ok(()),
-            Err(e) => Err(e),
-        }
+        ws_server.send_peers(message, peers).await
     }
 
     async fn send_all<T>(
         accessor: &Accessor<T, Self>, self_: Resource<WebSocketProxy>, message: String,
     ) -> Result<()> {
         let ws_server = use_server(accessor, &self_)?;
-        let result = ws_server.send_all(message).await;
-        match result {
-            Ok(()) => Ok(()),
-            Err(e) => Err(e),
-        }
+        ws_server.send_all(message).await
     }
 
     async fn health_check<T>(
         accessor: &Accessor<T, Self>, self_: Resource<WebSocketProxy>,
     ) -> Result<String> {
         let ws_server = use_server(accessor, &self_)?;
-        let result = ws_server.health_check().await;
-        match result {
-            Ok(status) => Ok(status),
-            Err(e) => Err(e),
-        }
+        ws_server.health_check().await
     }
 
     async fn drop<T>(_a: &Accessor<T, Self>, _r: Resource<WebSocketProxy>) -> Result<()>
