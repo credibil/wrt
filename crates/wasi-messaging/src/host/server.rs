@@ -96,14 +96,14 @@ where
             }
             Err(e) => match CredibilError::from_str(e.to_string().as_str()) {
                 Ok(err) | Err(err) => {
-                    Self::trace(&err, &self.service, &message.topic());
+                    Self::log_with_metrics(&err, &self.service, &message.topic());
                     Err(err)
                 }
             },
         }
     }
 
-    fn trace(err: &CredibilError, service: &str, topic: &str) {
+    fn log_with_metrics(err: &CredibilError, service: &str, topic: &str) {
         match err {
             CredibilError::ServiceUnavailable(description) => {
                 error!(
@@ -122,7 +122,8 @@ where
                 );
             }
             CredibilError::ServerError(description) => {
-                error!(monotonic_counter.runtime_errors = 1,
+                error!(
+                    monotonic_counter.runtime_errors = 1,
                     service = %service,
                     description
                 );

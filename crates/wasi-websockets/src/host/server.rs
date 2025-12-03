@@ -50,6 +50,10 @@ pub async fn service_client() -> &'static Mutex<WebSocketStream<MaybeTlsStream<T
         .await
 }
 
+/// Send a message to specified peers or all connected peers
+/// Accepts a JSON string representing a `PublishMessage`
+/// with a peers field (comma-separated list of peer addresses or "all")
+/// and a content field (the message to send)
 pub fn send_socket_message(message: &str) -> Result<()> {
     let message: PublishMessage = match serde_json::from_str(message) {
         Ok(m) => m,

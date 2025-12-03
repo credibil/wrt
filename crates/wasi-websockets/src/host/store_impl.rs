@@ -31,7 +31,7 @@ impl HostServerWithStore for WasiWebSockets {
         let result = ws_server.send_peers(message, peers).await;
         match result {
             Ok(()) => Ok(()),
-            Err(e) => Err(e.into()),
+            Err(e) => Err(e),
         }
     }
 
@@ -42,7 +42,7 @@ impl HostServerWithStore for WasiWebSockets {
         let result = ws_server.send_all(message).await;
         match result {
             Ok(()) => Ok(()),
-            Err(e) => Err(e.into()),
+            Err(e) => Err(e),
         }
     }
 
@@ -53,7 +53,7 @@ impl HostServerWithStore for WasiWebSockets {
         let result = ws_server.health_check().await;
         match result {
             Ok(status) => Ok(status),
-            Err(e) => Err(e.into()),
+            Err(e) => Err(e),
         }
     }
 

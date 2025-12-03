@@ -39,9 +39,8 @@ use store_impl::FutureResult;
 use wasmtime::component::{HasData, Linker};
 use wasmtime_wasi::ResourceTable;
 
-use self::generated::wasi::websockets::store;
 use self::generated::wasi::websockets::store::{Host as WsHost, HostServer};
-use self::generated::wasi::websockets::types as generated_types;
+use self::generated::wasi::websockets::{store, types as generated_types};
 
 const DEF_WEBSOCKETS_ADDR: &str = "0.0.0.0:80";
 

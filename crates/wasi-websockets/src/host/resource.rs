@@ -2,6 +2,7 @@ use std::fmt::Debug;
 use std::ops::Deref;
 use std::sync::Arc;
 
+use anyhow::anyhow;
 use credibil_error::Error;
 use futures::FutureExt;
 use futures_util::SinkExt;
@@ -54,7 +55,8 @@ pub trait WebSocketServer: Debug + Send + Sync + 'static {
                 content: message,
             })
             .unwrap(); // Safe unwrap
-            send_socket_message(&msg)
+            send_socket_message(&msg).map_err(|e| anyhow!(Error::ServerError(e.to_string())))?;
+            Ok(())
         }
         .boxed()
     }
@@ -68,7 +70,8 @@ pub trait WebSocketServer: Debug + Send + Sync + 'static {
                 content: message,
             })
             .unwrap(); // Safe unwrap
-            send_socket_message(&msg)
+            send_socket_message(&msg).map_err(|e| anyhow!(Error::ServerError(e.to_string())))?;
+            Ok(())
         }
         .boxed()
     }

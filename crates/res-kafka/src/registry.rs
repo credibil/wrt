@@ -67,7 +67,7 @@ impl Registry {
                 }
                 Ok(None) => buffer,
                 Err(e) => {
-                    trace(e, SERVICE, topic);
+                    log_with_metrics(e, SERVICE, topic);
                     buffer
                 }
             }
@@ -87,7 +87,7 @@ impl Registry {
                     return buffer.to_vec();
                 }
                 Err(e) => {
-                    trace(e, SERVICE, topic);
+                    log_with_metrics(e, SERVICE, topic);
                     return buffer.to_vec();
                 }
             };
@@ -191,7 +191,7 @@ impl Registry {
 }
 
 /// Performs tracing and metrics.
-fn trace(err: CredibilError, service: &str, topic: &str) {
+fn log_with_metrics(err: CredibilError, service: &str, topic: &str) {
     match err {
         CredibilError::ServiceUnavailable(description) => {
             error!(
@@ -210,7 +210,8 @@ fn trace(err: CredibilError, service: &str, topic: &str) {
             );
         }
         CredibilError::ServerError(description) => {
-            error!(monotonic_counter.runtime_errors = 1,
+            error!(
+                monotonic_counter.runtime_errors = 1,
                 service = %service,
                 description
             );
@@ -237,7 +238,7 @@ fn trace(err: CredibilError, service: &str, topic: &str) {
         }
         CredibilError::Gone(description) => {
             warn!(
-                monotonic_counter.deprecated_errors = 1,
+                monotonic_counter.stale_data = 1,
                 service = %service,
                 description
             );
