@@ -92,6 +92,7 @@ pub async fn run(wasm: PathBuf) -> Result<()> {
 
     let mut compiled =
         Runtime::new().build(&wasm).with_context(|| format!("compiling {}", wasm.display()))?;
+    tracing::info!("wasm component compiled successfully");
     let run_state = Context::new(&mut compiled).await.context("preparing runtime state")?;
     run_state.start().await.context("starting runtime services")
 }
@@ -189,6 +190,7 @@ impl Context {
         compiled.link(WasiVault)?;
         #[cfg(feature = "websockets")]
         compiled.link(WasiWebSockets)?;
+        tracing::info!("linking okay");
 
         Ok(Self {
             instance_pre: compiled.pre_instantiate()?,

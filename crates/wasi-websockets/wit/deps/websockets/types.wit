@@ -1,12 +1,7 @@
 package wasi:websockets@0.1.0;
 
 interface types {
-    /// An error record type.
-    /// Currently, this provides only one function to return a string representation
-    /// of the error. In the future, this will be extended to provide more information.
-    record error {
-        message: string,
-    }
+    type error = string;
 
     /// A peer record type representing a connected websocket peer.
     record peer {

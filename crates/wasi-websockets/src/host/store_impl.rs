@@ -1,16 +1,14 @@
-use anyhow::anyhow;
+use anyhow::{Result, anyhow};
 pub use runtime::FutureResult;
 use wasmtime::component::{Accessor, Resource};
 
+use crate::host::WasiWebSockets;
 use crate::host::generated::wasi::websockets::store::{HostServerWithStore, HostWithStore};
-use crate::host::generated::wasi::websockets::types::{Error, Peer};
+use crate::host::generated::wasi::websockets::types::Peer;
 use crate::host::resource::WebSocketProxy;
-use crate::host::{Result, WasiWebSockets};
 
 impl HostWithStore for WasiWebSockets {
-    async fn get_server<T>(
-        accessor: &Accessor<T, Self>,
-    ) -> Result<Resource<WebSocketProxy>, Error> {
+    async fn get_server<T>(accessor: &Accessor<T, Self>) -> Result<Resource<WebSocketProxy>> {
         let server = accessor.with(|mut store| store.get().ctx.serve()).await?;
         let proxy = WebSocketProxy(server);
         Ok(accessor.with(|mut store| store.get().table.push(proxy))?)
@@ -20,7 +18,7 @@ impl HostWithStore for WasiWebSockets {
 impl HostServerWithStore for WasiWebSockets {
     async fn get_peers<T>(
         accessor: &Accessor<T, Self>, self_: Resource<WebSocketProxy>,
-    ) -> Result<Vec<Peer>, Error> {
+    ) -> Result<Vec<Peer>> {
         let ws_server = use_server(accessor, &self_)?;
         Ok(ws_server.get_peers())
     }
@@ -28,35 +26,23 @@ impl HostServerWithStore for WasiWebSockets {
     async fn send_peers<T>(
         accessor: &Accessor<T, Self>, self_: Resource<WebSocketProxy>, message: String,
         peers: Vec<String>,
-    ) -> Result<(), Error> {
+    ) -> Result<()> {
         let ws_server = use_server(accessor, &self_)?;
-        let result = ws_server.send_peers(message, peers).await;
-        match result {
-            Ok(()) => Ok(()),
-            Err(e) => Err(e.into()),
-        }
+        ws_server.send_peers(message, peers).await
     }
 
     async fn send_all<T>(
         accessor: &Accessor<T, Self>, self_: Resource<WebSocketProxy>, message: String,
-    ) -> Result<(), Error> {
+    ) -> Result<()> {
         let ws_server = use_server(accessor, &self_)?;
-        let result = ws_server.send_all(message).await;
-        match result {
-            Ok(()) => Ok(()),
-            Err(e) => Err(e.into()),
-        }
+        ws_server.send_all(message).await
     }
 
     async fn health_check<T>(
         accessor: &Accessor<T, Self>, self_: Resource<WebSocketProxy>,
-    ) -> Result<String, Error> {
+    ) -> Result<String> {
         let ws_server = use_server(accessor, &self_)?;
-        let result = ws_server.health_check().await;
-        match result {
-            Ok(status) => Ok(status),
-            Err(e) => Err(e.into()),
-        }
+        ws_server.health_check().await
     }
 
     async fn drop<T>(_a: &Accessor<T, Self>, _r: Resource<WebSocketProxy>) -> Result<()>
@@ -75,20 +61,4 @@ pub fn use_server<T>(
             store.get().table.get(self_).map_err(|_e| anyhow!("Failed to get WebSocket server"))?;
         Ok::<_, anyhow::Error>(server.clone())
     })
-}
-
-impl From<wasmtime_wasi::ResourceTableError> for Error {
-    fn from(err: wasmtime_wasi::ResourceTableError) -> Self {
-        Self {
-            message: err.to_string(),
-        }
-    }
-}
-
-impl From<anyhow::Error> for Error {
-    fn from(err: anyhow::Error) -> Self {
-        Self {
-            message: err.to_string(),
-        }
-    }
 }

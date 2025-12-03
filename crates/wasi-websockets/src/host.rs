@@ -16,7 +16,10 @@ mod generated {
         world: "websockets",
         path: "wit",
         imports: {
-            default: async | store | tracing,
+            default: async | store | tracing | trappable,
+        },
+        trappable_error_type: {
+            "wasi:websockets/types.error" => anyhow::Error,
         },
         with: {
             "wasi:websockets/store.server": WebSocketProxy,
@@ -36,8 +39,8 @@ use store_impl::FutureResult;
 use wasmtime::component::{HasData, Linker};
 use wasmtime_wasi::ResourceTable;
 
-use self::generated::wasi::websockets::store;
 use self::generated::wasi::websockets::store::{Host as WsHost, HostServer};
+use self::generated::wasi::websockets::{store, types as generated_types};
 
 const DEF_WEBSOCKETS_ADDR: &str = "0.0.0.0:80";
 
@@ -72,6 +75,12 @@ pub struct WasiWebSocketsCtxView<'a> {
 }
 
 impl WsHost for WasiWebSocketsCtxView<'_> {}
+
+impl generated_types::Host for WasiWebSocketsCtxView<'_> {
+    fn convert_error(&mut self, err: anyhow::Error) -> Result<String> {
+        Ok(err.to_string())
+    }
+}
 
 impl HostServer for WasiWebSocketsCtxView<'_> {}
 
