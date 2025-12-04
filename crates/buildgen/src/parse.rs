@@ -29,12 +29,11 @@ impl Parse for BuildInput {
 
         // parse 'host:backend' pairs
         while !content.is_empty() {
-            let host_ident = content.parse::<Type>()?;
-
+            let host_type = content.parse::<Type>()?;
             content.parse::<Token![:]>()?;
             let backend: Type = content.parse()?;
 
-            let host_config = HostConfig::new(host_ident, backend.clone());
+            let host_config = HostConfig::new(host_type, backend.clone());
             hosts.push(host_config);
             backends.insert(backend);
 
@@ -49,32 +48,20 @@ impl Parse for BuildInput {
 
 /// Information about a WASI host and its configuration.
 pub struct HostConfig {
-    pub name: String,
-    pub ident: Type,
+    pub host_type: Type,
     pub backend: Type,
-    pub view_trait: syn::Ident,
-    pub view_method: syn::Ident,
-    pub ctx_view: syn::Ident,
     pub is_server: bool,
 }
 
 impl HostConfig {
-    fn new(ident: Type, backend: Type) -> Self {
-        let name = quote! {#ident}.to_string();
+    fn new(host_type: Type, backend: Type) -> Self {
+        let name = quote! {#host_type}.to_string();
         let short_name = name.strip_prefix("Wasi").unwrap_or(&name).to_lowercase();
-
-        let view_trait = syn::parse_str(&format!("{name}View")).unwrap();
-        let view_method = syn::parse_str(&short_name).unwrap();
-        let ctx_view = syn::parse_str(&format!("{name}CtxView")).unwrap();
         let is_server = matches!(short_name.as_str(), "http" | "messaging" | "websockets");
 
         Self {
-            name,
-            ident,
+            host_type,
             backend,
-            view_trait,
-            view_method,
-            ctx_view,
             is_server,
         }
     }

@@ -26,5 +26,4 @@ pub fn runtime(input: TokenStream) -> TokenStream {
         Err(e) => return e.into_compile_error().into(),
     };
     expand(pre_expand).into()
-
 }
