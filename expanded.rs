@@ -6,6 +6,7 @@ extern crate std;
 use std::prelude::rust_2024::*;
 use anyhow::Result;
 use runtime::{Cli, Command, Parser};
+use wasi_http::{DefaultHttp, WasiHttp};
 use wasi_otel::{DefaultOtel, WasiOtel};
 use anyhow::Context as _;
 use futures::future::{BoxFuture, try_join_all};
@@ -28,6 +29,7 @@ pub async fn runtime_run(wasm: std::path::PathBuf) -> anyhow::Result<()> {
 /// Runtime state holding pre-instantiated components and backend connections.
 struct Context {
     instance_pre: InstancePre<StoreCtx>,
+    defaulthttp: DefaultHttp,
     defaultotel: DefaultOtel,
 }
 #[automatically_derived]
@@ -36,6 +38,7 @@ impl ::core::clone::Clone for Context {
     fn clone(&self) -> Context {
         Context {
             instance_pre: ::core::clone::Clone::clone(&self.instance_pre),
+            defaulthttp: ::core::clone::Clone::clone(&self.defaulthttp),
             defaultotel: ::core::clone::Clone::clone(&self.defaultotel),
         }
     }
@@ -43,15 +46,19 @@ impl ::core::clone::Clone for Context {
 impl Context {
     /// Creates a new runtime state by linking WASI interfaces and connecting to backends.
     async fn new(compiled: &mut runtime::Compiled<StoreCtx>) -> anyhow::Result<Self> {
+        compiled.link(WasiHttp)?;
         compiled.link(WasiOtel)?;
         Ok(Self {
             instance_pre: compiled.pre_instantiate()?,
+            defaulthttp: DefaultHttp::connect().await?,
             defaultotel: DefaultOtel::connect().await?,
         })
     }
     /// start enabled servers
     async fn start(&self) -> anyhow::Result<()> {
-        let futures: Vec<BoxFuture<'_, anyhow::Result<()>>> = ::alloc::vec::Vec::new();
+        let futures: Vec<BoxFuture<'_, anyhow::Result<()>>> = <[_]>::into_vec(
+            ::alloc::boxed::box_new([Box::pin(wasi_http::WasiHttp.run(self))]),
+        );
         try_join_all(futures).await?;
         Ok(())
     }
@@ -72,6 +79,7 @@ impl runtime::State for Context {
         StoreCtx {
             table: ResourceTable::new(),
             wasi: wasi_ctx,
+            wasi_http: self.defaulthttp.clone(),
             wasi_otel: self.defaultotel.clone(),
         }
     }
@@ -80,12 +88,21 @@ impl runtime::State for Context {
 pub struct StoreCtx {
     pub table: wasmtime_wasi::ResourceTable,
     pub wasi: wasmtime_wasi::WasiCtx,
+    pub wasi_http: DefaultHttp,
     pub wasi_otel: DefaultOtel,
 }
 impl wasmtime_wasi::WasiView for StoreCtx {
     fn ctx(&mut self) -> wasmtime_wasi::WasiCtxView<'_> {
         wasmtime_wasi::WasiCtxView {
             ctx: &mut self.wasi,
+            table: &mut self.table,
+        }
+    }
+}
+impl wasi_http::WasiHttpView for StoreCtx {
+    fn http(&mut self) -> wasi_http::WasiHttpCtxView<'_> {
+        wasi_http::WasiHttpCtxView {
+            ctx: &mut self.wasi_http,
             table: &mut self.table,
         }
     }

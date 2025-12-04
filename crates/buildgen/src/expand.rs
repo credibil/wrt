@@ -6,12 +6,12 @@ use crate::parse::BuildInput;
 
 pub struct PreExpand {
     context: Vec<TokenStream>,
-    server_starts: Vec<TokenStream>,
-    view_impls: Vec<TokenStream>,
     host_types: Vec<Type>,
     host_idents: Vec<Ident>,
     backend_types: Vec<Type>,
     backend_idents: Vec<Ident>,
+    servers: Vec<TokenStream>,
+    wasi_views: Vec<TokenStream>,
 }
 
 impl TryFrom<BuildInput> for PreExpand {
@@ -25,20 +25,19 @@ impl TryFrom<BuildInput> for PreExpand {
             context.push(quote! {#field: #backend});
         }
 
-        // let mut link_calls = Vec::new();
-        let mut server_starts = Vec::new();
-        let mut view_impls = Vec::new();
         let mut host_types = Vec::new();
         let mut host_idents = Vec::new();
         let mut backend_types = Vec::new();
         let mut backend_idents = Vec::new();
+        let mut servers = Vec::new();
+        let mut wasi_views = Vec::new();
 
         for host in &input.hosts {
-            let host_type = &host.host_type;
-            let host_name = quote! {#host_type}.to_string();
+            let type_ = &host.type_;
+            let host_name = quote! {#type_}.to_string();
             let host_ident = syn::parse_str::<Ident>(&snake_case(&host_name))?;
 
-            host_types.push(host_type.clone());
+            host_types.push(type_.clone());
             host_idents.push(host_ident.clone());
             backend_types.push(host.backend.clone());
             backend_idents.push(field_name(&host.backend));
@@ -47,8 +46,8 @@ impl TryFrom<BuildInput> for PreExpand {
 
             // servers
             if host.is_server {
-                let start = quote! {Box::pin(#module::#host_type.run(self))};
-                server_starts.push(start);
+                let start = quote! {Box::pin(#module::#type_.run(self))};
+                servers.push(start);
             }
 
             // WasiViewXxx implementations
@@ -67,17 +66,17 @@ impl TryFrom<BuildInput> for PreExpand {
                     }
                 }
             };
-            view_impls.push(view);
+            wasi_views.push(view);
         }
 
         Ok(Self {
             context,
-            server_starts,
-            view_impls,
             host_types,
             host_idents,
             backend_types,
             backend_idents,
+            servers,
+            wasi_views,
         })
     }
 }
@@ -85,15 +84,13 @@ impl TryFrom<BuildInput> for PreExpand {
 pub fn expand(pre_expand: PreExpand) -> TokenStream {
     let PreExpand {
         context,
-        server_starts,
-        view_impls,
         host_types,
         host_idents,
         backend_types,
         backend_idents,
+        servers,
+        wasi_views,
     } = pre_expand;
-
-
 
     quote! {
         use anyhow::Context as _;
@@ -137,7 +134,7 @@ pub fn expand(pre_expand: PreExpand) -> TokenStream {
             /// start enabled servers
             async fn start(&self) -> anyhow::Result<()> {
                 let futures: Vec<BoxFuture<'_, anyhow::Result<()>>> = vec![
-                    #(#server_starts,)*
+                    #(#servers,)*
                 ];
                 try_join_all(futures).await?;
                 Ok(())
@@ -185,7 +182,7 @@ pub fn expand(pre_expand: PreExpand) -> TokenStream {
             }
         }
 
-        #(#view_impls)*
+        #(#wasi_views)*
     }
 }
 

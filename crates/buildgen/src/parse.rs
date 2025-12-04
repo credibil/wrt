@@ -15,7 +15,7 @@ use syn::{Token, Type};
 /// }
 /// ```
 pub struct BuildInput {
-    pub hosts: Vec<HostConfig>,
+    pub hosts: Vec<Host>,
     pub backends: HashSet<Type>,
 }
 
@@ -25,7 +25,7 @@ impl Parse for BuildInput {
         syn::braced!(content in input);
 
         let mut backends: HashSet<Type> = HashSet::new();
-        let mut hosts = Vec::<HostConfig>::new();
+        let mut hosts = Vec::<Host>::new();
 
         // parse 'host:backend' pairs
         while !content.is_empty() {
@@ -33,7 +33,7 @@ impl Parse for BuildInput {
             content.parse::<Token![:]>()?;
             let backend: Type = content.parse()?;
 
-            let host_config = HostConfig::new(host_type, backend.clone());
+            let host_config = Host::new(host_type, backend.clone());
             hosts.push(host_config);
             backends.insert(backend);
 
@@ -47,20 +47,20 @@ impl Parse for BuildInput {
 }
 
 /// Information about a WASI host and its configuration.
-pub struct HostConfig {
-    pub host_type: Type,
+pub struct Host {
+    pub type_: Type,
     pub backend: Type,
     pub is_server: bool,
 }
 
-impl HostConfig {
-    fn new(host_type: Type, backend: Type) -> Self {
-        let name = quote! {#host_type}.to_string();
+impl Host {
+    fn new(type_: Type, backend: Type) -> Self {
+        let name = quote! {#type_}.to_string();
         let short_name = name.strip_prefix("Wasi").unwrap_or(&name).to_lowercase();
         let is_server = matches!(short_name.as_str(), "http" | "messaging" | "websockets");
 
         Self {
-            host_type,
+            type_,
             backend,
             is_server,
         }
