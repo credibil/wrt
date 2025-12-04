@@ -1,11 +1,12 @@
 mod expand;
 mod parse;
-// mod generate;
+mod generate;
 
 use proc_macro::TokenStream;
 use syn::parse_macro_input;
 
-use self::expand::{PreExpand, expand};
+use self::expand::expand;
+use self::generate::Generated;
 use self::parse::BuildInput;
 
 /// Generates the runtime infrastructure based on the configuration.
@@ -22,9 +23,9 @@ use self::parse::BuildInput;
 #[proc_macro]
 pub fn runtime(input: TokenStream) -> TokenStream {
     let config = parse_macro_input!(input as BuildInput);
-    let pre_expand = match PreExpand::try_from(config) {
-        Ok(pre_expand) => pre_expand,
+    let generated = match Generated::try_from(config) {
+        Ok(generated) => generated,
         Err(e) => return e.into_compile_error().into(),
     };
-    expand(pre_expand).into()
+    expand(generated).into()
 }

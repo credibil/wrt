@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use syn::{Ident, Type};
@@ -7,21 +5,42 @@ use syn::{Ident, Type};
 use crate::parse::BuildInput;
 
 pub struct Generated {
-    context: Context,
-    store_ctx: StoreCtx,
-    servers: Vec<TokenStream>,
-    wasi_views: Vec<TokenStream>,
+    pub context: Vec<TokenStream>,
+    pub host_types: Vec<Type>,
+    pub host_idents: Vec<Ident>,
+    pub backend_types: Vec<Type>,
+    pub backend_idents: Vec<Ident>,
+    pub servers: Vec<TokenStream>,
+    pub wasi_views: Vec<TokenStream>,
 }
 
-impl From<BuildInput> for Generated {
-    fn from(input: BuildInput) -> Self {
+impl TryFrom<BuildInput> for Generated {
+    type Error = syn::Error;
+
+    fn try_from(input: BuildInput) -> Result<Self, Self::Error> {
+        // `Context` struct
+        let mut context = Vec::new();
+        for backend in input.backends {
+            let field = field_name(&backend);
+            context.push(quote! {#field: #backend});
+        }
+
+        let mut host_types = Vec::new();
+        let mut host_idents = Vec::new();
+        let mut backend_types = Vec::new();
+        let mut backend_idents = Vec::new();
         let mut servers = Vec::new();
         let mut wasi_views = Vec::new();
 
         for host in &input.hosts {
             let type_ = &host.type_;
             let host_name = quote! {#type_}.to_string();
-            let host_ident = format_ident!("{}", &snake_case(&host_name));
+            let host_ident = syn::parse_str::<Ident>(&snake_case(&host_name))?;
+
+            host_types.push(type_.clone());
+            host_idents.push(host_ident.clone());
+            backend_types.push(host.backend.clone());
+            backend_idents.push(field_name(&host.backend));
 
             let module = &host_ident;
 
@@ -50,52 +69,15 @@ impl From<BuildInput> for Generated {
             wasi_views.push(view);
         }
 
-        Self {
-            context: Context::from(&input.backends),
-            store_ctx: StoreCtx::from(&input),
+        Ok(Self {
+            context,
+            host_types,
+            host_idents,
+            backend_types,
+            backend_idents,
             servers,
             wasi_views,
-        }
-    }
-}
-
-pub struct Context {
-    pub fields: Vec<TokenStream>,
-}
-
-impl From<&HashSet<Type>> for Context {
-    fn from(backends: &HashSet<Type>) -> Self {
-        let mut fields = Vec::new();
-        for backend in backends {
-            let field = field_name(backend);
-            fields.push(quote! {#field: #backend});
-        }
-        Self { fields }
-    }
-}
-
-pub struct StoreCtx {
-    fields: Vec<TokenStream>,
-    instance: Vec<TokenStream>,
-}
-
-impl From<&BuildInput> for StoreCtx {
-    fn from(input: &BuildInput) -> Self {
-        let mut fields = Vec::new();
-        let mut instance = Vec::new();
-
-        for host in &input.hosts {
-            let type_ = &host.type_;
-            let host_name = quote! {#type_}.to_string();
-            let host_ident = format_ident!("{}", &snake_case(&host_name));
-
-            let backend_type = &host.backend;
-            fields.push(quote! {pub #host_ident: #backend_type});
-
-            let backend_ident = field_name(&host.backend);
-            instance.push(quote! {#host_ident: self.#backend_ident.clone()});
-        }
-        Self { fields, instance }
+        })
     }
 }
 
