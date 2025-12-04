@@ -49,7 +49,7 @@ impl Context {
             defaultotel: DefaultOtel::connect().await?,
         })
     }
-    /// Starts all enabled server interfaces (HTTP, messaging, websockets).
+    /// start enabled servers
     async fn start(&self) -> anyhow::Result<()> {
         let futures: Vec<BoxFuture<'_, anyhow::Result<()>>> = ::alloc::vec::Vec::new();
         try_join_all(futures).await?;
@@ -76,7 +76,7 @@ impl runtime::State for Context {
         }
     }
 }
-/// Per-instance data shared between the WebAssembly runtime and host functions.
+/// Per-guest instance data shared between the runtime and guest
 pub struct StoreCtx {
     pub table: wasmtime_wasi::ResourceTable,
     pub wasi: wasmtime_wasi::WasiCtx,

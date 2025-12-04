@@ -1,93 +1,67 @@
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{format_ident, quote};
 use syn::{Ident, Type};
 
 use crate::parse::BuildInput;
 
 pub struct PreExpand {
-    context_struct: Vec<TokenStream>,
-    context_inst: Vec<TokenStream>,
-    store_ctx_struct: Vec<TokenStream>,
-    store_ctx_inst: Vec<TokenStream>,
-    link_interfaces: Vec<TokenStream>,
+    context: Vec<TokenStream>,
     server_starts: Vec<TokenStream>,
     view_impls: Vec<TokenStream>,
+    host_types: Vec<Type>,
+    host_idents: Vec<Ident>,
+    backend_types: Vec<Type>,
+    backend_idents: Vec<Ident>,
 }
 
 impl TryFrom<BuildInput> for PreExpand {
     type Error = syn::Error;
 
     fn try_from(input: BuildInput) -> Result<Self, Self::Error> {
-        // `RuntimeContext` struct fields & `new()` method initialization
-        let mut context_struct = Vec::new();
-        let mut context_inst = Vec::new();
-
+        // `Context` struct
+        let mut context = Vec::new();
         for backend in input.backends {
-            let field_ident = field_name(&backend);
-            let field = quote! {
-                #field_ident: #backend
-            };
-            let init = quote! {
-                #field_ident: #backend::connect().await?
-            };
-
-            context_struct.push(field);
-            context_inst.push(init);
+            let field = field_name(&backend);
+            context.push(quote! {#field: #backend});
         }
 
-        // `StoreCtx` fields
-        let mut store_ctx_struct = Vec::new();
-        let mut store_ctx_inst = Vec::new();
-        let mut link_interfaces = Vec::new();
+        // let mut link_calls = Vec::new();
         let mut server_starts = Vec::new();
         let mut view_impls = Vec::new();
+        let mut host_types = Vec::new();
+        let mut host_idents = Vec::new();
+        let mut backend_types = Vec::new();
+        let mut backend_idents = Vec::new();
 
         for host in &input.hosts {
             let host_type = &host.host_type;
-            let name = quote! {#host_type}.to_string();
-            let field = syn::parse_str::<Ident>(&snake_case(&name))?;
-            let module = &field;
+            let host_name = quote! {#host_type}.to_string();
+            let host_ident = syn::parse_str::<Ident>(&snake_case(&host_name))?;
 
-            // `StoreCtx` struct fields
-            let backend_type = &host.backend;
-            let struct_field = quote! {
-                pub #field: #backend_type
-            };
-            store_ctx_struct.push(struct_field);
+            host_types.push(host_type.clone());
+            host_idents.push(host_ident.clone());
+            backend_types.push(host.backend.clone());
+            backend_idents.push(field_name(&host.backend));
 
-            // `StoreCtx` data fields
-            let backend_ident = field_name(backend_type);
-            let inst_field = quote! {
-                #field: self.#backend_ident.clone()
-            };
-            store_ctx_inst.push(inst_field);
-
-            // link interfaces
-            let host_type = &host.host_type;
-            link_interfaces.push(quote! {
-                compiled.link(#host_type)?;
-            });
+            let module = &host_ident;
 
             // servers
             if host.is_server {
-                let start = quote! {
-                    Box::pin(#module::#host_type.run(self))
-                };
+                let start = quote! {Box::pin(#module::#host_type.run(self))};
                 server_starts.push(start);
             }
 
             // WasiViewXxx implementations
-            let short_name = name.strip_prefix("Wasi").unwrap_or(&name).to_lowercase();
-
-            let view_trait = syn::parse_str::<Ident>(&format!("{name}View"))?;
-            let view_method = syn::parse_str::<Ident>(&short_name)?;
-            let ctx_view = syn::parse_str::<Ident>(&format!("{name}CtxView"))?;
+            let short_name = host_name.strip_prefix("Wasi").unwrap_or(&host_name).to_lowercase();
+            let view_trait = format_ident!("{host_name}View");
+            let view_method = format_ident!("{short_name}");
+            let ctx_view = format_ident!("{host_name}CtxView");
 
             let view = quote! {
                 impl #module::#view_trait for StoreCtx {
                     fn #view_method(&mut self) -> #module::#ctx_view<'_> {
                         #module::#ctx_view {
-                            ctx: &mut self.#field,
+                            ctx: &mut self.#host_ident,
                             table: &mut self.table,
                         }
                     }
@@ -97,27 +71,29 @@ impl TryFrom<BuildInput> for PreExpand {
         }
 
         Ok(Self {
-            context_struct,
-            context_inst,
-            store_ctx_struct,
-            store_ctx_inst,
-            link_interfaces,
+            context,
             server_starts,
             view_impls,
+            host_types,
+            host_idents,
+            backend_types,
+            backend_idents,
         })
     }
 }
 
 pub fn expand(pre_expand: PreExpand) -> TokenStream {
     let PreExpand {
-        context_struct,
-        context_inst,
-        store_ctx_struct,
-        store_ctx_inst,
-        link_interfaces,
+        context,
         server_starts,
         view_impls,
+        host_types,
+        host_idents,
+        backend_types,
+        backend_idents,
     } = pre_expand;
+
+
 
     quote! {
         use anyhow::Context as _;
@@ -143,22 +119,22 @@ pub fn expand(pre_expand: PreExpand) -> TokenStream {
         #[derive(Clone)]
         struct Context {
             instance_pre: InstancePre<StoreCtx>,
-            #(#context_struct,)*
+            #(#context,)*
         }
 
         impl Context {
             /// Creates a new runtime state by linking WASI interfaces and connecting to backends.
             async fn new(compiled: &mut runtime::Compiled<StoreCtx>) -> anyhow::Result<Self> {
-                // Link all enabled WASI interfaces to the component
-                #(#link_interfaces)*
+                // link enabled WASI components
+                #(compiled.link(#host_types)?;)*
 
                 Ok(Self {
                     instance_pre: compiled.pre_instantiate()?,
-                    #(#context_inst,)*
+                    #(#context::connect().await?,)*
                 })
             }
 
-            /// Starts all enabled server interfaces (HTTP, messaging, websockets).
+            /// start enabled servers
             async fn start(&self) -> anyhow::Result<()> {
                 let futures: Vec<BoxFuture<'_, anyhow::Result<()>>> = vec![
                     #(#server_starts,)*
@@ -187,16 +163,16 @@ pub fn expand(pre_expand: PreExpand) -> TokenStream {
                 StoreCtx {
                     table: ResourceTable::new(),
                     wasi: wasi_ctx,
-                    #(#store_ctx_inst,)*
+                    #(#host_idents: self.#backend_idents.clone(),)*
                 }
             }
         }
 
-        /// Per-instance data shared between the WebAssembly runtime and host functions.
+        /// Per-guest instance data shared between the runtime and guest
         pub struct StoreCtx {
             pub table: wasmtime_wasi::ResourceTable,
             pub wasi: wasmtime_wasi::WasiCtx,
-            #(#store_ctx_struct,)*
+            #(pub #host_idents: #backend_types,)*
         }
 
         // WASI View Implementations
