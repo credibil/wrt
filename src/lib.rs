@@ -97,6 +97,3 @@ impl RuntimeConfig {
         Ok(config)
     }
 }
-
-/// Marker trait for runtime state that can be used as a generic bound.
-pub trait RuntimeState {}

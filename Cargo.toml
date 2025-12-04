@@ -20,30 +20,7 @@ doctest = false
 workspace = true
 
 [features]
-default = ["jit", "http-server", "credibil"]
-
-# Top-level feature sets that can be used to create a build.
-# Each set contains a unique grouping of component-resource tuples used by wasm
-# apps.
-http-server = ["http-default", "otel-default"]
-credibil = ["http", "otel", "identity"]
-realtime = ["http-default", "otel-default", "keyvalue-redis", "messaging-kafka", "identity-azure"]
-realtime-http = ["http-default", "otel-default", "keyvalue-redis"]
-realtime-websockets = ["http-default", "messaging-kafka", "otel-default", "websockets-default"]
-
-# Component-Resource tuples (not intended to be used directly)
-blobstore-mongodb = ["blobstore", "mongodb"]
-blobstore-nats = ["blobstore", "nats"]
-http-default = ["http"]
-identity-azure = ["identity", "azure"]
-keyvalue-nats = ["keyvalue", "nats"]
-keyvalue-redis = ["keyvalue", "redis"]
-messaging-nats = ["messaging", "nats"]
-messaging-kafka = ["messaging", "kafka"]
-otel-default = ["otel"]
-sql-postgres = ["sql", "postgres"]
-vault-azure = ["vault", "azure"]
-websockets-default = ["websockets"]
+default = ["jit", "http", "otel", "identity"]
 
 # WASI components (not intended to be used directly)
 blobstore = ["dep:wasi-blobstore"]

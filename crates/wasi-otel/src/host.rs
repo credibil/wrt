@@ -30,6 +30,9 @@ use wasmtime::component::{HasData, Linker, ResourceTable};
 pub use self::default_impl::DefaultOtel;
 use self::generated::wasi::otel as wasi;
 
+#[derive(Debug)]
+pub struct WasiOtel;
+
 impl<T> Host<T> for WasiOtel
 where
     T: WasiOtelView + 'static,
@@ -42,10 +45,26 @@ where
     }
 }
 
-#[derive(Debug)]
-pub struct WasiOtel;
 impl HasData for WasiOtel {
     type Data<'a> = WasiOtelCtxView<'a>;
+}
+
+/// A trait which provides internal WASI OpenTelemetry state.
+///
+/// This is implemented by the `T` in `Linker<T>` — a single type shared across
+/// all WASI components for the runtime build.
+pub trait WasiOtelView: Send {
+    /// Return a [`WasiOtelCtxView`] from mutable reference to self.
+    fn otel(&mut self) -> WasiOtelCtxView<'_>;
+}
+
+/// View into [`WasiOtelCtx`] implementation and [`ResourceTable`].
+pub struct WasiOtelCtxView<'a> {
+    /// Mutable reference to the WASI OpenTelemetry context.
+    pub ctx: &'a mut dyn WasiOtelCtx,
+
+    /// Mutable reference to table used to manage resources.
+    pub table: &'a mut ResourceTable,
 }
 
 /// A trait which provides internal WASI OpenTelemetry context.
@@ -64,22 +83,4 @@ pub trait WasiOtelCtx: Debug + Send + Sync + 'static {
     /// Errors are logged but not propagated to prevent telemetry failures
     /// from affecting application logic.
     fn export_metrics(&self, request: ExportMetricsServiceRequest) -> FutureResult<()>;
-}
-
-/// View into [`WasiOtelCtx`] implementation and [`ResourceTable`].
-pub struct WasiOtelCtxView<'a> {
-    /// Mutable reference to the WASI OpenTelemetry context.
-    pub ctx: &'a mut dyn WasiOtelCtx,
-
-    /// Mutable reference to table used to manage resources.
-    pub table: &'a mut ResourceTable,
-}
-
-/// A trait which provides internal WASI OpenTelemetry state.
-///
-/// This is implemented by the `T` in `Linker<T>` — a single type shared across
-/// all WASI components for the runtime build.
-pub trait WasiOtelView: Send {
-    /// Return a [`WasiOtelCtxView`] from mutable reference to self.
-    fn otel(&mut self) -> WasiOtelCtxView<'_>;
 }
