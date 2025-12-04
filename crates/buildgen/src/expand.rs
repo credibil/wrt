@@ -5,10 +5,10 @@ use syn::{Ident, Type};
 use crate::parse::BuildInput;
 
 pub struct PreExpand {
-    context_fields: Vec<TokenStream>,
-    context_inits: Vec<TokenStream>,
+    context_struct: Vec<TokenStream>,
+    context_inst: Vec<TokenStream>,
     store_ctx_struct: Vec<TokenStream>,
-    store_ctx_data: Vec<TokenStream>,
+    store_ctx_inst: Vec<TokenStream>,
     link_interfaces: Vec<TokenStream>,
     server_starts: Vec<TokenStream>,
     view_impls: Vec<TokenStream>,
@@ -19,8 +19,8 @@ impl TryFrom<BuildInput> for PreExpand {
 
     fn try_from(input: BuildInput) -> Result<Self, Self::Error> {
         // `RuntimeContext` struct fields & `new()` method initialization
-        let mut context_fields = Vec::new();
-        let mut context_inits = Vec::new();
+        let mut context_struct = Vec::new();
+        let mut context_inst = Vec::new();
 
         for backend in input.backends {
             let field_ident = field_name(&backend);
@@ -31,34 +31,36 @@ impl TryFrom<BuildInput> for PreExpand {
                 #field_ident: #backend::connect().await?
             };
 
-            context_fields.push(field);
-            context_inits.push(init);
+            context_struct.push(field);
+            context_inst.push(init);
         }
 
         // `StoreCtx` fields
         let mut store_ctx_struct = Vec::new();
-        let mut store_ctx_data = Vec::new();
+        let mut store_ctx_inst = Vec::new();
         let mut link_interfaces = Vec::new();
         let mut server_starts = Vec::new();
+        let mut view_impls = Vec::new();
 
         for host in &input.hosts {
             let host_type = &host.host_type;
             let name = quote! {#host_type}.to_string();
-            let field_ident = syn::parse_str::<Ident>(&snake_case(&name))?;
+            let field = syn::parse_str::<Ident>(&snake_case(&name))?;
+            let module = &field;
 
             // `StoreCtx` struct fields
-            let backend_ty = &host.backend;
-            let field = quote! {
-                pub #field_ident: #backend_ty
+            let backend_type = &host.backend;
+            let struct_field = quote! {
+                pub #field: #backend_type
             };
-            store_ctx_struct.push(field);
+            store_ctx_struct.push(struct_field);
 
             // `StoreCtx` data fields
-            let backend_ident = field_name(backend_ty);
-            let init = quote! {
-                #field_ident: self.#backend_ident.clone()
+            let backend_ident = field_name(backend_type);
+            let inst_field = quote! {
+                #field: self.#backend_ident.clone()
             };
-            store_ctx_data.push(init);
+            store_ctx_inst.push(inst_field);
 
             // link interfaces
             let host_type = &host.host_type;
@@ -68,51 +70,37 @@ impl TryFrom<BuildInput> for PreExpand {
 
             // servers
             if host.is_server {
-                let module_name = snake_case(&name);
-                let module = syn::parse_str::<Ident>(&module_name)?;
                 let start = quote! {
                     Box::pin(#module::#host_type.run(self))
                 };
                 server_starts.push(start);
             }
-        }
 
-        // WasiViewXxx implementations
-        let view_impls: Vec<_> = input
-            .hosts
-            .iter()
-            .map(|host| {
-                let host_type = &host.host_type;
-                let name = quote! {#host_type}.to_string();
-                let field_ident = syn::parse_str::<Ident>(&snake_case(&name)).unwrap();
+            // WasiViewXxx implementations
+            let short_name = name.strip_prefix("Wasi").unwrap_or(&name).to_lowercase();
 
-                let short_name = name.strip_prefix("Wasi").unwrap_or(&name).to_lowercase();
+            let view_trait = syn::parse_str::<Ident>(&format!("{name}View"))?;
+            let view_method = syn::parse_str::<Ident>(&short_name)?;
+            let ctx_view = syn::parse_str::<Ident>(&format!("{name}CtxView"))?;
 
-                let view_trait = syn::parse_str::<Ident>(&format!("{name}View")).unwrap();
-                let view_method = syn::parse_str::<Ident>(&short_name).unwrap();
-                let ctx_view = syn::parse_str::<Ident>(&format!("{name}CtxView")).unwrap();
-
-                let module_name = snake_case(&name);
-                let module = syn::parse_str::<Ident>(&module_name).unwrap();
-
-                quote! {
-                    impl #module::#view_trait for StoreCtx {
-                        fn #view_method(&mut self) -> #module::#ctx_view<'_> {
-                            #module::#ctx_view {
-                                ctx: &mut self.#field_ident,
-                                table: &mut self.table,
-                            }
+            let view = quote! {
+                impl #module::#view_trait for StoreCtx {
+                    fn #view_method(&mut self) -> #module::#ctx_view<'_> {
+                        #module::#ctx_view {
+                            ctx: &mut self.#field,
+                            table: &mut self.table,
                         }
                     }
                 }
-            })
-            .collect();
+            };
+            view_impls.push(view);
+        }
 
         Ok(Self {
-            context_fields,
-            context_inits,
+            context_struct,
+            context_inst,
             store_ctx_struct,
-            store_ctx_data,
+            store_ctx_inst,
             link_interfaces,
             server_starts,
             view_impls,
@@ -122,10 +110,10 @@ impl TryFrom<BuildInput> for PreExpand {
 
 pub fn expand(pre_expand: PreExpand) -> TokenStream {
     let PreExpand {
-        context_fields,
-        context_inits,
+        context_struct,
+        context_inst,
         store_ctx_struct,
-        store_ctx_data,
+        store_ctx_inst,
         link_interfaces,
         server_starts,
         view_impls,
@@ -155,7 +143,7 @@ pub fn expand(pre_expand: PreExpand) -> TokenStream {
         #[derive(Clone)]
         struct Context {
             instance_pre: InstancePre<StoreCtx>,
-            #(#context_fields,)*
+            #(#context_struct,)*
         }
 
         impl Context {
@@ -166,7 +154,7 @@ pub fn expand(pre_expand: PreExpand) -> TokenStream {
 
                 Ok(Self {
                     instance_pre: compiled.pre_instantiate()?,
-                    #(#context_inits,)*
+                    #(#context_inst,)*
                 })
             }
 
@@ -199,7 +187,7 @@ pub fn expand(pre_expand: PreExpand) -> TokenStream {
                 StoreCtx {
                     table: ResourceTable::new(),
                     wasi: wasi_ctx,
-                    #(#store_ctx_data,)*
+                    #(#store_ctx_inst,)*
                 }
             }
         }
