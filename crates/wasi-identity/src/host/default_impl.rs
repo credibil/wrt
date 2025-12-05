@@ -53,8 +53,8 @@ impl Resource for DefaultIdentity {
 
 impl WasiIdentityCtx for DefaultIdentity {
     fn get_identity(&self, _name: String) -> FutureResult<Arc<dyn Identity>> {
+        tracing::debug!("getting identity");
         let token_manager = self.token_manager.clone();
-
         async move { Ok(Arc::new(token_manager) as Arc<dyn Identity>) }.boxed()
     }
 }
@@ -108,6 +108,7 @@ struct TokenManager {
 
 impl Identity for TokenManager {
     fn get_token(&self, scopes: Vec<String>) -> FutureResult<AccessToken> {
+        tracing::debug!("getting token");
         let token_manager = self.clone();
         async move { token_manager.token(&scopes).await }.boxed()
     }
@@ -128,9 +129,11 @@ impl TokenManager {
         let now = Instant::now();
 
         // use cached token if still valid
-        let cache = self.cache.lock().await;
-        if cache.expires_at > now {
-            return Ok(cache.access_token.clone());
+        {
+            let cache = self.cache.lock().await;
+            if cache.expires_at > now {
+                return Ok(cache.access_token.clone());
+            }
         }
 
         // if we drop through we need to fetch a new token

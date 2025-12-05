@@ -9,14 +9,14 @@ use runtime::{Cli, Command, Parser};
 // use res_mongodb::Client as MongoDb;
 // use res_nats::Client as Nats;
 use wasi_http::{DefaultHttp, WasiHttp};
-// use wasi_identity::{DefaultIdentity, WasiIdentity};
+use wasi_identity::{DefaultIdentity, WasiIdentity};
 use wasi_otel::{DefaultOtel, WasiOtel};
 
 // Generate runtime infrastructure for the credibil feature set
 buildgen::runtime!({
     WasiHttp: DefaultHttp,
     WasiOtel: DefaultOtel,
-    // WasiIdentity: DefaultIdentity,
+    WasiIdentity: DefaultIdentity,
     // "keyvalue": "default",
     // "messaging": "nats",
 });
