@@ -25,10 +25,10 @@ use std::marker::PhantomData;
 
 use opentelemetry_proto::tonic::collector::metrics::v1::ExportMetricsServiceRequest;
 use opentelemetry_proto::tonic::collector::trace::v1::ExportTraceServiceRequest;
-use runtime::{FutureResult, Host, WasiHostCtx, WasiHostCtxView, WasiHostView};
+use kernel::{FutureResult, Host, WasiHostCtx, WasiHostCtxView, WasiHostView};
 use wasmtime::component::{HasData, Linker};
 
-pub use self::default_impl::DefaultOtel;
+pub use self::default_impl::WasiOtelCtxImpl;
 use self::generated::wasi::otel as wasi;
 
 #[derive(Debug, Default)]

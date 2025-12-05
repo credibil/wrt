@@ -69,7 +69,7 @@ pub trait Server<S: State>: Debug + Sync + Send {
 
 /// WASI hosts that can be run implement this trait in order to allow the runtime to
 /// start them.
-pub trait Resource: Sized + Sync + Send {
+pub trait Backend: Sized + Sync + Send {
     type ConnectOptions: FromEnv;
 
     /// Connect to the resource.

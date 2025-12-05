@@ -1,6 +1,6 @@
 # buildgen
 
-Procedural macros for generating WebAssembly Component Runtime infrastructure.
+Procedural macros for generating WebAssembly Component Initiator infrastructure.
 
 ## Overview
 
@@ -130,7 +130,7 @@ A public async function that:
 4. Connects to backends
 5. Starts server interfaces (HTTP, messaging, WebSockets)
 
-## Example: Custom Runtime Configuration
+## Example: Custom Initiator Configuration
 
 You can create different runtime configurations for different use cases:
 

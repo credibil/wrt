@@ -5,7 +5,7 @@ use fromenv::FromEnv;
 use futures::Future;
 use http_body_util::BodyExt;
 use http_body_util::combinators::UnsyncBoxBody;
-use runtime::Resource;
+use kernel::Backend;
 use tracing::instrument;
 use wasmtime_wasi::TrappableError;
 use wasmtime_wasi_http::p3::bindings::http::types::ErrorCode;
@@ -25,7 +25,7 @@ pub struct ConnectOptions {
     pub addr: String,
 }
 
-impl runtime::FromEnv for ConnectOptions {
+impl kernel::FromEnv for ConnectOptions {
     fn from_env() -> Result<Self> {
         Self::from_env().finalize().map_err(|e| anyhow!("issue loading connection options: {e}"))
     }
@@ -34,7 +34,7 @@ impl runtime::FromEnv for ConnectOptions {
 #[derive(Debug, Clone)]
 pub struct DefaultHttp;
 
-impl Resource for DefaultHttp {
+impl Backend for DefaultHttp {
     type ConnectOptions = ConnectOptions;
 
     #[instrument]

@@ -5,105 +5,105 @@ extern crate std;
 #[prelude_import]
 use std::prelude::rust_2024::*;
 use anyhow::Result;
-use runtime::{Cli, Command, Parser};
-use wasi_otel::{DefaultOtel, WasiOtel};
-use anyhow::Context as _;
-use futures::future::{BoxFuture, try_join_all};
-use runtime::{Resource, Server, WasiHostCtxView, WasiHostView};
-use wasmtime_wasi::{WasiCtxBuilder, ResourceTable};
-use wasmtime::component::InstancePre;
-/// Run the specified wasm guest using the configured runtime.
-pub async fn runtime_run(wasm: std::path::PathBuf) -> anyhow::Result<()> {
-    runtime_cli::RuntimeConfig::from_wasm(&wasm)?;
-    let mut compiled = runtime::Runtime::new()
-        .build(&wasm)
-        .with_context(|| ::alloc::__export::must_use({
-            ::alloc::fmt::format(format_args!("compiling {0}", wasm.display()))
-        }))?;
-    let run_state = Context::new(&mut compiled)
-        .await
-        .context("preparing runtime state")?;
-    run_state.start().await.context("starting runtime services")
-}
-/// Runtime state holding pre-instantiated components and backend connections.
-struct Context {
-    instance_pre: InstancePre<StoreCtx>,
-    pub defaultotel: DefaultOtel,
-}
-#[automatically_derived]
-impl ::core::clone::Clone for Context {
-    #[inline]
-    fn clone(&self) -> Context {
-        Context {
-            instance_pre: ::core::clone::Clone::clone(&self.instance_pre),
-            defaultotel: ::core::clone::Clone::clone(&self.defaultotel),
+use kernel::{Cli, Command, Parser};
+use wasi_otel::{WasiOtel, WasiOtelCtxImpl};
+mod runtime {
+    use super::*;
+    use anyhow::Context as _;
+    use futures::future::{BoxFuture, try_join_all};
+    use kernel::{Backend, Server, WasiHostCtxView, WasiHostView};
+    use wasmtime_wasi::{WasiCtxBuilder, ResourceTable};
+    use wasmtime::component::InstancePre;
+    /// Run the specified wasm guest using the configured runtime.
+    pub async fn run(wasm: std::path::PathBuf) -> anyhow::Result<()> {
+        let mut compiled = kernel::create(&wasm)
+            .with_context(|| ::alloc::__export::must_use({
+                ::alloc::fmt::format(format_args!("compiling {0}", wasm.display()))
+            }))?;
+        let run_state = Context::new(&mut compiled)
+            .await
+            .context("preparing runtime state")?;
+        run_state.start().await.context("starting runtime services")
+    }
+    /// Initiator state holding pre-instantiated components and backend connections.
+    struct Context {
+        instance_pre: InstancePre<StoreCtx>,
+        pub wasiotelctximpl: WasiOtelCtxImpl,
+    }
+    #[automatically_derived]
+    impl ::core::clone::Clone for Context {
+        #[inline]
+        fn clone(&self) -> Context {
+            Context {
+                instance_pre: ::core::clone::Clone::clone(&self.instance_pre),
+                wasiotelctximpl: ::core::clone::Clone::clone(&self.wasiotelctximpl),
+            }
         }
     }
-}
-impl Context {
-    /// Creates a new runtime state by linking WASI interfaces and connecting to backends.
-    async fn new(compiled: &mut runtime::Compiled<StoreCtx>) -> anyhow::Result<Self> {
-        compiled.link(WasiOtel::default())?;
-        Ok(Self {
-            instance_pre: compiled.pre_instantiate()?,
-            defaultotel: DefaultOtel::connect().await?,
-        })
-    }
-    /// start enabled servers
-    async fn start(&self) -> anyhow::Result<()> {
-        let futures: Vec<BoxFuture<'_, anyhow::Result<()>>> = ::alloc::vec::Vec::new();
-        try_join_all(futures).await?;
-        Ok(())
-    }
-}
-impl runtime::State for Context {
-    type StoreCtx = StoreCtx;
-    fn instance_pre(&self) -> &InstancePre<Self::StoreCtx> {
-        &self.instance_pre
-    }
-    fn new_store(&self) -> Self::StoreCtx {
-        let wasi_ctx = WasiCtxBuilder::new()
-            .inherit_args()
-            .inherit_env()
-            .inherit_stdin()
-            .stdout(tokio::io::stdout())
-            .stderr(tokio::io::stderr())
-            .build();
-        StoreCtx {
-            table: ResourceTable::new(),
-            wasi: wasi_ctx,
-            wasi_otel: self.defaultotel.clone(),
+    impl Context {
+        /// Creates a new runtime state by linking WASI interfaces and connecting to backends.
+        async fn new(compiled: &mut kernel::Compiled<StoreCtx>) -> anyhow::Result<Self> {
+            compiled.link(WasiOtel::default())?;
+            Ok(Self {
+                instance_pre: compiled.pre_instantiate()?,
+                wasiotelctximpl: WasiOtelCtxImpl::connect().await?,
+            })
+        }
+        /// start enabled servers
+        async fn start(&self) -> anyhow::Result<()> {
+            let futures: Vec<BoxFuture<'_, anyhow::Result<()>>> = ::alloc::vec::Vec::new();
+            try_join_all(futures).await?;
+            Ok(())
         }
     }
-}
-/// Per-guest instance data shared between the runtime and guest
-pub struct StoreCtx {
-    pub table: wasmtime_wasi::ResourceTable,
-    pub wasi: wasmtime_wasi::WasiCtx,
-    pub wasi_otel: DefaultOtel,
-}
-impl wasmtime_wasi::WasiView for StoreCtx {
-    fn ctx(&mut self) -> wasmtime_wasi::WasiCtxView<'_> {
-        wasmtime_wasi::WasiCtxView {
-            ctx: &mut self.wasi,
-            table: &mut self.table,
+    impl kernel::State for Context {
+        type StoreCtx = StoreCtx;
+        fn instance_pre(&self) -> &InstancePre<Self::StoreCtx> {
+            &self.instance_pre
+        }
+        fn new_store(&self) -> Self::StoreCtx {
+            let wasi_ctx = WasiCtxBuilder::new()
+                .inherit_args()
+                .inherit_env()
+                .inherit_stdin()
+                .stdout(tokio::io::stdout())
+                .stderr(tokio::io::stderr())
+                .build();
+            StoreCtx {
+                table: ResourceTable::new(),
+                wasi: wasi_ctx,
+                wasi_otel: self.wasiotelctximpl.clone(),
+            }
         }
     }
-}
-impl WasiHostView<DefaultOtel> for StoreCtx {
-    fn ctx_view(&mut self) -> WasiHostCtxView<'_, DefaultOtel> {
-        WasiHostCtxView {
-            ctx: &mut self.wasi_otel,
-            table: &mut self.table,
+    /// Per-guest instance data shared between the runtime and guest
+    pub struct StoreCtx {
+        pub table: wasmtime_wasi::ResourceTable,
+        pub wasi: wasmtime_wasi::WasiCtx,
+        pub wasi_otel: WasiOtelCtxImpl,
+    }
+    impl wasmtime_wasi::WasiView for StoreCtx {
+        fn ctx(&mut self) -> wasmtime_wasi::WasiCtxView<'_> {
+            wasmtime_wasi::WasiCtxView {
+                ctx: &mut self.wasi,
+                table: &mut self.table,
+            }
+        }
+    }
+    impl WasiHostView<WasiOtelCtxImpl> for StoreCtx {
+        fn ctx_view(&mut self) -> WasiHostCtxView<'_, WasiOtelCtxImpl> {
+            WasiHostCtxView {
+                ctx: &mut self.wasi_otel,
+                table: &mut self.table,
+            }
         }
     }
 }
 fn main() -> Result<()> {
     let body = async {
         match Cli::parse().command {
-            Command::Run { wasm } => runtime_run(wasm).await,
-            Command::Env => runtime_cli::env::print(),
-            Command::Compile { wasm, output } => runtime::compile(&wasm, output),
+            Command::Run { wasm } => runtime::run(wasm).await,
+            Command::Compile { wasm, output } => kernel::compile(&wasm, output),
         }
     };
     #[allow(

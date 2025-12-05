@@ -1,5 +1,5 @@
 use anyhow::anyhow;
-pub use runtime::FutureResult;
+pub use kernel::FutureResult;
 use wasmtime::component::{Accessor, Resource};
 
 use crate::host::generated::wasi::websockets::store::{HostServerWithStore, HostWithStore};

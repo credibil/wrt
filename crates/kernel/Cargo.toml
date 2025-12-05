@@ -1,6 +1,6 @@
 [package]
-name = "runtime"
-description = "Credibil runtime"
+name = "kernel"
+description = "Credibil runtime system"
 readme = "README.md"
 authors.workspace = true
 categories.workspace = true

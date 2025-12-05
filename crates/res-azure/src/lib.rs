@@ -13,7 +13,7 @@ use azure_core::credentials::{Secret, TokenCredential};
 use azure_identity::{ClientSecretCredential, DeveloperToolsCredential};
 use azure_security_keyvault_secrets::SecretClient;
 use fromenv::FromEnv;
-use runtime::Resource;
+use kernel::Backend;
 use tracing::instrument;
 
 #[derive(Clone)]
@@ -27,7 +27,7 @@ impl Debug for Client {
     }
 }
 
-impl Resource for Client {
+impl Backend for Client {
     type ConnectOptions = ConnectOptions;
 
     #[instrument]
@@ -79,7 +79,7 @@ pub struct CredentialOptions {
     pub client_secret: String,
 }
 
-impl runtime::FromEnv for ConnectOptions {
+impl kernel::FromEnv for ConnectOptions {
     fn from_env() -> Result<Self> {
         Self::from_env().finalize().map_err(|e| anyhow!("issue loading connection options: {e}"))
     }

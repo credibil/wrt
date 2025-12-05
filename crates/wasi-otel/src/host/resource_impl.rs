@@ -1,6 +1,6 @@
 use anyhow::Result;
 use opentelemetry_sdk::Resource;
-use runtime::WasiHostCtxView;
+use kernel::WasiHostCtxView;
 use wasmtime::component::Accessor;
 
 use crate::host::generated::wasi::otel::{resource, types};

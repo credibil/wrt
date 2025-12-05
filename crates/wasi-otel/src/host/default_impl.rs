@@ -1,11 +1,11 @@
 use anyhow::{Context, Result, anyhow};
 use fromenv::FromEnv;
 use futures::FutureExt;
+use kernel::Backend;
 use opentelemetry_proto::tonic::collector::metrics::v1::ExportMetricsServiceRequest;
 use opentelemetry_proto::tonic::collector::metrics::v1::metrics_service_client::MetricsServiceClient;
 use opentelemetry_proto::tonic::collector::trace::v1::ExportTraceServiceRequest;
 use opentelemetry_proto::tonic::collector::trace::v1::trace_service_client::TraceServiceClient;
-use runtime::Resource;
 use tonic::transport::Channel;
 use tracing::instrument;
 
@@ -17,19 +17,19 @@ pub struct ConnectOptions {
     pub grpc_url: String,
 }
 
-impl runtime::FromEnv for ConnectOptions {
+impl kernel::FromEnv for ConnectOptions {
     fn from_env() -> Result<Self> {
         Self::from_env().finalize().map_err(|e| anyhow!("issue loading connection options: {e}"))
     }
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct DefaultOtel {
+pub struct WasiOtelCtxImpl {
     traces_client: Option<TraceServiceClient<Channel>>,
     metrics_client: Option<MetricsServiceClient<Channel>>,
 }
 
-impl Resource for DefaultOtel {
+impl Backend for WasiOtelCtxImpl {
     type ConnectOptions = ConnectOptions;
 
     #[instrument]
@@ -49,7 +49,7 @@ impl Resource for DefaultOtel {
     }
 }
 
-impl WasiOtelCtx for DefaultOtel {
+impl WasiOtelCtx for WasiOtelCtxImpl {
     /// Export traces using gRPC.
     ///
     /// Errors are logged but not propagated to prevent telemetry failures

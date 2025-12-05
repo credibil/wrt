@@ -31,7 +31,7 @@ futures.workspace = true
 http-body-util.workspace = true
 hyper.workspace = true
 reqwest = { workspace = true, features = ["rustls-tls"] }
-runtime.workspace = true
+kernel.workspace = true
 tokio.workspace = true
 wasmtime = { workspace = true, features = ["component-model-async"] }
 wasmtime-wasi.workspace = true

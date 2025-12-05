@@ -41,11 +41,9 @@ impl TryFrom<BuildInput> for Generated {
             store_ctx_fields.push(quote! {#host_ident: #backend_type});
             store_ctx_values.push(quote! {#host_ident: self.#backend_ident.clone()});
 
-            let module = &host_ident;
-
             // servers
             if host.is_server {
-                let start = quote! {Box::pin(#module::#host_type.run(self))};
+                let start = quote! {Box::pin(#host_type.run(self))};
                 server_trait_impls.push(start);
             }
 

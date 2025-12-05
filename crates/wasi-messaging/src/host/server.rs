@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use futures::StreamExt;
-use runtime::State;
+use kernel::State;
 use tracing::{Instrument, debug_span};
 use wasmtime::Store;
 

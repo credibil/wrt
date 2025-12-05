@@ -66,3 +66,7 @@ impl Host {
         }
     }
 }
+
+// fn is_server<S: kernel::State, T: kernel::Server<S>>() {
+//     true
+// }

@@ -11,11 +11,11 @@ use std::sync::Arc;
 
 use anyhow::{Result, anyhow};
 use fromenv::{FromEnv, ParseResult};
+use kernel::Backend;
 use rand::random_range;
 use rdkafka::consumer::{Consumer, StreamConsumer};
 use rdkafka::producer::{DeliveryResult, ProducerContext, ThreadedProducer};
 use rdkafka::{ClientConfig, ClientContext, Message as _};
-use runtime::Resource;
 use tracing::instrument;
 
 use crate::partitioner::Partitioner;
@@ -37,7 +37,7 @@ impl Debug for Client {
     }
 }
 
-impl Resource for Client {
+impl Backend for Client {
     type ConnectOptions = ConnectOptions;
 
     #[instrument]
@@ -82,7 +82,8 @@ impl Resource for Client {
 
 #[derive(Debug, Clone, FromEnv)]
 pub struct ConnectOptions {
-    #[env(from = "KAFKA_CLIENT_ID")]
+    // #[env(from = "KAFKA_CLIENT_ID")]
+    #[env(from = "COMPONENT")]
     pub client_id: String,
     #[env(from = "KAFKA_BROKERS")]
     pub brokers: String,
@@ -146,7 +147,7 @@ impl From<&ConnectOptions> for ClientConfig {
     }
 }
 
-impl runtime::FromEnv for ConnectOptions {
+impl kernel::FromEnv for ConnectOptions {
     fn from_env() -> Result<Self> {
         Self::from_env().finalize().map_err(|e| anyhow!("issue loading connection options: {e}"))
     }

@@ -11,7 +11,7 @@ use oauth2::{
     ClientId, ClientSecret, EmptyExtraTokenFields, Scope, StandardTokenResponse,
     TokenResponse as _, TokenUrl,
 };
-use runtime::Resource;
+use kernel::Backend;
 use tracing::instrument;
 
 use crate::host::WasiIdentityCtx;
@@ -30,7 +30,7 @@ pub struct ConnectOptions {
     pub token_url: String,
 }
 
-impl runtime::FromEnv for ConnectOptions {
+impl kernel::FromEnv for ConnectOptions {
     fn from_env() -> Result<Self> {
         Self::from_env().finalize().map_err(|e| anyhow!("issue loading connection options: {e}"))
     }
@@ -41,7 +41,7 @@ pub struct DefaultIdentity {
     token_manager: TokenManager,
 }
 
-impl Resource for DefaultIdentity {
+impl Backend for DefaultIdentity {
     type ConnectOptions = ConnectOptions;
 
     #[instrument]

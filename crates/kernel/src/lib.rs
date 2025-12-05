@@ -1,10 +1,10 @@
 #![cfg(not(target_arch = "wasm32"))]
 
-//! # WebAssembly Runtime
+//! # WebAssembly Initiator
 
 #[cfg(feature = "jit")]
-mod compiler;
-mod runtime;
+mod compile;
+mod create;
 mod traits;
 
 use std::path::PathBuf;
@@ -14,8 +14,8 @@ use clap::Subcommand;
 pub use {wasmtime, wasmtime_wasi};
 
 #[cfg(feature = "jit")]
-pub use self::compiler::*;
-pub use self::runtime::*;
+pub use self::compile::*;
+pub use self::create::*;
 pub use self::traits::*;
 
 #[derive(Parser, PartialEq, Eq)]
@@ -46,7 +46,4 @@ pub enum Command {
         #[arg(short, long)]
         output: Option<PathBuf>,
     },
-
-    /// Print the runtime environment variable requirements.
-    Env,
 }

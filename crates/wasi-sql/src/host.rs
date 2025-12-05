@@ -33,7 +33,7 @@ mod generated {
 use std::fmt::Debug;
 use std::sync::Arc;
 
-use runtime::Host;
+use kernel::Host;
 use wasmtime::component::{HasData, Linker};
 use wasmtime_wasi::ResourceTable;
 

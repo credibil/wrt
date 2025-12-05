@@ -35,8 +35,8 @@ use std::sync::Arc;
 
 use bytes::Bytes;
 pub use resource::*;
-pub use runtime::FutureResult;
-use runtime::Host;
+pub use kernel::FutureResult;
+use kernel::Host;
 use wasmtime::component::{HasData, Linker, ResourceTable};
 use wasmtime_wasi::p2::pipe::MemoryOutputPipe;
 

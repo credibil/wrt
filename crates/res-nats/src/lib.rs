@@ -11,7 +11,7 @@ use std::sync::Arc;
 use anyhow::{Context, Result, anyhow};
 use async_nats::AuthError;
 use fromenv::{FromEnv, ParseResult};
-use runtime::Resource;
+use kernel::Backend;
 use tracing::instrument;
 
 #[derive(Debug, Clone)]
@@ -20,7 +20,7 @@ pub struct Client {
     topics: Option<Vec<String>>,
 }
 
-impl Resource for Client {
+impl Backend for Client {
     type ConnectOptions = ConnectOptions;
 
     #[instrument]
@@ -59,7 +59,7 @@ pub struct ConnectOptions {
     pub seed: Option<String>,
 }
 
-impl runtime::FromEnv for ConnectOptions {
+impl kernel::FromEnv for ConnectOptions {
     fn from_env() -> Result<Self> {
         Self::from_env().finalize().map_err(|e| anyhow!("issue loading connection options: {e}"))
     }

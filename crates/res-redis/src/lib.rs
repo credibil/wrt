@@ -9,7 +9,7 @@ use std::fmt::Debug;
 use anyhow::{Result, anyhow};
 use fromenv::FromEnv;
 use redis::aio::{ConnectionManager, ConnectionManagerConfig};
-use runtime::Resource;
+use kernel::Backend;
 use tracing::instrument;
 
 #[derive(Clone)]
@@ -21,7 +21,7 @@ impl Debug for Client {
     }
 }
 
-impl Resource for Client {
+impl Backend for Client {
     type ConnectOptions = ConnectOptions;
 
     #[instrument(name = "Redis::connect_with")]
@@ -52,7 +52,7 @@ pub struct ConnectOptions {
     pub max_delay_ms: u64,
 }
 
-impl runtime::FromEnv for ConnectOptions {
+impl kernel::FromEnv for ConnectOptions {
     fn from_env() -> Result<Self> {
         Self::from_env().finalize().map_err(|e| anyhow!("issue loading connection options: {e}"))
     }

@@ -6,13 +6,13 @@ mod blobstore;
 
 use anyhow::{Result, anyhow};
 use fromenv::FromEnv;
-use runtime::Resource;
+use kernel::Backend;
 use tracing::instrument;
 
 #[derive(Debug, Clone)]
 pub struct Client(mongodb::Client);
 
-impl Resource for Client {
+impl Backend for Client {
     type ConnectOptions = ConnectOptions;
 
     #[instrument(name = "MongoDb::connect")]
@@ -32,7 +32,7 @@ pub struct ConnectOptions {
     pub uri: String,
 }
 
-impl runtime::FromEnv for ConnectOptions {
+impl kernel::FromEnv for ConnectOptions {
     fn from_env() -> Result<Self> {
         Self::from_env().finalize().map_err(|e| anyhow!("issue loading connection options: {e}"))
     }

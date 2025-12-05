@@ -2384,6 +2384,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "kernel"
+version = "0.19.0"
+dependencies = [
+ "anyhow",
+ "cfg-if",
+ "clap",
+ "credibil-otel",
+ "fromenv",
+ "futures",
+ "tracing",
+ "wasmtime",
+ "wasmtime-wasi",
+]
+
+[[package]]
 name = "lazy_static"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3881,7 +3896,7 @@ dependencies = [
  "fromenv",
  "futures",
  "http",
- "runtime",
+ "kernel",
  "tracing",
  "wasi-identity",
  "wasi-vault",
@@ -3898,9 +3913,9 @@ dependencies = [
  "fromenv",
  "futures",
  "jsonschema 0.37.4",
+ "kernel",
  "rand 0.9.2",
  "rdkafka",
- "runtime",
  "schema-registry-client",
  "serde",
  "serde_json",
@@ -3917,8 +3932,8 @@ dependencies = [
  "chrono",
  "fromenv",
  "futures",
+ "kernel",
  "mongodb",
- "runtime",
  "serde",
  "serde_json",
  "tracing",
@@ -3934,8 +3949,8 @@ dependencies = [
  "chrono",
  "fromenv",
  "futures",
+ "kernel",
  "nkeys",
- "runtime",
  "tokio",
  "tracing",
  "wasi-blobstore",
@@ -3952,7 +3967,7 @@ dependencies = [
  "deadpool-postgres",
  "fromenv",
  "futures",
- "runtime",
+ "kernel",
  "rustls 0.23.35",
  "serde_json",
  "tokio-postgres",
@@ -3969,8 +3984,8 @@ dependencies = [
  "anyhow",
  "fromenv",
  "futures",
+ "kernel",
  "redis",
- "runtime",
  "tracing",
  "wasi-keyvalue",
 ]
@@ -3996,21 +4011,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "runtime"
-version = "0.19.0"
-dependencies = [
- "anyhow",
- "cfg-if",
- "clap",
- "credibil-otel",
- "fromenv",
- "futures",
- "tracing",
- "wasmtime",
- "wasmtime-wasi",
-]
-
-[[package]]
 name = "runtime-cli"
 version = "0.19.0"
 dependencies = [
@@ -4023,6 +4023,7 @@ dependencies = [
  "futures",
  "http",
  "http-body-util",
+ "kernel",
  "openssl",
  "opentelemetry",
  "reqwest",
@@ -4032,7 +4033,6 @@ dependencies = [
  "res-nats",
  "res-postgres",
  "res-redis",
- "runtime",
  "serde_json",
  "tokio",
  "tower-http",
@@ -5600,7 +5600,7 @@ dependencies = [
  "anyhow",
  "bytes",
  "futures",
- "runtime",
+ "kernel",
  "tracing",
  "wasmtime",
  "wasmtime-wasi",
@@ -5623,9 +5623,9 @@ dependencies = [
  "http-body",
  "http-body-util",
  "hyper",
+ "kernel",
  "percent-encoding",
  "reqwest",
- "runtime",
  "serde",
  "serde_json",
  "tokio",
@@ -5645,8 +5645,8 @@ dependencies = [
  "anyhow",
  "fromenv",
  "futures",
+ "kernel",
  "oauth2",
- "runtime",
  "serde",
  "tokio",
  "tracing",
@@ -5663,7 +5663,7 @@ dependencies = [
  "base64ct",
  "chrono",
  "futures",
- "runtime",
+ "kernel",
  "serde",
  "serde_json",
  "tracing",
@@ -5679,7 +5679,7 @@ dependencies = [
  "anyhow",
  "futures",
  "http",
- "runtime",
+ "kernel",
  "serde",
  "time",
  "tokio",
@@ -5699,12 +5699,12 @@ dependencies = [
  "fromenv",
  "futures",
  "hex",
+ "kernel",
  "num-traits",
  "opentelemetry",
  "opentelemetry-proto",
  "opentelemetry_sdk",
  "prost 0.14.1",
- "runtime",
  "tonic",
  "tracing",
  "tracing-opentelemetry",
@@ -5731,7 +5731,7 @@ dependencies = [
  "anyhow",
  "base64ct",
  "futures",
- "runtime",
+ "kernel",
  "serde_json",
  "tracing",
  "wasmtime",
@@ -5745,7 +5745,7 @@ version = "0.19.0"
 dependencies = [
  "anyhow",
  "futures",
- "runtime",
+ "kernel",
  "tracing",
  "wasmtime",
  "wasmtime-wasi",
@@ -5764,7 +5764,7 @@ dependencies = [
  "hyper",
  "hyper-tungstenite",
  "hyper-util",
- "runtime",
+ "kernel",
  "serde",
  "serde_json",
  "tokio",

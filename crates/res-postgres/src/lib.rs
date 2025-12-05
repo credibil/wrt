@@ -14,7 +14,7 @@ use std::str;
 use anyhow::{Context as _, Result, anyhow};
 use deadpool_postgres::{Config, Pool, PoolConfig, Runtime};
 use fromenv::FromEnv;
-use runtime::Resource;
+use kernel::Backend;
 use rustls::crypto::ring;
 use rustls::{ClientConfig, RootCertStore};
 use tokio_postgres::config::{Host, SslMode};
@@ -27,7 +27,7 @@ use webpki_roots::TLS_SERVER_ROOTS;
 pub struct Client(Pool);
 
 /// Postgres resource builder
-impl Resource for Client {
+impl Backend for Client {
     type ConnectOptions = ConnectOptions;
 
     /// Connect to `PostgreSQL` with provided options and return a connection pool
@@ -78,7 +78,7 @@ pub struct ConnectOptions {
     pub pool_size: usize,
 }
 
-impl runtime::FromEnv for ConnectOptions {
+impl kernel::FromEnv for ConnectOptions {
     fn from_env() -> Result<Self> {
         Self::from_env().finalize().map_err(|e| anyhow!("issue loading connection options: {e}"))
     }

@@ -13,8 +13,8 @@ repository.workspace = true
 rust-version.workspace = true
 version.workspace = true
 
-[lib]
-doctest = false
+# [lib]
+# doctest = false
 
 [lints]
 workspace = true
@@ -42,7 +42,7 @@ postgres = ["dep:res-postgres"]
 redis = ["dep:res-redis"]
 
 # Enables just-in-time wasm to machine code compilation.
-jit = ["runtime/jit"]
+jit = ["kernel/jit"]
 
 [dependencies]
 anyhow.workspace = true
@@ -62,7 +62,7 @@ res-kafka = { workspace = true, optional = true }
 res-nats = { workspace = true, optional = true }
 res-postgres = { workspace = true, optional = true }
 res-redis = { workspace = true, optional = true }
-runtime.workspace = true
+kernel.workspace = true
 tokio = { workspace = true, features = ["macros"] }
 wasi-blobstore = { workspace = true, optional = true }
 wasi-http = { workspace = true, optional = true }
@@ -259,13 +259,13 @@ credibil-otel = { version = "0.5.0", registry = "credibil" }
 
 # interally referenced crates
 buildgen = { path = "crates/buildgen", version = "0.19.0" }
+kernel = { path = "crates/kernel", version = "0.19.0", registry = "credibil" }
 res-azure = { path = "crates/res-azure", version = "0.19.0", registry = "credibil" }
 res-kafka = { path = "crates/res-kafka", version = "0.19.0", registry = "credibil" }
 res-mongodb = { path = "crates/res-mongodb", version = "0.19.0", registry = "credibil" }
 res-nats = { path = "crates/res-nats", version = "0.19.0", registry = "credibil" }
 res-postgres = { path = "crates/res-postgres", version = "0.19.0", registry = "credibil" }
 res-redis = { path = "crates/res-redis", version = "0.19.0", registry = "credibil" }
-runtime = { path = "crates/runtime", version = "0.19.0", registry = "credibil" }
 wasi-blobstore = { path = "crates/wasi-blobstore", version = "0.19.0", registry = "credibil" }
 wasi-http = { path = "crates/wasi-http", version = "0.19.0", registry = "credibil" }
 wasi-identity = { path = "crates/wasi-identity", version = "0.19.0", registry = "credibil" }
