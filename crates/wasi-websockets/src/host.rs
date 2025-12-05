@@ -29,8 +29,8 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use futures::FutureExt;
-use resource::{DefaultWebSocketServer, WebSocketServer};
 use kernel::{Host, Server, State};
+use resource::{DefaultWebSocketServer, WebSocketServer};
 use server::run_server;
 use store_impl::FutureResult;
 use wasmtime::component::{HasData, Linker};

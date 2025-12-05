@@ -23,9 +23,9 @@ mod generated {
 use std::fmt::Debug;
 use std::marker::PhantomData;
 
+use kernel::{FutureResult, Host, WasiHostCtx, WasiHostCtxView, WasiHostView};
 use opentelemetry_proto::tonic::collector::metrics::v1::ExportMetricsServiceRequest;
 use opentelemetry_proto::tonic::collector::trace::v1::ExportTraceServiceRequest;
-use kernel::{FutureResult, Host, WasiHostCtx, WasiHostCtxView, WasiHostView};
 use wasmtime::component::{HasData, Linker};
 
 pub use self::default_impl::WasiOtelCtxImpl;

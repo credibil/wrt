@@ -8,8 +8,8 @@ use std::fmt::Debug;
 
 use anyhow::{Result, anyhow};
 use fromenv::FromEnv;
-use redis::aio::{ConnectionManager, ConnectionManagerConfig};
 use kernel::Backend;
+use redis::aio::{ConnectionManager, ConnectionManagerConfig};
 use tracing::instrument;
 
 #[derive(Clone)]

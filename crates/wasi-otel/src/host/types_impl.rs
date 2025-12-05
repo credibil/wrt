@@ -1,8 +1,8 @@
 use std::hash::{Hash, Hasher};
 
+use kernel::WasiHostCtxView;
 use opentelemetry::{Array, Key, Value};
 use opentelemetry_sdk::Resource;
-use kernel::WasiHostCtxView;
 
 use crate::host::WasiOtelCtx;
 use crate::host::generated::wasi::otel::types;

@@ -34,8 +34,8 @@ mod generated {
 use std::fmt::Debug;
 use std::sync::Arc;
 
-pub use resource::*;
 use kernel::{Host, Server, State};
+pub use resource::*;
 use wasmtime::component::{HasData, Linker};
 use wasmtime_wasi::{ResourceTable, ResourceTableError};
 

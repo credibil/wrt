@@ -5,13 +5,13 @@ use anyhow::{Result, anyhow};
 use fromenv::FromEnv;
 use futures::FutureExt;
 use futures::lock::Mutex;
+use kernel::Backend;
 use oauth2::basic::{BasicClient, BasicTokenType};
 use oauth2::reqwest::{self, redirect};
 use oauth2::{
     ClientId, ClientSecret, EmptyExtraTokenFields, Scope, StandardTokenResponse,
     TokenResponse as _, TokenUrl,
 };
-use kernel::Backend;
 use tracing::instrument;
 
 use crate::host::WasiIdentityCtx;
