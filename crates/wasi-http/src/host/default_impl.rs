@@ -3,6 +3,7 @@ use base64ct::{Base64, Encoding};
 use bytes::Bytes;
 use fromenv::FromEnv;
 use futures::Future;
+use http::{Request, Response};
 use http_body_util::BodyExt;
 use http_body_util::combinators::UnsyncBoxBody;
 use kernel::Backend;
@@ -13,6 +14,7 @@ use wasmtime_wasi_http::p3::{self, RequestOptions};
 
 pub type HttpResult<T> = Result<T, HttpError>;
 pub type HttpError = TrappableError<ErrorCode>;
+pub type FutureResult<T> = Box<dyn Future<Output = Result<T, ErrorCode>> + Send>;
 
 // pub type HeaderResult<T> = Result<T, HeaderError>;
 // pub type HeaderError = TrappableError<types::HeaderError>;
@@ -32,9 +34,9 @@ impl kernel::FromEnv for ConnectOptions {
 }
 
 #[derive(Debug, Clone)]
-pub struct DefaultHttp;
+pub struct WasiHttpCtxImpl;
 
-impl Backend for DefaultHttp {
+impl Backend for WasiHttpCtxImpl {
     type ConnectOptions = ConnectOptions;
 
     #[instrument]
@@ -43,17 +45,13 @@ impl Backend for DefaultHttp {
     }
 }
 
-impl p3::WasiHttpCtx for DefaultHttp {
+impl p3::WasiHttpCtx for WasiHttpCtxImpl {
     fn send_request(
-        &mut self, request: http::Request<UnsyncBoxBody<Bytes, ErrorCode>>,
-        _options: Option<RequestOptions>,
-        fut: Box<dyn Future<Output = Result<(), ErrorCode>> + Send>,
+        &mut self, request: Request<UnsyncBoxBody<Bytes, ErrorCode>>,
+        _options: Option<RequestOptions>, fut: FutureResult<()>,
     ) -> Box<
         dyn Future<
-                Output = HttpResult<(
-                    http::Response<UnsyncBoxBody<Bytes, ErrorCode>>,
-                    Box<dyn Future<Output = Result<(), ErrorCode>> + Send>,
-                )>,
+                Output = HttpResult<(Response<UnsyncBoxBody<Bytes, ErrorCode>>, FutureResult<()>)>,
             > + Send,
     > {
         Box::new(async move {
@@ -67,6 +65,7 @@ impl p3::WasiHttpCtx for DefaultHttp {
             // check for client certificate in headers
             if let Some(encoded_cert) = parts.headers.remove("Client-Cert") {
                 tracing::debug!("using client certificate");
+
                 let encoded_str = encoded_cert
                     .to_str()
                     .map_err(|e| ErrorCode::InternalError(Some(e.to_string())))?;
@@ -86,10 +85,10 @@ impl p3::WasiHttpCtx for DefaultHttp {
                 .await
                 .map_err(into_error)?;
 
-            let converted: http::Response<reqwest::Body> = resp.into();
+            let converted: Response<reqwest::Body> = resp.into();
             let (parts, body) = converted.into_parts();
             let body = body.map_err(into_error).boxed_unsync();
-            let response = http::Response::from_parts(parts, body);
+            let response = Response::from_parts(parts, body);
 
             Ok((response, fut))
         })
@@ -110,21 +109,3 @@ fn into_error(e: reqwest::Error) -> ErrorCode {
         ErrorCode::InternalError(Some(e.to_string()))
     }
 }
-
-// use std::env;
-
-// use azure_core::credentials::TokenCredential;
-// use azure_identity::{ManagedIdentityCredential, ManagedIdentityCredentialOptions, UserAssignedId};
-
-// async fn access_token() -> Result<String, anyhow::Error> {
-//     let user_assigned_id = env::var("AZURE_IDENTITY").ok().map(UserAssignedId::ClientId);
-//     let options = ManagedIdentityCredentialOptions { user_assigned_id, ..Default::default() };
-//     let credential = ManagedIdentityCredential::new(Some(options))?;
-
-//     let token = {
-//         let access_token = credential.get_token(&[], None).await?;
-//         let token = access_token.token.secret().to_string();
-//         token
-//     };
-//     Ok(token)
-// }

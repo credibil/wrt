@@ -7,7 +7,6 @@ use quote::quote;
 
 use crate::generate::Generated;
 
-#[allow(clippy::too_many_lines)]
 pub fn expand(generated: Generated) -> TokenStream {
     let Generated {
         context_fields,

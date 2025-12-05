@@ -8,7 +8,7 @@ use kernel::{Cli, Command, Parser};
 // use res_azure::Client as Azure;
 // use res_mongodb::Client as MongoDb;
 // use res_nats::Client as Nats;
-// use wasi_http::{DefaultHttp as WasiHttpCtxImpl, WasiHttp};
+// use wasi_http::{WasiHttpCtxImpl as WasiHttpCtxImpl, WasiHttp};
 // use wasi_identity::{DefaultIdentity as WasiIdentityCtxImpl, WasiIdentity};
 use wasi_otel::{WasiOtel, WasiOtelCtxImpl};
 

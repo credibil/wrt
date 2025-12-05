@@ -9,7 +9,7 @@ use syn::{Token, Type};
 /// Parses input in the form of 'host:backend' pairs. For example:
 /// ```ignore
 /// {
-///     WasiHttp: DefaultHttp,
+///     WasiHttp: WasiHttpCtxImpl,
 ///     WasiOtel: DefaultOtel,
 ///     ...
 /// }
