@@ -1,3 +1,7 @@
+//! # Generated Code Expansion
+//!
+//! Expands the generated code into a complete runtime implementation.
+
 use proc_macro2::TokenStream;
 use quote::quote;
 
@@ -5,13 +9,12 @@ use crate::generate::Generated;
 
 pub fn expand(generated: Generated) -> TokenStream {
     let Generated {
-        context,
-        host_types,
-        host_idents,
-        backend_types,
-        backend_idents,
-        servers,
-        wasi_views,
+        context_fields,
+        store_ctx_fields,
+        store_ctx_values,
+        host_trait_impls,
+        server_trait_impls,
+        wasi_view_impls,
     } = generated;
 
     quote! {
@@ -38,25 +41,25 @@ pub fn expand(generated: Generated) -> TokenStream {
         #[derive(Clone)]
         struct Context {
             instance_pre: InstancePre<StoreCtx>,
-            #(#context,)*
+            #(pub #context_fields,)*
         }
 
         impl Context {
             /// Creates a new runtime state by linking WASI interfaces and connecting to backends.
             async fn new(compiled: &mut runtime::Compiled<StoreCtx>) -> anyhow::Result<Self> {
                 // link enabled WASI components
-                #(compiled.link(#host_types)?;)*
+                #(compiled.link(#host_trait_impls)?;)*
 
                 Ok(Self {
                     instance_pre: compiled.pre_instantiate()?,
-                    #(#context::connect().await?,)*
+                    #(#context_fields::connect().await?,)*
                 })
             }
 
             /// start enabled servers
             async fn start(&self) -> anyhow::Result<()> {
                 let futures: Vec<BoxFuture<'_, anyhow::Result<()>>> = vec![
-                    #(#servers,)*
+                    #(#server_trait_impls,)*
                 ];
                 try_join_all(futures).await?;
                 Ok(())
@@ -82,7 +85,7 @@ pub fn expand(generated: Generated) -> TokenStream {
                 StoreCtx {
                     table: ResourceTable::new(),
                     wasi: wasi_ctx,
-                    #(#host_idents: self.#backend_idents.clone(),)*
+                    #(#store_ctx_values,)*
                 }
             }
         }
@@ -91,7 +94,7 @@ pub fn expand(generated: Generated) -> TokenStream {
         pub struct StoreCtx {
             pub table: wasmtime_wasi::ResourceTable,
             pub wasi: wasmtime_wasi::WasiCtx,
-            #(pub #host_idents: #backend_types,)*
+            #(pub #store_ctx_fields,)*
         }
 
         // WASI View Implementations
@@ -104,6 +107,6 @@ pub fn expand(generated: Generated) -> TokenStream {
             }
         }
 
-        #(#wasi_views)*
+        #(#wasi_view_impls)*
     }
 }

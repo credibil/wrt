@@ -22,8 +22,8 @@ use self::parse::BuildInput;
 /// ```
 #[proc_macro]
 pub fn runtime(input: TokenStream) -> TokenStream {
-    let config = parse_macro_input!(input as BuildInput);
-    let generated = match Generated::try_from(config) {
+    let parsed = parse_macro_input!(input as BuildInput);
+    let generated = match Generated::try_from(parsed) {
         Ok(generated) => generated,
         Err(e) => return e.into_compile_error().into(),
     };

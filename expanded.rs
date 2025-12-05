@@ -29,8 +29,8 @@ pub async fn runtime_run(wasm: std::path::PathBuf) -> anyhow::Result<()> {
 /// Runtime state holding pre-instantiated components and backend connections.
 struct Context {
     instance_pre: InstancePre<StoreCtx>,
-    defaulthttp: DefaultHttp,
-    defaultotel: DefaultOtel,
+    pub defaultotel: DefaultOtel,
+    pub defaulthttp: DefaultHttp,
 }
 #[automatically_derived]
 impl ::core::clone::Clone for Context {
@@ -38,8 +38,8 @@ impl ::core::clone::Clone for Context {
     fn clone(&self) -> Context {
         Context {
             instance_pre: ::core::clone::Clone::clone(&self.instance_pre),
-            defaulthttp: ::core::clone::Clone::clone(&self.defaulthttp),
             defaultotel: ::core::clone::Clone::clone(&self.defaultotel),
+            defaulthttp: ::core::clone::Clone::clone(&self.defaulthttp),
         }
     }
 }
@@ -50,8 +50,8 @@ impl Context {
         compiled.link(WasiOtel)?;
         Ok(Self {
             instance_pre: compiled.pre_instantiate()?,
-            defaulthttp: DefaultHttp::connect().await?,
             defaultotel: DefaultOtel::connect().await?,
+            defaulthttp: DefaultHttp::connect().await?,
         })
     }
     /// start enabled servers

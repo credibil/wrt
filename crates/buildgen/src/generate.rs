@@ -5,13 +5,12 @@ use syn::{Ident, Type};
 use crate::parse::BuildInput;
 
 pub struct Generated {
-    pub context: Vec<TokenStream>,
-    pub host_types: Vec<Type>,
-    pub host_idents: Vec<Ident>,
-    pub backend_types: Vec<Type>,
-    pub backend_idents: Vec<Ident>,
-    pub servers: Vec<TokenStream>,
-    pub wasi_views: Vec<TokenStream>,
+    pub context_fields: Vec<TokenStream>,
+    pub store_ctx_fields: Vec<TokenStream>,
+    pub store_ctx_values: Vec<TokenStream>,
+    pub host_trait_impls: Vec<Type>,
+    pub server_trait_impls: Vec<TokenStream>,
+    pub wasi_view_impls: Vec<TokenStream>,
 }
 
 impl TryFrom<BuildInput> for Generated {
@@ -19,35 +18,35 @@ impl TryFrom<BuildInput> for Generated {
 
     fn try_from(input: BuildInput) -> Result<Self, Self::Error> {
         // `Context` struct
-        let mut context = Vec::new();
+        let mut context_fields = Vec::new();
         for backend in input.backends {
             let field = field_name(&backend);
-            context.push(quote! {#field: #backend});
+            context_fields.push(quote! {#field: #backend});
         }
 
-        let mut host_types = Vec::new();
-        let mut host_idents = Vec::new();
-        let mut backend_types = Vec::new();
-        let mut backend_idents = Vec::new();
-        let mut servers = Vec::new();
-        let mut wasi_views = Vec::new();
+        let mut store_ctx_fields = Vec::new();
+        let mut store_ctx_values = Vec::new();
+        let mut host_trait_impls = Vec::new();
+        let mut server_trait_impls = Vec::new();
+        let mut wasi_view_impls = Vec::new();
 
         for host in &input.hosts {
             let type_ = &host.type_;
             let host_name = quote! {#type_}.to_string();
             let host_ident = syn::parse_str::<Ident>(&snake_case(&host_name))?;
+            let backend_type = &host.backend;
+            let backend_ident = field_name(backend_type);
 
-            host_types.push(type_.clone());
-            host_idents.push(host_ident.clone());
-            backend_types.push(host.backend.clone());
-            backend_idents.push(field_name(&host.backend));
+            host_trait_impls.push(host.type_.clone());
+            store_ctx_fields.push(quote! {#host_ident: #backend_type});
+            store_ctx_values.push(quote! {#host_ident: self.#backend_ident.clone()});
 
             let module = &host_ident;
 
             // servers
             if host.is_server {
                 let start = quote! {Box::pin(#module::#type_.run(self))};
-                servers.push(start);
+                server_trait_impls.push(start);
             }
 
             // WasiViewXxx implementations
@@ -66,17 +65,16 @@ impl TryFrom<BuildInput> for Generated {
                     }
                 }
             };
-            wasi_views.push(view);
+            wasi_view_impls.push(view);
         }
 
         Ok(Self {
-            context,
-            host_types,
-            host_idents,
-            backend_types,
-            backend_idents,
-            servers,
-            wasi_views,
+            context_fields,
+            store_ctx_fields,
+            store_ctx_values,
+            host_trait_impls,
+            server_trait_impls,
+            wasi_view_impls,
         })
     }
 }
