@@ -1,6 +1,6 @@
 mod expand;
-mod parse;
 mod generate;
+mod parse;
 
 use proc_macro::TokenStream;
 use syn::parse_macro_input;

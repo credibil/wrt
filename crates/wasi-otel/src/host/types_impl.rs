@@ -2,11 +2,12 @@ use std::hash::{Hash, Hasher};
 
 use opentelemetry::{Array, Key, Value};
 use opentelemetry_sdk::Resource;
+use runtime::WasiHostCtxView;
 
-use crate::host::WasiOtelCtxView;
+use crate::host::WasiOtelCtx;
 use crate::host::generated::wasi::otel::types;
 
-impl types::Host for WasiOtelCtxView<'_> {
+impl<C: WasiOtelCtx> types::Host for WasiHostCtxView<'_, C> {
     fn convert_error(&mut self, err: types::Error) -> anyhow::Result<types::Error> {
         tracing::error!("{err}");
         Ok(err)

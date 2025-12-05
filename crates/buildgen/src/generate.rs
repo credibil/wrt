@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream;
-use quote::{format_ident, quote};
+use quote::quote;
 use syn::{Ident, Type};
 
 use crate::parse::BuildInput;
@@ -31,13 +31,13 @@ impl TryFrom<BuildInput> for Generated {
         let mut wasi_view_impls = Vec::new();
 
         for host in &input.hosts {
-            let type_ = &host.type_;
-            let host_name = quote! {#type_}.to_string();
+            let host_type = &host.type_;
+            let host_name = quote! {#host_type}.to_string();
             let host_ident = syn::parse_str::<Ident>(&snake_case(&host_name))?;
             let backend_type = &host.backend;
             let backend_ident = field_name(backend_type);
 
-            host_trait_impls.push(host.type_.clone());
+            host_trait_impls.push(host_type.clone());
             store_ctx_fields.push(quote! {#host_ident: #backend_type});
             store_ctx_values.push(quote! {#host_ident: self.#backend_ident.clone()});
 
@@ -45,20 +45,15 @@ impl TryFrom<BuildInput> for Generated {
 
             // servers
             if host.is_server {
-                let start = quote! {Box::pin(#module::#type_.run(self))};
+                let start = quote! {Box::pin(#module::#host_type.run(self))};
                 server_trait_impls.push(start);
             }
 
             // WasiViewXxx implementations
-            let short_name = host_name.strip_prefix("Wasi").unwrap_or(&host_name).to_lowercase();
-            let view_trait = format_ident!("{host_name}View");
-            let view_method = format_ident!("{short_name}");
-            let ctx_view = format_ident!("{host_name}CtxView");
-
             let view = quote! {
-                impl #module::#view_trait for StoreCtx {
-                    fn #view_method(&mut self) -> #module::#ctx_view<'_> {
-                        #module::#ctx_view {
+                impl WasiHostView<#backend_type> for StoreCtx {
+                    fn ctx_view(&mut self) -> WasiHostCtxView<'_, #backend_type> {
+                        WasiHostCtxView {
                             ctx: &mut self.#host_ident,
                             table: &mut self.table,
                         }

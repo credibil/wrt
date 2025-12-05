@@ -16,12 +16,13 @@ use opentelemetry_proto::tonic::metrics::v1::{
 };
 use opentelemetry_proto::tonic::resource::v1::Resource;
 use opentelemetry_sdk::error::OTelSdkError;
+use runtime::WasiHostCtxView;
 use wasmtime::component::Accessor;
 
 use crate::host::generated::wasi::otel::metrics::{self as wasi, HostWithStore};
-use crate::host::{WasiOtel, WasiOtelCtxView};
+use crate::host::{WasiOtel, WasiOtelCtx};
 
-impl HostWithStore for WasiOtel {
+impl<C: WasiOtelCtx> HostWithStore for WasiOtel<C> {
     async fn export<T>(
         accessor: &Accessor<T, Self>, rm: wasi::ResourceMetrics,
     ) -> Result<(), wasi::Error> {
@@ -31,17 +32,15 @@ impl HostWithStore for WasiOtel {
             return Ok(());
         }
 
-        // convert to opentelemetry export format
+        // convert and export
         let request = ExportMetricsServiceRequest::from(rm);
-
-        // export via gRPC
         accessor.with(|mut store| store.get().ctx.export_metrics(request)).await?;
 
         Ok(())
     }
 }
 
-impl wasi::Host for WasiOtelCtxView<'_> {}
+impl<C: WasiOtelCtx> wasi::Host for WasiHostCtxView<'_, C> {}
 
 impl From<OTelSdkError> for wasi::Error {
     fn from(err: OTelSdkError) -> Self {

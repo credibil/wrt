@@ -9,16 +9,14 @@ use opentelemetry_proto::tonic::resource::v1::Resource;
 use opentelemetry_proto::tonic::trace::v1::span::{Event, Link};
 use opentelemetry_proto::tonic::trace::v1::status::StatusCode;
 use opentelemetry_proto::tonic::trace::v1::{ResourceSpans, ScopeSpans, Span, Status};
+use runtime::WasiHostCtxView;
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 use wasmtime::component::Accessor;
 
 use crate::host::generated::wasi::otel::tracing::{self as wasi, HostWithStore};
-use crate::{WasiOtel, WasiOtelCtxView};
+use crate::{WasiOtel, WasiOtelCtx};
 
-// *** WASIP3 ***
-// use `HostWithStore` to add async support`
-
-impl HostWithStore for WasiOtel {
+impl<C: WasiOtelCtx> HostWithStore for WasiOtel<C> {
     async fn export<T>(
         accessor: &Accessor<T, Self>, span_data: Vec<wasi::SpanData>,
     ) -> Result<(), wasi::Error> {
@@ -49,7 +47,7 @@ impl HostWithStore for WasiOtel {
     }
 }
 
-impl wasi::Host for WasiOtelCtxView<'_> {}
+impl<C: WasiOtelCtx> wasi::Host for WasiHostCtxView<'_, C> {}
 
 pub fn resource_spans(
     spans: Vec<wasi::SpanData>, resource: &opentelemetry_sdk::Resource,

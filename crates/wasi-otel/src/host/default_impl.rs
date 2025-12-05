@@ -11,7 +11,7 @@ use tracing::instrument;
 
 use crate::host::{FutureResult, WasiOtelCtx};
 
-#[derive(Debug, Clone, FromEnv)]
+#[derive(Debug, Clone, Default, FromEnv)]
 pub struct ConnectOptions {
     #[env(from = "OTEL_GRPC_URL", default = "http://localhost:4317")]
     pub grpc_url: String,
@@ -23,10 +23,10 @@ impl runtime::FromEnv for ConnectOptions {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct DefaultOtel {
-    traces_client: TraceServiceClient<Channel>,
-    metrics_client: MetricsServiceClient<Channel>,
+    traces_client: Option<TraceServiceClient<Channel>>,
+    metrics_client: Option<MetricsServiceClient<Channel>>,
 }
 
 impl Resource for DefaultOtel {
@@ -43,8 +43,8 @@ impl Resource for DefaultOtel {
         let metrics_client = MetricsServiceClient::new(channel);
 
         Ok(Self {
-            traces_client,
-            metrics_client,
+            traces_client: Some(traces_client),
+            metrics_client: Some(metrics_client),
         })
     }
 }
@@ -55,7 +55,10 @@ impl WasiOtelCtx for DefaultOtel {
     /// Errors are logged but not propagated to prevent telemetry failures
     /// from affecting application logic.
     fn export_traces(&self, request: ExportTraceServiceRequest) -> FutureResult<()> {
-        let mut client = self.traces_client.clone();
+        let Some(mut client) = self.traces_client.clone() else {
+            tracing::error!("no traces client available");
+            return Box::pin(async { Ok(()) });
+        };
 
         async move {
             if let Err(e) = client.export(request).await {
@@ -71,7 +74,10 @@ impl WasiOtelCtx for DefaultOtel {
     /// Errors are logged but not propagated to prevent telemetry failures
     /// from affecting application logic.
     fn export_metrics(&self, request: ExportMetricsServiceRequest) -> FutureResult<()> {
-        let mut client = self.metrics_client.clone();
+        let Some(mut client) = self.metrics_client.clone() else {
+            tracing::error!("no metrics client available");
+            return Box::pin(async { Ok(()) });
+        };
 
         async move {
             if let Err(e) = client.export(request).await {

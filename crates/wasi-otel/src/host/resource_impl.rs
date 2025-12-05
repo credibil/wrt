@@ -1,11 +1,12 @@
 use anyhow::Result;
 use opentelemetry_sdk::Resource;
+use runtime::WasiHostCtxView;
 use wasmtime::component::Accessor;
 
 use crate::host::generated::wasi::otel::{resource, types};
-use crate::host::{WasiOtel, WasiOtelCtxView};
+use crate::host::{WasiOtel, WasiOtelCtx};
 
-impl resource::HostWithStore for WasiOtel {
+impl<C: WasiOtelCtx> resource::HostWithStore for WasiOtel<C> {
     async fn resource<T>(_: &Accessor<T, Self>) -> Result<types::Resource> {
         let Some(resource) = credibil_otel::init::resource() else {
             ::tracing::warn!("otel resource not initialized");
@@ -16,4 +17,4 @@ impl resource::HostWithStore for WasiOtel {
     }
 }
 
-impl resource::Host for WasiOtelCtxView<'_> {}
+impl<C: WasiOtelCtx> resource::Host for WasiHostCtxView<'_, C> {}

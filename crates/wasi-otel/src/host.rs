@@ -21,57 +21,43 @@ mod generated {
 }
 
 use std::fmt::Debug;
+use std::marker::PhantomData;
 
 use opentelemetry_proto::tonic::collector::metrics::v1::ExportMetricsServiceRequest;
 use opentelemetry_proto::tonic::collector::trace::v1::ExportTraceServiceRequest;
-use runtime::{FutureResult, Host};
-use wasmtime::component::{HasData, Linker, ResourceTable};
+use runtime::{FutureResult, Host, WasiHostCtx, WasiHostCtxView, WasiHostView};
+use wasmtime::component::{HasData, Linker};
 
 pub use self::default_impl::DefaultOtel;
 use self::generated::wasi::otel as wasi;
 
-#[derive(Debug)]
-pub struct WasiOtel;
+#[derive(Debug, Default)]
+pub struct WasiOtel<T: WasiOtelCtx> {
+    _priv: PhantomData<fn() -> T>,
+}
 
-impl<T> Host<T> for WasiOtel
+impl<T, C> Host<T> for WasiOtel<C>
 where
-    T: WasiOtelView + 'static,
+    C: WasiOtelCtx,
+    T: WasiHostView<C> + 'static,
 {
     fn add_to_linker(linker: &mut Linker<T>) -> anyhow::Result<()> {
-        wasi::tracing::add_to_linker::<_, Self>(linker, T::otel)?;
-        wasi::metrics::add_to_linker::<_, Self>(linker, T::otel)?;
-        wasi::types::add_to_linker::<_, Self>(linker, T::otel)?;
-        wasi::resource::add_to_linker::<_, Self>(linker, T::otel)
+        wasi::tracing::add_to_linker::<_, Self>(linker, T::ctx_view)?;
+        wasi::metrics::add_to_linker::<_, Self>(linker, T::ctx_view)?;
+        wasi::types::add_to_linker::<_, Self>(linker, T::ctx_view)?;
+        wasi::resource::add_to_linker::<_, Self>(linker, T::ctx_view)
     }
 }
 
-impl HasData for WasiOtel {
-    type Data<'a> = WasiOtelCtxView<'a>;
-}
-
-/// A trait which provides internal WASI OpenTelemetry state.
-///
-/// This is implemented by the `T` in `Linker<T>` — a single type shared across
-/// all WASI components for the runtime build.
-pub trait WasiOtelView: Send {
-    /// Return a [`WasiOtelCtxView`] from mutable reference to self.
-    fn otel(&mut self) -> WasiOtelCtxView<'_>;
-}
-
-/// View into [`WasiOtelCtx`] implementation and [`ResourceTable`].
-pub struct WasiOtelCtxView<'a> {
-    /// Mutable reference to the WASI OpenTelemetry context.
-    pub ctx: &'a mut dyn WasiOtelCtx,
-
-    /// Mutable reference to table used to manage resources.
-    pub table: &'a mut ResourceTable,
+impl<C: WasiOtelCtx + 'static> HasData for WasiOtel<C> {
+    type Data<'a> = WasiHostCtxView<'a, C>;
 }
 
 /// A trait which provides internal WASI OpenTelemetry context.
 ///
 /// This is implemented by the resource-specific provider of OpenTelemetry
 /// functionality.
-pub trait WasiOtelCtx: Debug + Send + Sync + 'static {
+pub trait WasiOtelCtx: WasiHostCtx {
     /// Export traces using gRPC.
     ///
     /// Errors are logged but not propagated to prevent telemetry failures
