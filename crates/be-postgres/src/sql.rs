@@ -42,8 +42,7 @@ impl Connection for PostgresConnection {
             let param_refs: Vec<ParamRef> =
                 pg_params.iter().map(|b| b.as_ref() as ParamRef).collect();
 
-            let pg_rows =
-                cnn.query(&query, &param_refs).await.context("query failed")?;
+            let pg_rows = cnn.query(&query, &param_refs).await.context("query failed")?;
             tracing::debug!("query returned {} rows", pg_rows.len());
 
             let mut wasi_rows = Vec::new();

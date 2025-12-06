@@ -71,8 +71,7 @@ pub fn use_server<T>(
     accessor: &Accessor<T, WasiWebSockets>, self_: &Resource<WebSocketProxy>,
 ) -> Result<WebSocketProxy> {
     accessor.with(|mut store| {
-        let server =
-            store.get().table.get(self_).context("Failed to get WebSocket server")?;
+        let server = store.get().table.get(self_).context("Failed to get WebSocket server")?;
         Ok::<_, anyhow::Error>(server.clone())
     })
 }

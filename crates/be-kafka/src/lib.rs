@@ -45,9 +45,7 @@ impl Backend for Client {
         let mut config = ClientConfig::from(&options);
 
         // producer
-        let producer = config
-            .create_with_context(Tracer {})
-            .context("issue creating producer")?;
+        let producer = config.create_with_context(Tracer {}).context("issue creating producer")?;
 
         // maybe custom partitioner and schema registry
         let partitioner = Partitioner::new(options.partition_count);
@@ -58,8 +56,7 @@ impl Backend for Client {
             let group_id = consumer_options.group_id.as_deref().unwrap_or(DEFAULT_GROUP);
             config.set("group.id", group_id);
 
-            let consumer: StreamConsumer =
-                config.create().context("issue creating consumer")?;
+            let consumer: StreamConsumer = config.create().context("issue creating consumer")?;
 
             // subscribe to topics
             let topics = consumer_options.topics.iter().map(String::as_str).collect::<Vec<_>>();

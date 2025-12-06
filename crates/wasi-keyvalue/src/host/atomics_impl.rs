@@ -58,8 +58,7 @@ impl HostCasWithStore for WasiKeyValue {
         accessor: &Accessor<T, Self>, bucket: Resource<BucketProxy>, key: String,
     ) -> Result<Resource<Cas>> {
         let bucket = get_bucket(accessor, &bucket)?;
-        let current =
-            bucket.get(key.clone()).await.context("issue getting key")?;
+        let current = bucket.get(key.clone()).await.context("issue getting key")?;
         let cas = Cas { key, current };
         Ok(accessor.with(|mut store| store.get().table.push(cas))?)
     }

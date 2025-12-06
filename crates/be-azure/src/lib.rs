@@ -41,8 +41,7 @@ impl Backend for Client {
                 None,
             )?
         } else {
-            DeveloperToolsCredential::new(None)
-                .context("could not create credential")?
+            DeveloperToolsCredential::new(None).context("could not create credential")?
         };
         tracing::info!("connected to azure api");
 

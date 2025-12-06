@@ -42,8 +42,7 @@ impl Cache {
             tracing::debug!("no Cache-Control header present");
             return Ok(None);
         }
-        let control = Control::try_from(headers)
-            .context("issue parsing Cache-Control headers")?;
+        let control = Control::try_from(headers).context("issue parsing Cache-Control headers")?;
         let cache_opts = request
             .extensions()
             .get::<CacheOptions>()
@@ -198,8 +197,7 @@ impl TryFrom<&http::HeaderMap> for Control {
 
 fn serialize(response: &Response<Bytes>) -> Result<Vec<u8>> {
     let ser = Serialized::try_from(response)?;
-    bincode::encode_to_vec(&ser, config::standard())
-        .context("serializing response")
+    bincode::encode_to_vec(&ser, config::standard()).context("serializing response")
 }
 
 fn deserialize(data: &[u8]) -> Result<Response<Bytes>> {
@@ -239,9 +237,7 @@ impl TryFrom<Serialized> for Response<Bytes> {
         for (k, v) in s.headers {
             response = response.header(k, v);
         }
-        response
-            .body(Bytes::from(s.body))
-            .context("building response from cached data")
+        response.body(Bytes::from(s.body)).context("building response from cached data")
     }
 }
 

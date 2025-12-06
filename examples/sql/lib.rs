@@ -35,10 +35,9 @@ impl Guest for Http {
 async fn query() -> Result<Json<Value>> {
     tracing::info!("query database");
 
-    let pool =
-        Connection::open("postgres").context("failed to open connection")?;
-    let stmt = Statement::prepare("SELECT * from mytable;", &[])
-        .context("failed to prepare statement")?;
+    let pool = Connection::open("postgres").context("failed to open connection")?;
+    let stmt =
+        Statement::prepare("SELECT * from mytable;", &[]).context("failed to prepare statement")?;
 
     let res = readwrite::query(&pool, &stmt).context("query failed")?;
 
@@ -67,8 +66,7 @@ async fn insert(_body: Bytes) -> Result<Json<Value>> {
     tracing::debug!("opening connection");
 
     let pool = Connection::open("db").context("failed to open connection")?;
-    let stmt = Statement::prepare(insert, &params)
-        .context("failed to prepare statement")?;
+    let stmt = Statement::prepare(insert, &params).context("failed to prepare statement")?;
 
     let res = readwrite::exec(&pool, &stmt).context("query failed")?;
 

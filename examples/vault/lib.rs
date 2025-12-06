@@ -25,8 +25,7 @@ impl Guest for Http {
 #[wasi_otel::instrument]
 async fn handler(body: Bytes) -> Result<Json<Value>> {
     // write secret to vault
-    let locker =
-        vault::open("credibil-locker").context("failed to open vault locker")?;
+    let locker = vault::open("credibil-locker").context("failed to open vault locker")?;
     locker.set("secret-id", &body).context("issue setting secret")?;
 
     // read secret from vault

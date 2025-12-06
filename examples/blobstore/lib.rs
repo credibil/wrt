@@ -27,18 +27,16 @@ impl Guest for Http {
 async fn handler(body: Bytes) -> Result<Json<Value>> {
     // write to blobstore
     let outgoing = OutgoingValue::new_outgoing_value();
-    let stream =
-        outgoing.outgoing_value_write_body().context("failed create stream")?;
+    let stream = outgoing.outgoing_value_write_body().context("failed create stream")?;
     stream.blocking_write_and_flush(&body).context("writing body")?;
 
-    let container = blobstore::create_container("container")
-        .context("failed to create container")?;
+    let container =
+        blobstore::create_container("container").context("failed to create container")?;
     container.write_data("request", &outgoing).context("failed to write data")?;
     OutgoingValue::finish(outgoing).context("issue finishing")?;
 
     // read from blobstore
-    let incoming =
-        container.get_data("request", 0, 0).context("failed to read data")?;
+    let incoming = container.get_data("request", 0, 0).context("failed to read data")?;
     let data = IncomingValue::incoming_value_consume_sync(incoming)
         .context("failed to create incoming value")?;
 

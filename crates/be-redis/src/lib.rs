@@ -27,8 +27,8 @@ impl Backend for Client {
 
     #[instrument(name = "Redis::connect_with")]
     async fn connect_with(options: Self::ConnectOptions) -> Result<Self> {
-        let client = redis::Client::open(options.url.clone())
-            .context("failed to create redis client")?;
+        let client =
+            redis::Client::open(options.url.clone()).context("failed to create redis client")?;
         let config = ConnectionManagerConfig::new()
             .set_number_of_retries(options.max_retries)
             .set_max_delay(Duration::from_millis(options.max_delay));

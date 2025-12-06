@@ -200,10 +200,7 @@ impl Client for crate::Client {
         async move {
             let payload = message.payload();
             let Some(headers) = message.metadata() else {
-                client
-                    .publish(topic.clone(), payload.into())
-                    .await
-                    .context("failed to publish")?;
+                client.publish(topic.clone(), payload.into()).await.context("failed to publish")?;
                 return Ok(());
             };
 

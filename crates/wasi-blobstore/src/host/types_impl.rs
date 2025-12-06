@@ -76,8 +76,7 @@ pub fn get_incoming<T>(
     accessor: &Accessor<T, WasiBlobstore>, self_: &Resource<IncomingValue>,
 ) -> Result<IncomingValue> {
     accessor.with(|mut store| {
-        let incoming =
-            store.get().table.get(self_).context("IncomingValue not found")?;
+        let incoming = store.get().table.get(self_).context("IncomingValue not found")?;
         Ok(incoming.clone())
     })
 }
@@ -86,8 +85,7 @@ pub fn get_outgoing<T>(
     accessor: &Accessor<T, WasiBlobstore>, self_: &Resource<OutgoingValue>,
 ) -> Result<OutgoingValue> {
     accessor.with(|mut store| {
-        let outgoing =
-            store.get().table.get(self_).context("OutgoingValue not found")?;
+        let outgoing = store.get().table.get(self_).context("OutgoingValue not found")?;
         Ok(outgoing.clone())
     })
 }

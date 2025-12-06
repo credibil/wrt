@@ -33,12 +33,9 @@ where
 
     tracing::debug!("forwarding request to proxy: {:?}", request.headers());
 
-    let wasi_req =
-        http_into_wasi_request(request).context("Issue converting request")?;
-    let wasi_resp =
-        handler::handle(wasi_req).await.context("Issue calling proxy")?;
-    let http_resp = http_from_wasi_response(wasi_resp)
-        .context("Issue converting response")?;
+    let wasi_req = http_into_wasi_request(request).context("Issue converting request")?;
+    let wasi_resp = handler::handle(wasi_req).await.context("Issue calling proxy")?;
+    let http_resp = http_from_wasi_response(wasi_resp).context("Issue converting response")?;
 
     // convert body
     let (parts, body) = http_resp.into_parts();
