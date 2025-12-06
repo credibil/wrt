@@ -2,6 +2,7 @@
 
 mod atomics_impl;
 mod batch_impl;
+pub mod default_impl;
 mod resource;
 mod store_impl;
 

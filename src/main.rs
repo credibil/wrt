@@ -17,7 +17,7 @@ buildgen::runtime!({
     WasiHttp: WasiHttpCtxImpl,
     WasiOtel: WasiOtelCtxImpl,
     WasiIdentity: WasiIdentityCtxImpl,
-    
+
 });
 
 #[tokio::main]

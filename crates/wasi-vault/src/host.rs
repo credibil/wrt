@@ -2,6 +2,7 @@
 //!
 //! This module implements the host-side logic for the WASI Vault service.
 
+pub mod default_impl;
 mod resource;
 mod vault_impl;
 

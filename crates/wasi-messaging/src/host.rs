@@ -1,3 +1,4 @@
+pub mod default_impl;
 mod producer_impl;
 mod request_reply_impl;
 mod resource;
