@@ -23,7 +23,7 @@ fromenv.workspace = true
 futures.workspace = true
 kernel.workspace = true
 parking_lot.workspace = true
-rusqlite = { version = "0.32", features = ["bundled"] }
+rusqlite = { version = "0.37.0", features = ["bundled"] }
 tracing.workspace = true
 wasmtime.workspace = true
 wasmtime-wasi.workspace = true

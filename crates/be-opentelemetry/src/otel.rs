@@ -41,4 +41,3 @@ impl WasiOtelCtx for Client {
         .boxed()
     }
 }
-

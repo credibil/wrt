@@ -21,8 +21,7 @@ anyhow.workspace = true
 fromenv.workspace = true
 futures.workspace = true
 kernel.workspace = true
-opentelemetry-proto = { version = "0.31.0", features = ["gen-tonic"] }
+opentelemetry-proto={workspace = true, features=["gen-tonic"]}
 tonic = "0.14.2"
 tracing.workspace = true
 wasi-otel.workspace = true
-

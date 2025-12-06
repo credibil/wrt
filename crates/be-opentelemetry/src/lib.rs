@@ -37,7 +37,7 @@ impl Backend for Client {
             .connect()
             .await
             .context("failed to connect to OpenTelemetry gRPC endpoint")?;
-        
+
         let traces_client = TraceServiceClient::new(channel.clone());
         let metrics_client = MetricsServiceClient::new(channel);
 
@@ -60,4 +60,3 @@ impl kernel::FromEnv for ConnectOptions {
         Self::from_env().finalize().context("issue loading connection options")
     }
 }
-
