@@ -23,7 +23,7 @@ pub fn expand(generated: Generated) -> TokenStream {
 
             use anyhow::Context as _;
             use futures::future::{BoxFuture, try_join_all};
-            use kernel::{Backend, Server, WasiHostCtxView, WasiHostView};
+            use kernel::{Backend, Server};
             use wasmtime_wasi::{WasiCtxBuilder, ResourceTable};
             use wasmtime::component::InstancePre;
 
@@ -48,7 +48,7 @@ pub fn expand(generated: Generated) -> TokenStream {
                 /// Creates a new runtime state by linking WASI interfaces and connecting to backends.
                 async fn new(compiled: &mut kernel::Compiled<StoreCtx>) -> anyhow::Result<Self> {
                     // link enabled WASI components
-                    #(compiled.link(#host_trait_impls::default())?;)*
+                    #(compiled.link(#host_trait_impls)?;)*
 
                     Ok(Self {
                         instance_pre: compiled.pre_instantiate()?,
@@ -108,6 +108,7 @@ pub fn expand(generated: Generated) -> TokenStream {
             }
 
             #(#wasi_view_impls)*
+
             // impl WasiHostView<DefaultOtel> for StoreCtx {
             //     fn ctx_view(&mut self) -> WasiHostCtxView<'_, DefaultOtel> {
             //         WasiHostCtxView {

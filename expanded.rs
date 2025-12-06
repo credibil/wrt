@@ -6,6 +6,7 @@ extern crate std;
 use std::prelude::rust_2024::*;
 use anyhow::Result;
 use kernel::{Cli, Command, Parser};
+use wasi_http::{WasiHttpCtxImpl, WasiHttp};
 use wasi_otel::{WasiOtel, WasiOtelCtxImpl};
 mod runtime {
     use super::*;
@@ -29,6 +30,7 @@ mod runtime {
     struct Context {
         instance_pre: InstancePre<StoreCtx>,
         pub wasiotelctximpl: WasiOtelCtxImpl,
+        pub wasihttpctximpl: WasiHttpCtxImpl,
     }
     #[automatically_derived]
     impl ::core::clone::Clone for Context {
@@ -37,21 +39,26 @@ mod runtime {
             Context {
                 instance_pre: ::core::clone::Clone::clone(&self.instance_pre),
                 wasiotelctximpl: ::core::clone::Clone::clone(&self.wasiotelctximpl),
+                wasihttpctximpl: ::core::clone::Clone::clone(&self.wasihttpctximpl),
             }
         }
     }
     impl Context {
         /// Creates a new runtime state by linking WASI interfaces and connecting to backends.
         async fn new(compiled: &mut kernel::Compiled<StoreCtx>) -> anyhow::Result<Self> {
-            compiled.link(WasiOtel::default())?;
+            compiled.link(WasiHttp)?;
+            compiled.link(WasiOtel)?;
             Ok(Self {
                 instance_pre: compiled.pre_instantiate()?,
                 wasiotelctximpl: WasiOtelCtxImpl::connect().await?,
+                wasihttpctximpl: WasiHttpCtxImpl::connect().await?,
             })
         }
         /// start enabled servers
         async fn start(&self) -> anyhow::Result<()> {
-            let futures: Vec<BoxFuture<'_, anyhow::Result<()>>> = ::alloc::vec::Vec::new();
+            let futures: Vec<BoxFuture<'_, anyhow::Result<()>>> = <[_]>::into_vec(
+                ::alloc::boxed::box_new([Box::pin(WasiHttp.run(self))]),
+            );
             try_join_all(futures).await?;
             Ok(())
         }
@@ -72,6 +79,7 @@ mod runtime {
             StoreCtx {
                 table: ResourceTable::new(),
                 wasi: wasi_ctx,
+                wasi_http: self.wasihttpctximpl.clone(),
                 wasi_otel: self.wasiotelctximpl.clone(),
             }
         }
@@ -80,6 +88,7 @@ mod runtime {
     pub struct StoreCtx {
         pub table: wasmtime_wasi::ResourceTable,
         pub wasi: wasmtime_wasi::WasiCtx,
+        pub wasi_http: WasiHttpCtxImpl,
         pub wasi_otel: WasiOtelCtxImpl,
     }
     impl wasmtime_wasi::WasiView for StoreCtx {
@@ -90,9 +99,17 @@ mod runtime {
             }
         }
     }
-    impl WasiHostView<WasiOtelCtxImpl> for StoreCtx {
-        fn ctx_view(&mut self) -> WasiHostCtxView<'_, WasiOtelCtxImpl> {
-            WasiHostCtxView {
+    impl wasi_http::WasiHttpView for StoreCtx {
+        fn http(&mut self) -> wasi_http::WasiHttpCtxView<'_> {
+            wasi_http::WasiHttpCtxView {
+                ctx: &mut self.wasi_http,
+                table: &mut self.table,
+            }
+        }
+    }
+    impl wasi_otel::WasiOtelView for StoreCtx {
+        fn otel(&mut self) -> wasi_otel::WasiOtelCtxView<'_> {
+            wasi_otel::WasiOtelCtxView {
                 ctx: &mut self.wasi_otel,
                 table: &mut self.table,
             }

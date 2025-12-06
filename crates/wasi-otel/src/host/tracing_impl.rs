@@ -3,7 +3,6 @@
 use std::collections::HashMap;
 
 use anyhow::Result;
-use kernel::WasiHostCtxView;
 use opentelemetry::trace::{self as otel, TraceContextExt};
 use opentelemetry_proto::tonic::collector::trace::v1::ExportTraceServiceRequest;
 use opentelemetry_proto::tonic::resource::v1::Resource;
@@ -14,9 +13,9 @@ use tracing_opentelemetry::OpenTelemetrySpanExt;
 use wasmtime::component::Accessor;
 
 use crate::host::generated::wasi::otel::tracing::{self as wasi, HostWithStore};
-use crate::{WasiOtel, WasiOtelCtx};
+use crate::{WasiOtel, WasiOtelCtxView};
 
-impl<C: WasiOtelCtx> HostWithStore for WasiOtel<C> {
+impl HostWithStore for WasiOtel {
     async fn export<T>(
         accessor: &Accessor<T, Self>, span_data: Vec<wasi::SpanData>,
     ) -> Result<(), wasi::Error> {
@@ -47,7 +46,7 @@ impl<C: WasiOtelCtx> HostWithStore for WasiOtel<C> {
     }
 }
 
-impl<C: WasiOtelCtx> wasi::Host for WasiHostCtxView<'_, C> {}
+impl wasi::Host for WasiOtelCtxView<'_> {}
 
 pub fn resource_spans(
     spans: Vec<wasi::SpanData>, resource: &opentelemetry_sdk::Resource,

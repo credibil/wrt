@@ -23,10 +23,10 @@ impl kernel::FromEnv for ConnectOptions {
     }
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct WasiOtelCtxImpl {
-    traces_client: Option<TraceServiceClient<Channel>>,
-    metrics_client: Option<MetricsServiceClient<Channel>>,
+    traces_client: TraceServiceClient<Channel>,
+    metrics_client: MetricsServiceClient<Channel>,
 }
 
 impl Backend for WasiOtelCtxImpl {
@@ -43,8 +43,8 @@ impl Backend for WasiOtelCtxImpl {
         let metrics_client = MetricsServiceClient::new(channel);
 
         Ok(Self {
-            traces_client: Some(traces_client),
-            metrics_client: Some(metrics_client),
+            traces_client,
+            metrics_client,
         })
     }
 }
@@ -55,10 +55,7 @@ impl WasiOtelCtx for WasiOtelCtxImpl {
     /// Errors are logged but not propagated to prevent telemetry failures
     /// from affecting application logic.
     fn export_traces(&self, request: ExportTraceServiceRequest) -> FutureResult<()> {
-        let Some(mut client) = self.traces_client.clone() else {
-            tracing::error!("no traces client available");
-            return Box::pin(async { Ok(()) });
-        };
+        let mut client = self.traces_client.clone();
 
         async move {
             if let Err(e) = client.export(request).await {
@@ -74,10 +71,7 @@ impl WasiOtelCtx for WasiOtelCtxImpl {
     /// Errors are logged but not propagated to prevent telemetry failures
     /// from affecting application logic.
     fn export_metrics(&self, request: ExportMetricsServiceRequest) -> FutureResult<()> {
-        let Some(mut client) = self.metrics_client.clone() else {
-            tracing::error!("no metrics client available");
-            return Box::pin(async { Ok(()) });
-        };
+        let mut client = self.metrics_client.clone();
 
         async move {
             if let Err(e) = client.export(request).await {

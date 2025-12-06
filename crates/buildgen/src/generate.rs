@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{format_ident, quote};
 use syn::{Ident, Type};
 
 use crate::parse::BuildInput;
@@ -48,10 +48,16 @@ impl TryFrom<BuildInput> for Generated {
             }
 
             // WasiViewXxx implementations
+            let short_name = host_name.strip_prefix("Wasi").unwrap_or(&host_name).to_lowercase();
+            let view_trait = format_ident!("{host_name}View");
+            let view_method = format_ident!("{short_name}");
+            let ctx_view = format_ident!("{host_name}CtxView");
+            let module = &host_ident;
+
             let view = quote! {
-                impl WasiHostView<#backend_type> for StoreCtx {
-                    fn ctx_view(&mut self) -> WasiHostCtxView<'_, #backend_type> {
-                        WasiHostCtxView {
+                impl #module::#view_trait for StoreCtx {
+                    fn #view_method(&mut self) -> #module::#ctx_view<'_> {
+                        #module::#ctx_view {
                             ctx: &mut self.#host_ident,
                             table: &mut self.table,
                         }

@@ -1,7 +1,6 @@
 //! # WASI Tracing
 
 use anyhow::Result;
-use kernel::WasiHostCtxView;
 use opentelemetry_proto::tonic::collector::metrics::v1::ExportMetricsServiceRequest;
 use opentelemetry_proto::tonic::common::v1::any_value::Value;
 use opentelemetry_proto::tonic::common::v1::{
@@ -20,9 +19,9 @@ use opentelemetry_sdk::error::OTelSdkError;
 use wasmtime::component::Accessor;
 
 use crate::host::generated::wasi::otel::metrics::{self as wasi, HostWithStore};
-use crate::host::{WasiOtel, WasiOtelCtx};
+use crate::host::{WasiOtel,  WasiOtelCtxView};
 
-impl<C: WasiOtelCtx> HostWithStore for WasiOtel<C> {
+impl HostWithStore for WasiOtel {
     async fn export<T>(
         accessor: &Accessor<T, Self>, rm: wasi::ResourceMetrics,
     ) -> Result<(), wasi::Error> {
@@ -40,7 +39,7 @@ impl<C: WasiOtelCtx> HostWithStore for WasiOtel<C> {
     }
 }
 
-impl<C: WasiOtelCtx> wasi::Host for WasiHostCtxView<'_, C> {}
+impl wasi::Host for WasiOtelCtxView<'_> {}
 
 impl From<OTelSdkError> for wasi::Error {
     fn from(err: OTelSdkError) -> Self {
