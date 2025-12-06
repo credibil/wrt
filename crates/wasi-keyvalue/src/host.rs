@@ -30,7 +30,7 @@ mod generated {
 use std::fmt::Debug;
 use std::sync::Arc;
 
-use kernel::Host;
+use kernel::{Host, Server, State};
 use wasmtime::component::{HasData, Linker, ResourceTableError};
 use wasmtime_wasi::ResourceTable;
 
@@ -50,6 +50,8 @@ where
         batch::add_to_linker::<_, Self>(linker, T::keyvalue)
     }
 }
+
+impl<S> Server<S> for WasiKeyValue where S: State {}
 
 #[derive(Debug)]
 pub struct WasiKeyValue;
@@ -87,4 +89,18 @@ impl From<ResourceTableError> for Error {
     fn from(err: ResourceTableError) -> Self {
         Self::Other(err.to_string())
     }
+}
+
+#[macro_export]
+macro_rules! wasi_view {
+    ($store_ctx:ty, $field_name:ident) => {
+        impl wasi_keyvalue::WasiKeyValueView for $store_ctx {
+            fn keyvalue(&mut self) -> wasi_keyvalue::WasiKeyValueCtxView<'_> {
+                wasi_keyvalue::WasiKeyValueCtxView {
+                    ctx: &mut self.$field_name,
+                    table: &mut self.table,
+                }
+            }
+        }
+    };
 }

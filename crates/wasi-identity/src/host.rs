@@ -31,7 +31,7 @@ mod generated {
 use std::fmt::Debug;
 use std::sync::Arc;
 
-use kernel::Host;
+use kernel::{Host, Server, State};
 use wasmtime::component::{HasData, Linker};
 use wasmtime_wasi::ResourceTable;
 
@@ -50,6 +50,8 @@ where
         credentials::add_to_linker::<_, Self>(linker, T::identity)
     }
 }
+
+impl<S> Server<S> for WasiIdentity where S: State {}
 
 impl HasData for WasiIdentity {
     type Data<'a> = WasiIdentityCtxView<'a>;
@@ -82,4 +84,18 @@ pub struct WasiIdentityCtxView<'a> {
 /// functionality. For example, an in-memory store, or a Redis-backed store.
 pub trait WasiIdentityCtx: Debug + Send + Sync + 'static {
     fn get_identity(&self, name: String) -> FutureResult<Arc<dyn Identity>>;
+}
+
+#[macro_export]
+macro_rules! wasi_view {
+    ($store_ctx:ty, $field_name:ident) => {
+        impl wasi_identity::WasiIdentityView for $store_ctx {
+            fn identity(&mut self) -> wasi_identity::WasiIdentityCtxView<'_> {
+                wasi_identity::WasiIdentityCtxView {
+                    ctx: &mut self.$field_name,
+                    table: &mut self.table,
+                }
+            }
+        }
+    };
 }

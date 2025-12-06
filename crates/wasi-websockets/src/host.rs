@@ -94,3 +94,17 @@ pub trait WebSocketsCtxView: Debug + Send + Sync + 'static {
 #[derive(Clone, Debug)]
 pub struct DefaultWebSocketsCtx;
 impl WebSocketsCtxView for DefaultWebSocketsCtx {}
+
+#[macro_export]
+macro_rules! wasi_view {
+    ($store_ctx:ty, $field_name:ident) => {
+        impl wasi_websockets::WebSocketsView for $store_ctx {
+            fn start(&mut self) -> wasi_websockets::WasiWebSocketsCtxView<'_> {
+                wasi_websockets::WasiWebSocketsCtxView {
+                    ctx: &self.$field_name,
+                    table: &mut self.table,
+                }
+            }
+        }
+    };
+}

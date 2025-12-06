@@ -6,7 +6,9 @@ extern crate std;
 use std::prelude::rust_2024::*;
 use anyhow::Result;
 use kernel::{Cli, Command, Parser};
+use be_azure::Client as Azure;
 use wasi_http::{WasiHttp, WasiHttpCtxImpl};
+use wasi_identity::{WasiIdentity, WasiIdentityCtxImpl};
 use wasi_otel::{WasiOtel, WasiOtelCtxImpl};
 mod runtime {
     use super::*;
@@ -26,9 +28,11 @@ mod runtime {
             .context("preparing runtime state")?;
         run_state.start().await.context("starting runtime services")
     }
-    /// Initiator state holding pre-instantiated components and backend connections.
+    /// Initiator state holding pre-instantiated components and backend
+    /// connections.
     struct Context {
         instance_pre: InstancePre<StoreCtx>,
+        pub azure: Azure,
         pub wasihttpctximpl: WasiHttpCtxImpl,
         pub wasiotelctximpl: WasiOtelCtxImpl,
     }
@@ -38,28 +42,35 @@ mod runtime {
         fn clone(&self) -> Context {
             Context {
                 instance_pre: ::core::clone::Clone::clone(&self.instance_pre),
+                azure: ::core::clone::Clone::clone(&self.azure),
                 wasihttpctximpl: ::core::clone::Clone::clone(&self.wasihttpctximpl),
                 wasiotelctximpl: ::core::clone::Clone::clone(&self.wasiotelctximpl),
             }
         }
     }
     impl Context {
-        /// Creates a new runtime state by linking WASI interfaces and connecting to backends.
+        /// Creates a new runtime state by linking WASI interfaces and
+        /// connecting to backends.
         async fn new(compiled: &mut kernel::Compiled<StoreCtx>) -> anyhow::Result<Self> {
             compiled.link(WasiHttp)?;
             compiled.link(WasiOtel)?;
+            compiled.link(WasiIdentity)?;
             Ok(Self {
                 instance_pre: compiled.pre_instantiate()?,
+                azure: Azure::connect().await?,
                 wasihttpctximpl: WasiHttpCtxImpl::connect().await?,
                 wasiotelctximpl: WasiOtelCtxImpl::connect().await?,
             })
         }
-        /// start enabled servers
+        /// Start servers
+        /// N.B. for simplicity, all hosts are "servers" with a default
+        /// implementation the does nothing
         async fn start(&self) -> anyhow::Result<()> {
             let futures: Vec<BoxFuture<'_, anyhow::Result<()>>> = <[_]>::into_vec(
                 ::alloc::boxed::box_new([
                     Box::pin(WasiHttp.run(self)),
-                    Box::pin(async { Ok(()) }),
+                    Box::pin(WasiOtel.run(self)),
+                    Box::pin(WasiIdentity.run(self)),
                 ]),
             );
             try_join_all(futures).await?;
@@ -84,6 +95,7 @@ mod runtime {
                 wasi: wasi_ctx,
                 wasi_http: self.wasihttpctximpl.clone(),
                 wasi_otel: self.wasiotelctximpl.clone(),
+                wasi_identity: self.azure.clone(),
             }
         }
     }
@@ -93,6 +105,7 @@ mod runtime {
         pub wasi: wasmtime_wasi::WasiCtx,
         pub wasi_http: WasiHttpCtxImpl,
         pub wasi_otel: WasiOtelCtxImpl,
+        pub wasi_identity: Azure,
     }
     impl wasmtime_wasi::WasiView for StoreCtx {
         fn ctx(&mut self) -> wasmtime_wasi::WasiCtxView<'_> {
@@ -114,6 +127,14 @@ mod runtime {
         fn otel(&mut self) -> wasi_otel::WasiOtelCtxView<'_> {
             wasi_otel::WasiOtelCtxView {
                 ctx: &mut self.wasi_otel,
+                table: &mut self.table,
+            }
+        }
+    }
+    impl wasi_identity::WasiIdentityView for StoreCtx {
+        fn identity(&mut self) -> wasi_identity::WasiIdentityCtxView<'_> {
+            wasi_identity::WasiIdentityCtxView {
+                ctx: &mut self.wasi_identity,
                 table: &mut self.table,
             }
         }

@@ -37,11 +37,11 @@ impl kernel::FromEnv for ConnectOptions {
 }
 
 #[derive(Debug, Clone)]
-pub struct DefaultIdentity {
+pub struct WasiIdentityCtxImpl {
     token_manager: TokenManager,
 }
 
-impl Backend for DefaultIdentity {
+impl Backend for WasiIdentityCtxImpl {
     type ConnectOptions = ConnectOptions;
 
     #[instrument]
@@ -51,7 +51,7 @@ impl Backend for DefaultIdentity {
     }
 }
 
-impl WasiIdentityCtx for DefaultIdentity {
+impl WasiIdentityCtx for WasiIdentityCtxImpl {
     fn get_identity(&self, _name: String) -> FutureResult<Arc<dyn Identity>> {
         tracing::debug!("getting identity");
         let token_manager = self.token_manager.clone();

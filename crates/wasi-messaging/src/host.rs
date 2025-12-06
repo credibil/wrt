@@ -139,3 +139,17 @@ impl From<anyhow::Error> for Error {
         Self::Other(err.to_string())
     }
 }
+
+#[macro_export]
+macro_rules! wasi_view {
+    ($store_ctx:ty, $field_name:ident) => {
+        impl wasi_messaging::WasiMessagingView for $store_ctx {
+            fn messaging(&mut self) -> wasi_messaging::WasiMessagingCtxView<'_> {
+                wasi_messaging::WasiMessagingCtxView {
+                    ctx: &mut self.$field_name,
+                    table: &mut self.table,
+                }
+            }
+        }
+    };
+}
