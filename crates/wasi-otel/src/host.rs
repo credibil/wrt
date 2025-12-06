@@ -28,7 +28,7 @@ use opentelemetry_proto::tonic::collector::trace::v1::ExportTraceServiceRequest;
 use wasmtime::component::{HasData, Linker, ResourceTable};
 
 pub use self::default_impl::WasiOtelCtxImpl;
-use self::generated::wasi::otel as wasi;
+use self::generated::wasi::otel::{metrics, resource, tracing, types};
 
 #[derive(Debug)]
 pub struct WasiOtel;
@@ -38,10 +38,10 @@ where
     T: WasiOtelView + 'static,
 {
     fn add_to_linker(linker: &mut Linker<T>) -> anyhow::Result<()> {
-        wasi::tracing::add_to_linker::<_, Self>(linker, T::otel)?;
-        wasi::metrics::add_to_linker::<_, Self>(linker, T::otel)?;
-        wasi::types::add_to_linker::<_, Self>(linker, T::otel)?;
-        wasi::resource::add_to_linker::<_, Self>(linker, T::otel)
+        tracing::add_to_linker::<_, Self>(linker, T::otel)?;
+        metrics::add_to_linker::<_, Self>(linker, T::otel)?;
+        types::add_to_linker::<_, Self>(linker, T::otel)?;
+        resource::add_to_linker::<_, Self>(linker, T::otel)
     }
 }
 
@@ -100,10 +100,3 @@ macro_rules! wasi_view {
         }
     };
 }
-
-// #[macro_export]
-// macro_rules! server_run {
-//     ($self:ident) => {
-//         async { Ok(()) }
-//     };
-// }

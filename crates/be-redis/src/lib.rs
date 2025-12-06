@@ -5,6 +5,7 @@
 mod keyvalue;
 
 use std::fmt::Debug;
+use std::time::Duration;
 
 use anyhow::{Result, anyhow};
 use fromenv::FromEnv;
@@ -30,7 +31,7 @@ impl Backend for Client {
             .map_err(|e| anyhow!("failed to create redis client: {e}"))?;
         let config = ConnectionManagerConfig::new()
             .set_number_of_retries(options.max_retries)
-            .set_max_delay(options.max_delay_ms);
+            .set_max_delay(Duration::from_millis(options.max_delay));
 
         let conn = client
             .get_connection_manager_with_config(config)
@@ -49,7 +50,7 @@ pub struct ConnectOptions {
     #[env(from = "REDIS_MAX_RETRIES", default = "3")]
     pub max_retries: usize,
     #[env(from = "REDIS_MAX_DELAY", default = "1000")]
-    pub max_delay_ms: u64,
+    pub max_delay: u64,
 }
 
 impl kernel::FromEnv for ConnectOptions {

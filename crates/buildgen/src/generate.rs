@@ -45,7 +45,7 @@ impl TryFrom<BuildInput> for Generated {
 
             // servers
             server_trait_impls.push(quote! {#host_type});
-            
+
             // WasiViewXxx implementations
             // let module = &host_ident;
             // let short_name = host_name.strip_prefix("Wasi").unwrap_or(&host_name).to_lowercase();

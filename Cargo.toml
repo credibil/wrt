@@ -251,11 +251,11 @@ wasmtime = { version = "40.0.0", default-features = false, features = ["componen
 wasmtime-wasi = { version = "40.0.0", features = ["p3"] }
 wasmtime-wasi-http = { version = "40.0.0", features = ["p3"] }
 wasmtime-wasi-io = "40.0.0"
-wit-bindgen = { version = "0.48.1", features = ["async-spawn"] }
+wit-bindgen = { version = "0.49.0", features = ["async-spawn"] }
 
 # credibil registry
-credibil-encoding = { version = "0.5.0", registry = "credibil" }
-credibil-otel = { version = "0.5.0", registry = "credibil" }
+credibil-encoding = { version = "0.6.0", registry = "credibil" }
+credibil-otel = { version = "0.6.0", registry = "credibil" }
 
 # interally referenced crates
 be-azure = { path = "crates/be-azure", version = "0.19.0", registry = "credibil" }
@@ -278,8 +278,7 @@ wasi-vault = { path = "crates/wasi-vault", version = "0.19.0", registry = "credi
 wasi-websockets = { path = "crates/wasi-websockets", version = "0.19.0", registry = "credibil" }
 
 [patch.crates-io]
-# wasip3 = { git = "https://github.com/bytecodealliance/wasi-rs" }
-wasmtime = { git = "https://github.com/bytecodealliance/wasmtime" }
-wasmtime-wasi = { git = "https://github.com/bytecodealliance/wasmtime" }
-wasmtime-wasi-http = { git = "https://github.com/bytecodealliance/wasmtime" }
-wasmtime-wasi-io = { git = "https://github.com/bytecodealliance/wasmtime" }
+wasmtime = { git = "https://github.com/bytecodealliance/wasmtime", branch = "release-40.0.0" }
+wasmtime-wasi = { git = "https://github.com/bytecodealliance/wasmtime", branch = "release-40.0.0" }
+wasmtime-wasi-http = { git = "https://github.com/bytecodealliance/wasmtime", branch = "release-40.0.0" }
+wasmtime-wasi-io = { git = "https://github.com/bytecodealliance/wasmtime", branch = "release-40.0.0" }

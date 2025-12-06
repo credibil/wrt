@@ -58,7 +58,7 @@ pub fn expand(generated: Generated) -> TokenStream {
                     })
                 }
 
-                /// Start servers 
+                /// Start servers
                 /// N.B. for simplicity, all hosts are "servers" with a default
                 /// implementation the does nothing
                 async fn start(&self) -> anyhow::Result<()> {
