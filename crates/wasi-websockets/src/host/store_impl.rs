@@ -1,4 +1,4 @@
-use anyhow::anyhow;
+use anyhow::Context;
 pub use kernel::FutureResult;
 use wasmtime::component::{Accessor, Resource};
 
@@ -72,7 +72,7 @@ pub fn use_server<T>(
 ) -> Result<WebSocketProxy> {
     accessor.with(|mut store| {
         let server =
-            store.get().table.get(self_).map_err(|_e| anyhow!("Failed to get WebSocket server"))?;
+            store.get().table.get(self_).context("Failed to get WebSocket server")?;
         Ok::<_, anyhow::Error>(server.clone())
     })
 }

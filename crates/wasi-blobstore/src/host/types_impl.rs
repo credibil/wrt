@@ -1,4 +1,4 @@
-use anyhow::{Result, anyhow};
+use anyhow::{Context, Result};
 use bytes::Bytes;
 use wasmtime::component::{Accessor, Resource};
 use wasmtime_wasi::p2::bindings::io::streams::{InputStream, OutputStream};
@@ -77,7 +77,7 @@ pub fn get_incoming<T>(
 ) -> Result<IncomingValue> {
     accessor.with(|mut store| {
         let incoming =
-            store.get().table.get(self_).map_err(|e| anyhow!("IncomingValue not found: {e}"))?;
+            store.get().table.get(self_).context("IncomingValue not found")?;
         Ok(incoming.clone())
     })
 }
@@ -87,7 +87,7 @@ pub fn get_outgoing<T>(
 ) -> Result<OutgoingValue> {
     accessor.with(|mut store| {
         let outgoing =
-            store.get().table.get(self_).map_err(|e| anyhow!("OutgoingValue not found: {e}"))?;
+            store.get().table.get(self_).context("OutgoingValue not found")?;
         Ok(outgoing.clone())
     })
 }

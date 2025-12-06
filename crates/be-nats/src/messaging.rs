@@ -2,7 +2,7 @@ use std::any::Any;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use anyhow::anyhow;
+use anyhow::{Context, anyhow};
 use async_nats::HeaderMap;
 use futures::future::FutureExt;
 use futures::stream::{self, StreamExt};
@@ -203,7 +203,7 @@ impl Client for crate::Client {
                 client
                     .publish(topic.clone(), payload.into())
                     .await
-                    .map_err(|e| anyhow!("failed to publish: {e}"))?;
+                    .context("failed to publish")?;
                 return Ok(());
             };
 
@@ -215,7 +215,7 @@ impl Client for crate::Client {
             client
                 .publish_with_headers(topic.clone(), nats_headers, payload.into())
                 .await
-                .map_err(|e| anyhow!("failed to publish: {e}"))?;
+                .context("failed to publish")?;
 
             Ok(())
         }
@@ -246,7 +246,7 @@ impl Client for crate::Client {
             let nats_msg = client
                 .send_request(topic.clone(), request)
                 .await
-                .map_err(|e| anyhow!("failed to send request: {e}"))?;
+                .context("failed to send request")?;
             Ok(MessageProxy(Arc::new(NatsMessage(nats_msg)) as Arc<dyn Message>))
         }
         .boxed()

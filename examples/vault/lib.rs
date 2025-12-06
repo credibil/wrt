@@ -26,11 +26,11 @@ impl Guest for Http {
 async fn handler(body: Bytes) -> Result<Json<Value>> {
     // write secret to vault
     let locker =
-        vault::open("credibil-locker").map_err(|e| anyhow!("failed to open vault locker: {e}"))?;
-    locker.set("secret-id", &body).map_err(|e| anyhow!("issue setting secret: {e}"))?;
+        vault::open("credibil-locker").context("failed to open vault locker")?;
+    locker.set("secret-id", &body).context("issue setting secret")?;
 
     // read secret from vault
-    let secret = locker.get("secret-id").map_err(|e| anyhow!("issue retriving secret: {e}"))?;
+    let secret = locker.get("secret-id").context("issue retriving secret")?;
     assert_eq!(secret.unwrap(), body);
 
     let response = serde_json::from_slice::<Value>(&body).context("deserializing data")?;

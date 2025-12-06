@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 use std::sync::Arc;
 
-use anyhow::{Context, anyhow};
+use anyhow::Context;
 use async_nats::jetstream;
 use async_nats::jetstream::object_store::{Config, ObjectStore};
 use chrono::Utc;
@@ -57,7 +57,7 @@ impl WasiBlobstoreCtx for Client {
             jetstream::new(client)
                 .delete_object_store(&name)
                 .await
-                .map_err(|e| anyhow!("issue deleting object store: {e}"))?;
+                .context("issue deleting object store")?;
             Ok(())
         }
         .boxed()

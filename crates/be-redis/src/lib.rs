@@ -7,7 +7,7 @@ mod keyvalue;
 use std::fmt::Debug;
 use std::time::Duration;
 
-use anyhow::{Result, anyhow};
+use anyhow::{Context, Result};
 use fromenv::FromEnv;
 use kernel::Backend;
 use redis::aio::{ConnectionManager, ConnectionManagerConfig};
@@ -28,7 +28,7 @@ impl Backend for Client {
     #[instrument(name = "Redis::connect_with")]
     async fn connect_with(options: Self::ConnectOptions) -> Result<Self> {
         let client = redis::Client::open(options.url.clone())
-            .map_err(|e| anyhow!("failed to create redis client: {e}"))?;
+            .context("failed to create redis client")?;
         let config = ConnectionManagerConfig::new()
             .set_number_of_retries(options.max_retries)
             .set_max_delay(Duration::from_millis(options.max_delay));
@@ -36,7 +36,7 @@ impl Backend for Client {
         let conn = client
             .get_connection_manager_with_config(config)
             .await
-            .map_err(|e| anyhow!("issue getting redis connection: {e}"))?;
+            .context("issue getting redis connection")?;
 
         tracing::info!("connected to redis");
         Ok(Self(conn))
@@ -55,6 +55,6 @@ pub struct ConnectOptions {
 
 impl kernel::FromEnv for ConnectOptions {
     fn from_env() -> Result<Self> {
-        Self::from_env().finalize().map_err(|e| anyhow!("issue loading connection options: {e}"))
+        Self::from_env().finalize().context("issue loading connection options")
     }
 }

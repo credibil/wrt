@@ -8,7 +8,7 @@ mod key_vault;
 use std::fmt::Debug;
 use std::sync::Arc;
 
-use anyhow::{Result, anyhow};
+use anyhow::{Context, Result};
 use azure_core::credentials::{Secret, TokenCredential};
 use azure_identity::{ClientSecretCredential, DeveloperToolsCredential};
 use azure_security_keyvault_secrets::SecretClient;
@@ -42,7 +42,7 @@ impl Backend for Client {
             )?
         } else {
             DeveloperToolsCredential::new(None)
-                .map_err(|e| anyhow!("could not create credential: {e}"))?
+                .context("could not create credential")?
         };
         tracing::info!("connected to azure api");
 
@@ -52,7 +52,7 @@ impl Backend for Client {
         };
 
         let client = SecretClient::new(url, credential, None)
-            .map_err(|e| anyhow!("failed to connect to azure keyvault: {e}"))?;
+            .context("failed to connect to azure keyvault")?;
         tracing::info!("connected to azure keyvault");
 
         Ok(Self {
@@ -81,6 +81,6 @@ pub struct CredentialOptions {
 
 impl kernel::FromEnv for ConnectOptions {
     fn from_env() -> Result<Self> {
-        Self::from_env().finalize().map_err(|e| anyhow!("issue loading connection options: {e}"))
+        Self::from_env().finalize().context("issue loading connection options")
     }
 }

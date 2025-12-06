@@ -1,6 +1,6 @@
 //! Cache header parsing and cache get/put
 
-use anyhow::{Result, anyhow, bail};
+use anyhow::{Context, Result, anyhow, bail};
 use bincode::{Decode, Encode, config};
 use bytes::Bytes;
 use http::header::{CACHE_CONTROL, IF_NONE_MATCH};
@@ -43,7 +43,7 @@ impl Cache {
             return Ok(None);
         }
         let control = Control::try_from(headers)
-            .map_err(|e| anyhow!("issue parsing Cache-Control headers: {e}"))?;
+            .context("issue parsing Cache-Control headers")?;
         let cache_opts = request
             .extensions()
             .get::<CacheOptions>()
@@ -74,7 +74,7 @@ impl Cache {
         let cache = wasi_keyvalue::cache::open(&self.bucket)?;
         cache
             .get(&ctrl.etag)
-            .map_err(|e| anyhow!("retrieving cached response: {e}"))?
+            .context("retrieving cached response")?
             .map_or(Ok(None), |data| deserialize(&data).map(Some))
     }
 
@@ -199,12 +199,12 @@ impl TryFrom<&http::HeaderMap> for Control {
 fn serialize(response: &Response<Bytes>) -> Result<Vec<u8>> {
     let ser = Serialized::try_from(response)?;
     bincode::encode_to_vec(&ser, config::standard())
-        .map_err(|e| anyhow!("serializing response: {e}"))
+        .context("serializing response")
 }
 
 fn deserialize(data: &[u8]) -> Result<Response<Bytes>> {
     let (ser, _): (Serialized, _) = bincode::decode_from_slice(data, config::standard())
-        .map_err(|e| anyhow!("deserializing cached response: {e}"))?;
+        .context("deserializing cached response")?;
     Response::<Bytes>::try_from(ser)
 }
 
@@ -241,7 +241,7 @@ impl TryFrom<Serialized> for Response<Bytes> {
         }
         response
             .body(Bytes::from(s.body))
-            .map_err(|e| anyhow!("building response from cached data: {e}"))
+            .context("building response from cached data")
     }
 }
 

@@ -1,4 +1,4 @@
-use anyhow::anyhow;
+use anyhow::{Context, anyhow};
 use wasmtime::component::{Accessor, Resource};
 
 use crate::WasiKeyValueCtxView;
@@ -59,7 +59,7 @@ impl HostCasWithStore for WasiKeyValue {
     ) -> Result<Resource<Cas>> {
         let bucket = get_bucket(accessor, &bucket)?;
         let current =
-            bucket.get(key.clone()).await.map_err(|e| anyhow!("issue getting key: {e}"))?;
+            bucket.get(key.clone()).await.context("issue getting key")?;
         let cas = Cas { key, current };
         Ok(accessor.with(|mut store| store.get().table.push(cas))?)
     }

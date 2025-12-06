@@ -6,7 +6,7 @@
 //! The interface exposes simple HTTP GET and POST endpoints to trigger the SQL
 //! queries.
 
-use anyhow::anyhow;
+use anyhow::{Context, anyhow};
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use bytes::Bytes;
@@ -36,11 +36,11 @@ async fn query() -> Result<Json<Value>> {
     tracing::info!("query database");
 
     let pool =
-        Connection::open("postgres").map_err(|e| anyhow!("failed to open connection: {e:?}"))?;
+        Connection::open("postgres").context("failed to open connection")?;
     let stmt = Statement::prepare("SELECT * from mytable;", &[])
-        .map_err(|e| anyhow!("failed to prepare statement: {e:?}"))?;
+        .context("failed to prepare statement")?;
 
-    let res = readwrite::query(&pool, &stmt).map_err(|e| anyhow!("query failed: {e:?}"))?;
+    let res = readwrite::query(&pool, &stmt).context("query failed")?;
 
     Ok(Json(into_json(res)?))
 }
@@ -66,11 +66,11 @@ async fn insert(_body: Bytes) -> Result<Json<Value>> {
 
     tracing::debug!("opening connection");
 
-    let pool = Connection::open("db").map_err(|e| anyhow!("failed to open connection: {e:?}"))?;
+    let pool = Connection::open("db").context("failed to open connection")?;
     let stmt = Statement::prepare(insert, &params)
-        .map_err(|e| anyhow!("failed to prepare statement: {e:?}"))?;
+        .context("failed to prepare statement")?;
 
-    let res = readwrite::exec(&pool, &stmt).map_err(|e| anyhow!("query failed: {e:?}"))?;
+    let res = readwrite::exec(&pool, &stmt).context("query failed")?;
 
     Ok(Json(json!({
         "message": res

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use anyhow::{anyhow, bail};
+use anyhow::{Context, anyhow, bail};
 use chrono::NaiveDate;
 use deadpool_postgres::Object;
 use futures::future::FutureExt;
@@ -19,7 +19,7 @@ impl WasiSqlCtx for Client {
         let pool = self.0.clone();
 
         async move {
-            let cnn = pool.get().await.map_err(|e| anyhow!("issue getting connection: {e}"))?;
+            let cnn = pool.get().await.context("issue getting connection")?;
             Ok(Arc::new(PostgresConnection(Arc::new(cnn))) as Arc<dyn Connection>)
         }
         .boxed()
@@ -43,7 +43,7 @@ impl Connection for PostgresConnection {
                 pg_params.iter().map(|b| b.as_ref() as ParamRef).collect();
 
             let pg_rows =
-                cnn.query(&query, &param_refs).await.map_err(|e| anyhow!("query failed: {e}"))?;
+                cnn.query(&query, &param_refs).await.context("query failed")?;
             tracing::debug!("query returned {} rows", pg_rows.len());
 
             let mut wasi_rows = Vec::new();

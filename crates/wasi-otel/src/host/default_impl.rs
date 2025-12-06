@@ -1,4 +1,4 @@
-use anyhow::{Context, Result, anyhow};
+use anyhow::{Context, Result};
 use fromenv::FromEnv;
 use futures::FutureExt;
 use kernel::Backend;
@@ -19,7 +19,7 @@ pub struct ConnectOptions {
 
 impl kernel::FromEnv for ConnectOptions {
     fn from_env() -> Result<Self> {
-        Self::from_env().finalize().map_err(|e| anyhow!("issue loading connection options: {e}"))
+        Self::from_env().finalize().context("issue loading connection options")
     }
 }
 

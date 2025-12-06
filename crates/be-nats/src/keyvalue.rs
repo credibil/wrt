@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use anyhow::{Context, anyhow};
+use anyhow::Context;
 use async_nats::jetstream::kv::Config;
 use async_nats::jetstream::{self, kv};
 use futures::TryStreamExt;
@@ -30,7 +30,7 @@ impl WasiKeyValueCtx for Client {
                     })
                     .await;
 
-                result.map_err(|e| anyhow!("failed to create bucket: {e}"))?
+                result.context("failed to create bucket")?
             };
 
             Ok(Arc::new(KvBucket(store)) as Arc<dyn Bucket>)

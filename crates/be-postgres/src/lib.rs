@@ -48,7 +48,7 @@ impl Backend for Client {
         // TLS mode
         ring::default_provider()
             .install_default()
-            .map_err(|e| anyhow!("Failed to install rustls crypto provider: {e:?}"))?;
+            .map_err(|_e| anyhow!("Failed to install rustls crypto provider"))?;
 
         let mut store = RootCertStore::empty();
         store.extend(TLS_SERVER_ROOTS.iter().cloned());
@@ -80,7 +80,7 @@ pub struct ConnectOptions {
 
 impl kernel::FromEnv for ConnectOptions {
     fn from_env() -> Result<Self> {
-        Self::from_env().finalize().map_err(|e| anyhow!("issue loading connection options: {e}"))
+        Self::from_env().finalize().context("issue loading connection options")
     }
 }
 
@@ -102,8 +102,7 @@ impl TryFrom<&ConnectOptions> for deadpool_postgres::Config {
         let username = tokio.get_user().ok_or_else(|| anyhow!("Username is missing"))?;
         let password = tokio.get_password().ok_or_else(|| anyhow!("Password is missing"))?;
         let database = tokio.get_dbname().ok_or_else(|| anyhow!("Database is missing"))?;
-        let password =
-            str::from_utf8(password).map_err(|_e| anyhow!("Password contains invalid UTF-8"))?;
+        let password = str::from_utf8(password).context("Password contains invalid UTF-8")?;
 
         // convert tokio_postgres::Config to deadpool_postgres::Config
         let mut deadpool = Self::new();

@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{format_ident, quote};
 use syn::{Ident, Type};
 
 use crate::parse::BuildInput;
@@ -91,8 +91,7 @@ fn field_name(field_type: &Type) -> Ident {
     } else {
         "backend".to_string()
     };
-
-    syn::parse_str(&name).unwrap()
+    format_ident!("{name}")
 }
 
 fn snake_case(s: &str) -> String {

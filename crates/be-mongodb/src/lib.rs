@@ -4,7 +4,7 @@
 
 mod blobstore;
 
-use anyhow::{Result, anyhow};
+use anyhow::{Context, Result};
 use fromenv::FromEnv;
 use kernel::Backend;
 use tracing::instrument;
@@ -19,7 +19,7 @@ impl Backend for Client {
     async fn connect_with(options: Self::ConnectOptions) -> Result<Self> {
         let client = mongodb::Client::with_uri_str(&options.uri)
             .await
-            .map_err(|e| anyhow!("failed to connect to mongo: {e}"))?;
+            .context("failed to connect to mongo")?;
         tracing::info!("connected to mongo");
 
         Ok(Self(client))
@@ -34,6 +34,6 @@ pub struct ConnectOptions {
 
 impl kernel::FromEnv for ConnectOptions {
     fn from_env() -> Result<Self> {
-        Self::from_env().finalize().map_err(|e| anyhow!("issue loading connection options: {e}"))
+        Self::from_env().finalize().context("issue loading connection options")
     }
 }

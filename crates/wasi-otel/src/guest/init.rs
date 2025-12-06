@@ -2,7 +2,7 @@
 
 use std::sync::OnceLock;
 
-use anyhow::{Result, anyhow};
+use anyhow::{Context, Result, anyhow};
 use cfg_if::cfg_if;
 use opentelemetry::{KeyValue, Value};
 use opentelemetry_sdk::Resource;
@@ -63,12 +63,12 @@ pub fn init() -> Result<ExitGuard> {
         registry.with(metrics_layer)
     };
 
-    registry.try_init().map_err(|e| anyhow!("issue initializing subscriber: {e}"))?;
+    registry.try_init().context("issue initializing subscriber")?;
 
     // let mut lock = INIT.write().map_err(|e| anyhow!("issue acquiring INIT write lock: {e}"))?;
     // *lock = true;
     // drop(lock);
-    INIT.set(true).map_err(|_t| anyhow!("wasi-otel already initialized"))?;
+    INIT.set(true).context("wasi-otel already initialized")?;
 
     Ok(guard)
 }

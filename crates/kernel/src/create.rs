@@ -87,14 +87,14 @@ impl<T: WasiView> Compiled<T> {
 fn init_env(wasm: &Path) -> Result<()> {
     let name = wasm.file_stem().and_then(|s| s.to_str()).unwrap_or("unknown");
 
-    // SAFETY: Environment variable modification is safe here because:
-    // 1. This runs during single-threaded initialization
-    // 2. Backend clients that depend on these vars are created after this
-    unsafe {
-        if env::var("COMPONENT").is_err() {
+    if env::var("COMPONENT").is_err() {
+        // SAFETY: Environment variable modification is safe here because:
+        // 1. This runs during single-threaded initialization
+        // 2. Backend clients that depend on these vars are created after this
+        unsafe {
             env::set_var("COMPONENT", name);
-        }
-    };
+        };
+    }
 
     // telemetry
     let mut builder = Telemetry::new(name);

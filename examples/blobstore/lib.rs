@@ -28,19 +28,19 @@ async fn handler(body: Bytes) -> Result<Json<Value>> {
     // write to blobstore
     let outgoing = OutgoingValue::new_outgoing_value();
     let stream =
-        outgoing.outgoing_value_write_body().map_err(|()| anyhow!("failed create stream"))?;
+        outgoing.outgoing_value_write_body().context("failed create stream")?;
     stream.blocking_write_and_flush(&body).context("writing body")?;
 
     let container = blobstore::create_container("container")
-        .map_err(|e| anyhow!("failed to create container: {e}"))?;
-    container.write_data("request", &outgoing).map_err(|e| anyhow!("failed to write data: {e}"))?;
-    OutgoingValue::finish(outgoing).map_err(|e| anyhow!("issue finishing: {e}"))?;
+        .context("failed to create container")?;
+    container.write_data("request", &outgoing).context("failed to write data")?;
+    OutgoingValue::finish(outgoing).context("issue finishing")?;
 
     // read from blobstore
     let incoming =
-        container.get_data("request", 0, 0).map_err(|e| anyhow!("failed to read data: {e}"))?;
+        container.get_data("request", 0, 0).context("failed to read data")?;
     let data = IncomingValue::incoming_value_consume_sync(incoming)
-        .map_err(|e| anyhow!("failed to create incoming value: {e}"))?;
+        .context("failed to create incoming value")?;
 
     assert_eq!(data, body);
 

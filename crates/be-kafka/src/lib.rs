@@ -9,7 +9,7 @@ mod registry;
 use std::fmt::{self, Debug};
 use std::sync::Arc;
 
-use anyhow::{Result, anyhow};
+use anyhow::{Context, Result};
 use fromenv::{FromEnv, ParseResult};
 use kernel::Backend;
 use rand::random_range;
@@ -47,7 +47,7 @@ impl Backend for Client {
         // producer
         let producer = config
             .create_with_context(Tracer {})
-            .map_err(|e| anyhow!("issue creating producer: {e}"))?;
+            .context("issue creating producer")?;
 
         // maybe custom partitioner and schema registry
         let partitioner = Partitioner::new(options.partition_count);
@@ -59,11 +59,11 @@ impl Backend for Client {
             config.set("group.id", group_id);
 
             let consumer: StreamConsumer =
-                config.create().map_err(|e| anyhow!("issue creating consumer: {e}"))?;
+                config.create().context("issue creating consumer")?;
 
             // subscribe to topics
             let topics = consumer_options.topics.iter().map(String::as_str).collect::<Vec<_>>();
-            consumer.subscribe(&topics).map_err(|e| anyhow!("issue subscribing to topics: {e}"))?;
+            consumer.subscribe(&topics).context("issue subscribing to topics")?;
             tracing::debug!("subscribed to topics: {topics:?}");
 
             Some(Arc::new(consumer))
@@ -149,7 +149,7 @@ impl From<&ConnectOptions> for ClientConfig {
 
 impl kernel::FromEnv for ConnectOptions {
     fn from_env() -> Result<Self> {
-        Self::from_env().finalize().map_err(|e| anyhow!("issue loading connection options: {e}"))
+        Self::from_env().finalize().context("issue loading connection options")
     }
 }
 

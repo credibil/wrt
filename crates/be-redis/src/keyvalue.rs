@@ -2,7 +2,7 @@
 use std::fmt::Debug;
 use std::sync::Arc;
 
-use anyhow::anyhow;
+use anyhow::Context;
 use futures::FutureExt;
 use redis::AsyncCommands;
 use redis::aio::ConnectionManager;
@@ -51,7 +51,7 @@ impl Bucket for RedisBucket {
         let key = format!("{}:{key}", self.identifier);
         let mut conn = self.conn.0.clone();
         async move {
-            conn.get(key.clone()).await.map_err(|e| anyhow!("failed to get value for {key}: {e}"))
+            conn.get(key.clone()).await.with_context(|| format!("failed to get value for {key}"))
         }
         .boxed()
     }
@@ -63,7 +63,7 @@ impl Bucket for RedisBucket {
         async move {
             conn.set_ex(&key, value, TTL_DAY)
                 .await
-                .map_err(|e| anyhow!("failed to set value for {key}: {e}"))
+                .with_context(|| format!("failed to set value for {key}"))
         }
         .boxed()
     }
@@ -72,9 +72,7 @@ impl Bucket for RedisBucket {
         let key = format!("{}:{key}", self.identifier);
         let mut conn = self.conn.0.clone();
         async move {
-            conn.del(key.clone())
-                .await
-                .map_err(|e| anyhow!("failed to delete value for {key}: {e}"))
+            conn.del(key.clone()).await.with_context(|| format!("failed to delete value for {key}"))
         }
         .boxed()
     }
@@ -85,7 +83,7 @@ impl Bucket for RedisBucket {
         async move {
             conn.exists(key.clone())
                 .await
-                .map_err(|e| anyhow!("failed to check existence of key {key}: {e}"))
+                .with_context(|| format!("failed to check existence of key {key}"))
         }
         .boxed()
     }
@@ -96,7 +94,7 @@ impl Bucket for RedisBucket {
         async move {
             conn.keys(pattern.clone())
                 .await
-                .map_err(|e| anyhow!("failed to list keys for {pattern}: {e}"))
+                .with_context(|| format!("failed to list keys for {pattern}"))
         }
         .boxed()
     }
