@@ -3,6 +3,7 @@
 use std::clone::Clone;
 use std::convert::Infallible;
 use std::env;
+use std::sync::Arc;
 
 use anyhow::{Context, Result, anyhow};
 use bytes::Bytes;
@@ -36,7 +37,9 @@ where
     let listener = TcpListener::bind(&addr).await?;
     tracing::info!("http server listening on: {}", listener.local_addr()?);
 
-    let handler: Handler<S> = Handler { state: state.clone() };
+    let handler = Handler {
+        state: Arc::new(state.clone()),
+    };
 
     // listen for requests until terminated
     loop {
@@ -75,7 +78,7 @@ where
     S: State,
     <S as State>::StoreCtx: WasiHttpView,
 {
-    state: S,
+    state: Arc<S>,
 }
 
 impl<S> Handler<S>

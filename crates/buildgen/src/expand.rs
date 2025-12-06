@@ -59,8 +59,8 @@ pub fn expand(generated: Generated) -> TokenStream {
                 /// start enabled servers
                 async fn start(&self) -> anyhow::Result<()> {
                     let futures: Vec<BoxFuture<'_, anyhow::Result<()>>> = vec![
-                        // #(Box::pin(#server_trait_impls),)*
-                        #(Box::pin(#server_trait_impls.run(self)),)*
+                        #(Box::pin(#server_trait_impls),)*
+                        // #(Box::pin(#server_trait_impls.run(self)),)*
                     ];
                     try_join_all(futures).await?;
                     Ok(())

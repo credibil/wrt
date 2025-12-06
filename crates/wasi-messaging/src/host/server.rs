@@ -47,7 +47,7 @@ where
     // Get subscriptions for the topics configured in the wasm component.
     async fn subscriptions(&self) -> Result<Subscriptions> {
         let instance_pre = self.state.instance_pre();
-        let store_data = self.state.new_store();
+        let store_data = self.state.store();
         let mut store = Store::new(instance_pre.engine(), store_data);
 
         store
@@ -60,7 +60,7 @@ where
 
     // Forward message to the wasm guest.
     async fn send(&self, message: MessageProxy) -> Result<()> {
-        let mut store_data = self.state.new_store();
+        let mut store_data = self.state.store();
         let be_msg = store_data.messaging().table.push(message.clone())?;
 
         let instance_pre = self.state.instance_pre();
