@@ -46,8 +46,8 @@ impl TryFrom<BuildInput> for Generated {
             // servers
             // if host.is_server {
             // let start = quote! {Box::pin(#host_type.run(self))};
-            // let start = quote! {#host_type};
-            let start = quote! {#module::server_run!(self)};
+            let start = quote! {#host_type};
+            // let start = quote! {#module::server_run!(self)};
             server_trait_impls.push(start);
             // }
 

@@ -47,9 +47,9 @@ macro_rules! wasi_view {
     };
 }
 
-#[macro_export]
-macro_rules! server_run {
-    ($self:ident) => {
-        WasiHttp.run($self)
-    };
-}
+// #[macro_export]
+// macro_rules! server_run {
+//     ($self:ident) => {
+//         WasiHttp.run($self)
+//     };
+// }

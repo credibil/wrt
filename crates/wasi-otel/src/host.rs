@@ -22,7 +22,7 @@ mod generated {
 
 use std::fmt::Debug;
 
-use kernel::{FutureResult, Host};
+use kernel::{FutureResult, Host, Server, State};
 use opentelemetry_proto::tonic::collector::metrics::v1::ExportMetricsServiceRequest;
 use opentelemetry_proto::tonic::collector::trace::v1::ExportTraceServiceRequest;
 use wasmtime::component::{HasData, Linker, ResourceTable};
@@ -44,6 +44,8 @@ where
         wasi::resource::add_to_linker::<_, Self>(linker, T::otel)
     }
 }
+
+impl<S> Server<S> for WasiOtel where S: State {}
 
 impl HasData for WasiOtel {
     type Data<'a> = WasiOtelCtxView<'a>;
@@ -99,9 +101,9 @@ macro_rules! wasi_view {
     };
 }
 
-#[macro_export]
-macro_rules! server_run {
-    ($self:ident) => {
-        async { Ok(()) }
-    };
-}
+// #[macro_export]
+// macro_rules! server_run {
+//     ($self:ident) => {
+//         async { Ok(()) }
+//     };
+// }
