@@ -38,6 +38,7 @@ azure = ["dep:be-azure"]
 kafka = ["dep:be-kafka"]
 mongodb = ["dep:be-mongodb"]
 nats = ["dep:be-nats"]
+opentelemetry = ["dep:be-opentelemetry"]
 postgres = ["dep:be-postgres"]
 redis = ["dep:be-redis"]
 
@@ -60,6 +61,7 @@ be-azure = { workspace = true, optional = true }
 be-mongodb = { workspace = true, optional = true }
 be-kafka = { workspace = true, optional = true }
 be-nats = { workspace = true, optional = true }
+be-opentelemetry = { workspace = true, optional = true }
 be-postgres = { workspace = true, optional = true }
 be-redis = { workspace = true, optional = true }
 kernel.workspace = true
@@ -232,6 +234,7 @@ hyper = "1.7.0"
 hyper-util = "0.1.17"
 opentelemetry = "0.31.0"
 opentelemetry_sdk = { version = "0.31.0", features = ["experimental_metrics_custom_reader"] }
+parking_lot = "0.12"
 proc-macro2 = "1.0.101"
 quote = "1.0.40"
 rand = "0.9.2"
@@ -262,6 +265,7 @@ be-azure = { path = "crates/be-azure", version = "0.19.0", registry = "credibil"
 be-kafka = { path = "crates/be-kafka", version = "0.19.0", registry = "credibil" }
 be-mongodb = { path = "crates/be-mongodb", version = "0.19.0", registry = "credibil" }
 be-nats = { path = "crates/be-nats", version = "0.19.0", registry = "credibil" }
+be-opentelemetry = { path = "crates/be-opentelemetry", version = "0.19.0", registry = "credibil" }
 be-postgres = { path = "crates/be-postgres", version = "0.19.0", registry = "credibil" }
 be-redis = { path = "crates/be-redis", version = "0.19.0", registry = "credibil" }
 buildgen = { path = "crates/buildgen", version = "0.19.0" }

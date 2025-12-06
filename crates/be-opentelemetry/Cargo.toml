@@ -1,6 +1,7 @@
 [package]
-name = "wasi-messaging"
-description = "WASI messaging WIT implementation"
+name = "be-opentelemetry"
+description = "OpenTelemetry gRPC resource provider"
+publish = false
 readme = "README.md"
 authors.workspace = true
 categories.workspace = true
@@ -15,26 +16,13 @@ version.workspace = true
 [lints]
 workspace = true
 
-[features]
-
-# host dependencies
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 anyhow.workspace = true
 fromenv.workspace = true
 futures.workspace = true
-http.workspace = true
 kernel.workspace = true
-parking_lot.workspace = true
-serde.workspace = true
-time.workspace = true
-tokio.workspace = true
+opentelemetry-proto = { version = "0.31.0", features = ["gen-tonic"] }
+tonic = "0.14.2"
 tracing.workspace = true
-wasmtime.workspace = true
-wasmtime-wasi.workspace = true
+wasi-otel.workspace = true
 
-# guest dependencies
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-wit-bindgen.workspace = true
-
-[dev-dependencies]
-tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
