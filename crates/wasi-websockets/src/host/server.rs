@@ -195,7 +195,7 @@ async fn handle_request(
 pub async fn run_server<S>(_: &S) -> Result<()>
 where
     S: State,
-    <S as State>::StoreCtx: WebSocketsView,
+    S::StoreCtx: WebSocketsView,
 {
     let state = PeerMap::new(StdMutex::new(HashMap::new()));
     let _ = PEER_MAP.set(Arc::<StdMutex<HashMap<SocketAddr, PeerInfo>>>::clone(&state));

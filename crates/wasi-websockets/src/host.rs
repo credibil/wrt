@@ -53,7 +53,7 @@ where
 impl<S> Server<S> for WasiWebSockets
 where
     S: State,
-    <S as State>::StoreCtx: WebSocketsView,
+    S::StoreCtx: WebSocketsView,
 {
     /// Provide http proxy service the specified wasm component.
     /// ``state`` will be used at a later time to provide resource access to guest handlers

@@ -26,7 +26,7 @@ where
 impl<S> Server<S> for WasiHttp
 where
     S: State,
-    <S as State>::StoreCtx: WasiHttpView,
+    S::StoreCtx: WasiHttpView,
 {
     async fn run(&self, state: &S) -> Result<()> {
         server::serve(state).await
@@ -46,10 +46,3 @@ macro_rules! wasi_view {
         }
     };
 }
-
-// #[macro_export]
-// macro_rules! server_run {
-//     ($self:ident) => {
-//         WasiHttp.run($self)
-//     };
-// }

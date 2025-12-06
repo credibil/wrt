@@ -45,7 +45,7 @@ where
     }
 }
 
-impl<S> Server<S> for WasiOtel where S: State {}
+impl<S: State> Server<S> for WasiOtel {}
 
 impl HasData for WasiOtel {
     type Data<'a> = WasiOtelCtxView<'a>;

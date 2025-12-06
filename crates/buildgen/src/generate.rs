@@ -44,13 +44,8 @@ impl TryFrom<BuildInput> for Generated {
             let module = &host_ident;
 
             // servers
-            // if host.is_server {
-            // let start = quote! {Box::pin(#host_type.run(self))};
-            let start = quote! {#host_type};
-            // let start = quote! {#module::server_run!(self)};
-            server_trait_impls.push(start);
-            // }
-
+            server_trait_impls.push(quote! {#host_type});
+            
             // WasiViewXxx implementations
             // let module = &host_ident;
             // let short_name = host_name.strip_prefix("Wasi").unwrap_or(&host_name).to_lowercase();

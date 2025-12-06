@@ -37,7 +37,8 @@ pub fn expand(generated: Generated) -> TokenStream {
                 run_state.start().await.context("starting runtime services")
             }
 
-            /// Initiator state holding pre-instantiated components and backend connections.
+            /// Initiator state holding pre-instantiated components and backend
+            /// connections.
             #[derive(Clone)]
             struct Context {
                 instance_pre: InstancePre<StoreCtx>,
@@ -45,7 +46,8 @@ pub fn expand(generated: Generated) -> TokenStream {
             }
 
             impl Context {
-                /// Creates a new runtime state by linking WASI interfaces and connecting to backends.
+                /// Creates a new runtime state by linking WASI interfaces and
+                /// connecting to backends.
                 async fn new(compiled: &mut kernel::Compiled<StoreCtx>) -> anyhow::Result<Self> {
                     // link enabled WASI components
                     #(compiled.link(#host_trait_impls)?;)*
@@ -56,10 +58,11 @@ pub fn expand(generated: Generated) -> TokenStream {
                     })
                 }
 
-                /// start enabled servers
+                /// Start servers 
+                /// N.B. for simplicity, all hosts are "servers" with a default
+                /// implementation the does nothing
                 async fn start(&self) -> anyhow::Result<()> {
                     let futures: Vec<BoxFuture<'_, anyhow::Result<()>>> = vec![
-                        // #(Box::pin(#server_trait_impls),)*
                         #(Box::pin(#server_trait_impls.run(self)),)*
                     ];
                     try_join_all(futures).await?;
