@@ -313,7 +313,7 @@ mod tests {
     }
 
     #[test]
-    fn requires_etag_when_store_enabled() {
+    fn requibe_etag_when_store_enabled() {
         let mut headers = HeaderMap::new();
         headers.append(CACHE_CONTROL, "no-cache".parse().unwrap());
 

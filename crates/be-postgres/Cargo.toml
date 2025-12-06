@@ -1,6 +1,6 @@
 [package]
-name = "res-kafka"
-description = "Kafka messaging resource"
+name = "be-postgres"
+description = "Postgres resource provider"
 publish = false
 readme = "README.md"
 authors.workspace = true
@@ -19,18 +19,14 @@ workspace = true
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 anyhow.workspace = true
 chrono.workspace = true
+deadpool-postgres = { version = "0.14", default-features = false, features = ["rt_tokio_1"] }
 fromenv.workspace = true
 futures.workspace = true
-jsonschema = "0.37.4"
-rand.workspace = true
-rdkafka = { version = "0.38", features = ["cmake-build", "ssl-vendored", "tokio"] }
 kernel.workspace = true
-schema-registry-client = "0.4.1"
+rustls = { version = "0.23.35", default-features = false, features = ["ring"] }
 serde_json.workspace = true
-tokio.workspace = true
+tokio-postgres = { version = "0.7", features = ["with-chrono-0_4"] }
+tokio-postgres-rustls = { version = "0.13", default-features = false }
 tracing.workspace = true
-wasi-messaging.workspace = true
-
-[dev-dependencies]
-csv.workspace = true
-serde.workspace = true
+wasi-sql.workspace = true
+webpki-roots = { version = "1.0", default-features = false }

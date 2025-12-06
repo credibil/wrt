@@ -19,7 +19,7 @@ use opentelemetry_sdk::error::OTelSdkError;
 use wasmtime::component::Accessor;
 
 use crate::host::generated::wasi::otel::metrics::{self as wasi, HostWithStore};
-use crate::host::{WasiOtel,  WasiOtelCtxView};
+use crate::host::{WasiOtel, WasiOtelCtxView};
 
 impl HostWithStore for WasiOtel {
     async fn export<T>(

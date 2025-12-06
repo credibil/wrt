@@ -23,9 +23,9 @@ use buildgen::runtime;
 // Import the backend types you want to use
 use wasi_http::WasiHttpCtx;
 use wasi_otel::DefaultOtel;
-use res_mongodb::Client as MongoDb;
-use res_nats::Client as Nats;
-use res_azure::Client as Azure;
+use be_mongodb::Client as MongoDb;
+use be_nats::Client as Nats;
+use be_azure::Client as Azure;
 
 // Generate runtime infrastructure
 runtime!({
@@ -148,7 +148,7 @@ mod http_runtime {
 mod full_runtime {
     use wasi_http::WasiHttpCtx;
     use wasi_otel::DefaultOtel;
-    use res_nats::Client as Nats;
+    use be_nats::Client as Nats;
     
     buildgen::runtime!({
         "http": WasiHttpCtx,

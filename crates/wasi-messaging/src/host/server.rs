@@ -61,7 +61,7 @@ where
     // Forward message to the wasm guest.
     async fn send(&self, message: MessageProxy) -> Result<()> {
         let mut store_data = self.state.new_store();
-        let res_msg = store_data.messaging().table.push(message.clone())?;
+        let be_msg = store_data.messaging().table.push(message.clone())?;
 
         let instance_pre = self.state.instance_pre();
         let mut store = Store::new(instance_pre.engine(), store_data);
@@ -71,7 +71,7 @@ where
         store
             .run_concurrent(async |store| {
                 let guest = messaging.wasi_messaging_incoming_handler();
-                Ok(guest.call_handle(store, res_msg).await??)
+                Ok(guest.call_handle(store, be_msg).await??)
             })
             .instrument(debug_span!("messaging-handle"))
             .await

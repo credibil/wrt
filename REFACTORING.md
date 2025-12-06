@@ -148,7 +148,7 @@ The existing feature flags still work. To use the new macro-based approach:
 1. **Import required types**:
 ```rust
 use wasi_http::WasiHttpCtx;
-use res_nats::Client as Nats;
+use be_nats::Client as Nats;
 // ... other backends
 ```
 
@@ -174,7 +174,7 @@ Creating a new runtime configuration is now much simpler:
 // Define in a module
 mod my_runtime {
     use wasi_http::WasiHttpCtx;
-    use res_nats::Client as Nats;
+    use be_nats::Client as Nats;
     
     buildgen::runtime!({
         "http": WasiHttpCtx,

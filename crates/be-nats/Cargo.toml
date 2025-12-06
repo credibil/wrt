@@ -1,6 +1,6 @@
 [package]
-name = "res-postgres"
-description = "Postgres resource provider"
+name = "be-nats"
+description = "NATS provider for messaging, keyvalue, and blobstore"
 publish = false
 readme = "README.md"
 authors.workspace = true
@@ -18,15 +18,14 @@ workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 anyhow.workspace = true
+async-nats = "0.45.0"
 chrono.workspace = true
-deadpool-postgres = { version = "0.14", default-features = false, features = ["rt_tokio_1"] }
 fromenv.workspace = true
 futures.workspace = true
+nkeys = "0.4.5"
 kernel.workspace = true
-rustls = { version = "0.23.35", default-features = false, features = ["ring"] }
-serde_json.workspace = true
-tokio-postgres = { version = "0.7", features = ["with-chrono-0_4"] }
-tokio-postgres-rustls = { version = "0.13", default-features = false }
+tokio.workspace = true
 tracing.workspace = true
-wasi-sql.workspace = true
-webpki-roots = { version = "1.0", default-features = false }
+wasi-blobstore.workspace = true
+wasi-keyvalue.workspace = true
+wasi-messaging.workspace = true

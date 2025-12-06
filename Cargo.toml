@@ -34,12 +34,12 @@ vault = ["dep:wasi-vault"]
 websockets = ["dep:wasi-websockets"]
 
 # Component resources (not intended to be used directly)
-azure = ["dep:res-azure"]
-kafka = ["dep:res-kafka"]
-mongodb = ["dep:res-mongodb"]
-nats = ["dep:res-nats"]
-postgres = ["dep:res-postgres"]
-redis = ["dep:res-redis"]
+azure = ["dep:be-azure"]
+kafka = ["dep:be-kafka"]
+mongodb = ["dep:be-mongodb"]
+nats = ["dep:be-nats"]
+postgres = ["dep:be-postgres"]
+redis = ["dep:be-redis"]
 
 # Enables just-in-time wasm to machine code compilation.
 jit = ["kernel/jit"]
@@ -56,12 +56,12 @@ futures.workspace = true
 http.workspace = true
 http-body-util.workspace = true
 reqwest.workspace = true
-res-azure = { workspace = true, optional = true }
-res-mongodb = { workspace = true, optional = true }
-res-kafka = { workspace = true, optional = true }
-res-nats = { workspace = true, optional = true }
-res-postgres = { workspace = true, optional = true }
-res-redis = { workspace = true, optional = true }
+be-azure = { workspace = true, optional = true }
+be-mongodb = { workspace = true, optional = true }
+be-kafka = { workspace = true, optional = true }
+be-nats = { workspace = true, optional = true }
+be-postgres = { workspace = true, optional = true }
+be-redis = { workspace = true, optional = true }
 kernel.workspace = true
 tokio = { workspace = true, features = ["macros"] }
 wasi-blobstore = { workspace = true, optional = true }
@@ -258,14 +258,14 @@ credibil-encoding = { version = "0.5.0", registry = "credibil" }
 credibil-otel = { version = "0.5.0", registry = "credibil" }
 
 # interally referenced crates
+be-azure = { path = "crates/be-azure", version = "0.19.0", registry = "credibil" }
+be-kafka = { path = "crates/be-kafka", version = "0.19.0", registry = "credibil" }
+be-mongodb = { path = "crates/be-mongodb", version = "0.19.0", registry = "credibil" }
+be-nats = { path = "crates/be-nats", version = "0.19.0", registry = "credibil" }
+be-postgres = { path = "crates/be-postgres", version = "0.19.0", registry = "credibil" }
+be-redis = { path = "crates/be-redis", version = "0.19.0", registry = "credibil" }
 buildgen = { path = "crates/buildgen", version = "0.19.0" }
 kernel = { path = "crates/kernel", version = "0.19.0", registry = "credibil" }
-res-azure = { path = "crates/res-azure", version = "0.19.0", registry = "credibil" }
-res-kafka = { path = "crates/res-kafka", version = "0.19.0", registry = "credibil" }
-res-mongodb = { path = "crates/res-mongodb", version = "0.19.0", registry = "credibil" }
-res-nats = { path = "crates/res-nats", version = "0.19.0", registry = "credibil" }
-res-postgres = { path = "crates/res-postgres", version = "0.19.0", registry = "credibil" }
-res-redis = { path = "crates/res-redis", version = "0.19.0", registry = "credibil" }
 wasi-blobstore = { path = "crates/wasi-blobstore", version = "0.19.0", registry = "credibil" }
 wasi-http = { path = "crates/wasi-http", version = "0.19.0", registry = "credibil" }
 wasi-identity = { path = "crates/wasi-identity", version = "0.19.0", registry = "credibil" }

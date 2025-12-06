@@ -1,5 +1,5 @@
 [package]
-name = "res-azure"
+name = "be-azure"
 description = "Azure resource provider"
 publish = false
 readme = "README.md"

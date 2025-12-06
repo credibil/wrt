@@ -5,10 +5,10 @@
 use anyhow::Result;
 use kernel::{Cli, Command, Parser};
 // Import backend types for the credibil feature set
-// use res_azure::Client as Azure;
-// use res_mongodb::Client as MongoDb;
-// use res_nats::Client as Nats;
-use wasi_http::{WasiHttpCtxImpl, WasiHttp};
+// use be_azure::Client as Azure;
+// use be_mongodb::Client as MongoDb;
+// use be_nats::Client as Nats;
+use wasi_http::{WasiHttp, WasiHttpCtxImpl};
 // use wasi_identity::{DefaultIdentity as WasiIdentityCtxImpl, WasiIdentity};
 use wasi_otel::{WasiOtel, WasiOtelCtxImpl};
 

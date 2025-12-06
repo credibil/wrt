@@ -1,6 +1,6 @@
 [package]
-name = "res-redis"
-description = "Redis resource provider"
+name = "be-kafka"
+description = "Kafka messaging resource"
 publish = false
 readme = "README.md"
 authors.workspace = true
@@ -18,12 +18,19 @@ workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 anyhow.workspace = true
+chrono.workspace = true
 fromenv.workspace = true
 futures.workspace = true
-# async-std-rustls-comp: async-std-comp, tls-rustls
-# tokio-rustls-comp: tokio-comp, tls-rustls
-# redis = { version = "0.32.6", features = ["aio", "connection-manager", "tokio-rustls-comp"] }
-redis = { version = "0.32.7", features = ["connection-manager", "tokio-rustls-comp"] }
+jsonschema = "0.37.4"
+rand.workspace = true
+rdkafka = { version = "0.38", features = ["cmake-build", "ssl-vendored", "tokio"] }
 kernel.workspace = true
+schema-registry-client = "0.4.1"
+serde_json.workspace = true
+tokio.workspace = true
 tracing.workspace = true
-wasi-keyvalue.workspace = true
+wasi-messaging.workspace = true
+
+[dev-dependencies]
+csv.workspace = true
+serde.workspace = true
