@@ -9,14 +9,14 @@ use kernel::{Cli, Command, Parser};
 // use be_mongodb::Client as MongoDb;
 // use be_nats::Client as Nats;
 use wasi_http::{WasiHttp, WasiHttpCtxImpl};
-use wasi_identity::{WasiIdentity, WasiIdentityCtxImpl};
+// use wasi_identity::{WasiIdentity, WasiIdentityCtxImpl};
 use wasi_otel::{WasiOtel, WasiOtelCtxImpl};
 
 // Generate runtime infrastructure for the credibil feature set
 buildgen::runtime!({
     WasiHttp: WasiHttpCtxImpl,
     WasiOtel: WasiOtelCtxImpl,
-    WasiIdentity: WasiIdentityCtxImpl,
+    // WasiIdentity: WasiIdentityCtxImpl,
 
 });
 
