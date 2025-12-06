@@ -84,3 +84,24 @@ pub trait WasiOtelCtx: Debug + Send + Sync + 'static {
     /// from affecting application logic.
     fn export_metrics(&self, request: ExportMetricsServiceRequest) -> FutureResult<()>;
 }
+
+#[macro_export]
+macro_rules! wasi_view {
+    ($store_ctx:ty, $field_name:ident) => {
+        impl wasi_otel::WasiOtelView for $store_ctx {
+            fn otel(&mut self) -> wasi_otel::WasiOtelCtxView<'_> {
+                wasi_otel::WasiOtelCtxView {
+                    ctx: &mut self.$field_name,
+                    table: &mut self.table,
+                }
+            }
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! server_run {
+    ($self:ident) => {
+        async { Ok(()) }
+    };
+}

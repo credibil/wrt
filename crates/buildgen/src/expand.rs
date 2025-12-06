@@ -59,7 +59,8 @@ pub fn expand(generated: Generated) -> TokenStream {
                 /// start enabled servers
                 async fn start(&self) -> anyhow::Result<()> {
                     let futures: Vec<BoxFuture<'_, anyhow::Result<()>>> = vec![
-                        #(#server_trait_impls,)*
+                        // #(Box::pin(#server_trait_impls),)*
+                        #(Box::pin(#server_trait_impls.run(self)),)*
                     ];
                     try_join_all(futures).await?;
                     Ok(())
@@ -73,7 +74,7 @@ pub fn expand(generated: Generated) -> TokenStream {
                     &self.instance_pre
                 }
 
-                fn new_store(&self) -> Self::StoreCtx {
+                fn store(&self) -> Self::StoreCtx {
                     let wasi_ctx = WasiCtxBuilder::new()
                         .inherit_args()
                         .inherit_env()
@@ -108,15 +109,6 @@ pub fn expand(generated: Generated) -> TokenStream {
             }
 
             #(#wasi_view_impls)*
-
-            // impl WasiHostView<DefaultOtel> for StoreCtx {
-            //     fn ctx_view(&mut self) -> WasiHostCtxView<'_, DefaultOtel> {
-            //         WasiHostCtxView {
-            //             ctx: &mut self.wasi_otel,
-            //             table: &mut self.table,
-            //         }
-            //     }
-            // }
         }
     }
 }

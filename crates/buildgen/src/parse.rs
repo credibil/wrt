@@ -1,6 +1,5 @@
 use std::collections::HashSet;
 
-use quote::quote;
 use syn::parse::{Parse, ParseStream};
 use syn::{Token, Type};
 
@@ -50,23 +49,10 @@ impl Parse for BuildInput {
 pub struct Host {
     pub type_: Type,
     pub backend: Type,
-    pub is_server: bool,
 }
 
 impl Host {
-    fn new(type_: Type, backend: Type) -> Self {
-        let name = quote! {#type_}.to_string();
-        let short_name = name.strip_prefix("Wasi").unwrap_or(&name).to_lowercase();
-        let is_server = matches!(short_name.as_str(), "http" | "messaging" | "websockets");
-
-        Self {
-            type_,
-            backend,
-            is_server,
-        }
+    const fn new(type_: Type, backend: Type) -> Self {
+        Self { type_, backend }
     }
 }
-
-// fn is_server<S: kernel::State, T: kernel::Server<S>>() {
-//     true
-// }

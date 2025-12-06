@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream;
-use quote::{format_ident, quote};
+use quote::quote;
 use syn::{Ident, Type};
 
 use crate::parse::BuildInput;
@@ -41,28 +41,36 @@ impl TryFrom<BuildInput> for Generated {
             store_ctx_fields.push(quote! {#host_ident: #backend_type});
             store_ctx_values.push(quote! {#host_ident: self.#backend_ident.clone()});
 
-            // servers
-            if host.is_server {
-                let start = quote! {Box::pin(#host_type.run(self))};
-                server_trait_impls.push(start);
-            }
-
-            // WasiViewXxx implementations
-            let short_name = host_name.strip_prefix("Wasi").unwrap_or(&host_name).to_lowercase();
-            let view_trait = format_ident!("{host_name}View");
-            let view_method = format_ident!("{short_name}");
-            let ctx_view = format_ident!("{host_name}CtxView");
             let module = &host_ident;
 
+            // servers
+            // if host.is_server {
+            // let start = quote! {Box::pin(#host_type.run(self))};
+            let start = quote! {#host_type};
+            // let start = quote! {#module::server_run!(self)};
+            server_trait_impls.push(start);
+            // }
+
+            // WasiViewXxx implementations
+            // let module = &host_ident;
+            // let short_name = host_name.strip_prefix("Wasi").unwrap_or(&host_name).to_lowercase();
+            // let view_trait = format_ident!("{host_name}View");
+            // let view_method = format_ident!("{short_name}");
+            // let ctx_view = format_ident!("{host_name}CtxView");
+
+            // let view = quote! {
+            //     impl #module::#view_trait for StoreCtx {
+            //         fn #view_method(&mut self) -> #module::#ctx_view<'_> {
+            //             #module::#ctx_view {
+            //                 ctx: &mut self.#host_ident,
+            //                 table: &mut self.table,
+            //             }
+            //         }
+            //     }
+            // };
+
             let view = quote! {
-                impl #module::#view_trait for StoreCtx {
-                    fn #view_method(&mut self) -> #module::#ctx_view<'_> {
-                        #module::#ctx_view {
-                            ctx: &mut self.#host_ident,
-                            table: &mut self.table,
-                        }
-                    }
-                }
+                #module::wasi_view!(StoreCtx, #host_ident);
             };
             wasi_view_impls.push(view);
         }

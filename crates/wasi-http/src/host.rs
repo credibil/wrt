@@ -32,3 +32,24 @@ where
         server::serve(state).await
     }
 }
+
+#[macro_export]
+macro_rules! wasi_view {
+    ($store_ctx:ty, $field_name:ident) => {
+        impl wasi_http::WasiHttpView for $store_ctx {
+            fn http(&mut self) -> wasi_http::WasiHttpCtxView<'_> {
+                wasi_http::WasiHttpCtxView {
+                    ctx: &mut self.$field_name,
+                    table: &mut self.table,
+                }
+            }
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! server_run {
+    ($self:ident) => {
+        WasiHttp.run($self)
+    };
+}

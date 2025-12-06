@@ -60,7 +60,7 @@ pub struct Compiled<T: WasiView + 'static> {
 }
 
 impl<T: WasiView> Compiled<T> {
-    /// Link a WASI host to the runtime.
+    /// Link a WASI component to the runtime.
     ///
     /// # Errors
     ///

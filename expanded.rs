@@ -4,33 +4,34 @@
 extern crate std;
 #[prelude_import]
 use std::prelude::rust_2024::*;
+
 use anyhow::Result;
 use kernel::{Cli, Command, Parser};
-use wasi_http::{WasiHttpCtxImpl, WasiHttp};
+use wasi_http::{WasiHttp, WasiHttpCtxImpl};
 use wasi_otel::{WasiOtel, WasiOtelCtxImpl};
 mod runtime {
-    use super::*;
     use anyhow::Context as _;
     use futures::future::{BoxFuture, try_join_all};
-    use kernel::{Backend, Server, WasiHostCtxView, WasiHostView};
-    use wasmtime_wasi::{WasiCtxBuilder, ResourceTable};
+    use kernel::{Backend, Server};
     use wasmtime::component::InstancePre;
+    use wasmtime_wasi::{ResourceTable, WasiCtxBuilder};
+
+    use super::*;
     /// Run the specified wasm guest using the configured runtime.
     pub async fn run(wasm: std::path::PathBuf) -> anyhow::Result<()> {
-        let mut compiled = kernel::create(&wasm)
-            .with_context(|| ::alloc::__export::must_use({
+        let mut compiled = kernel::create(&wasm).with_context(|| {
+            ::alloc::__export::must_use({
                 ::alloc::fmt::format(format_args!("compiling {0}", wasm.display()))
-            }))?;
-        let run_state = Context::new(&mut compiled)
-            .await
-            .context("preparing runtime state")?;
+            })
+        })?;
+        let run_state = Context::new(&mut compiled).await.context("preparing runtime state")?;
         run_state.start().await.context("starting runtime services")
     }
     /// Initiator state holding pre-instantiated components and backend connections.
     struct Context {
         instance_pre: InstancePre<StoreCtx>,
-        pub wasiotelctximpl: WasiOtelCtxImpl,
         pub wasihttpctximpl: WasiHttpCtxImpl,
+        pub wasiotelctximpl: WasiOtelCtxImpl,
     }
     #[automatically_derived]
     impl ::core::clone::Clone for Context {
@@ -38,8 +39,8 @@ mod runtime {
         fn clone(&self) -> Context {
             Context {
                 instance_pre: ::core::clone::Clone::clone(&self.instance_pre),
-                wasiotelctximpl: ::core::clone::Clone::clone(&self.wasiotelctximpl),
                 wasihttpctximpl: ::core::clone::Clone::clone(&self.wasihttpctximpl),
+                wasiotelctximpl: ::core::clone::Clone::clone(&self.wasiotelctximpl),
             }
         }
     }
@@ -50,25 +51,30 @@ mod runtime {
             compiled.link(WasiOtel)?;
             Ok(Self {
                 instance_pre: compiled.pre_instantiate()?,
-                wasiotelctximpl: WasiOtelCtxImpl::connect().await?,
                 wasihttpctximpl: WasiHttpCtxImpl::connect().await?,
+                wasiotelctximpl: WasiOtelCtxImpl::connect().await?,
             })
         }
+
         /// start enabled servers
         async fn start(&self) -> anyhow::Result<()> {
-            let futures: Vec<BoxFuture<'_, anyhow::Result<()>>> = <[_]>::into_vec(
-                ::alloc::boxed::box_new([Box::pin(WasiHttp.run(self))]),
-            );
+            let futures: Vec<BoxFuture<'_, anyhow::Result<()>>> =
+                <[_]>::into_vec(::alloc::boxed::box_new([
+                    Box::pin(WasiHttp.run(self)),
+                    Box::pin(async { Ok(()) }),
+                ]));
             try_join_all(futures).await?;
             Ok(())
         }
     }
     impl kernel::State for Context {
         type StoreCtx = StoreCtx;
+
         fn instance_pre(&self) -> &InstancePre<Self::StoreCtx> {
             &self.instance_pre
         }
-        fn new_store(&self) -> Self::StoreCtx {
+
+        fn store(&self) -> Self::StoreCtx {
             let wasi_ctx = WasiCtxBuilder::new()
                 .inherit_args()
                 .inherit_env()

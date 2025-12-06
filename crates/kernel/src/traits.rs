@@ -17,7 +17,7 @@ pub trait State: Clone + Send + Sync + 'static {
     type StoreCtx: Send;
 
     #[must_use]
-    fn new_store(&self) -> Self::StoreCtx;
+    fn store(&self) -> Self::StoreCtx;
 
     fn instance_pre(&self) -> &InstancePre<Self::StoreCtx>;
 }

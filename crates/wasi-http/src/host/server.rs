@@ -94,7 +94,7 @@ where
 
         // instantiate the guest and get the proxy
         let instance_pre = self.state.instance_pre();
-        let store_data = self.state.new_store();
+        let store_data = self.state.store();
         let mut store = Store::new(instance_pre.engine(), store_data);
         let indices = ProxyIndices::new(instance_pre)?;
         let instance = instance_pre.instantiate_async(&mut store).await?;
