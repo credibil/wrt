@@ -16,11 +16,6 @@ use wasi_otel::{WasiOtel, WasiOtelCtxImpl};
 buildgen::runtime!({
     WasiHttp: WasiHttpCtxImpl,
     WasiOtel: WasiOtelCtxImpl,
-
-    // WasiHttp: {
-    //     backend: WasiHttpCtxImpl,
-    //     server: true,
-    // },
     // WasiIdentity: WasiIdentityCtxImpl,
 });
 
