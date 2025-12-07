@@ -1,7 +1,7 @@
 use std::any::Any;
 use std::error::Error;
 
-use anyhow::{Context, Result, anyhow};
+use anyhow::{Context, Result};
 use bytes::Bytes;
 use http_body_util::BodyExt;
 use wasip3::http::handler;

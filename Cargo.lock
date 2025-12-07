@@ -264,7 +264,7 @@ dependencies = [
  "axum-macros",
  "bytes",
  "futures-util",
- "http",
+ "http 1.4.0",
  "http-body",
  "http-body-util",
  "itoa",
@@ -290,7 +290,7 @@ checksum = "59446ce19cd142f8833f856eb31f3eb097812d1479ab224f54d72428ca21ea22"
 dependencies = [
  "bytes",
  "futures-core",
- "http",
+ "http 1.4.0",
  "http-body",
  "http-body-util",
  "mime",
@@ -408,7 +408,7 @@ dependencies = [
  "base64ct",
  "fromenv",
  "futures",
- "http",
+ "http 1.4.0",
  "kernel",
  "tracing",
  "wasi-identity",
@@ -583,6 +583,71 @@ dependencies = [
  "radium",
  "tap",
  "wyz",
+]
+
+[[package]]
+name = "blobstore"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "buildgen",
+ "bytes",
+ "futures",
+ "kernel",
+ "serde_json",
+ "tokio",
+ "tracing",
+ "wasi-blobstore",
+ "wasi-http",
+ "wasi-otel",
+ "wasip3",
+ "wasmtime",
+ "wasmtime-wasi",
+]
+
+[[package]]
+name = "blobstore-mongodb"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "be-mongodb",
+ "buildgen",
+ "bytes",
+ "futures",
+ "kernel",
+ "serde_json",
+ "tokio",
+ "tracing",
+ "wasi-blobstore",
+ "wasi-http",
+ "wasi-otel",
+ "wasip3",
+ "wasmtime",
+ "wasmtime-wasi",
+]
+
+[[package]]
+name = "blobstore-nats"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "be-nats",
+ "buildgen",
+ "bytes",
+ "futures",
+ "kernel",
+ "serde_json",
+ "tokio",
+ "tracing",
+ "wasi-blobstore",
+ "wasi-http",
+ "wasi-otel",
+ "wasip3",
+ "wasmtime",
+ "wasmtime-wasi",
 ]
 
 [[package]]
@@ -1171,7 +1236,7 @@ source = "sparse+https://pkgs.dev.azure.com/credibil/_packaging/credibil/Cargo/i
 checksum = "fcc44261aa78276dac6c295c07a9637e8b89dac3bb8683d7c923ac9291aa394f"
 dependencies = [
  "anyhow",
- "http",
+ "http 1.4.0",
  "opentelemetry",
  "opentelemetry-otlp",
  "opentelemetry_sdk",
@@ -1968,7 +2033,7 @@ dependencies = [
  "fnv",
  "futures-core",
  "futures-sink",
- "http",
+ "http 1.4.0",
  "indexmap",
  "slab",
  "tokio",
@@ -2096,6 +2161,25 @@ dependencies = [
 
 [[package]]
 name = "http"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "buildgen",
+ "futures",
+ "kernel",
+ "serde_json",
+ "tokio",
+ "tracing",
+ "wasi-http",
+ "wasi-otel",
+ "wasip3",
+ "wasmtime",
+ "wasmtime-wasi",
+]
+
+[[package]]
+name = "http"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e3ba2a386d7f85a81f119ad7498ebe444d2e22c2af0b86b069416ace48b3311a"
@@ -2111,7 +2195,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1efedce1fb8e6913f23e0c92de8e62cd5b772a67e7b3946df930a62566c93184"
 dependencies = [
  "bytes",
- "http",
+ "http 1.4.0",
 ]
 
 [[package]]
@@ -2122,9 +2206,23 @@ checksum = "b021d93e26becf5dc7e1b75b1bed1fd93124b374ceb73f43d4d4eafec896a64a"
 dependencies = [
  "bytes",
  "futures-core",
- "http",
+ "http 1.4.0",
  "http-body",
  "pin-project-lite",
+]
+
+[[package]]
+name = "http-proxy"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "bytes",
+ "serde_json",
+ "tracing",
+ "wasi-http",
+ "wasi-otel",
+ "wasip3",
 ]
 
 [[package]]
@@ -2150,7 +2248,7 @@ dependencies = [
  "futures-channel",
  "futures-core",
  "h2",
- "http",
+ "http 1.4.0",
  "http-body",
  "httparse",
  "httpdate",
@@ -2168,7 +2266,7 @@ version = "0.27.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e3c93eb611681b207e1fe55d5a71ecf91572ec8a6705cdb6857f7d8d5242cf58"
 dependencies = [
- "http",
+ "http 1.4.0",
  "hyper",
  "hyper-util",
  "rustls 0.23.35",
@@ -2234,7 +2332,7 @@ dependencies = [
  "futures-channel",
  "futures-core",
  "futures-util",
- "http",
+ "http 1.4.0",
  "http-body",
  "hyper",
  "ipnet",
@@ -2365,6 +2463,26 @@ name = "ident_case"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b9e0384b61958566e926dc50660321d12159025e767c18e043daf26b70104c39"
+
+[[package]]
+name = "identity"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "buildgen",
+ "futures",
+ "kernel",
+ "serde_json",
+ "tokio",
+ "tracing",
+ "wasi-http",
+ "wasi-identity",
+ "wasi-otel",
+ "wasip3",
+ "wasmtime",
+ "wasmtime-wasi",
+]
 
 [[package]]
 name = "idna"
@@ -2546,6 +2664,71 @@ dependencies = [
  "fromenv",
  "futures",
  "tracing",
+ "wasmtime",
+ "wasmtime-wasi",
+]
+
+[[package]]
+name = "keyvalue"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "buildgen",
+ "bytes",
+ "futures",
+ "kernel",
+ "serde_json",
+ "tokio",
+ "tracing",
+ "wasi-http",
+ "wasi-keyvalue",
+ "wasi-otel",
+ "wasip3",
+ "wasmtime",
+ "wasmtime-wasi",
+]
+
+[[package]]
+name = "keyvalue-nats"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "be-nats",
+ "buildgen",
+ "bytes",
+ "futures",
+ "kernel",
+ "serde_json",
+ "tokio",
+ "tracing",
+ "wasi-http",
+ "wasi-keyvalue",
+ "wasi-otel",
+ "wasip3",
+ "wasmtime",
+ "wasmtime-wasi",
+]
+
+[[package]]
+name = "keyvalue-redis"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "be-redis",
+ "buildgen",
+ "bytes",
+ "futures",
+ "kernel",
+ "serde_json",
+ "tokio",
+ "tracing",
+ "wasi-http",
+ "wasi-keyvalue",
+ "wasi-otel",
+ "wasip3",
  "wasmtime",
  "wasmtime-wasi",
 ]
@@ -2754,6 +2937,65 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ad38eb12aea514a0466ea40a80fd8cc83637065948eb4a426e4aa46261175227"
 dependencies = [
  "rustix 1.1.2",
+]
+
+[[package]]
+name = "messaging"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "bytes",
+ "serde_json",
+ "tracing",
+ "wasi-http",
+ "wasi-messaging",
+ "wasi-otel",
+ "wasip3",
+]
+
+[[package]]
+name = "messaging-kafka"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "be-kafka",
+ "buildgen",
+ "bytes",
+ "futures",
+ "kernel",
+ "serde_json",
+ "tokio",
+ "tracing",
+ "wasi-http",
+ "wasi-messaging",
+ "wasi-otel",
+ "wasip3",
+ "wasmtime",
+ "wasmtime-wasi",
+]
+
+[[package]]
+name = "messaging-nats"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "be-nats",
+ "buildgen",
+ "bytes",
+ "futures",
+ "kernel",
+ "serde_json",
+ "tokio",
+ "tracing",
+ "wasi-http",
+ "wasi-messaging",
+ "wasi-otel",
+ "wasip3",
+ "wasmtime",
+ "wasmtime-wasi",
 ]
 
 [[package]]
@@ -3085,7 +3327,7 @@ dependencies = [
  "base64",
  "chrono",
  "getrandom 0.2.16",
- "http",
+ "http 1.4.0",
  "rand 0.8.5",
  "reqwest",
  "serde",
@@ -3200,7 +3442,7 @@ checksum = "d7a6d09a73194e6b66df7c8f1b680f156d916a1a942abf2de06823dd02b7855d"
 dependencies = [
  "async-trait",
  "bytes",
- "http",
+ "http 1.4.0",
  "opentelemetry",
  "reqwest",
 ]
@@ -3211,7 +3453,7 @@ version = "0.31.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7a2366db2dca4d2ad033cad11e6ee42844fd727007af5ad04a1730f4cb8163bf"
 dependencies = [
- "http",
+ "http 1.4.0",
  "opentelemetry",
  "opentelemetry-http",
  "opentelemetry-proto",
@@ -3265,6 +3507,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "68f19d67e5a2795c94e73e0bb1cc1a7edeb2e28efd39e2e1c9b7a40c1108b11c"
 dependencies = [
  "num-traits",
+]
+
+[[package]]
+name = "otel"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "buildgen",
+ "futures",
+ "kernel",
+ "serde_json",
+ "tokio",
+ "tracing",
+ "wasi-http",
+ "wasi-otel",
+ "wasip3",
+ "wasmtime",
+ "wasmtime-wasi",
 ]
 
 [[package]]
@@ -4013,7 +4274,7 @@ dependencies = [
  "futures-core",
  "futures-util",
  "h2",
- "http",
+ "http 1.4.0",
  "http-body",
  "http-body-util",
  "hyper",
@@ -4646,6 +4907,43 @@ dependencies = [
 ]
 
 [[package]]
+name = "sql"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "bytes",
+ "serde_json",
+ "tracing",
+ "wasi-http",
+ "wasi-otel",
+ "wasi-sql",
+ "wasip3",
+]
+
+[[package]]
+name = "sql-postgres"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "be-postgres",
+ "buildgen",
+ "bytes",
+ "futures",
+ "kernel",
+ "serde_json",
+ "tokio",
+ "tracing",
+ "wasi-http",
+ "wasi-otel",
+ "wasi-sql",
+ "wasip3",
+ "wasmtime",
+ "wasmtime-wasi",
+]
+
+[[package]]
 name = "stable_deref_trait"
 version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5114,7 +5412,7 @@ dependencies = [
  "bytes",
  "futures-core",
  "futures-sink",
- "http",
+ "http 1.4.0",
  "httparse",
  "rand 0.8.5",
  "ring",
@@ -5166,7 +5464,7 @@ dependencies = [
  "base64",
  "bytes",
  "h2",
- "http",
+ "http 1.4.0",
  "http-body",
  "http-body-util",
  "hyper",
@@ -5223,7 +5521,7 @@ dependencies = [
  "bitflags",
  "bytes",
  "futures-util",
- "http",
+ "http 1.4.0",
  "http-body",
  "iri-string",
  "pin-project-lite",
@@ -5366,7 +5664,7 @@ checksum = "8628dcc84e5a09eb3d8423d6cb682965dea9133204e8fb3efee74c2a0c259442"
 dependencies = [
  "bytes",
  "data-encoding",
- "http",
+ "http 1.4.0",
  "httparse",
  "log",
  "rand 0.9.2",
@@ -5581,6 +5879,43 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ba73ea9cf16a25df0c8caa16c51acb937d5712a8429db78a3ee29d5dcacd3a65"
 
 [[package]]
+name = "vault"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "bytes",
+ "serde_json",
+ "tracing",
+ "wasi-http",
+ "wasi-otel",
+ "wasi-vault",
+ "wasip3",
+]
+
+[[package]]
+name = "vault-azure"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "be-azure",
+ "buildgen",
+ "bytes",
+ "futures",
+ "kernel",
+ "serde_json",
+ "tokio",
+ "tracing",
+ "wasi-http",
+ "wasi-otel",
+ "wasi-vault",
+ "wasip3",
+ "wasmtime",
+ "wasmtime-wasi",
+]
+
+[[package]]
 name = "vcpkg"
 version = "0.2.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5658,7 +5993,7 @@ dependencies = [
  "credibil-encoding",
  "fromenv",
  "futures",
- "http",
+ "http 1.4.0",
  "http-body",
  "http-body-util",
  "hyper",
@@ -5721,7 +6056,7 @@ dependencies = [
  "anyhow",
  "fromenv",
  "futures",
- "http",
+ "http 1.4.0",
  "kernel",
  "parking_lot",
  "serde",
@@ -5841,7 +6176,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "87ba4be47b1d11244670d11857eee0758a8f2c39aea64d80b78c1ce29b4642cd"
 dependencies = [
  "bytes",
- "http",
+ "http 1.4.0",
  "http-body",
  "thiserror 2.0.17",
  "wit-bindgen 0.48.1",
@@ -5929,7 +6264,7 @@ dependencies = [
  "bytes",
  "fromenv",
  "futures",
- "http",
+ "http 1.4.0",
  "http-body-util",
  "kernel",
  "openssl",
@@ -5938,7 +6273,6 @@ dependencies = [
  "serde_json",
  "tokio",
  "tower-http",
- "tracing",
  "wasi-blobstore",
  "wasi-http",
  "wasi-identity",
@@ -6303,7 +6637,7 @@ dependencies = [
  "async-trait",
  "bytes",
  "futures",
- "http",
+ "http 1.4.0",
  "http-body",
  "http-body-util",
  "hyper",
@@ -6375,6 +6709,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b2878ef029c47c6e8cf779119f20fcf52bde7ad42a731b2a304bc221df17571e"
 dependencies = [
  "rustls-pki-types",
+]
+
+[[package]]
+name = "websockets"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "buildgen",
+ "futures",
+ "kernel",
+ "serde_json",
+ "tokio",
+ "wasi-http",
+ "wasi-otel",
+ "wasi-websockets",
+ "wasip3",
+ "wasmtime",
+ "wasmtime-wasi",
 ]
 
 [[package]]

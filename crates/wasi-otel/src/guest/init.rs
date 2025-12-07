@@ -68,7 +68,7 @@ pub fn init() -> Result<ExitGuard> {
     // let mut lock = INIT.write().map_err(|e| anyhow!("issue acquiring INIT write lock: {e}"))?;
     // *lock = true;
     // drop(lock);
-    INIT.set(true).context("wasi-otel already initialized")?;
+    INIT.set(true).map_err(|_| anyhow!("wasi-otel already initialized"))?;
 
     Ok(guard)
 }

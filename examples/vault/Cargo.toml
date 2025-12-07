@@ -1,0 +1,19 @@
+[package]
+name = "vault"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+anyhow.workspace = true
+axum.workspace = true
+bytes.workspace = true
+serde_json.workspace = true
+tracing.workspace = true
+wasi-http.workspace = true
+wasi-otel.workspace = true
+wasi-vault.workspace = true
+wasip3.workspace = true

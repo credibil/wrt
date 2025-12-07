@@ -1,6 +1,6 @@
 #![cfg(target_arch = "wasm32")]
 
-use anyhow::{Context, anyhow};
+use anyhow::anyhow;
 use axum::routing::post;
 use axum::{Json, Router};
 use bytes::Bytes;
@@ -27,21 +27,24 @@ impl Guest for Http {
 async fn handler(body: Bytes) -> Result<Json<Value>> {
     // write to blobstore
     let outgoing = OutgoingValue::new_outgoing_value();
-    let stream = outgoing.outgoing_value_write_body().context("failed create stream")?;
-    stream.blocking_write_and_flush(&body).context("writing body")?;
+    let stream =
+        outgoing.outgoing_value_write_body().map_err(|()| anyhow!("failed to create stream"))?;
+    stream.blocking_write_and_flush(&body).map_err(|e| anyhow!("writing body: {e}"))?;
 
-    let container =
-        blobstore::create_container("container").context("failed to create container")?;
-    container.write_data("request", &outgoing).context("failed to write data")?;
-    OutgoingValue::finish(outgoing).context("issue finishing")?;
+    let container = blobstore::create_container("container")
+        .map_err(|e| anyhow!("failed to create container: {e}"))?;
+    container.write_data("request", &outgoing).map_err(|e| anyhow!("failed to write data: {e}"))?;
+    OutgoingValue::finish(outgoing).map_err(|e| anyhow!("issue finishing: {e}"))?;
 
     // read from blobstore
-    let incoming = container.get_data("request", 0, 0).context("failed to read data")?;
+    let incoming =
+        container.get_data("request", 0, 0).map_err(|e| anyhow!("failed to read data: {e}"))?;
     let data = IncomingValue::incoming_value_consume_sync(incoming)
-        .context("failed to create incoming value")?;
+        .map_err(|e| anyhow!("failed to create incoming value: {e}"))?;
 
     assert_eq!(data, body);
 
-    let response = serde_json::from_slice::<Value>(&data).context("deserializing data")?;
+    let response =
+        serde_json::from_slice::<Value>(&data).map_err(|e| anyhow!("deserializing data: {e}"))?;
     Ok(Json(response))
 }

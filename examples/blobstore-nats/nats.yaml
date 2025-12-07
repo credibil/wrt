@@ -1,4 +1,4 @@
-name: http_proxy
+name: blobstore
 
 include:
   - oci://ghcr.io/credibil/compose-nats:latest
