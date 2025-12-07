@@ -1,36 +1,35 @@
 # Examples
 
-The `examples` directory contains several example projects demonstrating each WASI component
-in combination with implemented resources. For example `wasi-keyvalue` combined with either
-a Redis or NATS JetStream backend.
+All examples share the same shape:
 
-## Running Examples
+1. (Optional) create `.env` at the repo root from `.env.example`.
+2. Build guests: `cargo build --target wasm32-wasip2 --examples`
+3. Start any required backing services with Docker Compose (see table).
+4. Run the host + guest:
+   `bash scripts/env-run.sh cargo run --example <example> -- run ./target/wasm32-wasip2/debug/examples/<example_with_underscores>_wasm.wasm`
+   (hyphens in the example name become underscores in the built Wasm file).
 
-You can easily run any example using `cargo make`. This will automatically build the WASM guest
-and run the host runtime with the correct arguments.
+To clean up services: `docker compose --file <compose-file> down -v`
 
-```bash
-cargo make run-example <example-name>
-```
+## Catalog
 
-For example:
+| Example | What it demonstrates | Compose file(s) |
+| --- | --- | --- |
+| [blobstore](./blobstore) | `wasi-blobstore` with default backend | _none_ |
+| [blobstore-mongodb](./blobstore-mongodb) | `wasi-blobstore` with MongoDB | `examples/blobstore-mongodb/mongodb.yaml` |
+| [blobstore-nats](./blobstore-nats) | `wasi-blobstore` with NATS JetStream | `examples/blobstore-nats/nats.yaml` |
+| [http](./http) | `wasi-http` server | `docker/otelcol.yaml` |
+| [http-proxy](./http-proxy) | `wasi-http` + `wasi-keyvalue` cache | _none_ |
+| [identity](./identity) | `wasi-identity` basics | _none_ |
+| [keyvalue-nats](./keyvalue-nats) | `wasi-keyvalue` with NATS JetStream | `examples/keyvalue-nats/nats.yaml` |
+| [keyvalue-redis](./keyvalue-redis) | `wasi-keyvalue` with Redis | `examples/keyvalue-redis/redis.yaml` |
+| [messaging-kafka](./messaging-kafka) | `wasi-messaging` pub/sub + req/rep on Kafka | `examples/messaging-kafka/kafka.yaml` |
+| [messaging-nats](./messaging-nats) | `wasi-messaging` pub/sub + req/rep on NATS | `examples/messaging-nats/nats.yaml` |
+| [otel](./otel) | `wasi-otel` spans/metrics demo | `docker/otelcol.yaml` |
+| [sql-postgres](./sql-postgres) | `wasi-sql` with Postgres | `examples/sql-postgres/postgres.yaml` |
+| [vault](./vault) | `wasi-vault` basics | _none_ |
+| [vault-azure](./vault-azure) | `wasi-vault` with Azure Key Vault | `examples/vault-azure/azurekv.yaml` |
+| [websockets](./websockets) | `wasi-websockets` server | `docker/otelcol.yaml` |
 
-```bash
-cargo make run-example blobstore
-cargo make run-example http
-```
+See the linked README in each row for endpoint paths and sample curl tests.
 
-Some examples require external services (like Redis or MongoDB). Please check the individual
-README files for instructions on starting these services (usually via `docker compose`).
-
-## Manual Execution
-
-Each example includes a dedicated host runtime binary. If you prefer to run manually without `cargo make`:
-
-```bash
-# Build the guest
-cargo build --example <example>-wasm --target wasm32-wasip2
-
-# Run the host
-cargo run --example <example> -- run ./target/wasm32-wasip2/debug/examples/<example>_wasm.wasm
-```

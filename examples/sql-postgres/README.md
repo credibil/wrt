@@ -7,35 +7,24 @@ and return all rows from a sample table.
 
 ## Quick Start
 
-To get started add a `.env` file to the workspace root. See the `.env.example` file for a template.
+1. Optional: copy `.env.example` to the repo root as `.env`.
+2. Build the guest:
+   ```bash
+   cargo build --example sql-postgres-wasm --target wasm32-wasip2
+   ```
+3. Start dependencies (in another terminal):
+   ```bash
+   docker compose --file ./examples/sql-postgres/postgres.yaml up
+   ```
+4. Run the host + guest:
+   ```bash
+   bash scripts/env-run.sh cargo run --example sql-postgres -- run ./target/wasm32-wasip2/debug/examples/sql_postgres_wasm.wasm
+   ```
+5. Test:
+   ```bash
+   # 1. INSERT
+   curl -X POST --header 'Content-Type: application/json' -d '{}' http://localhost:8080/
 
-### Build the WASI guest
-
-```bash
-cargo build --example sql-postgres-wasm --target wasm32-wasip2
-```
-
-### Run Postgres
-
-Start the Postgres server and Otel Collector in a separate console:
-
-```bash
-docker compose --file ./examples/sql-postgres/postgres.yaml up
-```
-
-Run the guest:
-
-```bash
-set -a && source .env && set +a
-cargo run --example sql-postgres -- run ./target/wasm32-wasip2/debug/examples/sql_postgres_wasm.wasm
-```
-
-### Test
-
-```bash
-# 1. INSERT
-curl -X POST --header 'Content-Type: application/json' -d '{}' http://localhost:8080/
-
-# 2. SELECT
-curl http://localhost:8080/
-```
+   # 2. SELECT
+   curl http://localhost:8080/
+   ```

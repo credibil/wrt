@@ -6,28 +6,16 @@ This example implements a simple blobstore using `wasi-blobstore`.
 
 This example uses the default implementation of `wasi-blobstore`.
 
-To get started add a `.env` file to the workspace root. See [`.env.example`](.env.example) for a
-template.
-
-### Run the example
-
-```bash
-cargo make run-example blobstore
-```
-
-Or manually:
-
-```bash
-# Build the guest
-cargo build --example blobstore-wasm --target wasm32-wasip2
-
-# Run the guest
-set -a && source .env && set +a
-cargo run --example blobstore -- run ./target/wasm32-wasip2/debug/examples/blobstore_wasm.wasm
-```
-
-### Test the guest
-
-```bash
-curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://localhost:8080
-```
+1. Optional: copy `.env.example` to the repo root as `.env`.
+2. Build the guest:
+   ```bash
+   cargo build --example blobstore-wasm --target wasm32-wasip2
+   ```
+3. Run the host + guest:
+   ```bash
+   bash scripts/env-run.sh cargo run --example blobstore -- run ./target/wasm32-wasip2/debug/examples/blobstore_wasm.wasm
+   ```
+4. Test:
+   ```bash
+   curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://localhost:8080
+   ```

@@ -14,36 +14,24 @@ replies to each message received by publishing to `rep.v1`.
 
 ## Quick Start
 
-To get started add a `.env` file to the workspace root. See [`.env.example`](.env.example) for a
-template.
+1. Optional: copy `.env.example` to the repo root as `.env`.
+2. Build the guest:
+   ```bash
+   cargo build --example messaging-nats-wasm --target wasm32-wasip2
+   ```
+3. Start dependencies (in another terminal):
+   ```bash
+   docker compose --file ./examples/messaging-nats/nats.yaml up
+   ```
+4. Run the host + guest:
+   ```bash
+   bash scripts/env-run.sh cargo run --example messaging-nats -- run ./target/wasm32-wasip2/debug/examples/messaging_nats_wasm.wasm
+   ```
+5. Test:
+   ```bash
+   # pub-sub
+   curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://localhost:8080/pub-sub
 
-### Build the WASI guest
-
-```bash
-cargo build --example messaging-nats-wasm --target wasm32-wasip2
-```
-
-### Run NATS
-
-Start the NATS server and Otel Collector in a separate console:
-
-```bash
-docker compose --file ./examples/messaging-nats/nats.yaml up
-```
-
-Run the guest:
-
-```bash
-set -a && source .env && set +a
-cargo run --example messaging-nats -- run ./target/wasm32-wasip2/debug/examples/messaging_nats_wasm.wasm
-```
-
-### Test
-
-```bash
-# pub-sub
-curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://localhost:8080/pub-sub
-
-# request-reply
-curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://localhost:8080/request-reply
-```
+   # request-reply
+   curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://localhost:8080/request-reply
+   ```
