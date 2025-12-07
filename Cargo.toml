@@ -59,32 +59,32 @@ required-features = ["http", "identity", "otel"]
 [[bin]]
 name = "blobstore-example"
 path = "examples/blobstore/default.rs"
-required-features = ["http", "otel", "blobstore", "nats"]
+required-features = ["http", "otel", "blobstore"]
 
 [[bin]]
 name = "http-proxy-example"
 path = "examples/http-proxy/default.rs"
-required-features = ["http", "otel", "keyvalue", "redis"]
+required-features = ["http", "otel", "keyvalue"]
 
 [[bin]]
 name = "keyvalue-example"
 path = "examples/keyvalue/default.rs"
-required-features = ["http", "otel", "keyvalue", "redis"]
+required-features = ["http", "otel", "keyvalue"]
 
 [[bin]]
 name = "messaging-example"
 path = "examples/messaging/default.rs"
-required-features = ["http", "otel", "messaging", "kafka"]
+required-features = ["http", "otel", "messaging"]
 
 [[bin]]
 name = "sql-example"
 path = "examples/sql/default.rs"
-required-features = ["http", "otel", "sql", "postgres"]
+required-features = ["http", "otel", "sql"]
 
 [[bin]]
 name = "vault-example"
 path = "examples/vault/default.rs"
-required-features = ["http", "otel", "vault", "azure"]
+required-features = ["http", "otel", "vault"]
 
 [[bin]]
 name = "websockets-example"
