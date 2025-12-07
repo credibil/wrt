@@ -13,11 +13,11 @@ repository.workspace = true
 rust-version.workspace = true
 version.workspace = true
 
-default-run = "wasm-cli"
+default-run = "wasm-examples"
 
 [[bin]]
 name = "wasm-examples"
-path = "src/main.rs"
+path = "src/examples.rs"
 required-features = [
     "blobstore",
     "http",
@@ -51,11 +51,6 @@ test = false
 name = "realtime-http"
 path = "src/realtime-http.rs"
 required-features = ["http", "keyvalue", "otel", "opentelemetry", "redis"]
-
-[[bin]]
-name = "blobstore-example"
-path = "examples/blobstore/default.rs"
-required-features = ["http", "otel", "blobstore"]
 
 [features]
 default = ["jit", "http"]

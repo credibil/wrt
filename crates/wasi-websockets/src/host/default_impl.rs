@@ -26,9 +26,9 @@ impl kernel::FromEnv for ConnectOptions {
 }
 
 #[derive(Debug, Clone)]
-pub struct WebSocketsCtxImpl;
+pub struct WasiWebSocketsCtxImpl;
 
-impl Backend for WebSocketsCtxImpl {
+impl Backend for WasiWebSocketsCtxImpl {
     type ConnectOptions = ConnectOptions;
 
     #[instrument]
@@ -39,7 +39,7 @@ impl Backend for WebSocketsCtxImpl {
     }
 }
 
-impl WebSocketsCtx for WebSocketsCtxImpl {
+impl WebSocketsCtx for WasiWebSocketsCtxImpl {
     /// Provide a default WebSockets server.
     ///
     /// This is a basic implementation for development use only.

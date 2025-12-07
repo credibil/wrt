@@ -2,7 +2,7 @@
 //!
 //! This module implements a runtime server for websockets
 
-pub mod default_impl;
+mod default_impl;
 mod resource;
 mod server;
 mod store_impl;
@@ -36,7 +36,7 @@ use store_impl::FutureResult;
 use wasmtime::component::{HasData, Linker};
 use wasmtime_wasi::ResourceTable;
 
-pub use self::default_impl::WebSocketsCtxImpl;
+pub use self::default_impl::WasiWebSocketsCtxImpl;
 use self::generated::wasi::websockets::store;
 
 #[derive(Clone, Debug)]
