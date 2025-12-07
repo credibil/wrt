@@ -1,25 +1,19 @@
 # Vault Example
 
-This example implements `wasi-vault` using the default (in memory) implementation.
+Demonstrates `wasi-vault` using the default (in-memory) implementation for secure secret storage.
 
 ## Quick Start
 
-Copy `.env.example` to the repo root as `.env`.
-
-Build the guest:
-
 ```bash
-cargo build --example vault-wasm --target wasm32-wasip2
+./scripts/run-example.sh vault
 ```
 
-Run the host + guest:
-
-```bash
-bash scripts/env.sh cargo run --example vault -- run ./target/wasm32-wasip2/debug/examples/vault_wasm.wasm
-```
-
-Test:
+## Test
 
 ```bash
 curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://localhost:8080
 ```
+
+## What It Does
+
+This example demonstrates basic secret management capabilities using an in-memory vault implementation.

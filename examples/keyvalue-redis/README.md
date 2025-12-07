@@ -1,31 +1,29 @@
 # Key-Value Example (Redis)
 
-This example implements a simple key-value store using `wasi-keyvalue` backed by Redis.
+Demonstrates `wasi-keyvalue` backed by Redis for persistent key-value storage.
+
+## Prerequisites
+
+Start Redis:
+
+```bash
+docker compose -f examples/keyvalue-redis/redis.yaml up -d
+```
 
 ## Quick Start
 
-Copy `.env.example` to the repo root as `.env`.
-
-Build the guest:
-
 ```bash
-cargo build --example keyvalue-redis-wasm --target wasm32-wasip2
+./scripts/run-example.sh keyvalue-redis
 ```
 
-Start dependencies (in another terminal):
-
-```bash
-docker compose --file ./examples/keyvalue-redis/redis.yaml up
-```
-
-Run the host + guest:
-
-```bash
-bash scripts/env.sh cargo run --example keyvalue-redis -- run ./target/wasm32-wasip2/debug/examples/keyvalue_redis_wasm.wasm
-```
-
-Test:
+## Test
 
 ```bash
 curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://localhost:8080
+```
+
+## Cleanup
+
+```bash
+docker compose -f examples/keyvalue-redis/redis.yaml down -v
 ```

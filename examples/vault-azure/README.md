@@ -1,25 +1,27 @@
 # Vault Example (Azure)
 
-This example implements a simple key-value store using `wasi-vault` backed by Azure Key Vault.
+Demonstrates `wasi-vault` backed by Azure Key Vault for secure secret storage.
+
+## Prerequisites
+
+- Azure Key Vault instance
+- Appropriate credentials configured in `.env`
 
 ## Quick Start
 
-Copy `.env.example` to the repo root as `.env`.
-
-Build the guest:
-
-```bash
-cargo build --example vault-azure-wasm --target wasm32-wasip2
-```
-
-Run the host + guest:
+1. Copy `.env.example` to `.env` and configure Azure credentials
+2. Run the example:
 
 ```bash
-bash scripts/env.sh cargo run --example vault-azure -- run ./target/wasm32-wasip2/debug/examples/vault_azure_wasm.wasm
+./scripts/run-example.sh vault-azure
 ```
 
-Test:
+## Test
 
 ```bash
 curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://localhost:8080
 ```
+
+## What It Does
+
+This example demonstrates secure secret management using Azure Key Vault as the backend for `wasi-vault`.

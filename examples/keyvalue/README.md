@@ -1,25 +1,23 @@
 # Key-Value Example
 
-This example implements `wasi-keyvalue` using the default (in memory) implementation.
+Demonstrates `wasi-keyvalue` using the default (in-memory) implementation.
 
 ## Quick Start
 
-Copy `.env.example` to the repo root as `.env`.
-
-Build the guest:
-
 ```bash
-cargo build --example keyvalue-wasm --target wasm32-wasip2
+./scripts/run-example.sh keyvalue
 ```
 
-Run the host + guest:
-
-```bash
-bash scripts/env.sh cargo run --example keyvalue -- run ./target/wasm32-wasip2/debug/examples/keyvalue_wasm.wasm
-```
-
-Test:
+## Test
 
 ```bash
 curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://localhost:8080
 ```
+
+## What It Does
+
+This example creates an HTTP endpoint that:
+- Accepts data via POST
+- Stores it in an in-memory key-value store
+- Retrieves it to verify the operation
+- Returns a success response

@@ -1,47 +1,39 @@
 # Messaging Example (Kafka)
 
-This example implements a simple messaging system using `wasi-messaging` backed by Apache Kafka.
+Demonstrates `wasi-messaging` backed by Apache Kafka for pub-sub and request-reply patterns.
 
-## Pub-Sub
+## Prerequisites
 
-The example subscribes to topic `a.v1` and, on receipt of a message, publishes it to topic `b.v1`.
-An HTTP request is used to initiate publishing to topic `a.v1` as well as send 100 generated
-messages to topic `b.v1`.
+Start Kafka:
 
-## Request-Reply
-
-The example also demonstrates a request-reply pattern where an HTTP request sends a message to topic
-`req.v1` and waits for a reply on topic `rep.v1`. A separate subscriber listens on `req.v1` and
-replies to each message received by publishing to `rep.v1`.
+```bash
+docker compose -f examples/messaging-kafka/kafka.yaml up -d
+```
 
 ## Quick Start
 
-Copy `.env.example` to the repo root as `.env`.
-
-Build the guest:
-
 ```bash
-cargo build --example messaging-kafka-wasm --target wasm32-wasip2
+./scripts/run-example.sh messaging-kafka
 ```
 
-Start dependencies (in another terminal):
+## Test
 
 ```bash
-docker compose --file ./examples/messaging-kafka/kafka.yaml up
-```
-
-Run the host + guest:
-
-```bash
-bash scripts/env.sh cargo run --example messaging-kafka -- run ./target/wasm32-wasip2/debug/examples/messaging_kafka_wasm.wasm
-```
-
-Test:
-
-```bash
-# pub-sub
+# Pub-Sub pattern
 curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://localhost:8080/pub-sub
 
-# request-reply
+# Request-Reply pattern
 curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://localhost:8080/request-reply
+```
+
+## What It Does
+
+**Pub-Sub:** Subscribes to topic `a.v1` and republishes messages to topic `b.v1`. HTTP requests initiate publishing to `a.v1` and generate 100 messages to `b.v1`.
+
+**Request-Reply:** Sends a message to `req.v1` and waits for a reply on `rep.v1`. A subscriber listens on `req.v1` and replies to each message.
+
+## Cleanup
+
+```bash
+docker compose -f examples/messaging-kafka/kafka.yaml down -v
 ```

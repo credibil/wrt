@@ -1,25 +1,24 @@
 # Blobstore Example
 
-This example implements `wasi-blobstore` using the default (in memory) implementation.
+Demonstrates `wasi-blobstore` using the default (in-memory) implementation.
 
 ## Quick Start
 
-Copy `.env.example` to the repo root as `.env`.
-
-Build the guest:
-
 ```bash
-cargo build --example blobstore-wasm --target wasm32-wasip2
+./scripts/run-example.sh blobstore
 ```
 
-Run the host + guest:
-
-```bash
-bash scripts/env.sh cargo run --example blobstore -- run ./target/wasm32-wasip2/debug/examples/blobstore_wasm.wasm
-```
-
-Test:
+## Test
 
 ```bash
 curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://localhost:8080
 ```
+
+## What It Does
+
+This example creates an HTTP endpoint that:
+
+- Accepts JSON data via POST
+- Writes the data to an in-memory blobstore container
+- Reads it back to verify the operation
+- Returns the data as JSON

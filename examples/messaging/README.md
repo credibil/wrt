@@ -1,25 +1,19 @@
 # Messaging Example
 
-This example implements `wasi-messaging` using the default (in memory) implementation.
+Demonstrates `wasi-messaging` using the default (in-memory) implementation for pub-sub messaging.
 
 ## Quick Start
 
-Copy `.env.example` to the repo root as `.env`.
-
-Build the guest:
-
 ```bash
-cargo build --example messaging-wasm --target wasm32-wasip2
+./scripts/run-example.sh messaging
 ```
 
-Run the host + guest:
-
-```bash
-bash scripts/env.sh cargo run --example messaging -- run ./target/wasm32-wasip2/debug/examples/messaging_wasm.wasm
-```
-
-Test:
+## Test
 
 ```bash
 curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://localhost:8080
 ```
+
+## What It Does
+
+This example demonstrates basic pub-sub messaging patterns using an in-memory message broker.

@@ -1,31 +1,29 @@
-# Blobstore MongoDB Example
+# Blobstore Example (MongoDB)
 
-This example implements a simple blobstore using `wasi-blobstore` backed by MongoDB.
+Demonstrates `wasi-blobstore` backed by MongoDB for persistent blob storage.
+
+## Prerequisites
+
+Start MongoDB:
+
+```bash
+docker compose -f examples/blobstore-mongodb/mongodb.yaml up -d
+```
 
 ## Quick Start
 
-Copy `.env.example` to the repo root as `.env`.
-
-Build the guest:
-
 ```bash
-cargo build --example blobstore-mongodb-wasm --target wasm32-wasip2
+./scripts/run-example.sh blobstore-mongodb
 ```
 
-Start dependencies (in another terminal):
-
-```bash
-docker compose --file ./examples/blobstore-mongodb/mongodb.yaml up
-```
-
-Run the host + guest:
-
-```bash
-bash scripts/env.sh cargo run --example blobstore-mongodb -- run ./target/wasm32-wasip2/debug/examples/blobstore_mongodb_wasm.wasm
-```
-
-Test:
+## Test
 
 ```bash
 curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://localhost:8080
+```
+
+## Cleanup
+
+```bash
+docker compose -f examples/blobstore-mongodb/mongodb.yaml down -v
 ```

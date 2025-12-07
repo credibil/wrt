@@ -1,25 +1,19 @@
-# Websockets Server Example
+# WebSockets Server Example
 
-This example implements a simple websockets server using `wasi-websockets`.
+Demonstrates `wasi-websockets` for real-time bidirectional communication.
 
 ## Quick Start
 
-Copy `.env.example` to the repo root as `.env`.
-
-Build the guest:
-
 ```bash
-cargo build --example websockets-wasm --target wasm32-wasip2
+./scripts/run-example.sh websockets
 ```
 
-Run the host + guest:
-
-```bash
-bash scripts/env.sh cargo run --example websockets -- run ./target/wasm32-wasip2/debug/examples/websockets_wasm.wasm
-```
-
-Test:
+## Test
 
 ```bash
 curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://localhost:8080
 ```
+
+## What It Does
+
+This example creates a WebSocket server that can handle real-time, bidirectional communication with clients.

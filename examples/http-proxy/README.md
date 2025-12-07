@@ -1,30 +1,19 @@
 # HTTP Proxy Example
 
-This example implements a simple HTTP server using `wasi-http`. It uses a `wasi-keyvalue` store
-to cache responses for proxied HTTP requests.
+Demonstrates an HTTP proxy using `wasi-http` with a `wasi-keyvalue` caching layer.
 
-HTTP GET and POST requests are made to the http service which subsequently makes outgoing requests
-using `Cache-Control` and `If-None-Match` headers.
-
-See [*Implementing Caching*](#implementing-caching) below.
+This example shows how to:
+- Make outgoing HTTP requests from within a WASI guest
+- Implement response caching with `Cache-Control` headers
+- Use ETags for cache validation
 
 ## Quick Start
 
-Copy `.env.example` to the repo root as `.env`.
-
-Build the guest:
-
 ```bash
-cargo build --example http-proxy-wasm --target wasm32-wasip2
+./scripts/run-example.sh http-proxy
 ```
 
-Run the host + guest:
-
-```bash
-bash scripts/env.sh cargo run --example http-proxy -- run ./target/wasm32-wasip2/debug/examples/http_proxy_wasm.wasm
-```
-
-Test:
+## Test
 
 ```bash
 curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://localhost:8080

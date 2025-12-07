@@ -1,25 +1,19 @@
 # Identity Example
 
-This example uses the default implementation of `wasi-identity`.
+Demonstrates `wasi-identity` using the default implementation.
 
 ## Quick Start
 
-Copy `.env.example` to the repo root as `.env`.
-
-Build the guest:
-
 ```bash
-cargo build --example identity-wasm --target wasm32-wasip2
+./scripts/run-example.sh identity
 ```
 
-Run the host + guest:
-
-```bash
-bash scripts/env.sh cargo run --example identity -- run ./target/wasm32-wasip2/debug/examples/identity_wasm.wasm
-```
-
-Test:
+## Test
 
 ```bash
 curl http://localhost:8080
 ```
+
+## What It Does
+
+This example demonstrates identity/authentication capabilities within a WASI guest module.
