@@ -21,7 +21,7 @@ docker compose --file ./examples/keyvalue-nats/nats.yaml up
 Run the host + guest:
 
 ```bash
-bash scripts/env-run.sh cargo run --example keyvalue-nats -- run ./target/wasm32-wasip2/debug/examples/keyvalue_nats_wasm.wasm
+bash scripts/env.sh cargo run --example keyvalue-nats -- run ./target/wasm32-wasip2/debug/examples/keyvalue_nats_wasm.wasm
 ```
 
 Test:

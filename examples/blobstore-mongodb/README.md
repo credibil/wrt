@@ -21,7 +21,7 @@ docker compose --file ./examples/blobstore-mongodb/mongodb.yaml up
 Run the host + guest:
 
 ```bash
-bash scripts/env-run.sh cargo run --example blobstore-mongodb -- run ./target/wasm32-wasip2/debug/examples/blobstore_mongodb_wasm.wasm
+bash scripts/env.sh cargo run --example blobstore-mongodb -- run ./target/wasm32-wasip2/debug/examples/blobstore_mongodb_wasm.wasm
 ```
 
 Test:

@@ -6,7 +6,7 @@ All examples share the same shape:
 2. Build guests: `cargo build --target wasm32-wasip2 --examples`
 3. Start any required backing services with Docker Compose (see table).
 4. Run the host + guest:
-   `bash scripts/env-run.sh cargo run --example <example> -- run ./target/wasm32-wasip2/debug/examples/<example_with_underscores>_wasm.wasm`
+   `bash scripts/env.sh cargo run --example <example> -- run ./target/wasm32-wasip2/debug/examples/<example_with_underscores>_wasm.wasm`
    (hyphens in the example name become underscores in the built Wasm file).
 
 To clean up services: `docker compose --file <compose-file> down -v`

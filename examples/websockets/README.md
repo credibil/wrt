@@ -15,7 +15,7 @@ cargo build --example websockets-wasm --target wasm32-wasip2
 Run the host + guest:
 
 ```bash
-bash scripts/env-run.sh cargo run --example websockets -- run ./target/wasm32-wasip2/debug/examples/websockets_wasm.wasm
+bash scripts/env.sh cargo run --example websockets -- run ./target/wasm32-wasip2/debug/examples/websockets_wasm.wasm
 ```
 
 Test:

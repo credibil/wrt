@@ -15,7 +15,7 @@ cargo build --example messaging-wasm --target wasm32-wasip2
 Run the host + guest:
 
 ```bash
-bash scripts/env-run.sh cargo run --example messaging -- run ./target/wasm32-wasip2/debug/examples/messaging_wasm.wasm
+bash scripts/env.sh cargo run --example messaging -- run ./target/wasm32-wasip2/debug/examples/messaging_wasm.wasm
 ```
 
 Test:

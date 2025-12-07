@@ -21,7 +21,7 @@ docker compose --file ./docker/otelcol.yaml up
 Run the host + guest:
 
 ```bash
-bash scripts/env-run.sh cargo run --example otel -- run ./target/wasm32-wasip2/debug/examples/otel_wasm.wasm
+bash scripts/env.sh cargo run --example otel -- run ./target/wasm32-wasip2/debug/examples/otel_wasm.wasm
 ```
 
 Test:

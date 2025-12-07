@@ -15,7 +15,7 @@ cargo build --example vault-azure-wasm --target wasm32-wasip2
 Run the host + guest:
 
 ```bash
-bash scripts/env-run.sh cargo run --example vault-azure -- run ./target/wasm32-wasip2/debug/examples/vault_azure_wasm.wasm
+bash scripts/env.sh cargo run --example vault-azure -- run ./target/wasm32-wasip2/debug/examples/vault_azure_wasm.wasm
 ```
 
 Test:

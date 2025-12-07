@@ -33,7 +33,7 @@ docker compose --file ./examples/messaging-kafka/kafka.yaml up
 Run the host + guest:
 
 ```bash
-bash scripts/env-run.sh cargo run --example messaging-kafka -- run ./target/wasm32-wasip2/debug/examples/messaging_kafka_wasm.wasm
+bash scripts/env.sh cargo run --example messaging-kafka -- run ./target/wasm32-wasip2/debug/examples/messaging_kafka_wasm.wasm
 ```
 
 Test:

@@ -21,7 +21,7 @@ docker compose --file ./examples/blobstore-nats/nats.yaml up
 Run the host + guest:
 
 ```bash
-bash scripts/env-run.sh cargo run --example blobstore-nats -- run ./target/wasm32-wasip2/debug/examples/blobstore_nats_wasm.wasm
+bash scripts/env.sh cargo run --example blobstore-nats -- run ./target/wasm32-wasip2/debug/examples/blobstore_nats_wasm.wasm
 ```
 
 Test:

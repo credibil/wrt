@@ -33,7 +33,7 @@ docker compose --file ./examples/messaging-nats/nats.yaml up
 Run the host + guest:
 
 ```bash
-bash scripts/env-run.sh cargo run --example messaging-nats -- run ./target/wasm32-wasip2/debug/examples/messaging_nats_wasm.wasm
+bash scripts/env.sh cargo run --example messaging-nats -- run ./target/wasm32-wasip2/debug/examples/messaging_nats_wasm.wasm
 ```
 
 Test:

@@ -2,7 +2,7 @@
 
 # Simple helper to load .env (if present) and run the given command.
 # Usage:
-#   bash scripts/env-run.sh cargo run --example http -- run ./path/to/guest.wasm
+#   bash scripts/env.sh cargo run --example http -- run ./path/to/guest.wasm
 
 set -euo pipefail
 

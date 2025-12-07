@@ -21,7 +21,7 @@ cargo build --example http-proxy-wasm --target wasm32-wasip2
 Run the host + guest:
 
 ```bash
-bash scripts/env-run.sh cargo run --example http-proxy -- run ./target/wasm32-wasip2/debug/examples/http_proxy_wasm.wasm
+bash scripts/env.sh cargo run --example http-proxy -- run ./target/wasm32-wasip2/debug/examples/http_proxy_wasm.wasm
 ```
 
 Test:
