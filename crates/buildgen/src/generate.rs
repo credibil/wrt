@@ -33,7 +33,7 @@ impl TryFrom<BuildInput> for Generated {
         for host in &input.hosts {
             let host_type = &host.type_;
             let host_name = quote! {#host_type}.to_string();
-            let host_ident = syn::parse_str::<Ident>(&snake_case(&host_name))?;
+            let host_ident = syn::parse_str::<Ident>(&module_name(&host_name))?;
             let backend_type = &host.backend;
             let backend_ident = field_name(backend_type);
 
@@ -94,13 +94,15 @@ fn field_name(field_type: &Type) -> Ident {
     format_ident!("{name}")
 }
 
-fn snake_case(s: &str) -> String {
-    let mut result = String::new();
-    for (i, c) in s.chars().enumerate() {
-        if c.is_ascii_uppercase() && i > 0 {
-            result.push('_');
-        }
-        result.push(c.to_ascii_lowercase());
-    }
-    result
+fn module_name(s: &str) -> String {
+    // let mut result = String::new();
+    // for (i, c) in s.chars().enumerate() {
+    //     if c.is_ascii_uppercase() && i > 0 {
+    //         result.push('_');
+    //     }
+    //     result.push(c.to_ascii_lowercase());
+    // }
+    // result
+
+    s.replace("Wasi", "wasi_").to_lowercase()
 }
