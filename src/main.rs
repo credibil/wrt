@@ -5,6 +5,7 @@
 
 use anyhow::Result;
 use kernel::{Cli, Command, Parser};
+use wasi_blobstore::{WasiBlobstore, WasiBlobstoreCtxImpl as BlobstoreDefault};
 use wasi_http::{WasiHttp, WasiHttpCtxImpl as HttpDefault};
 use wasi_identity::{WasiIdentity, WasiIdentityCtxImpl as IdentityDefault};
 use wasi_otel::{WasiOtel, WasiOtelCtxImpl as OtelDefault};
