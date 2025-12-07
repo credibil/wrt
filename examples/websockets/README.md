@@ -12,12 +12,6 @@ Build the guest:
 cargo build --example websockets-wasm --target wasm32-wasip2
 ```
 
-Start dependencies (in another terminal):
-
-```bash
-docker compose --file ./docker/otelcol.yaml up
-```
-
 Run the host + guest:
 
 ```bash
