@@ -117,12 +117,20 @@ openssl = { version = "0.10.75", features = ["vendored"] }
 [dev-dependencies]
 axum = { workspace = true, features = ["macros"] }
 base64ct.workspace = true
+be-azure = { workspace = true, optional = true }
+be-mongodb.workspace = true
+be-kafka.workspace = true
+be-nats.workspace = true
+be-opentelemetry.workspace = true
+be-postgres.workspace = true
+be-redis.workspace = true
 bytes.workspace = true
 http.workspace = true
 http-body-util.workspace = true
 opentelemetry.workspace = true
 serde_json.workspace = true
 tower-http.workspace = true
+tracing.workspace = true
 wasi-blobstore.workspace = true
 wasi-http.workspace = true
 wasi-identity.workspace = true
@@ -144,7 +152,7 @@ strip = true
 ignored = ["openssl"]
 
 [workspace]
-members = ["crates/*", "examples/*"]
+members = ["crates/*"]
 resolver = "3"
 
 [workspace.package]
@@ -273,3 +281,201 @@ wasmtime = { git = "https://github.com/bytecodealliance/wasmtime", branch = "rel
 wasmtime-wasi = { git = "https://github.com/bytecodealliance/wasmtime", branch = "release-40.0.0" }
 wasmtime-wasi-http = { git = "https://github.com/bytecodealliance/wasmtime", branch = "release-40.0.0" }
 wasmtime-wasi-io = { git = "https://github.com/bytecodealliance/wasmtime", branch = "release-40.0.0" }
+
+[[example]]
+name = "blobstore-wasm"
+path = "examples/blobstore/lib.rs"
+crate-type = ["cdylib"]
+# test = false
+
+[[example]]
+name = "blobstore"
+path = "examples/blobstore/main.rs"
+test = false
+
+[[example]]
+name = "blobstore-mongodb-wasm"
+path = "examples/blobstore-mongodb/lib.rs"
+crate-type = ["cdylib"]
+# test = false
+
+[[example]]
+name = "blobstore-mongodb"
+path = "examples/blobstore-mongodb/main.rs"
+test = false
+
+[[example]]
+name = "blobstore-nats-wasm"
+path = "examples/blobstore-nats/lib.rs"
+crate-type = ["cdylib"]
+# test = false
+
+[[example]]
+name = "blobstore-nats"
+path = "examples/blobstore-nats/main.rs"
+test = false
+
+[[example]]
+name = "http-wasm"
+path = "examples/http/lib.rs"
+crate-type = ["cdylib"]
+# test = false
+
+[[example]]
+name = "http"
+path = "examples/http/main.rs"
+test = false
+
+[[example]]
+name = "http-proxy-wasm"
+path = "examples/http-proxy/lib.rs"
+crate-type = ["cdylib"]
+# test = false
+
+[[example]]
+name = "http-proxy"
+path = "examples/http-proxy/main.rs"
+test = false
+
+[[example]]
+name = "identity-wasm"
+path = "examples/identity/lib.rs"
+crate-type = ["cdylib"]
+# test = false
+
+[[example]]
+name = "identity"
+path = "examples/identity/main.rs"
+test = false
+
+[[example]]
+name = "keyvalue-wasm"
+path = "examples/keyvalue/lib.rs"
+crate-type = ["cdylib"]
+# test = false
+
+[[example]]
+name = "keyvalue"
+path = "examples/keyvalue/main.rs"
+test = false
+
+[[example]]
+name = "keyvalue-nats-wasm"
+path = "examples/keyvalue-nats/lib.rs"
+crate-type = ["cdylib"]
+# test = false
+
+[[example]]
+name = "keyvalue-nats"
+path = "examples/keyvalue-nats/main.rs"
+test = false
+
+[[example]]
+name = "keyvalue-redis-wasm"
+path = "examples/keyvalue-redis/lib.rs"
+crate-type = ["cdylib"]
+# test = false
+
+[[example]]
+name = "keyvalue-redis"
+path = "examples/keyvalue-redis/main.rs"
+test = false
+
+[[example]]
+name = "messaging-wasm"
+path = "examples/messaging/lib.rs"
+crate-type = ["cdylib"]
+# test = false
+
+[[example]]
+name = "messaging"
+path = "examples/messaging/main.rs"
+test = false
+
+[[example]]
+name = "messaging-kafka-wasm"
+path = "examples/messaging-kafka/lib.rs"
+crate-type = ["cdylib"]
+# test = false
+
+[[example]]
+name = "messaging-kafka"
+path = "examples/messaging-kafka/main.rs"
+test = false
+
+[[example]]
+name = "messaging-nats-wasm"
+path = "examples/messaging-nats/lib.rs"
+crate-type = ["cdylib"]
+# test = false
+
+[[example]]
+name = "messaging-nats"
+path = "examples/messaging-nats/main.rs"
+test = false
+
+[[example]]
+name = "otel-wasm"
+path = "examples/otel/lib.rs"
+crate-type = ["cdylib"]
+# test = false
+
+[[example]]
+name = "otel"
+path = "examples/otel/main.rs"
+test = false
+
+[[example]]
+name = "sql-wasm"
+path = "examples/sql/lib.rs"
+crate-type = ["cdylib"]
+# test = false
+
+[[example]]
+name = "sql"
+path = "examples/sql/main.rs"
+test = false
+
+[[example]]
+name = "sql-postgres-wasm"
+path = "examples/sql-postgres/lib.rs"
+crate-type = ["cdylib"]
+# test = false
+
+[[example]]
+name = "sql-postgres"
+path = "examples/sql-postgres/main.rs"
+test = false
+
+[[example]]
+name = "vault-wasm"
+path = "examples/vault/lib.rs"
+crate-type = ["cdylib"]
+# test = false
+
+[[example]]
+name = "vault"
+path = "examples/vault/main.rs"
+test = false
+
+[[example]]
+name = "vault-azure-wasm"
+path = "examples/vault-azure/lib.rs"
+crate-type = ["cdylib"]
+# test = false
+
+[[example]]
+name = "vault-azure"
+path = "examples/vault-azure/main.rs"
+test = false
+
+[[example]]
+name = "websockets-wasm"
+path = "examples/websockets/lib.rs"
+crate-type = ["cdylib"]
+# test = false
+
+[[example]]
+name = "websockets"
+path = "examples/websockets/main.rs"
+test = false

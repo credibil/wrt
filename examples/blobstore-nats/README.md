@@ -11,12 +11,12 @@ template.
 
 ```bash
 # build the guest
-cargo build --example blobstore-nats --all-features --target wasm32-wasip2
+cargo build --example blobstore-nats-wasm --target wasm32-wasip2
 
 # console 1: start NATS
 docker compose --file ./examples/blobstore-nats/nats.yaml up
 
 # console 2: run the guest
 set -a && source .env && set +a
-cargo run --bin blobstore-nats -- run ./target/wasm32-wasip2/debug/blobstore_nats.wasm
+cargo run --example blobstore-nats -- run ./target/wasm32-wasip2/debug/examples/blobstore_nats_wasm.wasm
 ```

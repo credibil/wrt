@@ -10,7 +10,7 @@ template.
 ### Build the WASI guest
 
 ```bash
-cargo build --example keyvalue-nats --target wasm32-wasip2
+cargo build --example keyvalue-nats-wasm --target wasm32-wasip2
 ```
 
 ### Run NATS
@@ -25,7 +25,7 @@ Run the guest:
 
 ```bash
 set -a && source .env && set +a
-cargo run --bin keyvalue-nats -- run ./target/wasm32-wasip2/debug/keyvalue_nats.wasm
+cargo run --example keyvalue-nats -- run ./target/wasm32-wasip2/debug/examples/keyvalue_nats_wasm.wasm
 ```
 
 ### Test

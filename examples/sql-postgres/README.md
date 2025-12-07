@@ -12,7 +12,7 @@ To get started add a `.env` file to the workspace root. See the `.env.example` f
 ### Build the WASI guest
 
 ```bash
-cargo build --example sql-postgres --target wasm32-wasip2
+cargo build --example sql-postgres-wasm --target wasm32-wasip2
 ```
 
 ### Run Postgres
@@ -27,7 +27,7 @@ Run the guest:
 
 ```bash
 set -a && source .env && set +a
-cargo run --bin sql-postgres -- run ./target/wasm32-wasip2/debug/sql_postgres.wasm
+cargo run --example sql-postgres -- run ./target/wasm32-wasip2/debug/examples/sql_postgres_wasm.wasm
 ```
 
 ### Test

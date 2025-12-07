@@ -10,7 +10,7 @@ template.
 ### Build the WASI guest
 
 ```bash
-cargo build --example keyvalue-redis --target wasm32-wasip2
+cargo build --example keyvalue-redis-wasm --target wasm32-wasip2
 ```
 
 ### Run Redis
@@ -25,7 +25,7 @@ Run the guest:
 
 ```bash
 set -a && source .env && set +a
-cargo run --bin keyvalue-redis -- run ./target/wasm32-wasip2/debug/keyvalue_redis.wasm
+cargo run --example keyvalue-redis -- run ./target/wasm32-wasip2/debug/examples/keyvalue_redis_wasm.wasm
 ```
 
 ### Test

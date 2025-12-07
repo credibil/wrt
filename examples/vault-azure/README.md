@@ -10,7 +10,7 @@ template.
 ### Build the WASI guest
 
 ```bash
-cargo build --example vault-azure --target wasm32-wasip2
+cargo build --example vault-azure-wasm --target wasm32-wasip2
 ```
 
 ### Run
@@ -25,7 +25,7 @@ Run the guest:
 
 ```bash
 set -a && source .env && set +a
-cargo run --bin vault-azure -- run ./target/wasm32-wasip2/debug/vault_azure.wasm
+cargo run --example vault-azure -- run ./target/wasm32-wasip2/debug/examples/vault_azure_wasm.wasm
 ```
 
 ### Test

@@ -20,7 +20,7 @@ template.
 ### Build the WASI guest
 
 ```bash
-cargo build --example messaging-nats --target wasm32-wasip2
+cargo build --example messaging-nats-wasm --target wasm32-wasip2
 ```
 
 ### Run NATS
@@ -35,7 +35,7 @@ Run the guest:
 
 ```bash
 set -a && source .env && set +a
-cargo run --bin messaging-nats -- run ./target/wasm32-wasip2/debug/messaging_nats.wasm
+cargo run --example messaging-nats -- run ./target/wasm32-wasip2/debug/examples/messaging_nats_wasm.wasm
 ```
 
 ### Test

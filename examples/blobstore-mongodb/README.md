@@ -11,12 +11,12 @@ template.
 
 ```bash
 # build the guest
-cargo build --example blobstore-mongodb --all-features --target wasm32-wasip2
+cargo build --example blobstore-mongodb-wasm --target wasm32-wasip2
 
 # console 1: start MongoDB
 docker compose --file ./examples/blobstore-mongodb/mongodb.yaml up
 
 # console 2: run the guest
 set -a && source .env && set +a
-cargo run --bin blobstore-mongodb -- run ./target/wasm32-wasip2/debug/blobstore_mongodb.wasm
+cargo run --example blobstore-mongodb -- run ./target/wasm32-wasip2/debug/examples/blobstore_mongodb_wasm.wasm
 ```

@@ -1,7 +1,6 @@
 # Blobstore Example
 
-This example implements a simple blobstore using `wasi-blobstore` backed by either NATS JetStream
-or MongoDB.
+This example implements a simple blobstore using `wasi-blobstore`.
 
 ## Quick Start
 
@@ -10,36 +9,21 @@ This example uses the default implementation of `wasi-blobstore`.
 To get started add a `.env` file to the workspace root. See [`.env.example`](.env.example) for a
 template.
 
+### Build the guest
+
 ```bash
-# build the guest
-cargo build --example blobstore --all-features --target wasm32-wasip2
+cargo build --example blobstore-wasm --target wasm32-wasip2
+```
 
-# console 1: run the guest
+### Run the guest
+
+```bash
 set -a && source .env && set +a
-cargo run --all-features -- run ./target/wasm32-wasip2/debug/examples/blobstore.wasm
+cargo run --example blobstore -- run ./target/wasm32-wasip2/debug/examples/blobstore_wasm.wasm
+```
 
-# console 2: test the guest
+### Test the guest
+
+```bash
 curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://localhost:8080
-```
-
-### NATS
-
-```bash
-# console 1
-docker compose --file ./examples/blobstore/nats.yaml up
-
-# console 2
-set -a && source .env && set +a
-cargo run --bin blobstore-nats --features http,otel,blobstore,nats -- run ./target/wasm32-wasip2/debug/examples/blobstore.wasm
-```
-
-### MongoDB
-
-```bash
-# console 1
-docker compose --file ./examples/blobstore/mongodb.yaml up
-
-# console 2
-set -a && source .env && set +a
-cargo run --bin blobstore-mongodb --features http,otel,blobstore,mongodb -- run ./target/wasm32-wasip2/debug/examples/blobstore.wasm
 ```

@@ -7,10 +7,10 @@ This example implements a simple websockets server using `wasi-websockets`.
 To get started add a `.env` file to the workspace root. See [`.env.example`](.env.example) for a
 template.
 
-### Build the WASI guest
+### Build the guest
 
 ```bash
-cargo build --example websockets --target wasm32-wasip2
+cargo build --example websockets-wasm --target wasm32-wasip2
 ```
 
 ### Run
@@ -25,7 +25,7 @@ Run the guest:
 
 ```bash
 set -a && source .env && set +a
-cargo run --bin websockets-runtime --features http,otel,websockets -- run ./target/wasm32-wasip2/debug/examples/websockets.wasm
+cargo run --example websockets -- run ./target/wasm32-wasip2/debug/examples/websockets_wasm.wasm
 ```
 
 ### Test

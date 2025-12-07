@@ -20,7 +20,7 @@ template.
 ### Build the WASI guest
 
 ```bash
-cargo build --example messaging-kafka --target wasm32-wasip2
+cargo build --example messaging-kafka-wasm --target wasm32-wasip2
 ```
 
 ### Run Kafka
@@ -35,7 +35,7 @@ Run the guest using:
 
 ```bash
 set -a && source .env && set +a
-cargo run --bin messaging-kafka -- run ./target/wasm32-wasip2/debug/messaging_kafka.wasm
+cargo run --example messaging-kafka -- run ./target/wasm32-wasip2/debug/examples/messaging_kafka_wasm.wasm
 ```
 
 ### Test

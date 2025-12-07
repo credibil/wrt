@@ -10,7 +10,7 @@ template.
 ### Build the WASI guest
 
 ```bash
-cargo build --example http --target wasm32-wasip2
+cargo build --example http-wasm --target wasm32-wasip2
 ```
 
 ### Run
@@ -23,7 +23,7 @@ docker compose --file ./docker/otelcol.yaml up
 
 ```bash
 set -a && source .env && set +a
-cargo run --bin http -- run ./target/wasm32-wasip2/debug/http.wasm
+cargo run --example http -- run ./target/wasm32-wasip2/debug/examples/http_wasm.wasm
 ```
 
 ### Test

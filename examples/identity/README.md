@@ -7,10 +7,10 @@ This example uses the default implementation of `wasi-identity`.
 To get started add a `.env` file to the workspace root. See [`.env.example`](.env.example) for a
 template.
 
-### Build the WASI guest
+### Build the guest
 
 ```bash
-cargo build --example identity --target wasm32-wasip2
+cargo build --example identity-wasm --target wasm32-wasip2
 ```
 
 ### Run
@@ -25,7 +25,7 @@ Run the guest:
 
 ```bash
 set -a && source .env && set +a
-cargo run --all-features -- run ./target/wasm32-wasip2/debug/examples/identity.wasm
+cargo run --example identity -- run ./target/wasm32-wasip2/debug/examples/identity_wasm.wasm
 ```
 
 ### Test

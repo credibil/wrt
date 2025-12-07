@@ -7,10 +7,10 @@ This example implements opentelemetry for wasm32 guests using `wasi-otel`.
 To get started add a `.env` file to the workspace root. See [`.env.example`](.env.example) for a
 template.
 
-### Build the WASI guest
+### Build the guest
 
 ```bash
-cargo build --example otel --target wasm32-wasip2
+cargo build --example otel-wasm --target wasm32-wasip2
 ```
 
 ### Run
@@ -25,7 +25,7 @@ Run the guest:
 
 ```bash
 set -a && source .env && set +a
-cargo run --bin otel-runtime --features http,otel -- run ./target/wasm32-wasip2/debug/examples/otel.wasm
+cargo run --example otel -- run ./target/wasm32-wasip2/debug/examples/otel_wasm.wasm
 ```
 
 ### Test

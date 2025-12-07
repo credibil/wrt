@@ -1,52 +1,31 @@
 # HTTP Proxy Example
 
 This example implements a simple HTTP server using `wasi-http`. It uses a `wasi-keyvalue` store
-(Redis or NATS) to cache responses for proxied HTTP requests.
+to cache responses for proxied HTTP requests.
 
 HTTP GET and POST requests are made to the http service which subsequently makes outgoing requests
 using `Cache-Control` and `If-None-Match` headers.
 
-See [*Cache Control*](#cache-control) below.
+See [*Implement Caching*](#implement-caching) below.
 
 ## Quick Start
 
 To get started add a `.env` file to the workspace root. See [`.env.example`](.env.example) for a
 template.
 
-### Build the WASI guest
+### Build the guest
 
 ```bash
-cargo build --example http-proxy --target wasm32-wasip2
+cargo build --example http-proxy-wasm --target wasm32-wasip2
 ```
 
-### Run NATS
-
-Start the NATS server and Otel Collector in a separate console:
-
-```bash
-docker compose --file ./examples/http-proxy/nats.yaml up
-```
+### Run
 
 Run the guest:
 
 ```bash
 set -a && source .env && set +a
-cargo run --bin http-proxy-nats --features http,otel,keyvalue,nats -- run ./target/wasm32-wasip2/debug/examples/http_proxy.wasm
-```
-
-### Run Redis
-
-Start the Redis server and Otel Collector in a separate console:
-
-```bash
-docker compose --file ./examples/http-proxy/redis.yaml up
-```
-
-Run the guest using:
-
-```bash
-set -a && source .env && set +a
-cargo run --bin http-proxy-redis --features http,otel,keyvalue,redis -- run ./target/wasm32-wasip2/debug/examples/http_proxy.wasm
+cargo run --example http-proxy -- run ./target/wasm32-wasip2/debug/examples/http_proxy_wasm.wasm
 ```
 
 ### Test
@@ -73,7 +52,7 @@ directives are currently supported:
 
 Multiple directives can be combined in a comma-delimited list:
 
-```
+```http
 Cache-Control: max-age=86400,forward=https://example.com/api/v1/records/2934875
 ```
 
