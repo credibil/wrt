@@ -1,6 +1,6 @@
 # OpenTelemetry Example
 
-This example implements opentelemetry for wasm32 guests using `wasi-otel`. 
+This example implements opentelemetry for wasm32 guests using `wasi-otel`.
 
 ## Quick Start
 
@@ -25,7 +25,7 @@ Run the guest:
 
 ```bash
 set -a && source .env && set +a
-cargo run --features http-server -- run ./target/wasm32-wasip2/debug/examples/otel.wasm
+cargo run --bin otel-runtime --features http,otel -- run ./target/wasm32-wasip2/debug/examples/otel.wasm
 ```
 
 ### Test

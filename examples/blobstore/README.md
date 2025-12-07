@@ -29,10 +29,10 @@ Run the guest using either NATS or MongoDB:
 set -a && source .env && set +a
 
 # with NATS
-cargo run --features http,otel,blobstore,nats -- run ./target/wasm32-wasip2/debug/examples/blobstore.wasm
+cargo run --bin blobstore-nats --features http,otel,blobstore,nats -- run ./target/wasm32-wasip2/debug/examples/blobstore.wasm
 
 # with MongoDB
-cargo run --features http,otel,blobstore,mongodb -- run ./target/wasm32-wasip2/debug/examples/blobstore.wasm
+cargo run --bin blobstore-mongodb --features http,otel,blobstore,mongodb -- run ./target/wasm32-wasip2/debug/examples/blobstore.wasm
 ```
 
 ### Run using Docker Compose

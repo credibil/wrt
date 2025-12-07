@@ -1,10 +1,10 @@
 # HTTP Proxy Example
 
-This example implements a simple HTTP server using `wasi-http`. It uses a `wasi-keyvalue` store 
+This example implements a simple HTTP server using `wasi-http`. It uses a `wasi-keyvalue` store
 (Redis or NATS) to cache responses for proxied HTTP requests.
 
-HTTP GET and POST requests are made to the http service which subsequently makes outgoing requests 
-using `Cache-Control` and `If-None-Match` headers. 
+HTTP GET and POST requests are made to the http service which subsequently makes outgoing requests
+using `Cache-Control` and `If-None-Match` headers.
 
 See [*Cache Control*](#cache-control) below.
 
@@ -31,7 +31,7 @@ Run the guest:
 
 ```bash
 set -a && source .env && set +a
-cargo run --features http,otel,keyvalue,nats -- run ./target/wasm32-wasip2/debug/examples/http_proxy.wasm
+cargo run --bin http-proxy-nats --features http,otel,keyvalue,nats -- run ./target/wasm32-wasip2/debug/examples/http_proxy.wasm
 ```
 
 ### Run Redis
@@ -46,7 +46,7 @@ Run the guest using:
 
 ```bash
 set -a && source .env && set +a
-cargo run --features http,otel,keyvalue,redis -- run ./target/wasm32-wasip2/debug/examples/http_proxy.wasm
+cargo run --bin http-proxy-redis --features http,otel,keyvalue,redis -- run ./target/wasm32-wasip2/debug/examples/http_proxy.wasm
 ```
 
 ### Test
@@ -57,7 +57,7 @@ curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://loca
 
 ## Implementing Caching
 
-Use the [Cache-Control] header to influence the use of a pass-through cache. The following 
+Use the [Cache-Control] header to influence the use of a pass-through cache. The following
 directives are currently supported:
 
 * `no-cache` - make a request to the resource and then cache the result for future requests.
@@ -67,8 +67,8 @@ directives are currently supported:
   effect as leaving out the `Cache-Control` header altogether. No other directive can be used with
   this one otherwise an error will be returned.
 
-* `max-age=n` - try the cache first and return the result if it exists. If the record doesn't 
-  exist, go to the resource then cache the result with an expiry of now plus *n* seconds (for 
+* `max-age=n` - try the cache first and return the result if it exists. If the record doesn't
+  exist, go to the resource then cache the result with an expiry of now plus *n* seconds (for
   key-value stores that support ttl).
 
 Multiple directives can be combined in a comma-delimited list:
@@ -78,7 +78,7 @@ Cache-Control: max-age=86400,forward=https://example.com/api/v1/records/2934875
 ```
 
 > [!WARNING]
-> Currently, the [Cache-Control] header requires a corresponding [If-None-Match] header with a 
+> Currently, the [Cache-Control] header requires a corresponding [If-None-Match] header with a
 > single `<etag_value>` to use as the cache key.
 
 In the example guest an HTTP POST will cause an error: the [If-None-Match] header has been omitted

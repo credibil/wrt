@@ -28,7 +28,7 @@ Run the guest:
 
 ```bash
 set -a && source .env && set +a
-cargo run --features http,otel,sql,postgres -- run ./target/wasm32-wasip2/debug/examples/sql.wasm
+cargo run --bin sql-postgres --features http,otel,sql,postgres -- run ./target/wasm32-wasip2/debug/examples/sql.wasm
 ```
 
 ### Run Azure Table Storage
@@ -39,12 +39,8 @@ Start the Azure Table Storage server and Otel Collector in a separate console:
 docker compose --file ./examples/sql/azurets.yaml up
 ```
 
-Run the guest using:
-
-```bash
-set -a && source .env && set +a
-cargo run --features http,otel,sql,azure -- run ./target/wasm32-wasip2/debug/examples/sql.wasm
-```
+> Azure Table Storage runtime support is not yet available; use the Postgres
+> runtime above.
 
 ### Test
 

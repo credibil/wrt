@@ -26,7 +26,7 @@ Run the guest:
 
 ```bash
 set -a && source .env && set +a
-cargo run --features http,otel,keyvalue,nats -- run ./target/wasm32-wasip2/debug/examples/keyvalue.wasm
+cargo run --bin keyvalue-nats --features http,otel,keyvalue,nats -- run ./target/wasm32-wasip2/debug/examples/keyvalue.wasm
 ```
 
 ### Run Redis
@@ -41,7 +41,7 @@ Run the guest using:
 
 ```bash
 set -a && source .env && set +a
-cargo run --features http,otel,keyvalue,redis -- run ./target/wasm32-wasip2/debug/examples/keyvalue.wasm
+cargo run --bin keyvalue-redis --features http,otel,keyvalue,redis -- run ./target/wasm32-wasip2/debug/examples/keyvalue.wasm
 ```
 
 

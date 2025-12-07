@@ -5,7 +5,7 @@ Kafka or NATS JetStream.
 
 ### Pub-Sub
 The example subscribes to topic `a.v1` and, on receipt of a message, publishes it to topic `b.v1`.
-An HTTP request is used to initiate publishing to topic `a.v1` as well as send 100 generated 
+An HTTP request is used to initiate publishing to topic `a.v1` as well as send 100 generated
 messages to topic `b.v1`.
 
 ### Request-Reply
@@ -36,7 +36,7 @@ Run the guest:
 
 ```bash
 set -a && source .env && set +a
-cargo run --features http,otel,messaging,nats -- run ./target/wasm32-wasip2/debug/examples/messaging.wasm
+cargo run --bin messaging-nats --features http,otel,messaging,nats -- run ./target/wasm32-wasip2/debug/examples/messaging.wasm
 ```
 
 ### Run Kafka
@@ -51,7 +51,7 @@ Run the guest using:
 
 ```bash
 set -a && source .env && set +a
-cargo run --features http,otel,messaging,kafka -- run ./target/wasm32-wasip2/debug/examples/messaging.wasm
+cargo run --bin messaging-kafka --features http,otel,messaging,kafka -- run ./target/wasm32-wasip2/debug/examples/messaging.wasm
 ```
 
 ### Test

@@ -1,6 +1,6 @@
 # Websockets Server Example
 
-This example implements a simple websockets server using `wasi-websockets`. 
+This example implements a simple websockets server using `wasi-websockets`.
 
 ## Quick Start
 
@@ -25,7 +25,7 @@ Run the guest:
 
 ```bash
 set -a && source .env && set +a
-cargo run --features http,otel,websockets -- run ./target/wasm32-wasip2/debug/examples/websockets.wasm
+cargo run --bin websockets-runtime --features http,otel,websockets -- run ./target/wasm32-wasip2/debug/examples/websockets.wasm
 ```
 
 ### Test

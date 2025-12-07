@@ -26,8 +26,10 @@ use tokio_tungstenite::tungstenite::{Bytes, Message, Utf8Bytes};
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, connect_async};
 use tungstenite::protocol::Role;
 
+use crate::host::WebSocketsView;
 use crate::host::types::{PeerInfo, PeerMap, PublishMessage};
-use crate::host::{DEF_WEBSOCKETS_ADDR, WebSocketsView};
+
+const DEF_WEBSOCKETS_ADDR: &str = "0.0.0.0:80";
 
 static PEER_MAP: OnceCell<PeerMap> = OnceCell::const_new();
 

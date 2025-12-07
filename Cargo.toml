@@ -39,13 +39,77 @@ required-features = [
 [[bin]]
 name = "realtime-http"
 path = "src/realtime-http.rs"
-required-features = [
-    "http",
-    "keyvalue",
-    "otel",
-    "opentelemetry",
-    "redis",
-]
+required-features = ["http", "keyvalue", "otel", "opentelemetry", "redis"]
+
+[[bin]]
+name = "http-runtime"
+path = "examples/http/runtime.rs"
+required-features = ["http", "otel"]
+
+[[bin]]
+name = "otel-runtime"
+path = "examples/otel/runtime.rs"
+required-features = ["http", "otel"]
+
+[[bin]]
+name = "identity-runtime"
+path = "examples/identity/runtime.rs"
+required-features = ["http", "identity", "otel"]
+
+[[bin]]
+name = "blobstore-nats"
+path = "examples/blobstore/nats.rs"
+required-features = ["http", "otel", "blobstore", "nats"]
+
+[[bin]]
+name = "blobstore-mongodb"
+path = "examples/blobstore/mongodb.rs"
+required-features = ["http", "otel", "blobstore", "mongodb"]
+
+[[bin]]
+name = "http-proxy-redis"
+path = "examples/http-proxy/redis.rs"
+required-features = ["http", "otel", "keyvalue", "redis"]
+
+[[bin]]
+name = "http-proxy-nats"
+path = "examples/http-proxy/nats.rs"
+required-features = ["http", "otel", "keyvalue", "nats"]
+
+[[bin]]
+name = "keyvalue-redis"
+path = "examples/keyvalue/redis.rs"
+required-features = ["http", "otel", "keyvalue", "redis"]
+
+[[bin]]
+name = "keyvalue-nats"
+path = "examples/keyvalue/nats.rs"
+required-features = ["http", "otel", "keyvalue", "nats"]
+
+[[bin]]
+name = "messaging-kafka"
+path = "examples/messaging/kafka.rs"
+required-features = ["http", "otel", "messaging", "kafka"]
+
+[[bin]]
+name = "messaging-nats"
+path = "examples/messaging/nats.rs"
+required-features = ["http", "otel", "messaging", "nats"]
+
+[[bin]]
+name = "sql-postgres"
+path = "examples/sql/postgres.rs"
+required-features = ["http", "otel", "sql", "postgres"]
+
+[[bin]]
+name = "vault-azure"
+path = "examples/vault/azure.rs"
+required-features = ["http", "otel", "vault", "azure"]
+
+[[bin]]
+name = "websockets-runtime"
+path = "examples/websockets/runtime.rs"
+required-features = ["http", "otel", "websockets"]
 
 [features]
 default = ["jit", "http"]
@@ -272,7 +336,9 @@ hyper = "1.7.0"
 hyper-util = "0.1.17"
 opentelemetry = "0.31.0"
 opentelemetry-proto = "0.31.0"
-opentelemetry_sdk = { version = "0.31.0", features = ["experimental_metrics_custom_reader"] }
+opentelemetry_sdk = { version = "0.31.0", features = [
+    "experimental_metrics_custom_reader",
+] }
 parking_lot = "0.12"
 proc-macro2 = "1.0.101"
 quote = "1.0.40"
@@ -289,7 +355,10 @@ tracing = "0.1.41"
 tracing-opentelemetry = "0.32.0"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter", "fmt"] }
 wasip3 = { version = "0.3.1", features = ["http-compat"] }
-wasmtime = { version = "40.0.0", default-features = false, features = ["component-model-async", "parallel-compilation"] }
+wasmtime = { version = "40.0.0", default-features = false, features = [
+    "component-model-async",
+    "parallel-compilation",
+] }
 wasmtime-wasi = { version = "40.0.0", features = ["p3"] }
 wasmtime-wasi-http = { version = "40.0.0", features = ["p3"] }
 wasmtime-wasi-io = "40.0.0"

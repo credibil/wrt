@@ -25,7 +25,7 @@ Run the guest:
 
 ```bash
 set -a && source .env && set +a
-cargo run --features http,otel,vault,azure -- run ./target/wasm32-wasip2/debug/examples/vault.wasm
+cargo run --bin vault-azure --features http,otel,vault,azure -- run ./target/wasm32-wasip2/debug/examples/vault.wasm
 ```
 
 ### Test

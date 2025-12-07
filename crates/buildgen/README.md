@@ -60,30 +60,30 @@ runtime!({
 
 - **`http`**: HTTP client and server
   - Backend: `WasiHttpCtx` (marker type, no backend connection needed)
-  
+
 - **`otel`**: OpenTelemetry observability
   - Backend: `DefaultOtel` (connects to OTEL collector)
-  
+
 - **`blobstore`**: Object/blob storage
   - Backends: `MongoDb` or `Nats`
-  
+
 - **`keyvalue`**: Key-value storage
   - Backends: `Nats` or `Redis`
-  
+
 - **`messaging`**: Pub/sub messaging
   - Backends: `Nats` or `Kafka`
-  
+
 - **`vault`**: Secrets management
   - Backend: `Azure` (Azure Key Vault)
-  
+
 - **`sql`**: SQL database
   - Backend: `Postgres`
-  
+
 - **`identity`**: Identity and authentication
   - Backend: `Azure` (Azure Identity)
-  
+
 - **`websockets`**: WebSocket connections
-  - Backend: `DefaultWebSocketsCtx` (marker type, no backend connection needed)
+  - Backend: `WebSocketsCtxImpl` (default implementation for development use)
 
 ## Generated Code
 
@@ -124,6 +124,7 @@ Implements view traits for each configured WASI interface, allowing the WebAssem
 ### runtime_run() Function
 
 A public async function that:
+
 1. Loads runtime configuration
 2. Compiles the WebAssembly component
 3. Links WASI interfaces
@@ -138,7 +139,7 @@ You can create different runtime configurations for different use cases:
 // Minimal HTTP server
 mod http_runtime {
     use wasi_http::WasiHttpCtx;
-    
+
     buildgen::runtime!({
         "http": WasiHttpCtx
     });
@@ -149,7 +150,7 @@ mod full_runtime {
     use wasi_http::WasiHttpCtx;
     use wasi_otel::DefaultOtel;
     use be_nats::Client as Nats;
-    
+
     buildgen::runtime!({
         "http": WasiHttpCtx,
         "otel": DefaultOtel,
@@ -186,6 +187,7 @@ mod credibil_runtime {
 ```
 
 This provides:
+
 - **Better readability**: The configuration is explicit and self-documenting
 - **Less boilerplate**: No need for complex feature flag combinations
 - **Type safety**: Backend types are checked at compile time
@@ -194,4 +196,3 @@ This provides:
 ## License
 
 MIT OR Apache-2.0
-

@@ -23,7 +23,7 @@ docker compose --file ./docker/otelcol.yaml up
 
 ```bash
 set -a && source .env && set +a
-cargo run --features http -- run ./target/wasm32-wasip2/debug/examples/http.wasm
+cargo run --bin http-runtime --features http,otel -- run ./target/wasm32-wasip2/debug/examples/http.wasm
 ```
 
 ### Test
