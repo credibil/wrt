@@ -117,9 +117,9 @@ openssl = { version = "0.10.75", features = ["vendored"] }
 [dev-dependencies]
 axum = { workspace = true, features = ["macros"] }
 base64ct.workspace = true
-be-azure = { workspace = true, optional = true }
-be-mongodb.workspace = true
+be-azure.workspace = true
 be-kafka.workspace = true
+be-mongodb.workspace = true
 be-nats.workspace = true
 be-opentelemetry.workspace = true
 be-postgres.workspace = true
