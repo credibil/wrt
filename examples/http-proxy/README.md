@@ -6,23 +6,29 @@ to cache responses for proxied HTTP requests.
 HTTP GET and POST requests are made to the http service which subsequently makes outgoing requests
 using `Cache-Control` and `If-None-Match` headers.
 
-See [*Implement Caching*](#implement-caching) below.
+See [*Implementing Caching*](#implementing-caching) below.
 
 ## Quick Start
 
-1. Optional: copy `.env.example` to the repo root as `.env`.
-2. Build the guest:
-   ```bash
-   cargo build --example http-proxy-wasm --target wasm32-wasip2
-   ```
-3. Run the host + guest:
-   ```bash
-   bash scripts/env-run.sh cargo run --example http-proxy -- run ./target/wasm32-wasip2/debug/examples/http_proxy_wasm.wasm
-   ```
-4. Test:
-   ```bash
-   curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://localhost:8080
-   ```
+Copy `.env.example` to the repo root as `.env`.
+
+Build the guest:
+
+```bash
+cargo build --example http-proxy-wasm --target wasm32-wasip2
+```
+
+Run the host + guest:
+
+```bash
+bash scripts/env-run.sh cargo run --example http-proxy -- run ./target/wasm32-wasip2/debug/examples/http_proxy_wasm.wasm
+```
+
+Test:
+
+```bash
+curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://localhost:8080
+```
 
 ## Implementing Caching
 

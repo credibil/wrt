@@ -1,6 +1,25 @@
 # Key-Value Example
 
-This example has been split into separate examples for each backend:
+This example implements `wasi-keyvalue` using the default (in memory) implementation.
 
-* [NATS](../keyvalue-nats)
-* [Redis](../keyvalue-redis)
+## Quick Start
+
+Copy `.env.example` to the repo root as `.env`.
+
+Build the guest:
+
+```bash
+cargo build --example keyvalue-wasm --target wasm32-wasip2
+```
+
+Run the host + guest:
+
+```bash
+bash scripts/env-run.sh cargo run --example keyvalue -- run ./target/wasm32-wasip2/debug/examples/keyvalue_wasm.wasm
+```
+
+Test:
+
+```bash
+curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://localhost:8080
+```
