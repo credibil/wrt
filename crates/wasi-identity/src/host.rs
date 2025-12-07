@@ -35,9 +35,9 @@ use kernel::{Host, Server, State};
 use wasmtime::component::{HasData, Linker};
 use wasmtime_wasi::ResourceTable;
 
+pub use self::default_impl::WasiIdentityCtxImpl;
 use self::generated::wasi::identity::credentials;
-pub use crate::host::default_impl::*;
-pub use crate::host::resource::*;
+pub use self::resource::*;
 
 #[derive(Debug)]
 pub struct WasiIdentity;

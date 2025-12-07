@@ -36,13 +36,14 @@ use std::fmt::Debug;
 use std::sync::Arc;
 
 use kernel::{Host, Server, State};
-pub use resource::*;
 use wasmtime::component::{HasData, Linker};
 use wasmtime_wasi::{ResourceTable, ResourceTableError};
 
+pub use self::default_impl::WasiMessagingCtxImpl;
 pub use self::generated::Messaging;
 pub use self::generated::wasi::messaging::types::Error;
 use self::generated::wasi::messaging::{producer, request_reply, types};
+pub use self::resource::*;
 
 pub type Result<T, E = Error> = anyhow::Result<T, E>;
 

@@ -2,7 +2,7 @@
 
 mod atomics_impl;
 mod batch_impl;
-pub mod default_impl;
+mod default_impl;
 mod resource;
 mod store_impl;
 
@@ -35,6 +35,7 @@ use kernel::{Host, Server, State};
 use wasmtime::component::{HasData, Linker, ResourceTableError};
 use wasmtime_wasi::ResourceTable;
 
+pub use self::default_impl::WasiKeyValueCtxImpl;
 use self::generated::wasi::keyvalue::store::Error;
 use self::generated::wasi::keyvalue::{atomics, batch, store};
 pub use self::resource::*;

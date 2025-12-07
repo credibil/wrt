@@ -42,73 +42,53 @@ path = "src/realtime-http.rs"
 required-features = ["http", "keyvalue", "otel", "opentelemetry", "redis"]
 
 [[bin]]
-name = "http-runtime"
-path = "examples/http/runtime.rs"
+name = "http-example"
+path = "examples/http/default.rs"
 required-features = ["http", "otel"]
 
 [[bin]]
-name = "otel-runtime"
-path = "examples/otel/runtime.rs"
+name = "otel-example"
+path = "examples/otel/default.rs"
 required-features = ["http", "otel"]
 
 [[bin]]
-name = "identity-runtime"
-path = "examples/identity/runtime.rs"
+name = "identity-example"
+path = "examples/identity/default.rs"
 required-features = ["http", "identity", "otel"]
 
 [[bin]]
-name = "blobstore-nats"
-path = "examples/blobstore/nats.rs"
+name = "blobstore-example"
+path = "examples/blobstore/default.rs"
 required-features = ["http", "otel", "blobstore", "nats"]
 
 [[bin]]
-name = "blobstore-mongodb"
-path = "examples/blobstore/mongodb.rs"
-required-features = ["http", "otel", "blobstore", "mongodb"]
-
-[[bin]]
-name = "http-proxy-redis"
-path = "examples/http-proxy/redis.rs"
+name = "http-proxy-example"
+path = "examples/http-proxy/default.rs"
 required-features = ["http", "otel", "keyvalue", "redis"]
 
 [[bin]]
-name = "http-proxy-nats"
-path = "examples/http-proxy/nats.rs"
-required-features = ["http", "otel", "keyvalue", "nats"]
-
-[[bin]]
-name = "keyvalue-redis"
-path = "examples/keyvalue/redis.rs"
+name = "keyvalue-example"
+path = "examples/keyvalue/default.rs"
 required-features = ["http", "otel", "keyvalue", "redis"]
 
 [[bin]]
-name = "keyvalue-nats"
-path = "examples/keyvalue/nats.rs"
-required-features = ["http", "otel", "keyvalue", "nats"]
-
-[[bin]]
-name = "messaging-kafka"
-path = "examples/messaging/kafka.rs"
+name = "messaging-example"
+path = "examples/messaging/default.rs"
 required-features = ["http", "otel", "messaging", "kafka"]
 
 [[bin]]
-name = "messaging-nats"
-path = "examples/messaging/nats.rs"
-required-features = ["http", "otel", "messaging", "nats"]
-
-[[bin]]
-name = "sql-postgres"
-path = "examples/sql/postgres.rs"
+name = "sql-example"
+path = "examples/sql/default.rs"
 required-features = ["http", "otel", "sql", "postgres"]
 
 [[bin]]
-name = "vault-azure"
-path = "examples/vault/azure.rs"
+name = "vault-example"
+path = "examples/vault/default.rs"
 required-features = ["http", "otel", "vault", "azure"]
 
 [[bin]]
-name = "websockets-runtime"
-path = "examples/websockets/runtime.rs"
+name = "websockets-example"
+path = "examples/websockets/default.rs"
 required-features = ["http", "otel", "websockets"]
 
 [features]
