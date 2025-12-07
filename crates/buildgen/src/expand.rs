@@ -9,6 +9,7 @@ use crate::generate::Generated;
 
 pub fn expand(generated: Generated) -> TokenStream {
     let Generated {
+        generate_main,
         context_fields,
         store_ctx_fields,
         store_ctx_values,
@@ -16,6 +17,21 @@ pub fn expand(generated: Generated) -> TokenStream {
         server_trait_impls,
         wasi_view_impls,
     } = generated;
+
+    let main_fn = if generate_main {
+        quote! {
+            #[tokio::main]
+            async fn main() -> anyhow::Result<()> {
+                use kernel::Parser;
+                match kernel::Cli::parse().command {
+                    kernel::Command::Run { wasm } => runtime::run(wasm).await,
+                    _ => unreachable!(),
+                }
+            }
+        }
+    } else {
+        quote! {}
+    };
 
     quote! {
         mod runtime {
@@ -113,5 +129,6 @@ pub fn expand(generated: Generated) -> TokenStream {
 
             #(#wasi_view_impls)*
         }
+        #main_fn
     }
 }

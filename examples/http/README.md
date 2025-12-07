@@ -7,13 +7,7 @@ This example implements a simple HTTP server using `wasi-http`.
 To get started add a `.env` file to the workspace root. See [`.env.example`](.env.example) for a
 template.
 
-### Build the WASI guest
-
-```bash
-cargo build --example http-wasm --target wasm32-wasip2
-```
-
-### Run
+### Run the example
 
 Start the OpenTelemetry Collector in a separate console:
 
@@ -21,7 +15,19 @@ Start the OpenTelemetry Collector in a separate console:
 docker compose --file ./docker/otelcol.yaml up
 ```
 
+Then run:
+
 ```bash
+cargo make run-example http
+```
+
+Or manually:
+
+```bash
+# Build the WASI guest
+cargo build --example http-wasm --target wasm32-wasip2
+
+# Run
 set -a && source .env && set +a
 cargo run --example http -- run ./target/wasm32-wasip2/debug/examples/http_wasm.wasm
 ```

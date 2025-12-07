@@ -1,7 +1,9 @@
-use std::collections::HashSet;
-
 use syn::parse::{Parse, ParseStream};
 use syn::{Token, Type};
+
+mod kw {
+    syn::custom_keyword!(main);
+}
 
 /// Configuration for the runtime macro.
 ///
@@ -14,16 +16,25 @@ use syn::{Token, Type};
 /// }
 /// ```
 pub struct BuildInput {
+    pub generate_main: bool,
     pub hosts: Vec<Host>,
-    pub backends: HashSet<Type>,
+    pub backends: Vec<Type>,
 }
 
 impl Parse for BuildInput {
     fn parse(input: ParseStream) -> syn::Result<Self> {
+        let generate_main = if input.peek(kw::main) {
+            input.parse::<kw::main>()?;
+            input.parse::<Token![,]>()?;
+            true
+        } else {
+            false
+        };
+
         let content;
         syn::braced!(content in input);
 
-        let mut backends: HashSet<Type> = HashSet::new();
+        let mut backends = Vec::new();
         let mut hosts = Vec::<Host>::new();
 
         // parse 'host:backend' pairs
@@ -34,14 +45,18 @@ impl Parse for BuildInput {
 
             let host_config = Host::new(host_type, backend.clone());
             hosts.push(host_config);
-            backends.insert(backend);
+            backends.push(backend);
 
             if content.peek(Token![,]) {
                 content.parse::<Token![,]>()?;
             }
         }
 
-        Ok(Self { hosts, backends })
+        Ok(Self {
+            generate_main,
+            hosts,
+            backends,
+        })
     }
 }
 

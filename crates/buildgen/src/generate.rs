@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use syn::{Ident, Type};
@@ -5,6 +7,7 @@ use syn::{Ident, Type};
 use crate::parse::BuildInput;
 
 pub struct Generated {
+    pub generate_main: bool,
     pub context_fields: Vec<TokenStream>,
     pub store_ctx_fields: Vec<TokenStream>,
     pub store_ctx_values: Vec<TokenStream>,
@@ -19,7 +22,16 @@ impl TryFrom<BuildInput> for Generated {
     fn try_from(input: BuildInput) -> Result<Self, Self::Error> {
         // `Context` struct
         let mut context_fields = Vec::new();
+        let mut seen_backends = HashSet::new();
+
         for backend in input.backends {
+            // Deduplicate backends based on their string representation
+            let backend_str = quote! {#backend}.to_string();
+            if seen_backends.contains(&backend_str) {
+                continue;
+            }
+            seen_backends.insert(backend_str);
+
             let field = field_name(&backend);
             context_fields.push(quote! {#field: #backend});
         }
@@ -47,23 +59,6 @@ impl TryFrom<BuildInput> for Generated {
             server_trait_impls.push(quote! {#host_type});
 
             // WasiViewXxx implementations
-            // let module = &host_ident;
-            // let short_name = host_name.strip_prefix("Wasi").unwrap_or(&host_name).to_lowercase();
-            // let view_trait = format_ident!("{host_name}View");
-            // let view_method = format_ident!("{short_name}");
-            // let ctx_view = format_ident!("{host_name}CtxView");
-
-            // let view = quote! {
-            //     impl #module::#view_trait for StoreCtx {
-            //         fn #view_method(&mut self) -> #module::#ctx_view<'_> {
-            //             #module::#ctx_view {
-            //                 ctx: &mut self.#host_ident,
-            //                 table: &mut self.table,
-            //             }
-            //         }
-            //     }
-            // };
-
             let view = quote! {
                 #module::wasi_view!(StoreCtx, #host_ident);
             };
@@ -71,6 +66,7 @@ impl TryFrom<BuildInput> for Generated {
         }
 
         Ok(Self {
+            generate_main: input.generate_main,
             context_fields,
             store_ctx_fields,
             store_ctx_values,
@@ -95,14 +91,5 @@ fn field_name(field_type: &Type) -> Ident {
 }
 
 fn module_name(s: &str) -> String {
-    // let mut result = String::new();
-    // for (i, c) in s.chars().enumerate() {
-    //     if c.is_ascii_uppercase() && i > 0 {
-    //         result.push('_');
-    //     }
-    //     result.push(c.to_ascii_lowercase());
-    // }
-    // result
-
     s.replace("Wasi", "wasi_").to_lowercase()
 }
