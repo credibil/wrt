@@ -25,7 +25,7 @@ Run the guest:
 
 ```bash
 set -a && source .env && set +a
-cargo run --features http,otel,identity -- run ./target/wasm32-wasip2/debug/examples/identity.wasm
+cargo run --features="http identity otel" -- run ./target/wasm32-wasip2/debug/examples/identity.wasm
 ```
 
 ### Test

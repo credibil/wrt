@@ -4070,50 +4070,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "runtime-cli"
-version = "0.19.0"
-dependencies = [
- "anyhow",
- "axum",
- "base64ct",
- "be-azure",
- "be-kafka",
- "be-mongodb",
- "be-nats",
- "be-opentelemetry",
- "be-postgres",
- "be-redis",
- "buildgen",
- "bytes",
- "fromenv",
- "futures",
- "http",
- "http-body-util",
- "kernel",
- "openssl",
- "opentelemetry",
- "reqwest",
- "serde_json",
- "tokio",
- "tower-http",
- "tracing",
- "wasi-blobstore",
- "wasi-http",
- "wasi-identity",
- "wasi-keyvalue",
- "wasi-messaging",
- "wasi-otel",
- "wasi-sql",
- "wasi-vault",
- "wasi-websockets",
- "wasip3",
- "wasmtime",
- "wasmtime-wasi",
- "wasmtime-wasi-http",
- "wit-bindgen 0.49.0",
-]
-
-[[package]]
 name = "rusqlite"
 version = "0.37.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5953,6 +5909,50 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cbc538057e648b67f72a982e708d485b2efa771e1ac05fec311f9f63e5800db4"
 dependencies = [
  "unicode-ident",
+]
+
+[[package]]
+name = "wasm-cli"
+version = "0.19.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "base64ct",
+ "be-azure",
+ "be-kafka",
+ "be-mongodb",
+ "be-nats",
+ "be-opentelemetry",
+ "be-postgres",
+ "be-redis",
+ "buildgen",
+ "bytes",
+ "fromenv",
+ "futures",
+ "http",
+ "http-body-util",
+ "kernel",
+ "openssl",
+ "opentelemetry",
+ "reqwest",
+ "serde_json",
+ "tokio",
+ "tower-http",
+ "tracing",
+ "wasi-blobstore",
+ "wasi-http",
+ "wasi-identity",
+ "wasi-keyvalue",
+ "wasi-messaging",
+ "wasi-otel",
+ "wasi-sql",
+ "wasi-vault",
+ "wasi-websockets",
+ "wasip3",
+ "wasmtime",
+ "wasmtime-wasi",
+ "wasmtime-wasi-http",
+ "wit-bindgen 0.49.0",
 ]
 
 [[package]]
