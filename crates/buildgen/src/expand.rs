@@ -9,24 +9,25 @@ use crate::generate::Generated;
 
 pub fn expand(generated: Generated) -> TokenStream {
     let Generated {
-        main_fn,
         context_fields,
         store_ctx_fields,
         store_ctx_values,
         host_trait_impls,
         server_trait_impls,
         wasi_view_impls,
+        main_fn,
     } = generated;
 
     quote! {
         mod runtime {
             use super::*;
 
-            use anyhow::Context as _;
-            use futures::future::{BoxFuture, try_join_all};
-            use kernel::{Backend, Server};
+            use kernel::anyhow::Context as _;
+            use kernel::futures::future::{BoxFuture, try_join_all};
+            use kernel::tokio;
             use kernel::wasmtime::component::InstancePre;
-            use kernel::wasmtime_wasi::{WasiCtxBuilder, ResourceTable};
+            use kernel::wasmtime_wasi;
+            use kernel::{Backend, Server};
 
             /// Run the specified wasm guest using the configured runtime.
             pub async fn run(wasm: std::path::PathBuf) -> anyhow::Result<()> {
@@ -79,7 +80,7 @@ pub fn expand(generated: Generated) -> TokenStream {
                 }
 
                 fn store(&self) -> Self::StoreCtx {
-                    let wasi_ctx = WasiCtxBuilder::new()
+                    let wasi_ctx = wasmtime_wasi::WasiCtxBuilder::new()
                         .inherit_args()
                         .inherit_env()
                         .inherit_stdin()
@@ -88,7 +89,7 @@ pub fn expand(generated: Generated) -> TokenStream {
                         .build();
 
                     StoreCtx {
-                        table: ResourceTable::new(),
+                        table: wasmtime_wasi::ResourceTable::new(),
                         wasi: wasi_ctx,
                         #(#store_ctx_values,)*
                     }
