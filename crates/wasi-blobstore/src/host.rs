@@ -2,6 +2,7 @@
 
 mod blobstore_impl;
 mod container_impl;
+pub mod default_impl;
 mod resource;
 mod types_impl;
 
@@ -34,12 +35,13 @@ use std::fmt::Debug;
 use std::sync::Arc;
 
 use bytes::Bytes;
+pub use kernel::FutureResult;
+use kernel::{Host, Server, State};
 pub use resource::*;
-pub use runtime::FutureResult;
-use runtime::Host;
 use wasmtime::component::{HasData, Linker, ResourceTable};
 use wasmtime_wasi::p2::pipe::MemoryOutputPipe;
 
+pub use self::default_impl::WasiBlobstoreCtxImpl;
 pub use self::generated::wasi::blobstore::container::{ContainerMetadata, ObjectMetadata};
 use self::generated::wasi::blobstore::{blobstore, container, types};
 
@@ -57,6 +59,8 @@ where
         types::add_to_linker::<_, Self>(linker, T::blobstore)
     }
 }
+
+impl<S> Server<S> for WasiBlobstore where S: State {}
 
 #[derive(Debug)]
 pub struct WasiBlobstore;
@@ -98,4 +102,18 @@ pub struct WasiBlobstoreCtxView<'a> {
 pub trait WasiBlobstoreView: Send {
     /// Return a [`WasiBlobstoreCtxView`] from mutable reference to self.
     fn blobstore(&mut self) -> WasiBlobstoreCtxView<'_>;
+}
+
+#[macro_export]
+macro_rules! wasi_view {
+    ($store_ctx:ty, $field_name:ident) => {
+        impl wasi_blobstore::WasiBlobstoreView for $store_ctx {
+            fn blobstore(&mut self) -> wasi_blobstore::WasiBlobstoreCtxView<'_> {
+                wasi_blobstore::WasiBlobstoreCtxView {
+                    ctx: &mut self.$field_name,
+                    table: &mut self.table,
+                }
+            }
+        }
+    };
 }

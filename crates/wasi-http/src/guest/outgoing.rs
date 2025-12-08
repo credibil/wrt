@@ -1,7 +1,7 @@
 use std::any::Any;
 use std::error::Error;
 
-use anyhow::{Context, Result, anyhow};
+use anyhow::{Context, Result};
 use bytes::Bytes;
 use http_body_util::BodyExt;
 use wasip3::http::handler;
@@ -33,12 +33,9 @@ where
 
     tracing::debug!("forwarding request to proxy: {:?}", request.headers());
 
-    let wasi_req =
-        http_into_wasi_request(request).map_err(|e| anyhow!("Issue converting request: {e}"))?;
-    let wasi_resp =
-        handler::handle(wasi_req).await.map_err(|e| anyhow!("Issue calling proxy: {e}"))?;
-    let http_resp = http_from_wasi_response(wasi_resp)
-        .map_err(|e| anyhow!("Issue converting response: {e}"))?;
+    let wasi_req = http_into_wasi_request(request).context("Issue converting request")?;
+    let wasi_resp = handler::handle(wasi_req).await.context("Issue calling proxy")?;
+    let http_resp = http_from_wasi_response(wasi_resp).context("Issue converting response")?;
 
     // convert body
     let (parts, body) = http_resp.into_parts();

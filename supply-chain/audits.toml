@@ -219,6 +219,12 @@ user-id = 3797 # Jelte Fennema-Nio (JelteF)
 start = "2019-05-25"
 end = "2026-09-11"
 
+[[trusted.derive_more-impl]]
+criteria = "safe-to-deploy"
+user-id = 3797 # Jelte Fennema-Nio (JelteF)
+start = "2023-07-23"
+end = "2026-12-06"
+
 [[trusted.dyn-clone]]
 criteria = "safe-to-deploy"
 user-id = 3618 # David Tolnay (dtolnay)
@@ -645,6 +651,12 @@ user-id = 6743 # Ed Page (epage)
 start = "2022-10-21"
 end = "2026-11-27"
 
+[[trusted.toml_edit]]
+criteria = "safe-to-deploy"
+user-id = 6743 # Ed Page (epage)
+start = "2021-09-13"
+end = "2026-12-06"
+
 [[trusted.toml_parser]]
 criteria = "safe-to-deploy"
 user-id = 6743 # Ed Page (epage)
@@ -665,7 +677,7 @@ end = "2026-09-11"
 
 [[trusted.tower-layer]]
 criteria = "safe-to-deploy"
-user-id = 10 # Carl Lerche (carllerche)
+user-id = 10
 start = "2019-04-27"
 end = "2026-09-11"
 
@@ -689,7 +701,7 @@ end = "2026-09-11"
 
 [[trusted.valuable]]
 criteria = "safe-to-deploy"
-user-id = 10 # Carl Lerche (carllerche)
+user-id = 10
 start = "2022-01-03"
 end = "2026-09-11"
 

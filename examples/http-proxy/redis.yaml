@@ -1,5 +1,0 @@
-name: http_proxy
-
-include:
-  - oci://ghcr.io/credibil/compose-redis:latest
-  - oci://ghcr.io/credibil/compose-otelcol:latest

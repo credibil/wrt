@@ -22,30 +22,51 @@ mod generated {
 
 use std::fmt::Debug;
 
+use kernel::{FutureResult, Host, Server, State};
 use opentelemetry_proto::tonic::collector::metrics::v1::ExportMetricsServiceRequest;
 use opentelemetry_proto::tonic::collector::trace::v1::ExportTraceServiceRequest;
-use runtime::{FutureResult, Host};
 use wasmtime::component::{HasData, Linker, ResourceTable};
 
-pub use self::default_impl::DefaultOtelCtx;
-use self::generated::wasi::otel as wasi;
+pub use self::default_impl::WasiOtelCtxImpl;
+use self::generated::wasi::otel::{metrics, resource, tracing, types};
+
+#[derive(Debug)]
+pub struct WasiOtel;
 
 impl<T> Host<T> for WasiOtel
 where
     T: WasiOtelView + 'static,
 {
     fn add_to_linker(linker: &mut Linker<T>) -> anyhow::Result<()> {
-        wasi::tracing::add_to_linker::<_, Self>(linker, T::otel)?;
-        wasi::metrics::add_to_linker::<_, Self>(linker, T::otel)?;
-        wasi::types::add_to_linker::<_, Self>(linker, T::otel)?;
-        wasi::resource::add_to_linker::<_, Self>(linker, T::otel)
+        tracing::add_to_linker::<_, Self>(linker, T::otel)?;
+        metrics::add_to_linker::<_, Self>(linker, T::otel)?;
+        types::add_to_linker::<_, Self>(linker, T::otel)?;
+        resource::add_to_linker::<_, Self>(linker, T::otel)
     }
 }
 
-#[derive(Debug)]
-pub struct WasiOtel;
+impl<S: State> Server<S> for WasiOtel {}
+
 impl HasData for WasiOtel {
     type Data<'a> = WasiOtelCtxView<'a>;
+}
+
+/// A trait which provides internal WASI OpenTelemetry state.
+///
+/// This is implemented by the `T` in `Linker<T>` — a single type shared across
+/// all WASI components for the runtime build.
+pub trait WasiOtelView: Send {
+    /// Return a [`WasiOtelCtxView`] from mutable reference to self.
+    fn otel(&mut self) -> WasiOtelCtxView<'_>;
+}
+
+/// View into [`WasiOtelCtx`] implementation and [`ResourceTable`].
+pub struct WasiOtelCtxView<'a> {
+    /// Mutable reference to the WASI OpenTelemetry context.
+    pub ctx: &'a mut dyn WasiOtelCtx,
+
+    /// Mutable reference to table used to manage resources.
+    pub table: &'a mut ResourceTable,
 }
 
 /// A trait which provides internal WASI OpenTelemetry context.
@@ -66,20 +87,16 @@ pub trait WasiOtelCtx: Debug + Send + Sync + 'static {
     fn export_metrics(&self, request: ExportMetricsServiceRequest) -> FutureResult<()>;
 }
 
-/// View into [`WasiOtelCtx`] implementation and [`ResourceTable`].
-pub struct WasiOtelCtxView<'a> {
-    /// Mutable reference to the WASI OpenTelemetry context.
-    pub ctx: &'a mut dyn WasiOtelCtx,
-
-    /// Mutable reference to table used to manage resources.
-    pub table: &'a mut ResourceTable,
-}
-
-/// A trait which provides internal WASI OpenTelemetry state.
-///
-/// This is implemented by the `T` in `Linker<T>` — a single type shared across
-/// all WASI components for the runtime build.
-pub trait WasiOtelView: Send {
-    /// Return a [`WasiOtelCtxView`] from mutable reference to self.
-    fn otel(&mut self) -> WasiOtelCtxView<'_>;
+#[macro_export]
+macro_rules! wasi_view {
+    ($store_ctx:ty, $field_name:ident) => {
+        impl wasi_otel::WasiOtelView for $store_ctx {
+            fn otel(&mut self) -> wasi_otel::WasiOtelCtxView<'_> {
+                wasi_otel::WasiOtelCtxView {
+                    ctx: &mut self.$field_name,
+                    table: &mut self.table,
+                }
+            }
+        }
+    };
 }

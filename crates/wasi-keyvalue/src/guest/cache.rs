@@ -1,4 +1,4 @@
-use anyhow::{Context, Result, anyhow};
+use anyhow::{Context, Result};
 use chrono::serde::ts_seconds;
 use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
@@ -125,7 +125,7 @@ impl TryFrom<Cacheable> for Vec<u8> {
     type Error = anyhow::Error;
 
     fn try_from(value: Cacheable) -> Result<Self, Self::Error> {
-        serde_json::to_vec(&value).map_err(|e| anyhow!("issue serializing Cacheable: {e}"))
+        serde_json::to_vec(&value).context("issue serializing Cacheable")
     }
 }
 

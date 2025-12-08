@@ -1,35 +1,19 @@
-# Key-Value Example
+# Vault Example
 
-This example implements a simple key-value store using `wasi-vault` backed by Azure Key Vault.
+Demonstrates `wasi-vault` using the default (in-memory) implementation for secure secret storage.
 
 ## Quick Start
 
-To get started add a `.env` file to the workspace root. See [`.env.example`](.env.example) for a
-template.
-
-### Build the WASI guest
-
 ```bash
-cargo build --example vault --target wasm32-wasip2
+./scripts/run-example.sh vault
 ```
 
-### Run
-
-Start the OpenTelemetry Collector in a separate console:
-
-```bash
-docker compose --file ./docker/otelcol.yaml up
-```
-
-Run the guest:
-
-```bash
-set -a && source .env && set +a
-cargo run --features http,otel,vault,azure -- run ./target/wasm32-wasip2/debug/examples/vault.wasm
-```
-
-### Test
+## Test
 
 ```bash
 curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://localhost:8080
 ```
+
+## What It Does
+
+This example demonstrates basic secret management capabilities using an in-memory vault implementation.

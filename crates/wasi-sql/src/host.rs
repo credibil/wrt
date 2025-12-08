@@ -2,6 +2,7 @@
 //!
 //! This module implements the host-side logic for the WASI SQL service.
 
+pub mod default_impl;
 mod readwrite_impl;
 mod resource;
 mod types_impl;
@@ -33,11 +34,12 @@ mod generated {
 use std::fmt::Debug;
 use std::sync::Arc;
 
-use runtime::Host;
+use kernel::{Host, Server, State};
 use wasmtime::component::{HasData, Linker};
 use wasmtime_wasi::ResourceTable;
 
 use self::generated::wasi::sql::{readwrite, types};
+pub use crate::host::default_impl::WasiSqlCtxImpl;
 pub use crate::host::generated::wasi::sql::types::{DataType, Field, FormattedValue, Row};
 pub use crate::host::resource::*;
 
@@ -50,6 +52,8 @@ where
         types::add_to_linker::<_, Self>(linker, T::sql)
     }
 }
+
+impl<S> Server<S> for WasiSql where S: State {}
 
 #[derive(Debug)]
 pub struct WasiSql;
@@ -81,4 +85,18 @@ pub struct WasiSqlCtxView<'a> {
 pub trait WasiSqlView: Send {
     /// Return a [`WasiSqlCtxView`] from mutable reference to self.
     fn sql(&mut self) -> WasiSqlCtxView<'_>;
+}
+
+#[macro_export]
+macro_rules! wasi_view {
+    ($store_ctx:ty, $field_name:ident) => {
+        impl wasi_sql::WasiSqlView for $store_ctx {
+            fn sql(&mut self) -> wasi_sql::WasiSqlCtxView<'_> {
+                wasi_sql::WasiSqlCtxView {
+                    ctx: &mut self.$field_name,
+                    table: &mut self.table,
+                }
+            }
+        }
+    };
 }

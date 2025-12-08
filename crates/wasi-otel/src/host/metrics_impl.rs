@@ -31,10 +31,8 @@ impl HostWithStore for WasiOtel {
             return Ok(());
         }
 
-        // convert to opentelemetry export format
+        // convert and export
         let request = ExportMetricsServiceRequest::from(rm);
-
-        // export via gRPC
         accessor.with(|mut store| store.get().ctx.export_metrics(request)).await?;
 
         Ok(())

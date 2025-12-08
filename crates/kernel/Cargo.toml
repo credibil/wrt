@@ -1,0 +1,36 @@
+[package]
+name = "kernel"
+description = "Credibil runtime system"
+readme = "README.md"
+authors.workspace = true
+categories.workspace = true
+edition.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[lints]
+workspace = true
+
+[features]
+default = ["jit"]
+
+# Enables just-in-time wasm to machine code compilation.
+jit = ["wasmtime/cranelift"]
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+anyhow.workspace = true
+cfg-if.workspace = true
+clap = { version = "4.5.53", features = ["derive"] }
+credibil-otel.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+fromenv.workspace = true
+futures.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+wasmtime = { workspace = true, features = ["runtime"] }
+wasmtime-wasi.workspace = true

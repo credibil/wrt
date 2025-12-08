@@ -1,17 +1,17 @@
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use anyhow::{Result, anyhow};
+use anyhow::{Context, Result};
 use fromenv::FromEnv;
 use futures::FutureExt;
 use futures::lock::Mutex;
+use kernel::Backend;
 use oauth2::basic::{BasicClient, BasicTokenType};
 use oauth2::reqwest::{self, redirect};
 use oauth2::{
     ClientId, ClientSecret, EmptyExtraTokenFields, Scope, StandardTokenResponse,
     TokenResponse as _, TokenUrl,
 };
-use runtime::Resource;
 use tracing::instrument;
 
 use crate::host::WasiIdentityCtx;
@@ -30,18 +30,18 @@ pub struct ConnectOptions {
     pub token_url: String,
 }
 
-impl runtime::FromEnv for ConnectOptions {
+impl kernel::FromEnv for ConnectOptions {
     fn from_env() -> Result<Self> {
-        Self::from_env().finalize().map_err(|e| anyhow!("issue loading connection options: {e}"))
+        Self::from_env().finalize().context("issue loading connection options")
     }
 }
 
 #[derive(Debug, Clone)]
-pub struct DefaultIdentity {
+pub struct WasiIdentityCtxImpl {
     token_manager: TokenManager,
 }
 
-impl Resource for DefaultIdentity {
+impl Backend for WasiIdentityCtxImpl {
     type ConnectOptions = ConnectOptions;
 
     #[instrument]
@@ -51,10 +51,10 @@ impl Resource for DefaultIdentity {
     }
 }
 
-impl WasiIdentityCtx for DefaultIdentity {
+impl WasiIdentityCtx for WasiIdentityCtxImpl {
     fn get_identity(&self, _name: String) -> FutureResult<Arc<dyn Identity>> {
+        tracing::debug!("getting identity");
         let token_manager = self.token_manager.clone();
-
         async move { Ok(Arc::new(token_manager) as Arc<dyn Identity>) }.boxed()
     }
 }
@@ -108,6 +108,7 @@ struct TokenManager {
 
 impl Identity for TokenManager {
     fn get_token(&self, scopes: Vec<String>) -> FutureResult<AccessToken> {
+        tracing::debug!("getting token");
         let token_manager = self.clone();
         async move { token_manager.token(&scopes).await }.boxed()
     }
@@ -128,9 +129,11 @@ impl TokenManager {
         let now = Instant::now();
 
         // use cached token if still valid
-        let cache = self.cache.lock().await;
-        if cache.expires_at > now {
-            return Ok(cache.access_token.clone());
+        {
+            let cache = self.cache.lock().await;
+            if cache.expires_at > now {
+                return Ok(cache.access_token.clone());
+            }
         }
 
         // if we drop through we need to fetch a new token
