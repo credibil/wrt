@@ -10,9 +10,10 @@ mod runtime {
     use super::*;
     use kernel::anyhow::Context as _;
     use kernel::futures::future::{BoxFuture, try_join_all};
-    use kernel::{Backend, Server};
+    use kernel::tokio;
     use kernel::wasmtime::component::InstancePre;
-    use kernel::wasmtime_wasi::{WasiCtxBuilder, ResourceTable};
+    use kernel::wasmtime_wasi;
+    use kernel::{Backend, Server};
     /// Run the specified wasm guest using the configured runtime.
     pub async fn run(wasm: std::path::PathBuf) -> anyhow::Result<()> {
         let mut compiled = kernel::create(&wasm)
@@ -28,9 +29,9 @@ mod runtime {
     /// connections.
     struct Context {
         instance_pre: InstancePre<StoreCtx>,
-        pub httpdefault: HttpDefault,
-        pub oteldefault: OtelDefault,
-        pub blobstoredefault: BlobstoreDefault,
+        pub http_default: HttpDefault,
+        pub otel_default: OtelDefault,
+        pub blobstore_default: BlobstoreDefault,
     }
     #[automatically_derived]
     impl ::core::clone::Clone for Context {
@@ -38,9 +39,9 @@ mod runtime {
         fn clone(&self) -> Context {
             Context {
                 instance_pre: ::core::clone::Clone::clone(&self.instance_pre),
-                httpdefault: ::core::clone::Clone::clone(&self.httpdefault),
-                oteldefault: ::core::clone::Clone::clone(&self.oteldefault),
-                blobstoredefault: ::core::clone::Clone::clone(&self.blobstoredefault),
+                http_default: ::core::clone::Clone::clone(&self.http_default),
+                otel_default: ::core::clone::Clone::clone(&self.otel_default),
+                blobstore_default: ::core::clone::Clone::clone(&self.blobstore_default),
             }
         }
     }
@@ -53,9 +54,9 @@ mod runtime {
             compiled.link(WasiBlobstore)?;
             Ok(Self {
                 instance_pre: compiled.pre_instantiate()?,
-                httpdefault: HttpDefault::connect().await?,
-                oteldefault: OtelDefault::connect().await?,
-                blobstoredefault: BlobstoreDefault::connect().await?,
+                http_default: HttpDefault::connect().await?,
+                otel_default: OtelDefault::connect().await?,
+                blobstore_default: BlobstoreDefault::connect().await?,
             })
         }
         /// Start servers
@@ -79,7 +80,7 @@ mod runtime {
             &self.instance_pre
         }
         fn store(&self) -> Self::StoreCtx {
-            let wasi_ctx = WasiCtxBuilder::new()
+            let wasi_ctx = wasmtime_wasi::WasiCtxBuilder::new()
                 .inherit_args()
                 .inherit_env()
                 .inherit_stdin()
@@ -87,11 +88,11 @@ mod runtime {
                 .stderr(tokio::io::stderr())
                 .build();
             StoreCtx {
-                table: ResourceTable::new(),
+                table: wasmtime_wasi::ResourceTable::new(),
                 wasi: wasi_ctx,
-                wasi_http: self.httpdefault.clone(),
-                wasi_otel: self.oteldefault.clone(),
-                wasi_blobstore: self.blobstoredefault.clone(),
+                wasi_http: self.http_default.clone(),
+                wasi_otel: self.otel_default.clone(),
+                wasi_blobstore: self.blobstore_default.clone(),
             }
         }
     }

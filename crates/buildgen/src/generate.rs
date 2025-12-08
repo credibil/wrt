@@ -96,8 +96,22 @@ impl TryFrom<BuildInput> for Generated {
 
 /// Generates a field name for a backend type.
 fn field_ident(field_type: &Type) -> Ident {
-    let name = quote! {#field_type}.to_string();
-    format_ident!("{name}")
+    let type_str = quote! {#field_type}.to_string();
+
+    // convert the type string to a snake_case
+    let mut field_str = String::new();
+    for char in type_str.chars() {
+        if char.is_uppercase() {
+            if !field_str.is_empty() {
+                field_str.push('_');
+            }
+            field_str.push_str(&char.to_lowercase().to_string());
+        } else {
+            field_str.push(char);
+        }
+    }
+
+    format_ident!("{field_str}")
 }
 
 fn wasi_ident(wasi_type: &Type) -> Ident {
