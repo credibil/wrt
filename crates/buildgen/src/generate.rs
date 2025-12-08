@@ -7,7 +7,7 @@ use syn::{Ident, Type};
 use crate::parse::BuildInput;
 
 pub struct Generated {
-    pub generate_main: bool,
+    pub main_fn: TokenStream,
     pub context_fields: Vec<TokenStream>,
     pub store_ctx_fields: Vec<TokenStream>,
     pub store_ctx_values: Vec<TokenStream>,
@@ -20,6 +20,21 @@ impl TryFrom<BuildInput> for Generated {
     type Error = syn::Error;
 
     fn try_from(input: BuildInput) -> Result<Self, Self::Error> {
+        let main_fn = if input.gen_main {
+            quote! {
+                #[tokio::main]
+                async fn main() -> anyhow::Result<()> {
+                    use kernel::Parser;
+                    match kernel::Cli::parse().command {
+                        kernel::Command::Run { wasm } => runtime::run(wasm).await,
+                        _ => unreachable!(),
+                    }
+                }
+            }
+        } else {
+            quote! {}
+        };
+
         // `Context` struct
         let mut context_fields = Vec::new();
         let mut seen_backends = HashSet::new();
@@ -66,7 +81,7 @@ impl TryFrom<BuildInput> for Generated {
         }
 
         Ok(Self {
-            generate_main: input.generate_main,
+            main_fn,
             context_fields,
             store_ctx_fields,
             store_ctx_values,
