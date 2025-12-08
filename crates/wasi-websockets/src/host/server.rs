@@ -18,7 +18,7 @@ use hyper::service::service_fn;
 use hyper::upgrade::Upgraded;
 use hyper::{Method, Request, Response, StatusCode, Version};
 use hyper_util::rt::TokioIo;
-use runtime::State;
+use kernel::State;
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::{Mutex, OnceCell};
 use tokio_tungstenite::tungstenite::handshake::derive_accept_key;
@@ -26,8 +26,10 @@ use tokio_tungstenite::tungstenite::{Bytes, Message, Utf8Bytes};
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, connect_async};
 use tungstenite::protocol::Role;
 
+use crate::host::WebSocketsView;
 use crate::host::types::{PeerInfo, PeerMap, PublishMessage};
-use crate::host::{DEF_WEBSOCKETS_ADDR, WebSocketsView};
+
+const DEF_WEBSOCKETS_ADDR: &str = "0.0.0.0:80";
 
 static PEER_MAP: OnceCell<PeerMap> = OnceCell::const_new();
 
@@ -195,7 +197,7 @@ async fn handle_request(
 pub async fn run_server<S>(_: &S) -> Result<()>
 where
     S: State,
-    <S as State>::StoreCtx: WebSocketsView,
+    S::StoreCtx: WebSocketsView,
 {
     let state = PeerMap::new(StdMutex::new(HashMap::new()));
     let _ = PEER_MAP.set(Arc::<StdMutex<HashMap<SocketAddr, PeerInfo>>>::clone(&state));

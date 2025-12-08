@@ -1,11 +1,13 @@
-use anyhow::anyhow;
-pub use runtime::FutureResult;
+use anyhow::Context;
+pub use kernel::FutureResult;
 use wasmtime::component::{Accessor, Resource};
 
-use crate::host::generated::wasi::websockets::store::{HostServerWithStore, HostWithStore};
+use crate::host::generated::wasi::websockets::store::{
+    Host, HostServer, HostServerWithStore, HostWithStore,
+};
 use crate::host::generated::wasi::websockets::types::{Error, Peer};
 use crate::host::resource::WebSocketProxy;
-use crate::host::{Result, WasiWebSockets};
+use crate::host::{Result, WasiWebSockets, WasiWebSocketsCtxView};
 
 impl HostWithStore for WasiWebSockets {
     async fn get_server<T>(
@@ -67,12 +69,14 @@ impl HostServerWithStore for WasiWebSockets {
     }
 }
 
+impl Host for WasiWebSocketsCtxView<'_> {}
+impl HostServer for WasiWebSocketsCtxView<'_> {}
+
 pub fn use_server<T>(
     accessor: &Accessor<T, WasiWebSockets>, self_: &Resource<WebSocketProxy>,
 ) -> Result<WebSocketProxy> {
     accessor.with(|mut store| {
-        let server =
-            store.get().table.get(self_).map_err(|_e| anyhow!("Failed to get WebSocket server"))?;
+        let server = store.get().table.get(self_).context("Failed to get WebSocket server")?;
         Ok::<_, anyhow::Error>(server.clone())
     })
 }

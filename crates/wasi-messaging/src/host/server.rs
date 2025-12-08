@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use futures::StreamExt;
-use runtime::State;
+use kernel::State;
 use tracing::{Instrument, debug_span};
 use wasmtime::Store;
 
@@ -11,7 +11,7 @@ use crate::host::resource::{MessageProxy, Subscriptions};
 pub async fn run<S>(state: &S) -> Result<()>
 where
     S: State,
-    <S as State>::StoreCtx: WasiMessagingView,
+    S::StoreCtx: WasiMessagingView,
 {
     tracing::info!("starting messaging server");
 
@@ -34,7 +34,7 @@ where
 struct Handler<S>
 where
     S: State,
-    <S as State>::StoreCtx: WasiMessagingView,
+    S::StoreCtx: WasiMessagingView,
 {
     state: S,
 }
@@ -42,12 +42,12 @@ where
 impl<S> Handler<S>
 where
     S: State,
-    <S as State>::StoreCtx: WasiMessagingView,
+    S::StoreCtx: WasiMessagingView,
 {
     // Get subscriptions for the topics configured in the wasm component.
     async fn subscriptions(&self) -> Result<Subscriptions> {
         let instance_pre = self.state.instance_pre();
-        let store_data = self.state.new_store();
+        let store_data = self.state.store();
         let mut store = Store::new(instance_pre.engine(), store_data);
 
         store
@@ -60,8 +60,8 @@ where
 
     // Forward message to the wasm guest.
     async fn send(&self, message: MessageProxy) -> Result<()> {
-        let mut store_data = self.state.new_store();
-        let res_msg = store_data.messaging().table.push(message.clone())?;
+        let mut store_data = self.state.store();
+        let be_msg = store_data.messaging().table.push(message.clone())?;
 
         let instance_pre = self.state.instance_pre();
         let mut store = Store::new(instance_pre.engine(), store_data);
@@ -71,7 +71,7 @@ where
         store
             .run_concurrent(async |store| {
                 let guest = messaging.wasi_messaging_incoming_handler();
-                Ok(guest.call_handle(store, res_msg).await??)
+                Ok(guest.call_handle(store, be_msg).await??)
             })
             .instrument(debug_span!("messaging-handle"))
             .await

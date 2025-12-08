@@ -15,9 +15,6 @@ use wasmtime::component::Accessor;
 use crate::host::generated::wasi::otel::tracing::{self as wasi, HostWithStore};
 use crate::{WasiOtel, WasiOtelCtxView};
 
-// *** WASIP3 ***
-// use `HostWithStore` to add async support`
-
 impl HostWithStore for WasiOtel {
     async fn export<T>(
         accessor: &Accessor<T, Self>, span_data: Vec<wasi::SpanData>,

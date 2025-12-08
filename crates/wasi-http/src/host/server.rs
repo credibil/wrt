@@ -3,6 +3,7 @@
 use std::clone::Clone;
 use std::convert::Infallible;
 use std::env;
+use std::sync::Arc;
 
 use anyhow::{Context, Result, anyhow};
 use bytes::Bytes;
@@ -13,7 +14,7 @@ use hyper::body::Incoming;
 use hyper::header::{FORWARDED, HOST};
 use hyper::server::conn::http1;
 use hyper::service::service_fn;
-use runtime::State;
+use kernel::State;
 use tokio::net::TcpListener;
 use tokio::sync::oneshot;
 use tracing::{Instrument, debug_span};
@@ -30,13 +31,15 @@ const DEF_HTTP_URL: &str = "0.0.0.0:8080";
 pub async fn serve<S>(state: &S) -> Result<()>
 where
     S: State,
-    <S as State>::StoreCtx: WasiHttpView,
+    S::StoreCtx: WasiHttpView,
 {
     let addr = env::var("HTTP_ADDR").unwrap_or_else(|_| DEF_HTTP_URL.into());
     let listener = TcpListener::bind(&addr).await?;
     tracing::info!("http server listening on: {}", listener.local_addr()?);
 
-    let handler: Handler<S> = Handler { state: state.clone() };
+    let handler = Handler {
+        state: Arc::new(state.clone()),
+    };
 
     // listen for requests until terminated
     loop {
@@ -73,15 +76,15 @@ where
 struct Handler<S>
 where
     S: State,
-    <S as State>::StoreCtx: WasiHttpView,
+    S::StoreCtx: WasiHttpView,
 {
-    state: S,
+    state: Arc<S>,
 }
 
 impl<S> Handler<S>
 where
     S: State,
-    <S as State>::StoreCtx: WasiHttpView,
+    S::StoreCtx: WasiHttpView,
 {
     // Forward request to the wasm Guest.
     async fn handle(
@@ -94,7 +97,7 @@ where
 
         // instantiate the guest and get the proxy
         let instance_pre = self.state.instance_pre();
-        let store_data = self.state.new_store();
+        let store_data = self.state.store();
         let mut store = Store::new(instance_pre.engine(), store_data);
         let indices = ProxyIndices::new(instance_pre)?;
         let instance = instance_pre.instantiate_async(&mut store).await?;

@@ -1,35 +1,36 @@
 # OpenTelemetry Example
 
-This example implements opentelemetry for wasm32 guests using `wasi-otel`. 
+Demonstrates OpenTelemetry instrumentation for WebAssembly guests using `wasi-otel`.
+
+## Prerequisites
+
+Start the OpenTelemetry Collector:
+
+```bash
+docker compose -f docker/otelcol.yaml up -d
+```
 
 ## Quick Start
 
-To get started add a `.env` file to the workspace root. See [`.env.example`](.env.example) for a
-template.
-
-### Build the WASI guest
-
 ```bash
-cargo build --example otel --target wasm32-wasip2
+./scripts/run-example.sh otel
 ```
 
-### Run
-
-Start the OpenTelemetry Collector in a separate console:
-
-```bash
-docker compose --file ./docker/otelcol.yaml up
-```
-
-Run the guest:
-
-```bash
-set -a && source .env && set +a
-cargo run --features http-server -- run ./target/wasm32-wasip2/debug/examples/otel.wasm
-```
-
-### Test
+## Test
 
 ```bash
 curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://localhost:8080
+```
+
+## What It Does
+
+This example demonstrates:
+- Distributed tracing with OpenTelemetry
+- Metrics collection from WebAssembly guests
+- Integration with the OpenTelemetry Collector
+
+## Cleanup
+
+```bash
+docker compose -f docker/otelcol.yaml down -v
 ```

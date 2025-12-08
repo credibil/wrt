@@ -99,7 +99,16 @@ install_crate = "cargo-machete"
 
 [tasks.outdated]
 command = "cargo"
-args = ["outdated", "--workspace", "--exit-code", "1", "--depth", "1", "--ignore", "prost"]
+args = [
+    "outdated",
+    "--workspace",
+    "--exit-code",
+    "1",
+    "--depth",
+    "1",
+    "--ignore",
+    "prost",
+]
 install_crate = "cargo-outdated"
 
 [tasks.deny]
@@ -113,3 +122,31 @@ dependencies = ["audit", "fmt", "lint", "outdated", "unused"]
 # Emulate CI
 [tasks.ci]
 dependencies = ["lint", "test", "test-doc", "vet", "outdated", "deny", "fmt"]
+
+# -------------------------------------
+# Examples
+# -------------------------------------
+
+[tasks.run-example]
+description = "Run an example guest/host pair. Usage: cargo make run-example <example-name>"
+script = '''
+#!/usr/bin/env bash
+EXAMPLE=${1}
+if [ -z "$EXAMPLE" ]; then
+    echo "Usage: cargo make run-example <example-name>"
+    exit 1
+fi
+
+WASM_NAME=$(echo "${EXAMPLE}" | tr '-' '_')
+
+if [ -f .env ]; then
+    echo "Loading .env file"
+    set -a && source .env && set +a
+fi
+
+echo "Building guest for example: $EXAMPLE"
+cargo build --example ${EXAMPLE}-wasm --target wasm32-wasip2
+
+echo "Running host for example: $EXAMPLE"
+cargo run --example ${EXAMPLE} -- run ./target/wasm32-wasip2/debug/examples/${WASM_NAME}_wasm.wasm
+'''

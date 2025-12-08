@@ -1,35 +1,19 @@
-# Websockets Server Example
+# WebSockets Server Example
 
-This example implements a simple websockets server using `wasi-websockets`. 
+Demonstrates `wasi-websockets` for real-time bidirectional communication.
 
 ## Quick Start
 
-To get started add a `.env` file to the workspace root. See [`.env.example`](.env.example) for a
-template.
-
-### Build the WASI guest
-
 ```bash
-cargo build --example websockets --target wasm32-wasip2
+./scripts/run-example.sh websockets
 ```
 
-### Run
-
-Start the OpenTelemetry Collector in a separate console:
-
-```bash
-docker compose --file ./docker/otelcol.yaml up
-```
-
-Run the guest:
-
-```bash
-set -a && source .env && set +a
-cargo run --features http,otel,websockets -- run ./target/wasm32-wasip2/debug/examples/websockets.wasm
-```
-
-### Test
+## Test
 
 ```bash
 curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://localhost:8080
 ```
+
+## What It Does
+
+This example creates a WebSocket server that can handle real-time, bidirectional communication with clients.

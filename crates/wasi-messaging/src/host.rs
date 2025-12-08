@@ -1,3 +1,4 @@
+pub mod default_impl;
 mod producer_impl;
 mod request_reply_impl;
 mod resource;
@@ -34,14 +35,15 @@ mod generated {
 use std::fmt::Debug;
 use std::sync::Arc;
 
-pub use resource::*;
-use runtime::{Host, Server, State};
+use kernel::{Host, Server, State};
 use wasmtime::component::{HasData, Linker};
 use wasmtime_wasi::{ResourceTable, ResourceTableError};
 
+pub use self::default_impl::WasiMessagingCtxImpl;
 pub use self::generated::Messaging;
 pub use self::generated::wasi::messaging::types::Error;
 use self::generated::wasi::messaging::{producer, request_reply, types};
+pub use self::resource::*;
 
 pub type Result<T, E = Error> = anyhow::Result<T, E>;
 
@@ -59,7 +61,7 @@ where
 impl<S> Server<S> for WasiMessaging
 where
     S: State,
-    <S as State>::StoreCtx: WasiMessagingView,
+    S::StoreCtx: WasiMessagingView,
 {
     async fn run(&self, state: &S) -> anyhow::Result<()> {
         server::run(state).await
@@ -138,4 +140,18 @@ impl From<anyhow::Error> for Error {
     fn from(err: anyhow::Error) -> Self {
         Self::Other(err.to_string())
     }
+}
+
+#[macro_export]
+macro_rules! wasi_view {
+    ($store_ctx:ty, $field_name:ident) => {
+        impl wasi_messaging::WasiMessagingView for $store_ctx {
+            fn messaging(&mut self) -> wasi_messaging::WasiMessagingCtxView<'_> {
+                wasi_messaging::WasiMessagingCtxView {
+                    ctx: &mut self.$field_name,
+                    table: &mut self.table,
+                }
+            }
+        }
+    };
 }

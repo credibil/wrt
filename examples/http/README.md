@@ -1,33 +1,23 @@
 # HTTP Server Example
 
-This example implements a simple HTTP server using `wasi-http`.
+Demonstrates a basic HTTP server using `wasi-http` with GET and POST endpoints.
 
 ## Quick Start
 
-To get started add a `.env` file to the workspace root. See [`.env.example`](.env.example) for a
-template.
-
-### Build the WASI guest
-
 ```bash
-cargo build --example http --target wasm32-wasip2
+./scripts/run-example.sh http
 ```
 
-### Run
-
-Start the OpenTelemetry Collector in a separate console:
+## Test
 
 ```bash
-docker compose --file ./docker/otelcol.yaml up
-```
-
-```bash
-set -a && source .env && set +a
-cargo run --features http-server -- run ./target/wasm32-wasip2/debug/examples/http.wasm
-```
-
-### Test
-
-```bash
+# POST request
 curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://localhost:8080
+
+# GET request
+curl http://localhost:8080
 ```
+
+## What It Does
+
+This example creates a simple HTTP server with GET and POST endpoints that echo back JSON responses.

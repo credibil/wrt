@@ -2,6 +2,7 @@
 //!
 //! This module implements a runtime server for websockets
 
+mod default_impl;
 mod resource;
 mod server;
 mod store_impl;
@@ -28,32 +29,36 @@ use std::fmt::Debug;
 use std::sync::Arc;
 
 use anyhow::Result;
-use futures::FutureExt;
-use resource::{DefaultWebSocketServer, WebSocketServer};
-use runtime::{Host, Server, State};
+use kernel::{Host, Server, State};
+use resource::WebSocketServer;
 use server::run_server;
 use store_impl::FutureResult;
 use wasmtime::component::{HasData, Linker};
 use wasmtime_wasi::ResourceTable;
 
+pub use self::default_impl::WasiWebSocketsCtxImpl;
 use self::generated::wasi::websockets::store;
-use self::generated::wasi::websockets::store::{Host as WsHost, HostServer};
 
-const DEF_WEBSOCKETS_ADDR: &str = "0.0.0.0:80";
+#[derive(Clone, Debug)]
+pub struct WasiWebSockets;
 
 impl<T> Host<T> for WasiWebSockets
 where
     T: WebSocketsView + 'static,
 {
     fn add_to_linker(linker: &mut Linker<T>) -> Result<()> {
-        store::add_to_linker::<_, Self>(linker, T::start)
+        store::add_to_linker::<_, Self>(linker, T::websockets)
     }
+}
+
+impl HasData for WasiWebSockets {
+    type Data<'a> = WasiWebSocketsCtxView<'a>;
 }
 
 impl<S> Server<S> for WasiWebSockets
 where
     S: State,
-    <S as State>::StoreCtx: WebSocketsView,
+    S::StoreCtx: WebSocketsView,
 {
     /// Provide http proxy service the specified wasm component.
     /// ``state`` will be used at a later time to provide resource access to guest handlers
@@ -62,35 +67,33 @@ where
     }
 }
 
+pub trait WebSocketsView: Send {
+    fn websockets(&mut self) -> WasiWebSocketsCtxView<'_>;
+}
+
 /// View into [`WebSocketsCtxView`] and [`ResourceTable`].
 pub struct WasiWebSocketsCtxView<'a> {
-    /// View to the Web sockets context.
-    pub ctx: &'a dyn WebSocketsCtxView,
+    /// Mutable reference to the WASI WebSockets context.
+    pub ctx: &'a dyn WebSocketsCtx,
 
     /// Mutable reference to table used to manage resources.
     pub table: &'a mut ResourceTable,
 }
 
-impl WsHost for WasiWebSocketsCtxView<'_> {}
-
-impl HostServer for WasiWebSocketsCtxView<'_> {}
-
-pub trait WebSocketsView: Send {
-    fn start(&mut self) -> WasiWebSocketsCtxView<'_>;
+pub trait WebSocketsCtx: Debug + Send + Sync + 'static {
+    fn serve(&self) -> FutureResult<Arc<dyn WebSocketServer>>;
 }
 
-#[derive(Clone, Debug)]
-pub struct WasiWebSockets;
-impl HasData for WasiWebSockets {
-    type Data<'a> = WasiWebSocketsCtxView<'a>;
+#[macro_export]
+macro_rules! wasi_view {
+    ($store_ctx:ty, $field_name:ident) => {
+        impl wasi_websockets::WebSocketsView for $store_ctx {
+            fn websockets(&mut self) -> wasi_websockets::WasiWebSocketsCtxView<'_> {
+                wasi_websockets::WasiWebSocketsCtxView {
+                    ctx: &self.$field_name,
+                    table: &mut self.table,
+                }
+            }
+        }
+    };
 }
-
-pub trait WebSocketsCtxView: Debug + Send + Sync + 'static {
-    fn serve(&self) -> FutureResult<Arc<dyn WebSocketServer>> {
-        async move { Ok(Arc::new(DefaultWebSocketServer) as Arc<dyn WebSocketServer>) }.boxed()
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct DefaultWebSocketsCtx;
-impl WebSocketsCtxView for DefaultWebSocketsCtx {}

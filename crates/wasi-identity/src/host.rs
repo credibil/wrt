@@ -31,13 +31,16 @@ mod generated {
 use std::fmt::Debug;
 use std::sync::Arc;
 
-use runtime::Host;
+use kernel::{Host, Server, State};
 use wasmtime::component::{HasData, Linker};
 use wasmtime_wasi::ResourceTable;
 
+pub use self::default_impl::WasiIdentityCtxImpl;
 use self::generated::wasi::identity::credentials;
-pub use crate::host::default_impl::*;
-pub use crate::host::resource::*;
+pub use self::resource::*;
+
+#[derive(Debug)]
+pub struct WasiIdentity;
 
 impl<T> Host<T> for WasiIdentity
 where
@@ -48,18 +51,22 @@ where
     }
 }
 
-#[derive(Debug)]
-pub struct WasiIdentity;
+impl<S> Server<S> for WasiIdentity where S: State {}
+
 impl HasData for WasiIdentity {
     type Data<'a> = WasiIdentityCtxView<'a>;
 }
 
-/// A trait which provides internal WASI Key-Value context.
+//===============================================
+// TODO: this could be a generic trait for all WASI hosts
+//===============================================
+/// A trait which provides internal WASI Key-Value state.
 ///
-/// This is implemented by the resource-specific provider of Key-Value
-/// functionality. For example, an in-memory store, or a Redis-backed store.
-pub trait WasiIdentityCtx: Debug + Send + Sync + 'static {
-    fn get_identity(&self, name: String) -> FutureResult<Arc<dyn Identity>>;
+/// This is implemented by the `T` in `Linker<T>` — a single type shared across
+/// all WASI components for the runtime build.
+pub trait WasiIdentityView: Send {
+    /// Return a [`WasiIdentityCtxView`] from mutable reference to self.
+    fn identity(&mut self) -> WasiIdentityCtxView<'_>;
 }
 
 /// View into [`WasiIdentityCtx`] implementation and [`ResourceTable`].
@@ -71,11 +78,24 @@ pub struct WasiIdentityCtxView<'a> {
     pub table: &'a mut ResourceTable,
 }
 
-/// A trait which provides internal WASI Key-Value state.
+/// A trait which provides internal WASI Key-Value context.
 ///
-/// This is implemented by the `T` in `Linker<T>` — a single type shared across
-/// all WASI components for the runtime build.
-pub trait WasiIdentityView: Send {
-    /// Return a [`WasiIdentityCtxView`] from mutable reference to self.
-    fn identity(&mut self) -> WasiIdentityCtxView<'_>;
+/// This is implemented by the resource-specific provider of Key-Value
+/// functionality. For example, an in-memory store, or a Redis-backed store.
+pub trait WasiIdentityCtx: Debug + Send + Sync + 'static {
+    fn get_identity(&self, name: String) -> FutureResult<Arc<dyn Identity>>;
+}
+
+#[macro_export]
+macro_rules! wasi_view {
+    ($store_ctx:ty, $field_name:ident) => {
+        impl wasi_identity::WasiIdentityView for $store_ctx {
+            fn identity(&mut self) -> wasi_identity::WasiIdentityCtxView<'_> {
+                wasi_identity::WasiIdentityCtxView {
+                    ctx: &mut self.$field_name,
+                    table: &mut self.table,
+                }
+            }
+        }
+    };
 }

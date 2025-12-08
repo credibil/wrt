@@ -143,8 +143,7 @@ pub fn get_container<T>(
     accessor: &Accessor<T, WasiBlobstore>, self_: &Resource<ContainerProxy>,
 ) -> Result<ContainerProxy> {
     accessor.with(|mut store| {
-        let container =
-            store.get().table.get(self_).map_err(|e| anyhow!("Container not found: {e}"))?;
+        let container = store.get().table.get(self_).context("Container not found")?;
         Ok(container.clone())
     })
 }

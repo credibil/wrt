@@ -2,6 +2,7 @@
 //!
 //! This module implements the host-side logic for the WASI Vault service.
 
+pub mod default_impl;
 mod resource;
 mod vault_impl;
 
@@ -29,11 +30,12 @@ mod generated {
 use std::fmt::Debug;
 use std::sync::Arc;
 
-use runtime::Host;
+use kernel::{Host, Server, State};
 use wasmtime::component::{HasData, Linker};
 use wasmtime_wasi::ResourceTable;
 
 use self::generated::wasi::vault::vault;
+pub use crate::host::default_impl::WasiVaultCtxImpl;
 pub use crate::host::resource::*;
 
 impl<T> Host<T> for WasiVault
@@ -44,6 +46,8 @@ where
         vault::add_to_linker::<_, Self>(linker, T::vault)
     }
 }
+
+impl<S> Server<S> for WasiVault where S: State {}
 
 #[derive(Debug)]
 pub struct WasiVault;
@@ -75,4 +79,18 @@ pub struct WasiVaultCtxView<'a> {
 pub trait WasiVaultView: Send {
     /// Return a [`WasiVaultCtxView`] from mutable reference to self.
     fn vault(&mut self) -> WasiVaultCtxView<'_>;
+}
+
+#[macro_export]
+macro_rules! wasi_view {
+    ($store_ctx:ty, $field_name:ident) => {
+        impl wasi_vault::WasiVaultView for $store_ctx {
+            fn vault(&mut self) -> wasi_vault::WasiVaultCtxView<'_> {
+                wasi_vault::WasiVaultCtxView {
+                    ctx: &mut self.$field_name,
+                    table: &mut self.table,
+                }
+            }
+        }
+    };
 }
