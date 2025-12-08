@@ -8,6 +8,13 @@ Demonstrates `wasi-blobstore` using the default (in-memory) implementation.
 ./scripts/run-example.sh blobstore
 ```
 
+Alternatively, run
+
+```bash
+cargo build --example blobstore-wasm --target wasm32-wasip2
+bash scripts/env.sh cargo run --example blobstore -- run ./target/wasm32-wasip2/debug/examples/blobstore_wasm.wasm
+```
+
 ## Test
 
 ```bash
