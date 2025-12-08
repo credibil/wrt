@@ -5,7 +5,7 @@
 use anyhow::Result;
 use be_opentelemetry::Client as OpenTelemetry;
 use be_redis::Client as Redis;
-use kernel::{Cli, Command, Parser};
+use kernel::{Cli, Command, Parser, tokio};
 use wasi_http::{WasiHttp, WasiHttpCtxImpl};
 use wasi_keyvalue::WasiKeyValue;
 use wasi_otel::WasiOtel;
