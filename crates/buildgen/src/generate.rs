@@ -22,6 +22,8 @@ impl TryFrom<BuildInput> for Generated {
     fn try_from(input: BuildInput) -> Result<Self, Self::Error> {
         let main_fn = if input.gen_main {
             quote! {
+                use kernel::tokio;
+
                 #[tokio::main]
                 async fn main() -> anyhow::Result<()> {
                     use kernel::Parser;

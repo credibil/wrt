@@ -81,6 +81,7 @@ anyhow.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 base64ct.workspace = true
+buildgen.workspace = true
 bytes.workspace = true
 fromenv.workspace = true
 futures.workspace = true
@@ -95,7 +96,6 @@ be-opentelemetry = { workspace = true, optional = true }
 be-postgres = { workspace = true, optional = true }
 be-redis = { workspace = true, optional = true }
 kernel.workspace = true
-tokio = { workspace = true, features = ["macros"] }
 wasi-blobstore = { workspace = true, optional = true }
 wasi-http = { workspace = true, optional = true }
 wasi-identity = { workspace = true, optional = true }
@@ -108,28 +108,12 @@ wasi-websockets = { workspace = true, optional = true }
 wasmtime.workspace = true
 wasmtime-wasi.workspace = true
 wasmtime-wasi-http = { workspace = true, optional = true }
-buildgen.workspace = true
 
 # required for azure_identity, etc.
 openssl = { version = "0.10.75", features = ["vendored"] }
 
+# example guest & host dependencies
 [dev-dependencies]
-axum = { workspace = true, features = ["macros"] }
-base64ct.workspace = true
-be-azure.workspace = true
-be-kafka.workspace = true
-be-mongodb.workspace = true
-be-nats.workspace = true
-be-opentelemetry.workspace = true
-be-postgres.workspace = true
-be-redis.workspace = true
-bytes.workspace = true
-http.workspace = true
-http-body-util.workspace = true
-opentelemetry.workspace = true
-serde_json.workspace = true
-tower-http.workspace = true
-tracing.workspace = true
 wasi-blobstore.workspace = true
 wasi-http.workspace = true
 wasi-identity.workspace = true
@@ -139,8 +123,30 @@ wasi-otel.workspace = true
 wasi-sql.workspace = true
 wasi-vault.workspace = true
 wasi-websockets.workspace = true
+
+# example guest dependencies
+[target.'cfg(target_arch = "wasm32")'.dev-dependencies]
+axum = { workspace = true, features = ["macros"] }
+base64ct.workspace = true
+bytes.workspace = true
+http.workspace = true
+http-body-util.workspace = true
+opentelemetry.workspace = true
+serde_json.workspace = true
+tower-http.workspace = true
+tracing.workspace = true
 wasip3.workspace = true
 wit-bindgen.workspace = true
+
+# example host dependencies
+[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
+be-azure.workspace = true
+be-kafka.workspace = true
+be-mongodb.workspace = true
+be-nats.workspace = true
+be-opentelemetry.workspace = true
+be-postgres.workspace = true
+be-redis.workspace = true
 
 [profile.release]
 lto = true

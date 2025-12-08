@@ -18,8 +18,6 @@ pub fn expand(generated: Generated) -> TokenStream {
         wasi_view_impls,
     } = generated;
 
-
-
     quote! {
         mod runtime {
             use super::*;
@@ -27,8 +25,8 @@ pub fn expand(generated: Generated) -> TokenStream {
             use anyhow::Context as _;
             use futures::future::{BoxFuture, try_join_all};
             use kernel::{Backend, Server};
-            use wasmtime_wasi::{WasiCtxBuilder, ResourceTable};
-            use wasmtime::component::InstancePre;
+            use kernel::wasmtime::component::InstancePre;
+            use kernel::wasmtime_wasi::{WasiCtxBuilder, ResourceTable};
 
             /// Run the specified wasm guest using the configured runtime.
             pub async fn run(wasm: std::path::PathBuf) -> anyhow::Result<()> {
