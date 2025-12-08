@@ -7,7 +7,7 @@ use crate::host::generated::wasi::websockets::store::{
 };
 use crate::host::generated::wasi::websockets::types::Peer;
 use crate::host::resource::WebSocketProxy;
-use crate::host::{Result, WasiWebSockets, WasiWebSockets, WasiWebSocketsCtxView};
+use crate::host::{WasiWebSockets, WasiWebSocketsCtxView};
 
 impl HostWithStore for WasiWebSockets {
     async fn get_server<T>(accessor: &Accessor<T, Self>) -> Result<Resource<WebSocketProxy>> {

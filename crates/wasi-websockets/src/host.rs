@@ -87,18 +87,10 @@ pub trait WebSocketsCtx: Debug + Send + Sync + 'static {
     fn serve(&self) -> FutureResult<Arc<dyn WebSocketServer>>;
 }
 
-impl WsHost for WasiWebSocketsCtxView<'_> {}
-
 impl generated_types::Host for WasiWebSocketsCtxView<'_> {
     fn convert_error(&mut self, err: anyhow::Error) -> Result<String> {
         Ok(err.to_string())
     }
-}
-
-impl HostServer for WasiWebSocketsCtxView<'_> {}
-
-pub trait WebSocketsView: Send {
-    fn start(&mut self) -> WasiWebSocketsCtxView<'_>;
 }
 
 #[macro_export]
