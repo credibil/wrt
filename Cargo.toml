@@ -14,21 +14,6 @@ rust-version.workspace = true
 version.workspace = true
 default-run = "realtime"
 
-# [[bin]]
-# name = "wasm-examples"
-# path = "src/examples.rs"
-# required-features = [
-#     "blobstore",
-#     "http",
-#     "identity",
-#     "keyvalue",
-#     "messaging",
-#     "otel",
-#     "sql",
-#     "vault",
-#     "websockets",
-# ]
-
 [[bin]]
 name = "realtime"
 path = "src/realtime.rs"
