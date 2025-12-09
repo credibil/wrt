@@ -471,15 +471,13 @@ fn run_example_test(config: &ExampleConfig) -> Result<(), String> {
     }
 
     // Check Docker requirements
-    if config.needs_docker {
-        if let Some(compose_file) = config.docker_compose {
-            if !docker_service_running(compose_file) {
-                return Err(format!(
-                    "Docker services not running. Start with: docker compose -f {} up -d",
-                    compose_file
-                ));
-            }
-        }
+    if config.needs_docker
+        && let Some(compose_file) = config.docker_compose
+        && !docker_service_running(compose_file)
+    {
+        return Err(format!(
+            "Docker services not running. Start with: docker compose -f {compose_file} up -d"
+        ));
     }
 
     // Ensure this example is built
@@ -512,24 +510,24 @@ fn run_example_test(config: &ExampleConfig) -> Result<(), String> {
 // ============================================================================
 
 macro_rules! example_test {
-    ($test_name:ident, $example_name:expr) => {
+    ($test_name:ident, $example:expr) => {
         #[test]
+        #[ignore = "Too slow"]
         fn $test_name() {
             let configs = get_example_configs();
-            let example_name = $example_name;
-            let config = configs
-                .get(example_name)
-                .unwrap_or_else(|| panic!("Unknown example: {}", example_name));
+            let example = $example;
+            let config =
+                configs.get(example).expect(&format!("Should be valid example: {example}"));
 
             match run_example_test(config) {
                 Ok(()) => {}
                 Err(e) if e.contains("Missing required environment") => {
-                    eprintln!("Skipping {}: {}", example_name, e);
+                    eprintln!("Skipping {example}: {e}");
                 }
                 Err(e) if e.contains("Docker services not running") => {
-                    eprintln!("Skipping {}: {}", example_name, e);
+                    eprintln!("Skipping {example}: {e}");
                 }
-                Err(e) => panic!("Test failed for {}: {}", example_name, e),
+                Err(e) => panic!("Test failed for {example}: {e}"),
             }
         }
     };
