@@ -7,12 +7,13 @@
 //! Run specific test: `cargo test --test examples test_http`
 //! Run with output: `cargo test --test examples -- --nocapture`
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::env;
 use std::io::{BufRead, BufReader};
 use std::net::TcpListener;
 use std::path::PathBuf;
 use std::process::{Child, Command, Stdio};
+use std::sync::{LazyLock, Mutex};
 use std::time::{Duration, Instant};
 
 /// Configuration for testing an example
@@ -205,14 +206,14 @@ fn docker_service_running(compose_file: &str) -> bool {
 }
 
 /// Track which examples have been built
-static BUILT_EXAMPLES: std::sync::LazyLock<std::sync::Mutex<std::collections::HashSet<String>>> =
-    std::sync::LazyLock::new(|| std::sync::Mutex::new(std::collections::HashSet::new()));
+static BUILT_EXAMPLES: LazyLock<Mutex<HashSet<String>>> =
+    LazyLock::new(|| Mutex::new(HashSet::new()));
 
 /// Build a specific example (WASM guest and host)
 fn ensure_example_built(example: &str) -> Result<(), String> {
     // Check if already built
     {
-        let built = BUILT_EXAMPLES.lock().unwrap();
+        let built = BUILT_EXAMPLES.lock().expect("Failed to lock BUILT_EXAMPLES");
         if built.contains(example) {
             return Ok(());
         }
