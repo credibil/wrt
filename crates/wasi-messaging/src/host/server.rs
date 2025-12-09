@@ -1,10 +1,11 @@
 use std::str::FromStr;
 
 use anyhow::Result;
-use credibil_error::Error as CredibilError;
+use credibil_error::Error;
 use futures::StreamExt;
 use kernel::State;
-use tracing::{Instrument, debug_span, error, instrument, warn};
+use tracing::{Instrument, debug_span, instrument};
+use utils::messaging::log_with_metrics;
 use wasmtime::Store;
 
 use crate::host::WasiMessagingView;
@@ -69,13 +70,13 @@ where
     }
 
     // Forward message to the wasm guest.
-    async fn send(&self, message: MessageProxy) -> Result<(), CredibilError> {
+    async fn send(&self, message: MessageProxy) -> Result<(), Error> {
         let mut store_data = self.state.store();
         let be_msg = store_data
             .messaging()
             .table
             .push(message.clone())
-            .map_err(|e| CredibilError::ServerError(e.to_string()))?;
+            .map_err(|e| Error::ServerError(e.to_string()))?;
 
         let instance_pre = self.state.instance_pre();
         let mut store = Store::new(instance_pre.engine(), store_data);
@@ -85,7 +86,7 @@ where
         match store
             .run_concurrent(async |store| {
                 let guest = messaging.wasi_messaging_incoming_handler();
-                guest.call_handle(store, be_msg).await.map(|_| ()).map_err(CredibilError::from)
+                guest.call_handle(store, be_msg).await.map(|_| ()).map_err(Error::from)
             })
             .instrument(debug_span!("messaging-handle"))
             .await
@@ -94,79 +95,14 @@ where
                 tracing::info!(monotonic_counter.messages_processed = 1, service = %self.service, topic = %message.topic());
                 Ok(())
             }
-            Err(e) => match CredibilError::from_str(e.to_string().as_str()) {
+            Err(e) => match Error::from_str(e.to_string().as_str()) {
                 // Both Ok and Err arms do the same thing, but this way we ensure
                 // that we only log known CredibilErrors in a structured way.
                 Ok(err) | Err(err) => {
-                    Self::log_with_metrics(&err, &self.service, &message.topic());
+                    log_with_metrics(&err, &self.service, &message.topic());
                     Err(err)
                 }
             },
-        }
-    }
-
-    fn log_with_metrics(err: &CredibilError, service: &str, topic: &str) {
-        match err {
-            CredibilError::ServiceUnavailable(description) => {
-                error!(
-                    monotonic_counter.processing_errors = 1,
-                    service = %service,
-                    topic = %topic,
-                    description
-                );
-            }
-            CredibilError::BadGateway(description) => {
-                error!(
-                    monotonic_counter.external_errors = 1,
-                    service = %service,
-                    topic = %topic,
-                    description
-                );
-            }
-            CredibilError::ServerError(description) => {
-                error!(
-                    monotonic_counter.runtime_errors = 1,
-                    service = %service,
-                    description
-                );
-            }
-            CredibilError::BadRequest(description) => {
-                warn!(
-                    monotonic_counter.parsing_errors = 1,
-                    service = %service,
-                    topic = %topic,
-                    description
-                );
-            }
-            CredibilError::Unauthorized(description) => {
-                warn!(
-                    monotonic_counter.authorization_errors = 1,
-                    service = %service,
-                    description
-                );
-            }
-            CredibilError::NotFound(description) => {
-                warn!(
-                    monotonic_counter.not_found_errors = 1,
-                    service = %service,
-                    description
-                );
-            }
-            CredibilError::Gone(description) => {
-                warn!(
-                    monotonic_counter.stale_data = 1,
-                    service = %service,
-                    topic = %topic,
-                    description
-                );
-            }
-            CredibilError::ImATeaPot(description) => {
-                warn!(
-                    monotonic_counter.other_errors = 1,
-                    service = %service,
-                    description
-                );
-            }
         }
     }
 }

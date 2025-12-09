@@ -30,7 +30,6 @@ serde.workspace = true
 serde_json.workspace = true
 fromenv.workspace = true
 futures.workspace = true
-thiserror.workspace = true
 tracing.workspace = true
 wasmtime = { workspace = true, features = ["runtime"] }
 wasmtime-wasi.workspace = true

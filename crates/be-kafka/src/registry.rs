@@ -2,16 +2,17 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 
-use credibil_error::Error as CredibilError;
+use credibil_error::Error;
+use http::StatusCode;
 use jsonschema::validate;
-use reqwest::StatusCode;
 use schema_registry_client::rest::apis::Error as SchemaRegistryError;
 use schema_registry_client::rest::client_config::ClientConfig as RegistryConfig;
 use schema_registry_client::rest::schema_registry_client::{Client, SchemaRegistryClient};
 use serde_json::Value;
 use tokio::sync::Mutex;
 use tokio::time;
-use tracing::{error, instrument, warn};
+use tracing::instrument;
+use utils::messaging::log_with_metrics;
 
 use crate::RegistryOptions;
 
@@ -67,7 +68,7 @@ impl Registry {
                 }
                 Ok(None) => buffer,
                 Err(e) => {
-                    log_with_metrics(e, SERVICE, topic);
+                    log_with_metrics(&e, SERVICE, topic);
                     buffer
                 }
             }
@@ -87,7 +88,7 @@ impl Registry {
                     return buffer.to_vec();
                 }
                 Err(e) => {
-                    log_with_metrics(e, SERVICE, topic);
+                    log_with_metrics(&e, SERVICE, topic);
                     return buffer.to_vec();
                 }
             };
@@ -123,12 +124,11 @@ impl Registry {
         Ok(())
     }
 
-    async fn get_or_fetch_schema(
-        &self, topic: &str,
-    ) -> Result<Option<(i32, Value)>, CredibilError> {
-        let sr = self.client.as_ref().ok_or_else(|| {
-            CredibilError::ServerError("No schema registry client available".to_string())
-        })?;
+    async fn get_or_fetch_schema(&self, topic: &str) -> Result<Option<(i32, Value)>, Error> {
+        let sr = self
+            .client
+            .as_ref()
+            .ok_or_else(|| Error::ServerError("No schema registry client available".to_string()))?;
 
         let mut schemas = self.schemas.lock().await;
         if let Some(schema_entry) = schemas.get(topic) {
@@ -142,17 +142,17 @@ impl Registry {
                     SchemaRegistryError::ResponseError(e) => {
                         if e.status == StatusCode::NOT_FOUND {
                             schemas.insert(topic.to_string(), None);
-                            return Err(CredibilError::NotFound(format!(
+                            return Err(Error::NotFound(format!(
                                 "Schema not found for topic {topic}"
                             )));
                         }
-                        return Err(CredibilError::BadGateway(format!(
+                        return Err(Error::BadGateway(format!(
                             "Error fetching schema for topic {topic}: {}",
                             e.content
                         )));
                     }
                     _ => {
-                        return Err(CredibilError::ServerError(format!(
+                        return Err(Error::ServerError(format!(
                             "Error fetching schema for topic {topic}: {e:?}"
                         )));
                     }
@@ -162,13 +162,13 @@ impl Registry {
             let schema_str = schema_response
                 .schema
                 .as_ref()
-                .ok_or_else(|| CredibilError::BadGateway("Schema string is missing".to_string()))?;
+                .ok_or_else(|| Error::BadGateway("Schema string is missing".to_string()))?;
 
             let schema_json: Value = serde_json::from_str(schema_str)
-                .map_err(|e| CredibilError::BadGateway(format!("Invalid schema JSON: {e:?}")))?;
+                .map_err(|e| Error::BadGateway(format!("Invalid schema JSON: {e:?}")))?;
 
             let registry_id = schema_response.id.ok_or_else(|| {
-                CredibilError::BadGateway(format!("Registry ID missing for topic {topic}"))
+                Error::BadGateway(format!("Registry ID missing for topic {topic}"))
             })?;
             schemas.insert(topic.to_string(), Some((registry_id, schema_json.clone())));
             drop(schemas);
@@ -187,71 +187,6 @@ impl Registry {
                 tracing::info!("Schema cache cleared");
             }
         });
-    }
-}
-
-/// Performs tracing and metrics.
-fn log_with_metrics(err: CredibilError, service: &str, topic: &str) {
-    match err {
-        CredibilError::ServiceUnavailable(description) => {
-            error!(
-                monotonic_counter.processing_errors = 1,
-                service = %service,
-                topic = %topic,
-                description
-            );
-        }
-        CredibilError::BadGateway(description) => {
-            error!(
-                monotonic_counter.external_errors = 1,
-                service = %service,
-                topic = %topic,
-                description
-            );
-        }
-        CredibilError::ServerError(description) => {
-            error!(
-                monotonic_counter.runtime_errors = 1,
-                service = %service,
-                description
-            );
-        }
-        CredibilError::BadRequest(description) => {
-            warn!(
-                monotonic_counter.parsing_errors = 1,
-                service = %service,
-                topic = %topic,
-                description
-            );
-        }
-        CredibilError::Unauthorized(description) => {
-            warn!(
-                monotonic_counter.authorization_errors = 1,
-                service = %service,
-                description
-            );
-        }
-        CredibilError::NotFound(description) => {
-            warn!(
-                monotonic_counter.not_found_errors = 1,
-                service = %service,
-                description
-            );
-        }
-        CredibilError::Gone(description) => {
-            warn!(
-                monotonic_counter.stale_data = 1,
-                service = %service,
-                description
-            );
-        }
-        CredibilError::ImATeaPot(description) => {
-            warn!(
-                monotonic_counter.other_errors = 1,
-                service = %service,
-                description
-            );
-        }
     }
 }
 
