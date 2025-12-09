@@ -424,6 +424,3 @@ crate-type = ["cdylib"]
 name = "websockets"
 path = "examples/websockets/main.rs"
 
-[[test]]
-name = "examples"
-path = "tests/examples.rs"
