@@ -2,6 +2,31 @@
 
 This directory contains examples demonstrating WASI capabilities with WRT (WASI Runtime).
 
+## Understanding the Architecture
+
+Each example follows a **guest/host** architecture:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                        Host                             │
+│  (Native binary that provides WASI implementations)     │
+│                                                         │
+│   ┌─────────────────────────────────────────────────┐   │
+│   │                    Guest                        │   │
+│   │  (WebAssembly module with your business logic)  │   │
+│   │                                                 │   │
+│   │   lib.rs  ──────►  .wasm file                   │   │
+│   └─────────────────────────────────────────────────┘   │
+│                                                         │
+│   main.rs  ──────►  native binary                       │
+└─────────────────────────────────────────────────────────┘
+```
+
+- **Guest (`lib.rs`)**: Application code compiled to WebAssembly. It uses WASI interfaces to interact with the outside world.
+- **Host (`main.rs`)**: The runtime that loads and executes the Wasm guest, providing concrete implementations of WASI interfaces (e.g., connecting to backends such as Redis, Kafka, Postgres).
+
+This separation allows the same guest code to run with different backends—swap Redis for NATS without changing your application logic.
+
 ## Quick Start
 
 The easiest way to run an example is using the helper script:
@@ -99,25 +124,74 @@ Stop and remove services:
 docker compose -f <compose-file> down -v
 ```
 
-## Catalog
+## Learning Path
 
-| Example | What it demonstrates | Compose file(s) |
+Examples are organized by complexity. Start with **Beginner** examples to understand the fundamentals before moving to more advanced patterns.
+
+### Beginner
+
+These examples demonstrate single WASI interfaces with minimal setup (no external services required).
+
+| Example | What it demonstrates | Key concepts |
 | --- | --- | --- |
-| [blobstore](./blobstore) | `wasi-blobstore` with default backend | _none_ |
-| [blobstore-mongodb](./blobstore-mongodb) | `wasi-blobstore` with MongoDB | `examples/blobstore-mongodb/mongodb.yaml` |
-| [blobstore-nats](./blobstore-nats) | `wasi-blobstore` with NATS JetStream | `examples/blobstore-nats/nats.yaml` |
-| [http](./http) | `wasi-http` server | `docker/otelcol.yaml` |
-| [http-proxy](./http-proxy) | `wasi-http` + `wasi-keyvalue` cache | _none_ |
-| [identity](./identity) | `wasi-identity` basics | _none_ |
-| [keyvalue-nats](./keyvalue-nats) | `wasi-keyvalue` with NATS JetStream | `examples/keyvalue-nats/nats.yaml` |
-| [keyvalue-redis](./keyvalue-redis) | `wasi-keyvalue` with Redis | `examples/keyvalue-redis/redis.yaml` |
-| [messaging-kafka](./messaging-kafka) | `wasi-messaging` pub/sub + req/rep on Kafka | `examples/messaging-kafka/kafka.yaml` |
-| [messaging-nats](./messaging-nats) | `wasi-messaging` pub/sub + req/rep on NATS | `examples/messaging-nats/nats.yaml` |
-| [otel](./otel) | `wasi-otel` spans/metrics demo | `docker/otelcol.yaml` |
-| [sql-postgres](./sql-postgres) | `wasi-sql` with Postgres | `examples/sql-postgres/postgres.yaml` |
-| [vault](./vault) | `wasi-vault` basics | _none_ |
-| [vault-azure](./vault-azure) | `wasi-vault` with Azure Key Vault | `examples/vault-azure/azurekv.yaml` |
-| [websockets](./websockets) | `wasi-websockets` server | `docker/otelcol.yaml` |
+| [http](./http) | Basic HTTP server | WASI HTTP handler, Axum routing, JSON responses |
+| [keyvalue](./keyvalue) | In-memory key-value storage | WASI KeyValue store API |
+| [blobstore](./blobstore) | In-memory blob storage | WASI Blobstore API |
+| [vault](./vault) | In-memory secrets vault | WASI Vault API |
+| [identity](./identity) | Identity/auth basics | WASI Identity API |
 
-See the linked README in each row for endpoint paths and sample curl tests.
+### Intermediate
+
+These examples add observability, multiple endpoints, or external service backends.
+
+| Example | What it demonstrates | Compose file |
+| --- | --- | --- |
+| [otel](./otel) | Distributed tracing & metrics | `docker/otelcol.yaml` |
+| [websockets](./websockets) | WebSocket server | `docker/otelcol.yaml` |
+| [http-proxy](./http-proxy) | HTTP proxy with caching | _none_ |
+| [keyvalue-redis](./keyvalue-redis) | KeyValue with Redis backend | `examples/keyvalue-redis/redis.yaml` |
+| [keyvalue-nats](./keyvalue-nats) | KeyValue with NATS backend | `examples/keyvalue-nats/nats.yaml` |
+| [blobstore-mongodb](./blobstore-mongodb) | Blobstore with MongoDB | `examples/blobstore-mongodb/mongodb.yaml` |
+| [blobstore-nats](./blobstore-nats) | Blobstore with NATS | `examples/blobstore-nats/nats.yaml` |
+
+### Advanced
+
+These examples demonstrate complex patterns like pub/sub messaging, database operations, and cloud integrations.
+
+| Example | What it demonstrates | Compose file |
+| --- | --- | --- |
+| [sql-postgres](./sql-postgres) | SQL queries with Postgres | `examples/sql-postgres/postgres.yaml` |
+| [messaging-kafka](./messaging-kafka) | Pub/sub with Kafka (1000 msg fan-out) | `examples/messaging-kafka/kafka.yaml` |
+| [messaging-nats](./messaging-nats) | Pub/sub with NATS | `examples/messaging-nats/nats.yaml` |
+| [vault-azure](./vault-azure) | Secrets with Azure Key Vault | `examples/vault-azure/azurekv.yaml` |
+
+## Troubleshooting
+
+### Common Issues
+
+**Build fails with "target not found"**
+```bash
+rustup target add wasm32-wasip2
+```
+
+**Server won't start / port already in use**
+```bash
+# Find and kill the process using port 8080
+lsof -i :8080 | awk 'NR>1 {print $2}' | xargs kill
+```
+
+**Docker services not connecting**
+```bash
+# Check if services are running
+docker compose -f <compose-file> ps
+
+# View service logs
+docker compose -f <compose-file> logs
+```
+
+**WASM module panics at runtime**
+- Enable debug logging: `RUST_LOG=debug cargo run --example <name> -- run <wasm>`
+- Check that required environment variables are set (see `.env.example`)
+
+See the linked README in each example for specific endpoint paths and test commands.
 
