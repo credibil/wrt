@@ -1078,6 +1078,10 @@ criteria = "safe-to-deploy"
 version = "0.27.1"
 criteria = "safe-to-deploy"
 
+[[exemptions.simd-adler32]]
+version = "0.3.8"
+criteria = "safe-to-deploy"
+
 [[exemptions.siphasher]]
 version = "0.3.10"
 criteria = "safe-to-deploy"
