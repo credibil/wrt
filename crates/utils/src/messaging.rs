@@ -1,3 +1,4 @@
+#![cfg(not(target_arch = "wasm32"))]
 use credibil_error::Error;
 use tracing::{error, warn};
 
