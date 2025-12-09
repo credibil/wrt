@@ -25,6 +25,7 @@ curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://loca
 ## What It Does
 
 This example demonstrates:
+
 - Distributed tracing with OpenTelemetry
 - Metrics collection from WebAssembly guests
 - Integration with the OpenTelemetry Collector

@@ -17,6 +17,7 @@ curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://loca
 ## What It Does
 
 This example creates an HTTP endpoint that:
+
 - Accepts data via POST
 - Stores it in an in-memory key-value store
 - Retrieves it to verify the operation

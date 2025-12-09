@@ -28,9 +28,13 @@ curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://loca
 
 ## What It Does
 
-**Pub-Sub:** Subscribes to topic `a.v1` and republishes messages to topic `b.v1`. HTTP requests initiate publishing to `a.v1` and generate 100 messages to `b.v1`.
+### Pub-Sub
 
-**Request-Reply:** Sends a message to `req.v1` and waits for a reply on `rep.v1`. A subscriber listens on `req.v1` and replies to each message.
+Subscribes to topic `a.v1` and republishes messages to topic `b.v1`. HTTP requests initiate publishing to `a.v1` and generate 100 messages to `b.v1`.
+
+### Request-Reply
+
+Sends a message to `req.v1` and waits for a reply on `rep.v1`. A subscriber listens on `req.v1` and replies to each message.
 
 ## Cleanup
 
