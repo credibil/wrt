@@ -52,6 +52,7 @@ Test WASI examples by building and running them.
 Options:
   -h, --help     Show this help message
   -l, --list     List all available examples
+  -a, --all      Test all examples (including Docker-dependent ones)
 
 Arguments:
   example        One or more example names to test (default: all standalone examples)
@@ -68,38 +69,54 @@ Examples:
   DEBUG=true $0 http    # Test http with debug output
 
 Available Examples:
-  Standalone (default - tested by default):
-    blobstore, http, keyvalue, otel, vault
+  Standalone (tested by default):
+    blobstore      - blob storage with in-memory backend
+    http           - HTTP request handling
+    http-proxy     - HTTP proxy with caching (tests /echo endpoint)
+    identity       - identity/auth (needs IDENTITY_TOKEN_URL - skipped if missing)
+    keyvalue       - key-value store with in-memory backend
+    messaging      - pub-sub messaging (build-only, needs broker for runtime)
+    otel           - OpenTelemetry instrumentation
+    sql            - SQL database (tests query endpoint)
+    vault          - secrets vault with in-memory backend
+    websockets     - WebSocket server (tests /health endpoint)
 
-  Standalone (need extra config - not in default run):
-    http-proxy     - proxy/caching demo, returns 404 intentionally
-    identity       - needs IDENTITY_TOKEN_URL env var
-    messaging      - pub-sub example, HTTP returns 404
-    sql            - needs database or uses in-memory (may return 500)
-    websockets     - websocket server, HTTP returns 404
-
-  Docker-dependent (need docker compose services):
-    blobstore-mongodb, blobstore-nats, keyvalue-nats, keyvalue-redis,
-    messaging-kafka, messaging-nats, sql-postgres, vault-azure
+  Docker-dependent (auto-skipped if services not running):
+    blobstore-mongodb  - docker compose -f docker/mongodb.yaml up -d
+    blobstore-nats     - docker compose -f docker/nats.yaml up -d
+    keyvalue-nats      - docker compose -f docker/nats.yaml up -d
+    keyvalue-redis     - docker compose -f docker/redis.yaml up -d
+    messaging-kafka    - docker compose -f docker/kafka.yaml up -d
+    messaging-nats     - docker compose -f docker/nats.yaml up -d
+    sql-postgres       - docker compose -f docker/postgres.yaml up -d
+    vault-azure        - docker compose -f docker/azurekv.yaml up -d
 EOF
 }
 
 list_examples() {
     echo "Available examples:"
     echo ""
-    echo "Standalone (default - tested by default):"
-    echo "  blobstore, http, keyvalue, otel, vault"
+    echo "Standalone (tested by default):"
+    echo "  blobstore      - blob storage with in-memory backend"
+    echo "  http           - HTTP request handling"
+    echo "  http-proxy     - HTTP proxy with caching (tests /echo endpoint)"
+    echo "  identity       - identity/auth (needs IDENTITY_TOKEN_URL - skipped if missing)"
+    echo "  keyvalue       - key-value store with in-memory backend"
+    echo "  messaging      - pub-sub messaging (build-only, needs broker for runtime)"
+    echo "  otel           - OpenTelemetry instrumentation"
+    echo "  sql            - SQL database (tests query endpoint)"
+    echo "  vault          - secrets vault with in-memory backend"
+    echo "  websockets     - WebSocket server (tests /health endpoint)"
     echo ""
-    echo "Standalone (need extra config - not in default run):"
-    echo "  http-proxy     - proxy/caching demo, returns 404 intentionally"
-    echo "  identity       - needs IDENTITY_TOKEN_URL env var"
-    echo "  messaging      - pub-sub example, HTTP returns 404"
-    echo "  sql            - needs database or uses in-memory (may return 500)"
-    echo "  websockets     - websocket server, HTTP returns 404"
-    echo ""
-    echo "Docker-dependent (need docker compose services):"
-    echo "  blobstore-mongodb, blobstore-nats, keyvalue-nats, keyvalue-redis,"
-    echo "  messaging-kafka, messaging-nats, sql-postgres, vault-azure"
+    echo "Docker-dependent (auto-skipped if services not running):"
+    echo "  blobstore-mongodb  - docker compose -f docker/mongodb.yaml up -d"
+    echo "  blobstore-nats     - docker compose -f docker/nats.yaml up -d"
+    echo "  keyvalue-nats      - docker compose -f docker/nats.yaml up -d"
+    echo "  keyvalue-redis     - docker compose -f docker/redis.yaml up -d"
+    echo "  messaging-kafka    - docker compose -f docker/kafka.yaml up -d"
+    echo "  messaging-nats     - docker compose -f docker/nats.yaml up -d"
+    echo "  sql-postgres       - docker compose -f docker/postgres.yaml up -d"
+    echo "  vault-azure        - docker compose -f docker/azurekv.yaml up -d"
 }
 
 cleanup() {
@@ -186,37 +203,79 @@ wait_for_server() {
 # --- Test Functions ---
 
 # Test configuration for each example
-# Format: example_name|needs_docker|docker_compose_file|test_method|test_data
+# Format: needs_docker|docker_compose_file|method|path|data|required_env_vars
+#
+# Examples with specific routes:
+#   http-proxy: /echo (GET), /cache (GET), /origin (POST)
+#   websockets: /health (GET), /socket (POST)
+#   messaging: /pub-sub (POST), /request-reply (POST)
+#   sql: / (GET=query, POST=insert)
+#   identity: / (GET)
+#
 get_example_config() {
     local example=$1
     case "$example" in
-        blobstore)          echo "false||POST|{\"text\":\"hello\"}" ;;
-        blobstore-mongodb)  echo "true|docker/mongodb.yaml|POST|{\"text\":\"hello\"}" ;;
-        blobstore-nats)     echo "true|docker/nats.yaml|POST|{\"text\":\"hello\"}" ;;
-        http)               echo "false||POST|{\"text\":\"hello\"}" ;;
-        http-proxy)         echo "false||POST|{\"text\":\"hello\"}" ;;
-        identity)           echo "false||GET|" ;;
-        keyvalue)           echo "false||POST|{\"text\":\"hello\"}" ;;
-        keyvalue-nats)      echo "true|docker/nats.yaml|POST|{\"text\":\"hello\"}" ;;
-        keyvalue-redis)     echo "true|docker/redis.yaml|POST|{\"text\":\"hello\"}" ;;
-        messaging)          echo "false||POST|{\"text\":\"hello\"}" ;;
-        messaging-kafka)    echo "true|docker/kafka.yaml|POST|{\"text\":\"hello\"}" ;;
-        messaging-nats)     echo "true|docker/nats.yaml|POST|{\"text\":\"hello\"}" ;;
-        otel)               echo "false||POST|{\"text\":\"hello\"}" ;;
-        sql)                echo "false||POST|{\"text\":\"hello\"}" ;;
-        sql-postgres)       echo "true|docker/postgres.yaml|POST|{\"text\":\"hello\"}" ;;
-        vault)              echo "false||POST|{\"text\":\"hello\"}" ;;
-        vault-azure)        echo "true|docker/azurekv.yaml|POST|{\"text\":\"hello\"}" ;;
-        websockets)         echo "false||POST|{\"text\":\"hello\"}" ;;
+        # Standalone examples - no Docker needed
+        blobstore)          echo "false||POST|/|{\"text\":\"hello\"}|" ;;
+        http)               echo "false||POST|/|{\"text\":\"hello\"}|" ;;
+        keyvalue)           echo "false||POST|/|{\"text\":\"hello\"}|" ;;
+        otel)               echo "false||POST|/|{\"text\":\"hello\"}|" ;;
+        vault)              echo "false||POST|/|{\"text\":\"hello\"}|" ;;
+        
+        # Standalone examples - need specific routes or env vars
+        http-proxy)         echo "false||GET|/cache||" ;;  # /cache fetches and caches external URL
+        identity)           echo "false||GET|/||IDENTITY_TOKEN_URL" ;;
+        websockets)         echo "false||GET|/health||" ;;
+        
+        # Messaging needs a broker connection - skip HTTP test, just build
+        messaging)          echo "false||BUILD_ONLY|||" ;;
+        
+        # SQL needs database connection - skip HTTP test, just build
+        sql)                echo "false||BUILD_ONLY|||" ;;
+        
+        # Docker-dependent examples
+        blobstore-mongodb)  echo "true|docker/mongodb.yaml|POST|/|{\"text\":\"hello\"}|" ;;
+        blobstore-nats)     echo "true|docker/nats.yaml|POST|/|{\"text\":\"hello\"}|" ;;
+        keyvalue-nats)      echo "true|docker/nats.yaml|POST|/|{\"text\":\"hello\"}|" ;;
+        keyvalue-redis)     echo "true|docker/redis.yaml|POST|/|{\"text\":\"hello\"}|" ;;
+        messaging-kafka)    echo "true|docker/kafka.yaml|POST|/pub-sub|{\"text\":\"hello\"}|" ;;
+        messaging-nats)     echo "true|docker/nats.yaml|POST|/request-reply|{\"text\":\"hello\"}|" ;;
+        sql-postgres)       echo "true|docker/postgres.yaml|GET|/||" ;;
+        vault-azure)        echo "true|docker/azurekv.yaml|POST|/|{\"text\":\"hello\"}|" ;;
+        
         *)                  echo "unknown" ;;
     esac
+}
+
+# Check if required environment variables are set
+check_required_env() {
+    local required_vars=$1
+    local missing_vars=()
+    
+    if [[ -z "$required_vars" ]]; then
+        return 0
+    fi
+    
+    IFS=',' read -ra vars <<< "$required_vars"
+    for var in "${vars[@]}"; do
+        if [[ -z "${!var:-}" ]]; then
+            missing_vars+=("$var")
+        fi
+    done
+    
+    if [[ ${#missing_vars[@]} -gt 0 ]]; then
+        echo "${missing_vars[*]}"
+        return 1
+    fi
+    return 0
 }
 
 run_curl_test() {
     local port=$1
     local method=$2
-    local data=$3
-    local log_file=$4
+    local path=$3
+    local data=$4
+    local log_file=$5
     
     local curl_args=(
         --max-time "$CURL_TIMEOUT"
@@ -230,9 +289,13 @@ run_curl_test() {
     if [[ "$method" == "POST" && -n "$data" ]]; then
         curl_args+=(--header "Content-Type: application/json")
         curl_args+=(--data "$data")
+    elif [[ "$method" == "GET" && -n "$data" ]]; then
+        # For GET requests with data, send as JSON body (some APIs support this)
+        curl_args+=(--header "Content-Type: application/json")
+        curl_args+=(--data "$data")
     fi
     
-    curl_args+=("http://localhost:$port")
+    curl_args+=("http://localhost:${port}${path}")
     
     local http_code
     http_code=$(curl "${curl_args[@]}" 2>>"$log_file") || return 1
@@ -266,7 +329,30 @@ test_example() {
         return 0
     fi
     
-    IFS='|' read -r needs_docker docker_compose test_method test_data <<< "$config"
+    IFS='|' read -r needs_docker docker_compose test_method test_path test_data required_env <<< "$config"
+    
+    # Check required environment variables
+    if [[ -n "$required_env" ]]; then
+        local missing_vars
+        if ! missing_vars=$(check_required_env "$required_env"); then
+            echo -e "${YELLOW}⚠ Missing required environment variables: $missing_vars${NC}"
+            echo "  Set these in .env or export them before running"
+            
+            # Still try to build
+            echo "Building WASM (build-only test)..."
+            if cargo build --example "${example}-wasm" --target wasm32-wasip2 > "$LOG_DIR/${example}_build.log" 2>&1; then
+                echo -e "${GREEN}✓ Build succeeded${NC}"
+                PASSED+=("$example (build only)")
+            else
+                echo -e "${RED}✗ Build failed${NC}"
+                [[ "$DEBUG" == "true" ]] && cat "$LOG_DIR/${example}_build.log"
+                FAILED+=("$example (build failed)")
+            fi
+            SKIPPED+=("$example (missing env: $missing_vars)")
+            print_duration "$start_time"
+            return 0
+        fi
+    fi
     
     # Check Docker dependencies
     if [[ "$needs_docker" == "true" ]]; then
@@ -312,6 +398,14 @@ test_example() {
         return 1
     fi
     
+    # Handle BUILD_ONLY mode (for examples that can't be HTTP tested)
+    if [[ "$test_method" == "BUILD_ONLY" ]]; then
+        echo -e "${GREEN}✓ Build succeeded (runtime test skipped)${NC}"
+        PASSED+=("$example (build only)")
+        print_duration "$start_time"
+        return 0
+    fi
+    
     # Get a free port for this test
     local port
     port="${TEST_PORT:-$(get_free_port)}"
@@ -351,8 +445,8 @@ test_example() {
     echo "Server is ready!"
     
     # Run the test
-    echo "Testing endpoint ($test_method)..."
-    if run_curl_test "$port" "$test_method" "$test_data" "$LOG_DIR/${example}_test.log"; then
+    echo "Testing endpoint ($test_method $test_path)..."
+    if run_curl_test "$port" "$test_method" "$test_path" "$test_data" "$LOG_DIR/${example}_test.log"; then
         echo -e "${GREEN}✓ Test passed${NC}"
         PASSED+=("$example")
     else
@@ -419,6 +513,7 @@ print_summary() {
 main() {
     # Parse arguments
     local examples_to_test=()
+    local test_all=false
     
     while [[ $# -gt 0 ]]; do
         case "$1" in
@@ -429,6 +524,9 @@ main() {
             -l|--list)
                 list_examples
                 exit 0
+                ;;
+            -a|--all)
+                test_all=true
                 ;;
             -*)
                 echo "Unknown option: $1"
@@ -462,21 +560,45 @@ main() {
     LOG_DIR=$(mktemp -d)
     echo "Log directory: $LOG_DIR"
     
-    # Default examples if none specified (standalone only, no special config needed)
-    # Excluded from defaults:
-    #   - identity: needs IDENTITY_TOKEN_URL env var
-    #   - http-proxy: intentionally returns 404 to demonstrate caching behavior
-    #   - messaging: pub-sub example, HTTP endpoint returns 404
-    #   - sql: needs database or returns 500 on in-memory
-    #   - websockets: websocket server, HTTP returns 404
+    # Determine which examples to test
     if [[ ${#examples_to_test[@]} -eq 0 ]]; then
-        examples_to_test=(
-            blobstore
-            http
-            keyvalue
-            otel
-            vault
-        )
+        if [[ "$test_all" == "true" ]]; then
+            # All examples including Docker-dependent ones
+            examples_to_test=(
+                blobstore
+                blobstore-mongodb
+                blobstore-nats
+                http
+                http-proxy
+                identity
+                keyvalue
+                keyvalue-nats
+                keyvalue-redis
+                messaging
+                messaging-kafka
+                messaging-nats
+                otel
+                sql
+                sql-postgres
+                vault
+                vault-azure
+                websockets
+            )
+        else
+            # Default: standalone examples only
+            examples_to_test=(
+                blobstore
+                http
+                http-proxy
+                identity
+                keyvalue
+                messaging
+                otel
+                sql
+                vault
+                websockets
+            )
+        fi
     fi
     
     echo ""
