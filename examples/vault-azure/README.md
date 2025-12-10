@@ -9,11 +9,13 @@ Demonstrates `wasi-vault` backed by Azure Key Vault for secure secret storage.
 
 ## Quick Start
 
-1. Copy `.env.example` to `.env` and configure Azure credentials
-2. Run the example:
-
 ```bash
-./scripts/run-example.sh vault-azure
+# build the guest
+cargo build --example vault-azure-wasm --target wasm32-wasip2
+
+# run the host
+set -a && source .env && set +a
+cargo run --example vault-azure -- run ./target/wasm32-wasip2/debug/examples/vault_azure_wasm.wasm
 ```
 
 ## Test

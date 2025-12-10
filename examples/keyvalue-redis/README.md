@@ -13,7 +13,12 @@ docker compose -f examples/keyvalue-redis/redis.yaml up -d
 ## Quick Start
 
 ```bash
-./scripts/run-example.sh keyvalue-redis
+# build the guest
+cargo build --example keyvalue-redis-wasm --target wasm32-wasip2
+
+# run the host
+set -a && source .env && set +a
+cargo run --example keyvalue-redis -- run ./target/wasm32-wasip2/debug/examples/keyvalue_redis_wasm.wasm
 ```
 
 ## Test

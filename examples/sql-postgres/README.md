@@ -13,7 +13,12 @@ docker compose -f examples/sql-postgres/postgres.yaml up -d
 ## Quick Start
 
 ```bash
-./scripts/run-example.sh sql-postgres
+# build the guest
+cargo build --example sql-postgres-wasm --target wasm32-wasip2
+
+# run the host
+set -a && source .env && set +a
+cargo run --example sql-postgres -- run ./target/wasm32-wasip2/debug/examples/sql_postgres_wasm.wasm
 ```
 
 ## Test

@@ -13,7 +13,12 @@ docker compose -f examples/messaging-kafka/kafka.yaml up -d
 ## Quick Start
 
 ```bash
-./scripts/run-example.sh messaging-kafka
+# build the guest
+cargo build --example messaging-kafka-wasm --target wasm32-wasip2
+
+# run the host
+set -a && source .env && set +a
+cargo run --example messaging-kafka -- run ./target/wasm32-wasip2/debug/examples/messaging_kafka_wasm.wasm
 ```
 
 ## Test

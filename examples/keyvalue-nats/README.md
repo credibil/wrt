@@ -13,7 +13,12 @@ docker compose -f examples/keyvalue-nats/nats.yaml up -d
 ## Quick Start
 
 ```bash
-./scripts/run-example.sh keyvalue-nats
+# build the guest
+cargo build --example keyvalue-nats-wasm --target wasm32-wasip2
+
+# run the host
+set -a && source .env && set +a
+cargo run --example keyvalue-nats -- run ./target/wasm32-wasip2/debug/examples/keyvalue_nats_wasm.wasm
 ```
 
 ## Test

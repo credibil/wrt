@@ -10,7 +10,12 @@ This example shows how to:
 ## Quick Start
 
 ```bash
-./scripts/run-example.sh http-proxy
+# build the guest
+cargo build --example http-proxy-wasm --target wasm32-wasip2
+
+# run the host
+set -a && source .env && set +a
+cargo run --example http-proxy -- run ./target/wasm32-wasip2/debug/examples/http_proxy_wasm.wasm
 ```
 
 ## Test

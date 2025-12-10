@@ -13,7 +13,12 @@ docker compose -f examples/messaging-nats/nats.yaml up -d
 ## Quick Start
 
 ```bash
-./scripts/run-example.sh messaging-nats
+# build the guest
+cargo build --example messaging-nats-wasm --target wasm32-wasip2
+
+# run the host
+set -a && source .env && set +a
+cargo run --example messaging-nats -- run ./target/wasm32-wasip2/debug/examples/messaging_nats_wasm.wasm
 ```
 
 ## Test

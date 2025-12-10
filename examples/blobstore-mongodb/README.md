@@ -13,7 +13,12 @@ docker compose -f examples/blobstore-mongodb/mongodb.yaml up -d
 ## Quick Start
 
 ```bash
-./scripts/run-example.sh blobstore-mongodb
+# build the guest
+cargo build --example blobstore-mongodb-wasm --target wasm32-wasip2
+
+# run the host
+set -a && source .env && set +a
+cargo run --example blobstore-mongodb -- run ./target/wasm32-wasip2/debug/examples/blobstore_mongodb_wasm.wasm
 ```
 
 ## Test

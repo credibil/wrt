@@ -5,7 +5,12 @@ Demonstrates `wasi-sql` using the default (in-memory) implementation.
 ## Quick Start
 
 ```bash
-./scripts/run-example.sh sql
+# build the guest
+cargo build --example sql-wasm --target wasm32-wasip2
+
+# run the host
+set -a && source .env && set +a
+cargo run --example sql -- run ./target/wasm32-wasip2/debug/examples/sql_wasm.wasm
 ```
 
 ## Test

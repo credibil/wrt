@@ -23,15 +23,11 @@ use wasi_http::Result;
 use wasip3::exports::http::handler::Guest;
 use wasip3::http::types::{ErrorCode, Request, Response};
 
-/// The guest struct that implements the WASI HTTP handler interface.
-///
-/// This struct serves as the entry point for all HTTP requests. The host
-/// runtime calls `HttpGuest::handle()` for each incoming request.
 struct HttpGuest;
 
-/// This macro generates the WebAssembly exports required by the WASI HTTP
-/// interface. It creates the necessary FFI glue code so the host can invoke
-/// our `Guest` implementation.
+// This macro generates the WebAssembly exports required by the WASI HTTP
+// interface. It creates the necessary FFI glue code so the host can invoke
+// our `Guest` implementation.
 wasip3::http::proxy::export!(HttpGuest);
 
 impl Guest for HttpGuest {
