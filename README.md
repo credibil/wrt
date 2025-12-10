@@ -24,7 +24,8 @@ running each example can be found in the respective README files.
 export CARGO_REGISTRIES_CREDIBIL_TOKEN="<registry token>"
 
 docker build \
-  --build-arg FEATURES="realtime-websockets" \
+  --build-arg BIN="websockets" \
+  --build-arg FEATURES="websockets-default" \
   --secret id=credibil,env=CARGO_REGISTRIES_CREDIBIL_TOKEN \
-  --tag ghcr.io/credibil/realtime-websockets .
+  --tag ghcr.io/credibil/websockets .
 ```

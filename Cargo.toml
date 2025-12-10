@@ -50,8 +50,19 @@ name = "realtime-http"
 path = "src/realtime-http.rs"
 required-features = ["http", "keyvalue", "otel", "opentelemetry", "redis"]
 
+[[bin]]
+name = "websockets"
+path = "src/websockets.rs"
+required-features = [
+    "http",
+    "messaging",
+    "otel",
+    "websockets",
+]
+
 [features]
 default = ["jit", "http"]
+websockets-default = ["http", "kafka", "messaging", "otel", "websockets"]
 
 # WASI components (not intended to be used directly)
 blobstore = ["dep:wasi-blobstore"]
