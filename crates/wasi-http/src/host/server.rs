@@ -37,8 +37,11 @@ where
     let listener = TcpListener::bind(&addr).await?;
     tracing::info!("http server listening on: {}", listener.local_addr()?);
 
+    let service = std::env::var("COMPONENT").unwrap_or_else(|_| "unknown".into());
+
     let handler = Handler {
         state: Arc::new(state.clone()),
+        service,
     };
 
     // listen for requests until terminated
@@ -60,6 +63,28 @@ where
                         async move {
                             let response =
                                 handler.handle(request).await.unwrap_or_else(|_e| internal_error());
+                            match response.status().as_u16() {
+                                500..=599 => {
+                                    tracing::error!(
+                                        monotonic_counter.application_errors = 1,
+                                        service = %handler.service,
+                                        "server error response: {:?}", response
+                                    );
+                                }
+                                400..=499 => {
+                                    tracing::warn!(
+                                        monotonic_counter.client_errors = 1,
+                                        service = %handler.service,
+                                        "client error response: {:?}", response);
+                                }
+                                _ => {
+                                    tracing::info!(
+                                        monotonic_counter.successful_requests = 1,
+                                        service = %handler.service,
+                                        "response: {:?}", response
+                                    );
+                                }
+                            }
                             Ok::<_, Infallible>(response)
                         }
                     }),
@@ -79,6 +104,7 @@ where
     S::StoreCtx: WasiHttpView,
 {
     state: Arc<S>,
+    service: String,
 }
 
 impl<S> Handler<S>

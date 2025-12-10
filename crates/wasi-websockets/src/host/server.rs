@@ -52,6 +52,46 @@ pub async fn service_client() -> &'static Mutex<WebSocketStream<MaybeTlsStream<T
         .await
 }
 
+/// Send a message to specified peers or all connected peers
+/// Accepts a JSON string representing a `PublishMessage`
+/// with a peers field (comma-separated list of peer addresses or "all")
+/// and a content field (the message to send)
+pub fn send_socket_message(message: &str) -> Result<()> {
+    let message: PublishMessage = match serde_json::from_str(message) {
+        Ok(m) => m,
+        Err(e) => {
+            tracing::warn!("Failed to parse message: {}", e);
+            return Ok(());
+        }
+    };
+    let peer_map = get_peer_map()?;
+    let peers = peer_map.lock().unwrap();
+    let recipients = if message.peers == "all" {
+        peers.values().collect::<Vec<&PeerInfo>>()
+    } else {
+        let target_peers: Vec<SocketAddr> =
+            message.peers.split(',').filter_map(|s| s.parse().ok()).collect();
+        let mut filtered_peers: Vec<&PeerInfo> = Vec::new();
+        for addr in &target_peers {
+            if let Some(peer_info) = peers.get(addr) {
+                filtered_peers.push(peer_info);
+            }
+        }
+        filtered_peers
+    };
+
+    for recp in recipients {
+        if recp.is_service {
+            // skip service peers
+            continue;
+        }
+        // we don't really care about the send errors here
+        let _ = recp.sender.unbounded_send(Message::Text(Utf8Bytes::from(message.content.clone())));
+    }
+
+    Ok(())
+}
+
 /// Accept a new websocket connection
 #[allow(clippy::significant_drop_tightening)]
 async fn accept_connection(
@@ -75,40 +115,9 @@ async fn accept_connection(
         if is_service {
             if Message::Ping(Bytes::new()) == msg {
                 tracing::info!("Received ping from service peer {}", peer);
-                return future::ok(());
             }
-            tracing::info!(
-                "Received a message from service peer {}: {}",
-                peer,
-                msg.to_text().unwrap()
-            );
-            let message: PublishMessage = match serde_json::from_str(msg.to_text().unwrap()) {
-                Ok(m) => m,
-                Err(e) => {
-                    tracing::warn!("Failed to parse message from service client: {}", e);
-                    return future::ok(());
-                }
-            };
-            let peers = peer_map.lock().unwrap();
-            let recipients = if message.peers == "all" {
-                peers.values().collect::<Vec<&PeerInfo>>()
-            } else {
-                let target_peers: Vec<SocketAddr> =
-                    message.peers.split(',').filter_map(|s| s.parse().ok()).collect();
-                let mut filtered_peers: Vec<&PeerInfo> = Vec::new();
-                for addr in &target_peers {
-                    if let Some(peer_info) = peers.get(addr) {
-                        filtered_peers.push(peer_info);
-                    }
-                }
-                filtered_peers
-            };
-
-            for recp in recipients {
-                recp.sender
-                    .unbounded_send(Message::Text(Utf8Bytes::from(message.content.clone())))
-                    .unwrap();
-            }
+            // Ignore all other messages from service peers
+            return future::ok(());
         } else if let Message::Text(text) = msg {
             // Handle client filter subscription
             let json_msg: Result<serde_json::Value, _> = serde_json::from_str(&text);
@@ -192,7 +201,6 @@ async fn handle_request(
     Ok(res)
 }
 
-#[allow(clippy::missing_panics_doc)]
 #[allow(clippy::missing_errors_doc)]
 pub async fn run_server<S>(_: &S) -> Result<()>
 where

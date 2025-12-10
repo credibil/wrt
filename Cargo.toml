@@ -35,8 +35,19 @@ name = "realtime-http"
 path = "src/realtime-http.rs"
 required-features = ["http", "keyvalue", "otel", "opentelemetry", "redis"]
 
+[[bin]]
+name = "websockets"
+path = "src/websockets.rs"
+required-features = [
+    "http",
+    "messaging",
+    "otel",
+    "websockets",
+]
+
 [features]
 default = ["jit", "http"]
+websockets-default = ["http", "kafka", "messaging", "otel", "websockets"]
 
 # WASI components (not intended to be used directly)
 blobstore = ["dep:wasi-blobstore"]
@@ -234,6 +245,7 @@ wit-bindgen = { version = "0.49.0", features = ["async-spawn"] }
 # credibil registry
 credibil-encoding = { version = "0.6.0", registry = "credibil" }
 credibil-otel = { version = "0.6.0", registry = "credibil" }
+credibil-error = { version = "0.6.0", registry = "credibil" }
 
 # interally referenced crates
 be-azure = { path = "crates/be-azure", version = "0.19.0", registry = "credibil" }
@@ -245,6 +257,7 @@ be-postgres = { path = "crates/be-postgres", version = "0.19.0", registry = "cre
 be-redis = { path = "crates/be-redis", version = "0.19.0", registry = "credibil" }
 buildgen = { path = "crates/buildgen", version = "0.19.0" }
 kernel = { path = "crates/kernel", version = "0.19.0", registry = "credibil" }
+utils = { path = "crates/utils", version = "0.19.0", registry = "credibil" }
 wasi-blobstore = { path = "crates/wasi-blobstore", version = "0.19.0", registry = "credibil" }
 wasi-http = { path = "crates/wasi-http", version = "0.19.0", registry = "credibil" }
 wasi-identity = { path = "crates/wasi-identity", version = "0.19.0", registry = "credibil" }
