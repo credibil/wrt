@@ -2561,6 +2561,8 @@ dependencies = [
  "credibil-otel",
  "fromenv",
  "futures",
+ "serde",
+ "serde_json",
  "tokio",
  "tracing",
  "wasmtime",
