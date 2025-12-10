@@ -55,10 +55,10 @@ impl Guest for Http {
         // =====================================================================
         // The `tracing` crate supports metrics via special field prefixes.
         // These are automatically exported as OpenTelemetry metrics.
-        
+
         // Monotonic counter: always increases (good for request counts, errors)
         tracing::info!(monotonic_counter.tracing_counter = 1, key1 = "value 1");
-        
+
         // Gauge: current value that can go up or down (connections, queue size)
         tracing::info!(gauge.tracing_gauge = 1);
 
@@ -66,10 +66,10 @@ impl Guest for Http {
         // OPENTELEMETRY METRICS API
         // =====================================================================
         // Direct access to the OTel metrics API for more control.
-        
+
         // Get a meter (named metric producer)
         let meter = global::meter("my_meter");
-        
+
         // Create and increment a counter with attributes
         let counter = meter.u64_counter("otel_counter").build();
         counter.add(1, &[KeyValue::new("key1", "value 1")]);
@@ -78,19 +78,19 @@ impl Guest for Http {
         // OPENTELEMETRY SPANS
         // =====================================================================
         // Spans represent timed operations in a distributed trace.
-        
+
         // Get a tracer (named span producer)
         let tracer = global::tracer("basic");
-        
+
         // Create a span for a logical operation
         tracer.in_span("main-operation", |cx| {
             // Access the current span from the context
             let span = cx.span();
-            
+
             // Attributes: key-value metadata about the operation
             // Use for things like user IDs, request parameters, etc.
             span.set_attribute(KeyValue::new("my-attribute", "my-value"));
-            
+
             // Events: timestamped log entries within the span
             // Use for significant moments (cache hit, retry, etc.)
             span.add_event("main span event", vec![KeyValue::new("foo", "1")]);
@@ -118,7 +118,7 @@ impl Guest for Http {
         tracing::info_span!("handler span")
             .in_scope(|| {
                 tracing::info!("received request");
-                
+
                 // Build router with CORS support for browser testing
                 let router = Router::new()
                     .layer(
@@ -129,7 +129,7 @@ impl Guest for Http {
                     )
                     .route("/", post(handler))
                     .route("/", options(handle_options));
-                    
+
                 wasi_http::serve(router, request)
             })
             .await
