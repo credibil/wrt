@@ -29,7 +29,6 @@ impl kernel::FromEnv for ConnectOptions {
 
 #[derive(Debug, Clone)]
 pub struct WasiBlobstoreCtxImpl {
-    // Using Arc for shared state across instances
     store: Arc<parking_lot::RwLock<HashMap<String, InMemoryContainer>>>,
 }
 

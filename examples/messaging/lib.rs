@@ -1,3 +1,26 @@
+//! # Messaging Guest Module (Default Backend)
+//!
+//! This module demonstrates the WASI Messaging interface with the default
+//! (in-memory) backend. It shows the same patterns as the Kafka and NATS
+//! examples but without requiring external services.
+//!
+//! ## Two Interfaces
+//!
+//! This guest implements two WASI interfaces:
+//! 1. **HTTP Handler**: Exposes REST endpoints to trigger messaging operations
+//! 2. **Messaging Handler**: Processes incoming messages from subscribed topics
+//!
+//! ## Patterns Demonstrated
+//!
+//! - **Pub-Sub**: Publish messages to topics, receive via subscription
+//! - **Request-Reply**: Send message and wait for response
+//! - **Fan-out**: Receive one message, produce many
+//!
+//! ## Note
+//!
+//! This example uses the default backend for pub-sub but references "nats"
+//! for request-reply. In production, use consistent client names.
+
 #![cfg(target_arch = "wasm32")]
 
 use std::thread::sleep;
@@ -13,19 +36,35 @@ use wasi_messaging::{producer, request_reply};
 use wasip3::exports::http::handler::Guest;
 use wasip3::http::types::{ErrorCode, Request, Response};
 
+// =============================================================================
+// HTTP Interface
+// =============================================================================
+
+/// HTTP handler struct for REST endpoint access to messaging.
 pub struct Http;
+
+/// Export the HTTP handler for the WASI runtime.
 wasip3::http::proxy::export!(Http);
 
 impl Guest for Http {
+    /// Routes HTTP requests to messaging operations.
+    ///
+    /// - `POST /pub-sub`: Publish a message (triggers fan-out)
+    /// - `POST /request-reply`: Send message and wait for reply
     #[wasi_otel::instrument]
     async fn handle(request: Request) -> Result<Response, ErrorCode> {
         let router = Router::new()
             .route("/pub-sub", post(pub_sub))
-            .route("/request-reply", post(request_reply));
+            .route("/request-reply", post(request_reply_handler));
         wasi_http::serve(router, request).await
     }
 }
 
+/// Publish a message using the pub-sub pattern.
+///
+/// Creates a message with content-type and metadata, then publishes
+/// it to topic "a". The incoming message handler will receive this
+/// and fan out to topic "b".
 async fn pub_sub(Json(body): Json<Value>) -> Result<Json<Value>> {
     let client = Client::connect("kafka").unwrap();
 
@@ -33,8 +72,6 @@ async fn pub_sub(Json(body): Json<Value>) -> Result<Json<Value>> {
     message.set_content_type("application/json");
     message.add_metadata("key", "example_key");
 
-    // TODO: really want spawn here but handler returns and the guest is
-    // dropped before the async task completes. Needs investigation.
     wit_bindgen::block_on(async move {
         if let Err(e) = producer::send(&client, "a".to_string(), message).await {
             tracing::error!("error sending message to topic 'a': {e}");
@@ -45,7 +82,11 @@ async fn pub_sub(Json(body): Json<Value>) -> Result<Json<Value>> {
     Ok(Json(json!({"message": "message published"})))
 }
 
-async fn request_reply(body: Bytes) -> Json<Value> {
+/// Send a message and wait for a reply.
+///
+/// Demonstrates the request-reply pattern where the caller
+/// blocks until a response is received.
+async fn request_reply_handler(body: Bytes) -> Json<Value> {
     let client = Client::connect("nats").unwrap();
     let message = Message::new(&body);
     let reply = wit_bindgen::block_on(async move {
@@ -53,17 +94,29 @@ async fn request_reply(body: Bytes) -> Json<Value> {
     })
     .expect("should reply");
 
-    // process first reply
     let data = reply[0].data();
     let data_str = String::from_utf8_lossy(&data);
 
     Json(json!({"reply": data_str}))
 }
 
+// =============================================================================
+// Messaging Interface
+// =============================================================================
+
+/// Messaging handler struct for processing incoming messages.
 pub struct Messaging;
+
+/// Export the messaging handler for the WASI runtime.
 wasi_messaging::export!(Messaging with_types_in wasi_messaging);
 
 impl wasi_messaging::incoming_handler::Guest for Messaging {
+    /// Handle incoming messages from subscribed topics.
+    ///
+    /// Routes messages based on topic:
+    /// - `"a"`: Fan-out 1000 messages to topic "b"
+    /// - `"b"`: Log receipt
+    /// - `"c"`: Send reply (for request-reply pattern)
     async fn handle(message: Message) -> anyhow::Result<(), Error> {
         tracing::debug!("start processing msg");
 
@@ -74,7 +127,6 @@ impl wasi_messaging::incoming_handler::Guest for Messaging {
             "a" => {
                 tracing::debug!("handling topic a");
 
-                // send message to topic `b`
                 let mut resp = b"topic a says: ".to_vec();
                 resp.extend(message.data());
 
@@ -88,7 +140,7 @@ impl wasi_messaging::incoming_handler::Guest for Messaging {
 
                 let timer = Instant::now();
 
-                // use `spawn` to avoid blocking for non-blocking execution
+                // Fan-out: spawn 1000 concurrent message sends.
                 for i in 0..1000 {
                     wit_bindgen::spawn(async move {
                         tracing::debug!("sending message iteration {i}");
@@ -106,9 +158,7 @@ impl wasi_messaging::incoming_handler::Guest for Messaging {
                         }
                         tracing::debug!("message iteration {i} sent");
 
-                        // HACK: yield to host
                         if i % 100 == 0 {
-                            // wit_bindgen::yield_async().await;
                             sleep(Duration::from_nanos(1));
                             println!("sent 100 messages");
                         }
@@ -126,7 +176,6 @@ impl wasi_messaging::incoming_handler::Guest for Messaging {
                     .map_err(|e| Error::Other(format!("not utf8: {e}")))?;
                 tracing::debug!("message received on topic 'c': {data_str}");
 
-                // reply
                 let mut resp = b"Hello from topic c: ".to_vec();
                 resp.extend(data);
 

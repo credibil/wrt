@@ -13,7 +13,12 @@ docker compose -f docker/otelcol.yaml up -d
 ## Quick Start
 
 ```bash
-./scripts/run-example.sh otel
+# build the guest
+cargo build --example otel-wasm --target wasm32-wasip2
+
+# run the host
+set -a && source .env && set +a
+cargo run --example otel -- run ./target/wasm32-wasip2/debug/examples/otel_wasm.wasm
 ```
 
 ## Test
@@ -25,6 +30,7 @@ curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://loca
 ## What It Does
 
 This example demonstrates:
+
 - Distributed tracing with OpenTelemetry
 - Metrics collection from WebAssembly guests
 - Integration with the OpenTelemetry Collector

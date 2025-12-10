@@ -3,6 +3,7 @@
 Demonstrates an HTTP proxy using `wasi-http` with a `wasi-keyvalue` caching layer.
 
 This example shows how to:
+
 - Make outgoing HTTP requests from within a WASI guest
 - Implement response caching with `Cache-Control` headers
 - Use ETags for cache validation
@@ -10,7 +11,12 @@ This example shows how to:
 ## Quick Start
 
 ```bash
-./scripts/run-example.sh http-proxy
+# build the guest
+cargo build --example http-proxy-wasm --target wasm32-wasip2
+
+# run the host
+set -a && source .env && set +a
+cargo run --example http-proxy -- run ./target/wasm32-wasip2/debug/examples/http_proxy_wasm.wasm
 ```
 
 ## Test
@@ -24,14 +30,14 @@ curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://loca
 Use the [Cache-Control] header to influence the use of a pass-through cache. The following
 directives are currently supported:
 
-* `no-cache` - make a request to the resource and then cache the result for future requests.
+- `no-cache` - make a request to the resource and then cache the result for future requests.
   Usually used alongside `max-age` for key-value stores that support ttl.
 
-* `no-store` - make a request to the resource and do not update the cache. This has the same
+- `no-store` - make a request to the resource and do not update the cache. This has the same
   effect as leaving out the `Cache-Control` header altogether. No other directive can be used with
   this one otherwise an error will be returned.
 
-* `max-age=n` - try the cache first and return the result if it exists. If the record doesn't
+- `max-age=n` - try the cache first and return the result if it exists. If the record doesn't
   exist, go to the resource then cache the result with an expiry of now plus *n* seconds (for
   key-value stores that support ttl).
 

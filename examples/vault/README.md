@@ -5,7 +5,12 @@ Demonstrates `wasi-vault` using the default (in-memory) implementation for secur
 ## Quick Start
 
 ```bash
-./scripts/run-example.sh vault
+# build the guest
+cargo build --example vault-wasm --target wasm32-wasip2
+
+# run the host
+set -a && source .env && set +a
+cargo run --example vault -- run ./target/wasm32-wasip2/debug/examples/vault_wasm.wasm
 ```
 
 ## Test

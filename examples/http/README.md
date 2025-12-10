@@ -5,7 +5,12 @@ Demonstrates a basic HTTP server using `wasi-http` with GET and POST endpoints.
 ## Quick Start
 
 ```bash
-./scripts/run-example.sh http
+# build the guest
+cargo build --example http-wasm --target wasm32-wasip2
+
+# run the host
+set -a && source .env && set +a
+cargo run --example http -- run ./target/wasm32-wasip2/debug/examples/http_wasm.wasm
 ```
 
 ## Test

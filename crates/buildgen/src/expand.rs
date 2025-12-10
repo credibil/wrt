@@ -9,39 +9,25 @@ use crate::generate::Generated;
 
 pub fn expand(generated: Generated) -> TokenStream {
     let Generated {
-        generate_main,
         context_fields,
         store_ctx_fields,
         store_ctx_values,
         host_trait_impls,
         server_trait_impls,
         wasi_view_impls,
+        main_fn,
     } = generated;
-
-    let main_fn = if generate_main {
-        quote! {
-            #[tokio::main]
-            async fn main() -> anyhow::Result<()> {
-                use kernel::Parser;
-                match kernel::Cli::parse().command {
-                    kernel::Command::Run { wasm } => runtime::run(wasm).await,
-                    _ => unreachable!(),
-                }
-            }
-        }
-    } else {
-        quote! {}
-    };
 
     quote! {
         mod runtime {
             use super::*;
 
-            use anyhow::Context as _;
-            use futures::future::{BoxFuture, try_join_all};
+            use kernel::anyhow::Context as _;
+            use kernel::futures::future::{BoxFuture, try_join_all};
+            use kernel::tokio;
+            use kernel::wasmtime::component::InstancePre;
+            use kernel::wasmtime_wasi;
             use kernel::{Backend, Server};
-            use wasmtime_wasi::{WasiCtxBuilder, ResourceTable};
-            use wasmtime::component::InstancePre;
 
             /// Run the specified wasm guest using the configured runtime.
             pub async fn run(wasm: std::path::PathBuf) -> anyhow::Result<()> {
@@ -94,7 +80,7 @@ pub fn expand(generated: Generated) -> TokenStream {
                 }
 
                 fn store(&self) -> Self::StoreCtx {
-                    let wasi_ctx = WasiCtxBuilder::new()
+                    let wasi_ctx = wasmtime_wasi::WasiCtxBuilder::new()
                         .inherit_args()
                         .inherit_env()
                         .inherit_stdin()
@@ -103,7 +89,7 @@ pub fn expand(generated: Generated) -> TokenStream {
                         .build();
 
                     StoreCtx {
-                        table: ResourceTable::new(),
+                        table: wasmtime_wasi::ResourceTable::new(),
                         wasi: wasi_ctx,
                         #(#store_ctx_values,)*
                     }

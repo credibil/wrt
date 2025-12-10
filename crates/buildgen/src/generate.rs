@@ -7,13 +7,13 @@ use syn::{Ident, Type};
 use crate::parse::BuildInput;
 
 pub struct Generated {
-    pub generate_main: bool,
     pub context_fields: Vec<TokenStream>,
     pub store_ctx_fields: Vec<TokenStream>,
     pub store_ctx_values: Vec<TokenStream>,
     pub host_trait_impls: Vec<Type>,
     pub server_trait_impls: Vec<TokenStream>,
     pub wasi_view_impls: Vec<TokenStream>,
+    pub main_fn: TokenStream,
 }
 
 impl TryFrom<BuildInput> for Generated {
@@ -32,7 +32,7 @@ impl TryFrom<BuildInput> for Generated {
             }
             seen_backends.insert(backend_str);
 
-            let field = field_name(&backend);
+            let field = field_ident(&backend);
             context_fields.push(quote! {#field: #backend});
         }
 
@@ -44,52 +44,78 @@ impl TryFrom<BuildInput> for Generated {
 
         for host in &input.hosts {
             let host_type = &host.type_;
-            let host_name = quote! {#host_type}.to_string();
-            let host_ident = syn::parse_str::<Ident>(&module_name(&host_name))?;
+            let host_ident = wasi_ident(host_type);
             let backend_type = &host.backend;
-            let backend_ident = field_name(backend_type);
+            let backend_ident = field_ident(backend_type);
 
             host_trait_impls.push(host_type.clone());
             store_ctx_fields.push(quote! {#host_ident: #backend_type});
             store_ctx_values.push(quote! {#host_ident: self.#backend_ident.clone()});
 
-            let module = &host_ident;
-
             // servers
             server_trait_impls.push(quote! {#host_type});
 
             // WasiViewXxx implementations
+            // HACK: derive module name from WASI type
+            let module = wasi_ident(host_type);
             let view = quote! {
                 #module::wasi_view!(StoreCtx, #host_ident);
             };
             wasi_view_impls.push(view);
         }
 
+        // main function
+        let main_fn = if input.gen_main {
+            quote! {
+                use kernel::tokio;
+
+                #[tokio::main]
+                async fn main() -> anyhow::Result<()> {
+                    use kernel::Parser;
+                    match kernel::Cli::parse().command {
+                        kernel::Command::Run { wasm } => runtime::run(wasm).await,
+                        _ => unreachable!(),
+                    }
+                }
+            }
+        } else {
+            quote! {}
+        };
+
         Ok(Self {
-            generate_main: input.generate_main,
             context_fields,
             store_ctx_fields,
             store_ctx_values,
             host_trait_impls,
             server_trait_impls,
             wasi_view_impls,
+            main_fn,
         })
     }
 }
 
 /// Generates a field name for a backend type.
-fn field_name(field_type: &Type) -> Ident {
-    let name = if let Type::Path(type_path) = field_type {
-        type_path.path.segments.last().map_or_else(
-            || "backend".to_string(),
-            |segment| segment.ident.to_string().to_lowercase(),
-        )
-    } else {
-        "backend".to_string()
-    };
-    format_ident!("{name}")
+fn field_ident(field_type: &Type) -> Ident {
+    let type_str = quote! {#field_type}.to_string();
+
+    // convert the type string to a snake_case
+    let mut field_str = String::new();
+    for char in type_str.chars() {
+        if char.is_uppercase() {
+            if !field_str.is_empty() {
+                field_str.push('_');
+            }
+            field_str.push_str(&char.to_lowercase().to_string());
+        } else {
+            field_str.push(char);
+        }
+    }
+
+    format_ident!("{field_str}")
 }
 
-fn module_name(s: &str) -> String {
-    s.replace("Wasi", "wasi_").to_lowercase()
+fn wasi_ident(wasi_type: &Type) -> Ident {
+    let name = quote! {#wasi_type}.to_string();
+    let name = name.replace("Wasi", "wasi_").to_lowercase();
+    format_ident!("{name}")
 }

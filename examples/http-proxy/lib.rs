@@ -1,9 +1,25 @@
-#![cfg(target_arch = "wasm32")]
-
-//! Minimal example of an HTTP proxy that uses Redis as a caching layer.
+//! # HTTP Proxy Guest Module
 //!
-//! See the handler functions below for the use of headers to control caching
-//! behavior.
+//! This module demonstrates an HTTP proxy pattern with caching using WASI HTTP.
+//! It shows how to:
+//! - Make outbound HTTP requests from a WebAssembly guest
+//! - Implement HTTP caching with ETags and Cache-Control headers
+//! - Use client certificates for mTLS authentication
+//!
+//! ## Caching Strategy
+//!
+//! The proxy uses standard HTTP caching headers:
+//! - `Cache-Control`: Controls caching duration (`max-age`) and behavior (`no-cache`)
+//! - `If-None-Match`: Provides an ETag for cache lookup
+//!
+//! ## Endpoints
+//!
+//! - `GET /echo`: Simple echo handler
+//! - `GET /cache`: Fetch with caching (returns cached response if available)
+//! - `POST /origin`: Fetch from origin, cache response
+//! - `POST /client-cert`: Fetch with client certificate authentication
+
+#![cfg(target_arch = "wasm32")]
 
 use std::convert::Infallible;
 
@@ -23,11 +39,15 @@ use wasi_http::{CacheOptions, Result};
 use wasip3::exports::http::handler::Guest;
 use wasip3::http::types::{ErrorCode, Request, Response};
 
+/// HTTP handler struct.
 struct HttpGuest;
+
+/// Export the HTTP handler for the WASI runtime.
 wasip3::http::proxy::export!(HttpGuest);
 
 impl Guest for HttpGuest {
-    #[wasi_otel::instrument(name = "http_guest_handle",level = Level::DEBUG)]
+    /// Routes incoming requests to appropriate handlers.
+    #[wasi_otel::instrument(name = "http_guest_handle", level = Level::DEBUG)]
     async fn handle(request: Request) -> Result<Response, ErrorCode> {
         let router = Router::new()
             .route("/echo", get(echo))
@@ -38,7 +58,7 @@ impl Guest for HttpGuest {
     }
 }
 
-// Simple handler that echoes back the request body with a greeting
+/// Simple echo handler that returns the request body with a greeting.
 #[wasi_otel::instrument]
 async fn echo(Json(body): Json<Value>) -> Result<Json<Value>> {
     Ok(Json(json!({
@@ -47,16 +67,27 @@ async fn echo(Json(body): Json<Value>) -> Result<Json<Value>> {
     })))
 }
 
-// Check the cache for a pre-existing response (matching IF_NONE_MATCH etag).
-// If matched, return the cacheed response, otherwise forward request to
-// external service and caching the response before returning it.
+/// Fetches data with HTTP caching enabled.
+///
+/// This handler demonstrates cache-aware HTTP requests:
+/// 1. Sets `Cache-Control: max-age=300` to enable caching for 5 minutes
+/// 2. Provides `If-None-Match` with an ETag for cache key lookup
+/// 3. If cached response exists with matching ETag, returns it immediately
+/// 4. Otherwise, fetches from origin and caches the response
+///
+/// ## Cache Extension
+///
+/// The `CacheOptions` extension tells the host which bucket to use for caching.
 #[wasi_otel::instrument]
 async fn cache() -> Result<impl IntoResponse, Infallible> {
     let request = http::Request::builder()
         .method(Method::GET)
         .uri("https://jsonplaceholder.cypress.io/posts/1")
-        .header(CACHE_CONTROL, "max-age=300") // enable caching for 5 minutes
-        .header(IF_NONE_MATCH, "qf55low9rjsrup46vsiz9r73") // provide cache key
+        // Enable caching for 5 minutes
+        .header(CACHE_CONTROL, "max-age=300")
+        // Provide cache key (ETag) for lookup
+        .header(IF_NONE_MATCH, "qf55low9rjsrup46vsiz9r73")
+        // Specify the cache bucket to use
         .extension(CacheOptions {
             bucket_name: "example-bucket".to_string(),
         })
@@ -70,16 +101,19 @@ async fn cache() -> Result<impl IntoResponse, Infallible> {
     Ok(http_response)
 }
 
-// Forward request to external service and return the response.
-//
-// While the proxy will cache the response, an error will be returned as the
-// `If-None-Match` header is missing.
+/// Fetches from origin and caches the response.
+///
+/// Uses `no-cache` with `max-age` to:
+/// - Always fetch fresh data from origin
+/// - Cache the response for future requests
+///
+/// This is useful when you want to update the cache on every request.
 #[wasi_otel::instrument]
 async fn origin(body: Bytes) -> Result<Json<Value>> {
     let request = http::Request::builder()
         .method(Method::POST)
         .uri("https://jsonplaceholder.cypress.io/posts")
-        // go to origin for every request, but cache response for 5 minutes
+        // Always go to origin, but cache the response for 5 minutes
         .header(CACHE_CONTROL, "no-cache, max-age=300")
         .body(Full::new(body))
         .expect("failed to build request");
@@ -91,9 +125,18 @@ async fn origin(body: Bytes) -> Result<Json<Value>> {
     Ok(Json(body))
 }
 
+/// Demonstrates mTLS client certificate authentication.
+///
+/// Sends a request with a client certificate for mutual TLS authentication.
+/// The certificate and private key are base64-encoded in the `Client-Cert` header.
+///
+/// ## Security Note
+///
+/// In production, certificates should be loaded from secure storage
+/// (e.g., WASI Vault) rather than hardcoded.
 #[wasi_otel::instrument]
 async fn client_cert() -> Result<Json<Value>> {
-    // PEM-encoded private key and certificate
+    // PEM-encoded private key and certificate (placeholder).
     let auth_cert = "
         -----BEGIN CERTIFICATE-----
         ...Your Certificate Here...
@@ -106,6 +149,7 @@ async fn client_cert() -> Result<Json<Value>> {
     let request = http::Request::builder()
         .method(Method::GET)
         .uri("https://jsonplaceholder.cypress.io/posts/1")
+        // Client certificate for mTLS
         .header("Client-Cert", &encoded_cert)
         .extension(CacheOptions {
             bucket_name: "example-bucket".to_string(),

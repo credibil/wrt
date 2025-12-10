@@ -31,5 +31,6 @@ serde_json.workspace = true
 fromenv.workspace = true
 futures.workspace = true
 tracing.workspace = true
+tokio = { workspace = true, features = ["macros"] }
 wasmtime = { workspace = true, features = ["runtime"] }
 wasmtime-wasi.workspace = true

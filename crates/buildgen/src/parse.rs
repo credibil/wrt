@@ -16,14 +16,14 @@ mod kw {
 /// }
 /// ```
 pub struct BuildInput {
-    pub generate_main: bool,
+    pub gen_main: bool,
     pub hosts: Vec<Host>,
     pub backends: Vec<Type>,
 }
 
 impl Parse for BuildInput {
     fn parse(input: ParseStream) -> syn::Result<Self> {
-        let generate_main = if input.peek(kw::main) {
+        let gen_main = if input.peek(kw::main) {
             input.parse::<kw::main>()?;
             input.parse::<Token![,]>()?;
             true
@@ -53,7 +53,7 @@ impl Parse for BuildInput {
         }
 
         Ok(Self {
-            generate_main,
+            gen_main,
             hosts,
             backends,
         })
