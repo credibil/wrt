@@ -1,19 +1,17 @@
 #![cfg(not(target_arch = "wasm32"))]
-// #![cfg(all(feature = "http", feature = "identity", feature = "otel"))]
-
-//! WRT runtime CLI entry point.
 
 use anyhow::Result;
+use be_kafka::Client as Kafka;
 use kernel::{Cli, Command, Parser};
 use wasi_http::{WasiHttp, WasiHttpCtxImpl as HttpDefault};
-use wasi_messaging::{WasiMessaging, WasiMessagingCtxImpl as MessagingDefault};
+use wasi_messaging::WasiMessaging;
 use wasi_otel::{WasiOtel, WasiOtelCtxImpl as OtelDefault};
 use wasi_websockets::{WasiWebSockets, WasiWebSocketsCtxImpl as WebSocketsDefault};
 
 // Generate runtime infrastructure for the credibil feature set
 buildgen::runtime!({
     WasiHttp: HttpDefault,
-    WasiMessaging: MessagingDefault,
+    WasiMessaging: Kafka,
     WasiOtel: OtelDefault,
     WasiWebSockets: WebSocketsDefault,
 });

@@ -62,7 +62,7 @@ required-features = [
 
 [features]
 default = ["jit", "http"]
-websockets-default = ["http", "messaging", "otel", "websockets"]
+websockets-default = ["http", "kafka", "messaging", "otel", "websockets"]
 
 # WASI components (not intended to be used directly)
 blobstore = ["dep:wasi-blobstore"]
