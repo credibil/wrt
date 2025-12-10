@@ -272,24 +272,6 @@ name = "blobstore"
 path = "examples/blobstore/main.rs"
 
 [[example]]
-name = "blobstore-mongodb-wasm"
-path = "examples/blobstore-mongodb/lib.rs"
-crate-type = ["cdylib"]
-
-[[example]]
-name = "blobstore-mongodb"
-path = "examples/blobstore-mongodb/main.rs"
-
-[[example]]
-name = "blobstore-nats-wasm"
-path = "examples/blobstore-nats/lib.rs"
-crate-type = ["cdylib"]
-
-[[example]]
-name = "blobstore-nats"
-path = "examples/blobstore-nats/main.rs"
-
-[[example]]
 name = "http-wasm"
 path = "examples/http/lib.rs"
 crate-type = ["cdylib"]
@@ -326,24 +308,6 @@ name = "keyvalue"
 path = "examples/keyvalue/main.rs"
 
 [[example]]
-name = "keyvalue-nats-wasm"
-path = "examples/keyvalue-nats/lib.rs"
-crate-type = ["cdylib"]
-
-[[example]]
-name = "keyvalue-nats"
-path = "examples/keyvalue-nats/main.rs"
-
-[[example]]
-name = "keyvalue-redis-wasm"
-path = "examples/keyvalue-redis/lib.rs"
-crate-type = ["cdylib"]
-
-[[example]]
-name = "keyvalue-redis"
-path = "examples/keyvalue-redis/main.rs"
-
-[[example]]
 name = "messaging-wasm"
 path = "examples/messaging/lib.rs"
 crate-type = ["cdylib"]
@@ -351,24 +315,6 @@ crate-type = ["cdylib"]
 [[example]]
 name = "messaging"
 path = "examples/messaging/main.rs"
-
-[[example]]
-name = "messaging-kafka-wasm"
-path = "examples/messaging-kafka/lib.rs"
-crate-type = ["cdylib"]
-
-[[example]]
-name = "messaging-kafka"
-path = "examples/messaging-kafka/main.rs"
-
-[[example]]
-name = "messaging-nats-wasm"
-path = "examples/messaging-nats/lib.rs"
-crate-type = ["cdylib"]
-
-[[example]]
-name = "messaging-nats"
-path = "examples/messaging-nats/main.rs"
 
 [[example]]
 name = "otel-wasm"
@@ -389,15 +335,6 @@ name = "sql"
 path = "examples/sql/main.rs"
 
 [[example]]
-name = "sql-postgres-wasm"
-path = "examples/sql-postgres/lib.rs"
-crate-type = ["cdylib"]
-
-[[example]]
-name = "sql-postgres"
-path = "examples/sql-postgres/main.rs"
-
-[[example]]
 name = "vault-wasm"
 path = "examples/vault/lib.rs"
 crate-type = ["cdylib"]
@@ -405,15 +342,6 @@ crate-type = ["cdylib"]
 [[example]]
 name = "vault"
 path = "examples/vault/main.rs"
-
-[[example]]
-name = "vault-azure-wasm"
-path = "examples/vault-azure/lib.rs"
-crate-type = ["cdylib"]
-
-[[example]]
-name = "vault-azure"
-path = "examples/vault-azure/main.rs"
 
 [[example]]
 name = "websockets-wasm"
