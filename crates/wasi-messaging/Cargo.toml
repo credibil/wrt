@@ -17,13 +17,10 @@ workspace = true
 
 [features]
 
-[dependencies]
-credibil-error.workspace = true
-utils.workspace = true
-
 # host dependencies
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 anyhow.workspace = true
+credibil-error.workspace = true
 fromenv.workspace = true
 futures.workspace = true
 http.workspace = true

@@ -422,7 +422,6 @@ version = "0.19.0"
 dependencies = [
  "anyhow",
  "chrono",
- "credibil-error",
  "csv",
  "fromenv",
  "futures",
@@ -436,7 +435,6 @@ dependencies = [
  "serde_json",
  "tokio",
  "tracing",
- "utils",
  "wasi-messaging",
 ]
 
@@ -2558,6 +2556,7 @@ dependencies = [
  "anyhow",
  "cfg-if",
  "clap",
+ "credibil-error",
  "credibil-otel",
  "fromenv",
  "futures",
@@ -5575,14 +5574,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "06abde3611657adf66d383f00b093d7faecc7fa57071cce2578660c9f1010821"
 
 [[package]]
-name = "utils"
-version = "0.19.0"
-dependencies = [
- "credibil-error",
- "tracing",
-]
-
-[[package]]
 name = "uuid"
 version = "1.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5760,7 +5751,6 @@ dependencies = [
  "time",
  "tokio",
  "tracing",
- "utils",
  "wasmtime",
  "wasmtime-wasi",
  "wit-bindgen 0.49.0",

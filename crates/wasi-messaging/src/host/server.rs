@@ -3,9 +3,8 @@ use std::str::FromStr;
 use anyhow::Result;
 use credibil_error::Error;
 use futures::StreamExt;
-use kernel::State;
+use kernel::{State, error};
 use tracing::{Instrument, debug_span, instrument};
-use utils::messaging::log_with_metrics;
 use wasmtime::Store;
 
 use crate::host::WasiMessagingView;
@@ -99,7 +98,7 @@ where
                 // Both Ok and Err arms do the same thing, but this way we ensure
                 // that we only log known CredibilErrors in a structured way.
                 Ok(err) | Err(err) => {
-                    log_with_metrics(&err, &self.service, &message.topic());
+                    error::to_metric(&err, &self.service, &message.topic());
                     Err(err)
                 }
             },
