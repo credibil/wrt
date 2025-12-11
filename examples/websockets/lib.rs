@@ -22,8 +22,6 @@
 
 #![cfg(target_arch = "wasm32")]
 
-use std::println;
-
 use anyhow::{Context, anyhow};
 use axum::routing::{get, post};
 use axum::{Json, Router};

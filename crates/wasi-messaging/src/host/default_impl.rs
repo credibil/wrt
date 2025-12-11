@@ -55,7 +55,6 @@ impl Backend for WasiMessagingCtxImpl {
         tracing::debug!("initializing in-memory messaging");
 
         let (tx, rx) = broadcast::channel::<MessageProxy>(32);
-
         Ok(Self { tx, rx })
     }
 }
@@ -81,10 +80,9 @@ impl WasiMessagingCtx for WasiMessagingCtxImpl {
         tracing::debug!("setting content-type: {}", content_type);
 
         async move {
-            let inmem = message
-                .as_any()
-                .downcast_ref::<InMemoryMessage>()
-                .ok_or_else(|| anyhow!("invalid message type"))?;
+            let Some(inmem) = message.as_any().downcast_ref::<InMemoryMessage>() else {
+                anyhow::bail!("invalid message type");
+            };
 
             let mut updated = inmem.clone();
             let mut metadata = updated.metadata.unwrap_or_default();
@@ -100,11 +98,11 @@ impl WasiMessagingCtx for WasiMessagingCtxImpl {
         &self, message: Arc<dyn Message>, data: Vec<u8>,
     ) -> FutureResult<Arc<dyn Message>> {
         tracing::debug!("setting payload");
+
         async move {
-            let inmem = message
-                .as_any()
-                .downcast_ref::<InMemoryMessage>()
-                .ok_or_else(|| anyhow!("invalid message type"))?;
+            let Some(inmem) = message.as_any().downcast_ref::<InMemoryMessage>() else {
+                anyhow::bail!("invalid message type");
+            };
 
             let mut updated = inmem.clone();
             updated.payload = data;
@@ -119,10 +117,9 @@ impl WasiMessagingCtx for WasiMessagingCtxImpl {
     ) -> FutureResult<Arc<dyn Message>> {
         tracing::debug!("adding metadata: {key} = {value}");
         async move {
-            let inmem = message
-                .as_any()
-                .downcast_ref::<InMemoryMessage>()
-                .ok_or_else(|| anyhow!("invalid message type"))?;
+            let Some(inmem) = message.as_any().downcast_ref::<InMemoryMessage>() else {
+                anyhow::bail!("invalid message type");
+            };
 
             let mut updated = inmem.clone();
             let mut metadata = updated.metadata.unwrap_or_default();
@@ -157,10 +154,9 @@ impl WasiMessagingCtx for WasiMessagingCtxImpl {
     ) -> FutureResult<Arc<dyn Message>> {
         tracing::debug!("removing metadata: {}", key);
         async move {
-            let inmem = message
-                .as_any()
-                .downcast_ref::<InMemoryMessage>()
-                .ok_or_else(|| anyhow!("invalid message type"))?;
+            let Some(inmem) = message.as_any().downcast_ref::<InMemoryMessage>() else {
+                anyhow::bail!("invalid message type");
+            };
 
             let mut updated = inmem.clone();
             if let Some(ref mut metadata) = updated.metadata {
@@ -194,10 +190,9 @@ impl Client for WasiMessagingCtxImpl {
         let sender = self.tx.clone();
 
         async move {
-            let inmem = message
-                .as_any()
-                .downcast_ref::<InMemoryMessage>()
-                .ok_or_else(|| anyhow!("invalid message type"))?;
+            let Some(inmem) = message.as_any().downcast_ref::<InMemoryMessage>() else {
+                anyhow::bail!("invalid message type");
+            };
 
             let mut updated = inmem.clone();
             updated.topic.clone_from(&topic);
@@ -219,10 +214,9 @@ impl Client for WasiMessagingCtxImpl {
         async move {
             // In a real implementation, this would send a request and wait for a response
             // For the default impl, we'll just create a simple response
-            let inmem = message
-                .as_any()
-                .downcast_ref::<InMemoryMessage>()
-                .ok_or_else(|| anyhow!("invalid message type"))?;
+            let Some(inmem) = message.as_any().downcast_ref::<InMemoryMessage>() else {
+                anyhow::bail!("invalid message type");
+            };
 
             let mut updated = inmem.clone();
             updated.topic.clone_from(&topic);
