@@ -2,28 +2,26 @@
 //!
 //! This is a lightweight implementation for development use only.
 
-#![allow(clippy::significant_drop_tightening)]
-#![allow(clippy::used_underscore_binding)]
-#![allow(clippy::assigning_clones)]
-#![allow(clippy::semicolon_outside_block)]
+// #![allow(clippy::significant_drop_tightening)]
+// #![allow(clippy::used_underscore_binding)]
+// #![allow(clippy::assigning_clones)]
+// #![allow(clippy::semicolon_outside_block)]
 
 use std::any::Any;
-use std::collections::HashMap;
 use std::sync::Arc;
 
 use anyhow::{Result, anyhow};
 use futures::FutureExt;
-use futures::stream::{self, StreamExt};
+use futures::stream::StreamExt;
 use kernel::Backend;
-use parking_lot::RwLock;
+use tokio::sync::broadcast::{self, Receiver, Sender};
+use tokio_stream::wrappers::BroadcastStream;
 use tracing::instrument;
 
 use crate::host::WasiMessagingCtx;
 use crate::host::resource::{
     Client, FutureResult, Message, MessageProxy, Metadata, Reply, RequestOptions, Subscriptions,
 };
-
-type MessageStore = Arc<RwLock<HashMap<String, Vec<InMemoryMessage>>>>;
 
 #[derive(Debug, Clone, Default)]
 pub struct ConnectOptions;
@@ -34,21 +32,31 @@ impl kernel::FromEnv for ConnectOptions {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct WasiMessagingCtxImpl {
-    store: MessageStore,
+    tx: Sender<MessageProxy>,
+    rx: Receiver<MessageProxy>,
+}
+
+impl Clone for WasiMessagingCtxImpl {
+    fn clone(&self) -> Self {
+        Self {
+            tx: self.tx.clone(),
+            rx: self.tx.subscribe(),
+        }
+    }
 }
 
 impl Backend for WasiMessagingCtxImpl {
     type ConnectOptions = ConnectOptions;
 
     #[instrument]
-    async fn connect_with(_options: Self::ConnectOptions) -> Result<Self> {
+    async fn connect_with(options: Self::ConnectOptions) -> Result<Self> {
         tracing::debug!("initializing in-memory messaging");
 
-        Ok(Self {
-            store: Arc::new(RwLock::new(HashMap::new())),
-        })
+        let (tx, rx) = broadcast::channel::<MessageProxy>(32);
+
+        Ok(Self { tx, rx })
     }
 }
 
@@ -56,7 +64,7 @@ impl WasiMessagingCtx for WasiMessagingCtxImpl {
     fn connect(&self) -> FutureResult<Arc<dyn Client>> {
         tracing::debug!("connecting messaging client");
 
-        let client = InMemoryClient::new(&self.store);
+        let client = self.clone();
         async move { Ok(Arc::new(client) as Arc<dyn Client>) }.boxed()
     }
 
@@ -165,34 +173,25 @@ impl WasiMessagingCtx for WasiMessagingCtxImpl {
     }
 }
 
-#[derive(Debug, Clone, Default)]
-struct InMemoryClient {
-    store: MessageStore,
-}
-
-impl InMemoryClient {
-    fn new(store: &MessageStore) -> Self {
-        Self {
-            store: Arc::clone(store),
-        }
-    }
-}
-
-impl Client for InMemoryClient {
+impl Client for WasiMessagingCtxImpl {
     fn subscribe(&self) -> FutureResult<Subscriptions> {
         tracing::debug!("subscribing to messages");
-        // Return an empty stream for the default implementation
-        // A real implementation would return a stream of messages from a topic
+
+        let stream = BroadcastStream::new(self.rx.resubscribe());
+
         async move {
-            let stream = stream::empty().boxed();
-            Ok(stream)
+            //  TODO: replace panic with proper error handling
+            let stream =
+                stream.map(|res| res.unwrap_or_else(|_| panic!("failed to receive message")));
+
+            Ok(Box::pin(stream) as Subscriptions)
         }
         .boxed()
     }
 
     fn send(&self, topic: String, message: MessageProxy) -> FutureResult<()> {
         tracing::debug!("sending message to topic: {topic}");
-        let store = Arc::clone(&self.store);
+        let sender = self.tx.clone();
 
         async move {
             let inmem = message
@@ -202,11 +201,10 @@ impl Client for InMemoryClient {
 
             let mut updated = inmem.clone();
             updated.topic.clone_from(&topic);
+            let msg_proxy = MessageProxy(Arc::new(updated) as Arc<dyn Message>);
 
-            {
-                let mut store = store.write();
-                store.entry(topic).or_default().push(updated);
-            }
+            sender.send(msg_proxy).map_err(|e| anyhow!("send error: {e}"))?;
+
             Ok(())
         }
         .boxed()
@@ -216,7 +214,7 @@ impl Client for InMemoryClient {
         &self, topic: String, message: MessageProxy, _options: Option<RequestOptions>,
     ) -> FutureResult<MessageProxy> {
         tracing::debug!("sending request to topic: {}", topic);
-        let store = Arc::clone(&self.store);
+        let sender = self.tx.clone();
 
         async move {
             // In a real implementation, this would send a request and wait for a response
@@ -229,10 +227,8 @@ impl Client for InMemoryClient {
             let mut updated = inmem.clone();
             updated.topic.clone_from(&topic);
 
-            {
-                let mut store = store.write();
-                store.entry(topic).or_default().push(updated);
-            }
+            let msg_proxy = MessageProxy(Arc::new(updated) as Arc<dyn Message>);
+            sender.send(msg_proxy).map_err(|e| anyhow!("send error: {e}"))?;
 
             // Return a simple acknowledgment message
             let response = InMemoryMessage {
