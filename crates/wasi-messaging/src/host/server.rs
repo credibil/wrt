@@ -82,7 +82,7 @@ where
         let instance = instance_pre.instantiate_async(&mut store).await?;
         let messaging = Messaging::new(&mut store, &instance)?;
 
-        match store
+        if let Err(e) = store
             .run_concurrent(async |store| {
                 let guest = messaging.wasi_messaging_incoming_handler();
                 guest.call_handle(store, be_msg).await.map(|_| ()).map_err(Error::from)
@@ -90,18 +90,13 @@ where
             .instrument(debug_span!("messaging-handle"))
             .await
         {
-            Ok(_) => {
-                tracing::info!(monotonic_counter.messages_processed = 1, service = %self.service, topic = %message.topic());
-                Ok(())
-            }
-            Err(e) => match Error::from_str(e.to_string().as_str()) {
-                // Both Ok and Err arms do the same thing, but this way we ensure
-                // that we only log known CredibilErrors in a structured way.
+            match Error::from_str(e.to_string().as_str()) {
                 Ok(err) | Err(err) => {
                     error::to_metric(&err, &self.service, &message.topic());
-                    Err(err)
                 }
-            },
+            }
         }
+
+        Ok(())
     }
 }

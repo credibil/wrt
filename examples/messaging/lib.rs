@@ -23,8 +23,7 @@
 
 #![cfg(target_arch = "wasm32")]
 
-use std::thread::sleep;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 use axum::routing::post;
 use axum::{Json, Router};
@@ -136,7 +135,7 @@ impl wasi_messaging::incoming_handler::Guest for Messaging {
                 let timer = Instant::now();
 
                 // Fan-out: spawn 1000 concurrent message sends.
-                for i in 0..10 {
+                for i in 0..1000 {
                     wit_bindgen::spawn(async move {
                         tracing::debug!("sending message iteration {i}");
                         let Ok(client) = Client::connect("kafka") else {
@@ -153,10 +152,10 @@ impl wasi_messaging::incoming_handler::Guest for Messaging {
                         }
                         tracing::debug!("message iteration {i} sent");
 
-                        // if i % 100 == 0 {
-                        //     sleep(Duration::from_nanos(1));
-                        //     println!("sent 100 messages");
-                        // }
+                        if i % 100 == 0 {
+                            wit_bindgen::yield_async().await;
+                            println!("sent 100 messages");
+                        }
                     });
                 }
 
