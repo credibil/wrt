@@ -18,7 +18,3 @@ cargo run --example vault -- run ./target/wasm32-wasip2/debug/examples/vault_was
 ```bash
 curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://localhost:8080
 ```
-
-## What It Does
-
-This example demonstrates basic secret management capabilities using an in-memory vault implementation.

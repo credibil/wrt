@@ -40,10 +40,7 @@ use wasip3::http::types::{ErrorCode, Request, Response};
 // HTTP Interface
 // =============================================================================
 
-/// HTTP handler struct for REST endpoint access to messaging.
 pub struct Http;
-
-/// Export the HTTP handler for the WASI runtime.
 wasip3::http::proxy::export!(Http);
 
 impl Guest for Http {
@@ -66,8 +63,9 @@ impl Guest for Http {
 /// it to topic "a". The incoming message handler will receive this
 /// and fan out to topic "b".
 async fn pub_sub(Json(body): Json<Value>) -> Result<Json<Value>> {
-    let client = Client::connect("kafka").unwrap();
+    tracing::debug!("sending message to topic 'a'");
 
+    let client = Client::connect("default").unwrap();
     let message = Message::new(&Bytes::from(body.to_string()));
     message.set_content_type("application/json");
     message.add_metadata("key", "example_key");
@@ -76,7 +74,7 @@ async fn pub_sub(Json(body): Json<Value>) -> Result<Json<Value>> {
         if let Err(e) = producer::send(&client, "a".to_string(), message).await {
             tracing::error!("error sending message to topic 'a': {e}");
         }
-        println!("handler: message published to topic 'a'");
+        tracing::debug!("handler: message published to topic 'a'");
     });
 
     Ok(Json(json!({"message": "message published"})))
@@ -104,10 +102,7 @@ async fn request_reply_handler(body: Bytes) -> Json<Value> {
 // Messaging Interface
 // =============================================================================
 
-/// Messaging handler struct for processing incoming messages.
 pub struct Messaging;
-
-/// Export the messaging handler for the WASI runtime.
 wasi_messaging::export!(Messaging with_types_in wasi_messaging);
 
 impl wasi_messaging::incoming_handler::Guest for Messaging {

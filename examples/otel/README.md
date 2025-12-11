@@ -27,14 +27,6 @@ cargo run --example otel -- run ./target/wasm32-wasip2/debug/examples/otel_wasm.
 curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://localhost:8080
 ```
 
-## What It Does
-
-This example demonstrates:
-
-- Distributed tracing with OpenTelemetry
-- Metrics collection from WebAssembly guests
-- Integration with the OpenTelemetry Collector
-
 ## Cleanup
 
 ```bash

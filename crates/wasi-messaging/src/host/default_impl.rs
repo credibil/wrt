@@ -11,16 +11,19 @@ use std::any::Any;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use futures::FutureExt;
 use futures::stream::{self, StreamExt};
 use kernel::Backend;
+use parking_lot::RwLock;
 use tracing::instrument;
 
 use crate::host::WasiMessagingCtx;
 use crate::host::resource::{
     Client, FutureResult, Message, MessageProxy, Metadata, Reply, RequestOptions, Subscriptions,
 };
+
+type MessageStore = Arc<RwLock<HashMap<String, Vec<InMemoryMessage>>>>;
 
 #[derive(Debug, Clone, Default)]
 pub struct ConnectOptions;
@@ -33,8 +36,7 @@ impl kernel::FromEnv for ConnectOptions {
 
 #[derive(Debug, Clone)]
 pub struct WasiMessagingCtxImpl {
-    // Using Arc for shared state across instances
-    store: Arc<parking_lot::RwLock<HashMap<String, Vec<InMemoryMessage>>>>,
+    store: MessageStore,
 }
 
 impl Backend for WasiMessagingCtxImpl {
@@ -43,8 +45,9 @@ impl Backend for WasiMessagingCtxImpl {
     #[instrument]
     async fn connect_with(_options: Self::ConnectOptions) -> Result<Self> {
         tracing::debug!("initializing in-memory messaging");
+
         Ok(Self {
-            store: Arc::new(parking_lot::RwLock::new(HashMap::new())),
+            store: Arc::new(RwLock::new(HashMap::new())),
         })
     }
 }
@@ -52,21 +55,15 @@ impl Backend for WasiMessagingCtxImpl {
 impl WasiMessagingCtx for WasiMessagingCtxImpl {
     fn connect(&self) -> FutureResult<Arc<dyn Client>> {
         tracing::debug!("connecting messaging client");
-        let client = InMemoryClient {
-            store: Arc::clone(&self.store),
-        };
+
+        let client = InMemoryClient::new(&self.store);
         async move { Ok(Arc::new(client) as Arc<dyn Client>) }.boxed()
     }
 
     fn new_message(&self, data: Vec<u8>) -> FutureResult<Arc<dyn Message>> {
         tracing::debug!("creating new message");
-        let message = InMemoryMessage {
-            topic: String::new(),
-            payload: data,
-            metadata: None,
-            description: None,
-            reply: None,
-        };
+
+        let message = InMemoryMessage::from(data);
         async move { Ok(Arc::new(message) as Arc<dyn Message>) }.boxed()
     }
 
@@ -74,18 +71,19 @@ impl WasiMessagingCtx for WasiMessagingCtxImpl {
         &self, message: Arc<dyn Message>, content_type: String,
     ) -> FutureResult<Arc<dyn Message>> {
         tracing::debug!("setting content-type: {}", content_type);
+
         async move {
-            let msg = message
+            let inmem = message
                 .as_any()
                 .downcast_ref::<InMemoryMessage>()
-                .ok_or_else(|| anyhow::anyhow!("invalid message type"))?;
+                .ok_or_else(|| anyhow!("invalid message type"))?;
 
-            let mut new_msg = msg.clone();
-            let mut metadata = new_msg.metadata.unwrap_or_default();
+            let mut updated = inmem.clone();
+            let mut metadata = updated.metadata.unwrap_or_default();
             metadata.insert("content-type".to_string(), content_type);
-            new_msg.metadata = Some(metadata);
+            updated.metadata = Some(metadata);
 
-            Ok(Arc::new(new_msg) as Arc<dyn Message>)
+            Ok(Arc::new(updated) as Arc<dyn Message>)
         }
         .boxed()
     }
@@ -95,15 +93,15 @@ impl WasiMessagingCtx for WasiMessagingCtxImpl {
     ) -> FutureResult<Arc<dyn Message>> {
         tracing::debug!("setting payload");
         async move {
-            let msg = message
+            let inmem = message
                 .as_any()
                 .downcast_ref::<InMemoryMessage>()
-                .ok_or_else(|| anyhow::anyhow!("invalid message type"))?;
+                .ok_or_else(|| anyhow!("invalid message type"))?;
 
-            let mut new_msg = msg.clone();
-            new_msg.payload = data;
+            let mut updated = inmem.clone();
+            updated.payload = data;
 
-            Ok(Arc::new(new_msg) as Arc<dyn Message>)
+            Ok(Arc::new(updated) as Arc<dyn Message>)
         }
         .boxed()
     }
@@ -111,19 +109,19 @@ impl WasiMessagingCtx for WasiMessagingCtxImpl {
     fn add_metadata(
         &self, message: Arc<dyn Message>, key: String, value: String,
     ) -> FutureResult<Arc<dyn Message>> {
-        tracing::debug!("adding metadata: {} = {}", key, value);
+        tracing::debug!("adding metadata: {key} = {value}");
         async move {
-            let msg = message
+            let inmem = message
                 .as_any()
                 .downcast_ref::<InMemoryMessage>()
-                .ok_or_else(|| anyhow::anyhow!("invalid message type"))?;
+                .ok_or_else(|| anyhow!("invalid message type"))?;
 
-            let mut new_msg = msg.clone();
-            let mut metadata = new_msg.metadata.unwrap_or_default();
+            let mut updated = inmem.clone();
+            let mut metadata = updated.metadata.unwrap_or_default();
             metadata.insert(key, value);
-            new_msg.metadata = Some(metadata);
+            updated.metadata = Some(metadata);
 
-            Ok(Arc::new(new_msg) as Arc<dyn Message>)
+            Ok(Arc::new(updated) as Arc<dyn Message>)
         }
         .boxed()
     }
@@ -133,15 +131,15 @@ impl WasiMessagingCtx for WasiMessagingCtxImpl {
     ) -> FutureResult<Arc<dyn Message>> {
         tracing::debug!("setting all metadata");
         async move {
-            let msg = message
+            let inmem = message
                 .as_any()
                 .downcast_ref::<InMemoryMessage>()
-                .ok_or_else(|| anyhow::anyhow!("invalid message type"))?;
+                .ok_or_else(|| anyhow!("invalid message type"))?;
 
-            let mut new_msg = msg.clone();
-            new_msg.metadata = Some(metadata);
+            let mut updated = inmem.clone();
+            updated.metadata = Some(metadata);
 
-            Ok(Arc::new(new_msg) as Arc<dyn Message>)
+            Ok(Arc::new(updated) as Arc<dyn Message>)
         }
         .boxed()
     }
@@ -151,25 +149,33 @@ impl WasiMessagingCtx for WasiMessagingCtxImpl {
     ) -> FutureResult<Arc<dyn Message>> {
         tracing::debug!("removing metadata: {}", key);
         async move {
-            let msg = message
+            let inmem = message
                 .as_any()
                 .downcast_ref::<InMemoryMessage>()
-                .ok_or_else(|| anyhow::anyhow!("invalid message type"))?;
+                .ok_or_else(|| anyhow!("invalid message type"))?;
 
-            let mut new_msg = msg.clone();
-            if let Some(ref mut metadata) = new_msg.metadata {
+            let mut updated = inmem.clone();
+            if let Some(ref mut metadata) = updated.metadata {
                 metadata.remove(&key);
             }
 
-            Ok(Arc::new(new_msg) as Arc<dyn Message>)
+            Ok(Arc::new(updated) as Arc<dyn Message>)
         }
         .boxed()
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 struct InMemoryClient {
-    store: Arc<parking_lot::RwLock<HashMap<String, Vec<InMemoryMessage>>>>,
+    store: MessageStore,
+}
+
+impl InMemoryClient {
+    fn new(store: &MessageStore) -> Self {
+        Self {
+            store: Arc::clone(store),
+        }
+    }
 }
 
 impl Client for InMemoryClient {
@@ -185,21 +191,21 @@ impl Client for InMemoryClient {
     }
 
     fn send(&self, topic: String, message: MessageProxy) -> FutureResult<()> {
-        tracing::debug!("sending message to topic: {}", topic);
+        tracing::debug!("sending message to topic: {topic}");
         let store = Arc::clone(&self.store);
 
         async move {
-            let msg = message
+            let inmem = message
                 .as_any()
                 .downcast_ref::<InMemoryMessage>()
-                .ok_or_else(|| anyhow::anyhow!("invalid message type"))?;
+                .ok_or_else(|| anyhow!("invalid message type"))?;
 
-            let mut new_msg = msg.clone();
-            new_msg.topic.clone_from(&topic);
+            let mut updated = inmem.clone();
+            updated.topic.clone_from(&topic);
 
             {
                 let mut store = store.write();
-                store.entry(topic).or_default().push(new_msg);
+                store.entry(topic).or_default().push(updated);
             }
             Ok(())
         }
@@ -215,17 +221,17 @@ impl Client for InMemoryClient {
         async move {
             // In a real implementation, this would send a request and wait for a response
             // For the default impl, we'll just create a simple response
-            let msg = message
+            let inmem = message
                 .as_any()
                 .downcast_ref::<InMemoryMessage>()
-                .ok_or_else(|| anyhow::anyhow!("invalid message type"))?;
+                .ok_or_else(|| anyhow!("invalid message type"))?;
 
-            let mut new_msg = msg.clone();
-            new_msg.topic.clone_from(&topic);
+            let mut updated = inmem.clone();
+            updated.topic.clone_from(&topic);
 
             {
                 let mut store = store.write();
-                store.entry(topic).or_default().push(new_msg);
+                store.entry(topic).or_default().push(updated);
             }
 
             // Return a simple acknowledgment message
@@ -243,13 +249,25 @@ impl Client for InMemoryClient {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 struct InMemoryMessage {
     topic: String,
     payload: Vec<u8>,
     metadata: Option<Metadata>,
     description: Option<String>,
     reply: Option<Reply>,
+}
+
+impl From<Vec<u8>> for InMemoryMessage {
+    fn from(data: Vec<u8>) -> Self {
+        Self {
+            topic: String::new(),
+            payload: data,
+            metadata: None,
+            description: None,
+            reply: None,
+        }
+    }
 }
 
 impl Message for InMemoryMessage {
