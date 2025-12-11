@@ -180,9 +180,14 @@ impl Client for WasiMessagingCtxImpl {
         let stream = BroadcastStream::new(self.rx.resubscribe());
 
         async move {
-            //  TODO: replace panic with proper error handling
-            let stream =
-                stream.map(|res| res.unwrap_or_else(|_| panic!("failed to receive message")));
+            let stream = stream.filter_map(|res| async move {
+                res.ok()
+                // let Ok(msg) = res else {
+                //     tracing::warn!("issue receiving message: {}", res.err().unwrap());
+                //     return None;
+                // };
+                // Some(msg)
+            });
 
             Ok(Box::pin(stream) as Subscriptions)
         }
