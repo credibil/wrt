@@ -279,87 +279,87 @@ name = "blobstore-wasm"
 path = "examples/blobstore/lib.rs"
 crate-type = ["cdylib"]
 
-[[example]]
+[[target.'cfg(not(target_arch = "wasm32"))'.example]]
 name = "blobstore"
-path = "examples/blobstore/main.rs"
+path = "examples/blobstore/runtime.rs"
 
 [[example]]
 name = "http-wasm"
 path = "examples/http/lib.rs"
 crate-type = ["cdylib"]
 
-[[example]]
+[[target.'cfg(not(target_arch = "wasm32"))'.example]]
 name = "http"
-path = "examples/http/main.rs"
+path = "examples/http/runtime.rs"
 
 [[example]]
 name = "http-proxy-wasm"
 path = "examples/http-proxy/lib.rs"
 crate-type = ["cdylib"]
 
-[[example]]
+[[target.'cfg(not(target_arch = "wasm32"))'.example]]
 name = "http-proxy"
-path = "examples/http-proxy/main.rs"
+path = "examples/http-proxy/runtime.rs"
 
 [[example]]
 name = "identity-wasm"
 path = "examples/identity/lib.rs"
 crate-type = ["cdylib"]
 
-[[example]]
+[[target.'cfg(not(target_arch = "wasm32"))'.example]]
 name = "identity"
-path = "examples/identity/main.rs"
+path = "examples/identity/runtime.rs"
 
 [[example]]
 name = "keyvalue-wasm"
 path = "examples/keyvalue/lib.rs"
 crate-type = ["cdylib"]
 
-[[example]]
+[[target.'cfg(not(target_arch = "wasm32"))'.example]]
 name = "keyvalue"
-path = "examples/keyvalue/main.rs"
+path = "examples/keyvalue/runtime.rs"
 
 [[example]]
 name = "messaging-wasm"
 path = "examples/messaging/lib.rs"
 crate-type = ["cdylib"]
 
-[[example]]
+[[target.'cfg(not(target_arch = "wasm32"))'.example]]
 name = "messaging"
-path = "examples/messaging/main.rs"
+path = "examples/messaging/runtime.rs"
 
 [[example]]
 name = "otel-wasm"
 path = "examples/otel/lib.rs"
 crate-type = ["cdylib"]
 
-[[example]]
+[[target.'cfg(not(target_arch = "wasm32"))'.example]]
 name = "otel"
-path = "examples/otel/main.rs"
+path = "examples/otel/runtime.rs"
 
 [[example]]
 name = "sql-wasm"
 path = "examples/sql/lib.rs"
 crate-type = ["cdylib"]
 
-[[example]]
+[[target.'cfg(not(target_arch = "wasm32"))'.example]]
 name = "sql"
-path = "examples/sql/main.rs"
+path = "examples/sql/runtime.rs"
 
 [[example]]
 name = "vault-wasm"
 path = "examples/vault/lib.rs"
 crate-type = ["cdylib"]
 
-[[example]]
+[[target.'cfg(not(target_arch = "wasm32"))'.example]]
 name = "vault"
-path = "examples/vault/main.rs"
+path = "examples/vault/runtime.rs"
 
 [[example]]
 name = "websockets-wasm"
 path = "examples/websockets/lib.rs"
 crate-type = ["cdylib"]
 
-[[example]]
+[[target.'cfg(not(target_arch = "wasm32"))'.example]]
 name = "websockets"
-path = "examples/websockets/main.rs"
+path = "examples/websockets/runtime.rs"
