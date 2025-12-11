@@ -24,7 +24,7 @@
 
 use std::println;
 
-use anyhow::{Context, anyhow};
+use anyhow::{anyhow};
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use serde_json::{Value, json};
@@ -33,10 +33,7 @@ use wasi_websockets::store;
 use wasip3::exports::http::handler::Guest;
 use wasip3::http::types::{ErrorCode, Request, Response};
 
-/// HTTP handler struct.
 struct HttpGuest;
-
-/// Export the HTTP handler for the WASI runtime.
 wasip3::http::proxy::export!(HttpGuest);
 
 impl Guest for HttpGuest {
@@ -60,7 +57,7 @@ impl Guest for HttpGuest {
 #[axum::debug_handler]
 async fn get_handler() -> Result<Json<Value>> {
     // Get the WebSocket server handle from the host.
-    let server = store::get_server().context("getting websocket server")?;
+    let server = store::get_server().map_err(|e| anyhow!("getting websocket server: {e}"))?;
 
     // Query the server's health status.
     let message = server.health_check().unwrap_or_else(|_| "Service is unhealthy".to_string());
@@ -85,7 +82,7 @@ async fn get_handler() -> Result<Json<Value>> {
 #[axum::debug_handler]
 async fn post_handler(body: String) -> Result<Json<Value>> {
     // Get the WebSocket server handle.
-    let server = store::get_server().context("getting websocket server")?;
+    let server = store::get_server().map_err(|e| anyhow!("getting websocket server: {e}"))?;
 
     // Get list of all connected peers.
     let peers = server.get_peers();

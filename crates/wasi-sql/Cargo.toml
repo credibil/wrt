@@ -38,5 +38,5 @@ wit-bindgen.workspace = true
 [dependencies]
 anyhow.workspace = true
 
-[dev-dependencies]
+[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }

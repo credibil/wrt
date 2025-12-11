@@ -27,10 +27,7 @@ use wasi_keyvalue::store;
 use wasip3::exports::http::handler::Guest;
 use wasip3::http::types::{ErrorCode, Request, Response};
 
-/// HTTP handler struct implementing the WASI HTTP Guest trait.
 struct Http;
-
-/// Export the HTTP handler for the WASI runtime.
 wasip3::http::proxy::export!(Http);
 
 impl Guest for Http {

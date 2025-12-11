@@ -16,6 +16,7 @@ mod generated {
         world: "messaging",
         path: "wit",
         imports: {
+            // "wasi:messaging/types.[static]client.connect": ignore_wit,
             default: async | store | tracing | trappable,
         },
         exports: {

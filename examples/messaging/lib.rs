@@ -64,7 +64,7 @@ impl Guest for Http {
 async fn pub_sub(Json(body): Json<Value>) -> Result<Json<Value>> {
     tracing::debug!("sending message to topic 'a'");
 
-    let client = Client::connect("default").unwrap();
+    let client = Client::connect("default".to_string()).await.expect("should connect");
     let message = Message::new(&Bytes::from(body.to_string()));
     message.set_content_type("application/json");
     message.add_metadata("key", "example_key");
@@ -84,7 +84,7 @@ async fn pub_sub(Json(body): Json<Value>) -> Result<Json<Value>> {
 /// Demonstrates the request-reply pattern where the caller
 /// blocks until a response is received.
 async fn request_reply_handler(body: Bytes) -> Json<Value> {
-    let client = Client::connect("nats").unwrap();
+    let client = Client::connect("default".to_string()).await.expect("should connect");
     let message = Message::new(&body);
     let reply = wit_bindgen::block_on(async move {
         request_reply::request(&client, "a".to_string(), &message, None).await
@@ -138,8 +138,8 @@ impl wasi_messaging::incoming_handler::Guest for Messaging {
                 for i in 0..1000 {
                     wit_bindgen::spawn(async move {
                         tracing::debug!("sending message iteration {i}");
-                        let Ok(client) = Client::connect("kafka") else {
-                            tracing::error!("failed to connect kafka client");
+                        let Ok(client) = Client::connect("default".to_string()).await else {
+                            tracing::error!("failed to connect default client");
                             return;
                         };
 

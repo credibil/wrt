@@ -12,6 +12,7 @@ wit_bindgen::generate!({
     generate_all,
     pub_export_macro: true,
     async: [
+        "wasi:messaging/types@0.2.0-draft#[static]client.connect",
         "wasi:messaging/producer@0.2.0-draft#send",
         "wasi:messaging/request-reply@0.2.0-draft#request",
         "wasi:messaging/incoming-handler@0.2.0-draft#handle",

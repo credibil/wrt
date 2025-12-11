@@ -48,7 +48,7 @@ impl Backend for Client {
         // TLS mode
         ring::default_provider()
             .install_default()
-            .map_err(|_e| anyhow!("Failed to install rustls crypto provider"))?;
+            .map_err(|e| anyhow!("Failed to install rustls crypto provider: {e}"))?;
 
         let mut store = RootCertStore::empty();
         store.extend(TLS_SERVER_ROOTS.iter().cloned());

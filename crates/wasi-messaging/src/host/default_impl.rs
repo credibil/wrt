@@ -2,11 +2,6 @@
 //!
 //! This is a lightweight implementation for development use only.
 
-// #![allow(clippy::significant_drop_tightening)]
-// #![allow(clippy::used_underscore_binding)]
-// #![allow(clippy::assigning_clones)]
-// #![allow(clippy::semicolon_outside_block)]
-
 use std::any::Any;
 use std::sync::Arc;
 
@@ -34,15 +29,15 @@ impl kernel::FromEnv for ConnectOptions {
 
 #[derive(Debug)]
 pub struct WasiMessagingCtxImpl {
-    tx: Sender<MessageProxy>,
-    rx: Receiver<MessageProxy>,
+    sender: Sender<MessageProxy>,
+    receiver: Receiver<MessageProxy>,
 }
 
 impl Clone for WasiMessagingCtxImpl {
     fn clone(&self) -> Self {
         Self {
-            tx: self.tx.clone(),
-            rx: self.tx.subscribe(),
+            sender: self.sender.clone(),
+            receiver: self.sender.subscribe(),
         }
     }
 }
@@ -53,25 +48,21 @@ impl Backend for WasiMessagingCtxImpl {
     #[instrument]
     async fn connect_with(options: Self::ConnectOptions) -> Result<Self> {
         tracing::debug!("initializing in-memory messaging");
-
-        let (tx, rx) = broadcast::channel::<MessageProxy>(32);
-
-        Ok(Self { tx, rx })
+        let (sender, receiver) = broadcast::channel::<MessageProxy>(32);
+        Ok(Self { sender, receiver })
     }
 }
 
 impl WasiMessagingCtx for WasiMessagingCtxImpl {
     fn connect(&self) -> FutureResult<Arc<dyn Client>> {
         tracing::debug!("connecting messaging client");
-
         let client = self.clone();
         async move { Ok(Arc::new(client) as Arc<dyn Client>) }.boxed()
     }
 
     fn new_message(&self, data: Vec<u8>) -> FutureResult<Arc<dyn Message>> {
         tracing::debug!("creating new message");
-
-        let message = InMemoryMessage::from(data);
+        let message = InMemMessage::from(data);
         async move { Ok(Arc::new(message) as Arc<dyn Message>) }.boxed()
     }
 
@@ -81,7 +72,7 @@ impl WasiMessagingCtx for WasiMessagingCtxImpl {
         tracing::debug!("setting content-type: {}", content_type);
 
         async move {
-            let Some(inmem) = message.as_any().downcast_ref::<InMemoryMessage>() else {
+            let Some(inmem) = message.as_any().downcast_ref::<InMemMessage>() else {
                 anyhow::bail!("invalid message type");
             };
 
@@ -99,8 +90,9 @@ impl WasiMessagingCtx for WasiMessagingCtxImpl {
         &self, message: Arc<dyn Message>, data: Vec<u8>,
     ) -> FutureResult<Arc<dyn Message>> {
         tracing::debug!("setting payload");
+
         async move {
-            let Some(inmem) = message.as_any().downcast_ref::<InMemoryMessage>() else {
+            let Some(inmem) = message.as_any().downcast_ref::<InMemMessage>() else {
                 anyhow::bail!("invalid message type");
             };
 
@@ -116,8 +108,9 @@ impl WasiMessagingCtx for WasiMessagingCtxImpl {
         &self, message: Arc<dyn Message>, key: String, value: String,
     ) -> FutureResult<Arc<dyn Message>> {
         tracing::debug!("adding metadata: {key} = {value}");
+
         async move {
-            let Some(inmem) = message.as_any().downcast_ref::<InMemoryMessage>() else {
+            let Some(inmem) = message.as_any().downcast_ref::<InMemMessage>() else {
                 anyhow::bail!("invalid message type");
             };
 
@@ -135,8 +128,9 @@ impl WasiMessagingCtx for WasiMessagingCtxImpl {
         &self, message: Arc<dyn Message>, metadata: Metadata,
     ) -> FutureResult<Arc<dyn Message>> {
         tracing::debug!("setting all metadata");
+
         async move {
-            let Some(inmem) = message.as_any().downcast_ref::<InMemoryMessage>() else {
+            let Some(inmem) = message.as_any().downcast_ref::<InMemMessage>() else {
                 anyhow::bail!("invalid message type");
             };
 
@@ -152,8 +146,9 @@ impl WasiMessagingCtx for WasiMessagingCtxImpl {
         &self, message: Arc<dyn Message>, key: String,
     ) -> FutureResult<Arc<dyn Message>> {
         tracing::debug!("removing metadata: {}", key);
+
         async move {
-            let Some(inmem) = message.as_any().downcast_ref::<InMemoryMessage>() else {
+            let Some(inmem) = message.as_any().downcast_ref::<InMemMessage>() else {
                 anyhow::bail!("invalid message type");
             };
 
@@ -171,8 +166,7 @@ impl WasiMessagingCtx for WasiMessagingCtxImpl {
 impl Client for WasiMessagingCtxImpl {
     fn subscribe(&self) -> FutureResult<Subscriptions> {
         tracing::debug!("subscribing to messages");
-
-        let stream = BroadcastStream::new(self.rx.resubscribe());
+        let stream = BroadcastStream::new(self.receiver.resubscribe());
 
         async move {
             let stream = stream.filter_map(|res| async move { res.ok() });
@@ -183,10 +177,10 @@ impl Client for WasiMessagingCtxImpl {
 
     fn send(&self, topic: String, message: MessageProxy) -> FutureResult<()> {
         tracing::debug!("sending message to topic: {topic}");
-        let sender = self.tx.clone();
+        let sender = self.sender.clone();
 
         async move {
-            let Some(inmem) = message.as_any().downcast_ref::<InMemoryMessage>() else {
+            let Some(inmem) = message.as_any().downcast_ref::<InMemMessage>() else {
                 anyhow::bail!("invalid message type");
             };
 
@@ -205,12 +199,12 @@ impl Client for WasiMessagingCtxImpl {
         &self, topic: String, message: MessageProxy, _options: Option<RequestOptions>,
     ) -> FutureResult<MessageProxy> {
         tracing::debug!("sending request to topic: {}", topic);
-        let sender = self.tx.clone();
+        let sender = self.sender.clone();
 
         async move {
             // In a real implementation, this would send a request and wait for a response
             // For the default impl, we'll just create a simple response
-            let Some(inmem) = message.as_any().downcast_ref::<InMemoryMessage>() else {
+            let Some(inmem) = message.as_any().downcast_ref::<InMemMessage>() else {
                 anyhow::bail!("invalid message type");
             };
 
@@ -221,7 +215,7 @@ impl Client for WasiMessagingCtxImpl {
             sender.send(msg_proxy).map_err(|e| anyhow!("send error: {e}"))?;
 
             // Return a simple acknowledgment message
-            let response = InMemoryMessage {
+            let response = InMemMessage {
                 topic: "response".to_string(),
                 payload: b"ACK".to_vec(),
                 metadata: None,
@@ -236,7 +230,7 @@ impl Client for WasiMessagingCtxImpl {
 }
 
 #[derive(Debug, Clone, Default)]
-struct InMemoryMessage {
+struct InMemMessage {
     topic: String,
     payload: Vec<u8>,
     metadata: Option<Metadata>,
@@ -244,7 +238,7 @@ struct InMemoryMessage {
     reply: Option<Reply>,
 }
 
-impl From<Vec<u8>> for InMemoryMessage {
+impl From<Vec<u8>> for InMemMessage {
     fn from(data: Vec<u8>) -> Self {
         Self {
             topic: String::new(),
@@ -256,7 +250,7 @@ impl From<Vec<u8>> for InMemoryMessage {
     }
 }
 
-impl Message for InMemoryMessage {
+impl Message for InMemMessage {
     fn topic(&self) -> String {
         self.topic.clone()
     }

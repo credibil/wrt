@@ -38,10 +38,7 @@ use wasi_sql::{into_json, readwrite};
 use wasip3::exports::http::handler::Guest;
 use wasip3::http::types::{ErrorCode, Request, Response};
 
-/// HTTP handler struct.
 struct Http;
-
-/// Export the HTTP handler for the WASI runtime.
 wasip3::http::proxy::export!(Http);
 
 impl Guest for Http {
