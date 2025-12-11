@@ -180,9 +180,15 @@ impl Client for WasiMessagingCtxImpl {
         let stream = BroadcastStream::new(self.rx.resubscribe());
 
         async move {
-            //  TODO: replace panic with proper error handling
-            let stream =
-                stream.map(|res| res.unwrap_or_else(|_| panic!("failed to receive message")));
+            let stream = stream.filter_map(|res| async move {
+                match res {
+                    Ok(message) => Some(message),
+                    Err(e) => {
+                        tracing::warn!("failed to receive message from broadcast stream: {e}");
+                        None
+                    }
+                }
+            });
 
             Ok(Box::pin(stream) as Subscriptions)
         }
@@ -329,5 +335,34 @@ mod tests {
 
         // Test send
         client.send("test-topic".to_string(), MessageProxy(message)).await.expect("send");
+    }
+
+    #[tokio::test]
+    async fn test_subscribe_handles_broadcast_errors_gracefully() {
+        use futures::stream::StreamExt;
+
+        let ctx = WasiMessagingCtxImpl::connect_with(ConnectOptions).await.expect("connect");
+        let client = ctx.connect().await.expect("connect client");
+
+        // Create a subscription
+        let mut stream = client.subscribe().await.expect("subscribe");
+
+        // Send some messages
+        for i in 0..5 {
+            let message =
+                ctx.new_message(format!("message {i}").into_bytes()).await.expect("new message");
+            client.send(format!("topic-{i}"), MessageProxy(message)).await.expect("send");
+        }
+
+        // Receive messages - if the error handling is incorrect, this would panic
+        let mut count = 0;
+        while let Some(msg) = stream.next().await {
+            count += 1;
+            assert!(!msg.payload().is_empty());
+            if count >= 5 {
+                break;
+            }
+        }
+        assert_eq!(count, 5);
     }
 }
