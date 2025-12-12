@@ -47,7 +47,6 @@ required-features = [
 
 [features]
 default = ["jit", "http"]
-websockets-default = ["http", "kafka", "messaging", "otel", "websockets"]
 
 # WASI components (not intended to be used directly)
 blobstore = ["dep:wasi-blobstore"]
@@ -100,6 +99,7 @@ openssl = { version = "0.10.75", features = ["vendored"] }
 
 # example guest & host dependencies
 [dev-dependencies]
+cfg-if.workspace = true
 wasi-blobstore.workspace = true
 wasi-http.workspace = true
 wasi-identity.workspace = true
@@ -201,8 +201,8 @@ anyhow = "1.0.100"
 axum = { version = "0.8.4", default-features = false, features = ["json"] }
 base64ct = { version = "1.8.0", features = ["std"] }
 bytes = "1.10.1"
-cfg-if = "1.0.3"
 chrono = "0.4.42"
+cfg-if = "1.0.3"
 csv = "1.4.0"
 fromenv = "0.1.0"
 futures = "0.3.31"

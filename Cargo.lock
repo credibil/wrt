@@ -2554,7 +2554,6 @@ name = "kernel"
 version = "0.19.0"
 dependencies = [
  "anyhow",
- "cfg-if",
  "clap",
  "credibil-error",
  "credibil-otel",
@@ -5952,6 +5951,7 @@ dependencies = [
  "be-redis",
  "buildgen",
  "bytes",
+ "cfg-if",
  "http",
  "http-body-util",
  "kernel",

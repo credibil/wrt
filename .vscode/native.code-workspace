@@ -1,0 +1,14 @@
+{
+    "folders": [
+        {
+            "path": ".."
+        }
+    ],
+    "settings": {
+        "rust-analyzer.linkedProjects": [
+            "Cargo.toml"
+        ],
+        "rust-analyzer.check.command": "clippy",
+        "rust-analyzer.cargo.target": "aarch64-apple-darwin",
+    },
+}
