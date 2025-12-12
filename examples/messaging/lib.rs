@@ -47,7 +47,7 @@ impl Guest for Http {
     ///
     /// - `POST /pub-sub`: Publish a message (triggers fan-out)
     /// - `POST /request-reply`: Send message and wait for reply
-    #[wasi_otel::instrument]
+    // #[wasi_otel::instrument]
     async fn handle(request: Request) -> Result<Response, ErrorCode> {
         let router = Router::new()
             .route("/pub-sub", post(pub_sub))
@@ -117,69 +117,69 @@ impl wasi_messaging::incoming_handler::Guest for Messaging {
         let topic = message.topic().unwrap_or_default();
         tracing::debug!("message received for: {topic}");
 
-        match topic.as_str() {
-            "a" => {
-                tracing::debug!("handling topic a");
+        // match topic.as_str() {
+        //     "a" => {
+        //         tracing::debug!("handling topic a");
 
-                let mut resp = b"topic a says: ".to_vec();
-                resp.extend(message.data());
+        //         let mut resp = b"topic a says: ".to_vec();
+        //         resp.extend(message.data());
 
-                let pubmsg = Message::new(&resp);
-                if let Some(md) = message.metadata() {
-                    pubmsg.set_metadata(&md);
-                }
-                if let Some(format) = message.content_type() {
-                    pubmsg.set_content_type(&format);
-                }
+        //         let pubmsg = Message::new(&resp);
+        //         if let Some(md) = message.metadata() {
+        //             pubmsg.set_metadata(&md);
+        //         }
+        //         if let Some(format) = message.content_type() {
+        //             pubmsg.set_content_type(&format);
+        //         }
 
-                let timer = Instant::now();
+        //         let timer = Instant::now();
 
-                // Fan-out: spawn 1000 concurrent message sends.
-                for i in 0..1000 {
-                    wit_bindgen::spawn(async move {
-                        tracing::debug!("sending message iteration {i}");
-                        let Ok(client) = Client::connect("default".to_string()).await else {
-                            tracing::error!("failed to connect default client");
-                            return;
-                        };
+        //         // Fan-out: spawn 1000 concurrent message sends.
+        //         for i in 0..1000 {
+        //             wit_bindgen::spawn(async move {
+        //                 tracing::debug!("sending message iteration {i}");
+        //                 let Ok(client) = Client::connect("default".to_string()).await else {
+        //                     tracing::error!("failed to connect default client");
+        //                     return;
+        //                 };
 
-                        let data = format!("topic a iteration {i}");
-                        let message = Message::new(data.as_bytes());
-                        message.add_metadata("key", &format!("key-{i}"));
+        //                 let data = format!("topic a iteration {i}");
+        //                 let message = Message::new(data.as_bytes());
+        //                 message.add_metadata("key", &format!("key-{i}"));
 
-                        if let Err(e) = producer::send(&client, "b".to_string(), message).await {
-                            tracing::error!("error sending message to topic 'b': {e}");
-                        }
-                        tracing::debug!("message iteration {i} sent");
+        //                 if let Err(e) = producer::send(&client, "b".to_string(), message).await {
+        //                     tracing::error!("error sending message to topic 'b': {e}");
+        //                 }
+        //                 tracing::debug!("message iteration {i} sent");
 
-                        if i % 100 == 0 {
-                            wit_bindgen::yield_async().await;
-                            println!("sent 100 messages");
-                        }
-                    });
-                }
+        //                 if i % 100 == 0 {
+        //                     wit_bindgen::yield_async().await;
+        //                     println!("sent 100 messages");
+        //                 }
+        //             });
+        //         }
 
-                println!("sent 1000 messages in {} milliseconds", timer.elapsed().as_millis());
-            }
-            "b" => {
-                tracing::debug!("handling topic b");
-            }
-            "c" => {
-                let data = message.data();
-                let data_str = String::from_utf8(data.clone())
-                    .map_err(|e| Error::Other(format!("not utf8: {e}")))?;
-                tracing::debug!("message received on topic 'c': {data_str}");
+        //         println!("sent 1000 messages in {} milliseconds", timer.elapsed().as_millis());
+        //     }
+        //     "b" => {
+        //         tracing::debug!("handling topic b");
+        //     }
+        //     "c" => {
+        //         let data = message.data();
+        //         let data_str = String::from_utf8(data.clone())
+        //             .map_err(|e| Error::Other(format!("not utf8: {e}")))?;
+        //         tracing::debug!("message received on topic 'c': {data_str}");
 
-                let mut resp = b"Hello from topic c: ".to_vec();
-                resp.extend(data);
+        //         let mut resp = b"Hello from topic c: ".to_vec();
+        //         resp.extend(data);
 
-                let reply = Message::new(&resp);
-                request_reply::reply(&message, reply)?;
-            }
-            _ => {
-                tracing::debug!("unknown topic: {topic}");
-            }
-        }
+        //         let reply = Message::new(&resp);
+        //         request_reply::reply(&message, reply)?;
+        //     }
+        //     _ => {
+        //         tracing::debug!("unknown topic: {topic}");
+        //     }
+        // }
 
         tracing::debug!("finished processing msg");
         Ok(())

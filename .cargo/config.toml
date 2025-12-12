@@ -8,8 +8,8 @@ global-credential-providers = [
   # "cargo-credential-1password --account credibil.1password.com --vault Credibil",
 ]
 
-[env]
-CARGO_TARGET_WASM32_WASIP2_LINKER = "/Users/andrewweston/.cargo/bin/wasm-component-ld"
+# [env]
+# CARGO_TARGET_WASM32_WASIP2_LINKER = "/Users/andrewweston/.cargo/bin/wasm-component-ld"
 
 # [build]
 # targets = ["aarch64-apple-darwin", "wasm32-wasip2"]
