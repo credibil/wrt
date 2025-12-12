@@ -11,7 +11,7 @@ global-credential-providers = [
 
 
 # [env]
-# CARGO_TARGET_WASM32_WASIP2_LINKER = ".cargo/bin/wasm-component-ld"
+CARGO_TARGET_WASM32_WASIP2_LINKER = ".cargo/bin/wasm-component-ld"
 
 # [build]
 # targets = ["aarch64-apple-darwin", "wasm32-wasip2"]

@@ -42,7 +42,7 @@ use wasip3::http::types::{ErrorCode, Request, Response};
 /// HTTP handler struct.
 struct HttpGuest;
 
-/// Export the HTTP handler for the WASI runtime.
+// Export the HTTP handler for the WASI runtime.
 wasip3::http::proxy::export!(HttpGuest);
 
 impl Guest for HttpGuest {

@@ -44,16 +44,12 @@ directives are currently supported:
 Multiple directives can be combined in a comma-delimited list:
 
 ```http
-Cache-Control: max-age=86400,forward=https://example.com/api/v1/records/2934875
+Cache-Control: max-age=86400,no-cache
 ```
 
 > [!WARNING]
 > Currently, the [Cache-Control] header requires a corresponding [If-None-Match] header with a
 > single `<etag_value>` to use as the cache key.
-
-In the example guest an HTTP POST will cause an error: the [If-None-Match] header has been omitted
-to demonstrate that the caching implementation requires the guest to set this header alongside the
-[Cache-Control] header.
 
 [Cache-Control]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cache-Control
 [If-None-Match]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/If-None-Match
