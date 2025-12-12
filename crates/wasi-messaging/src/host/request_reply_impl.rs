@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use wasmtime::component::{Accessor, Resource};
+use wasmtime::component::{Access, Accessor, Resource};
 
 use crate::host::generated::wasi::messaging::request_reply::{
     Host, HostRequestOptions, HostRequestOptionsWithStore, HostWithStore,
@@ -52,42 +52,38 @@ impl HostWithStore for WasiMessaging {
 
 impl HostRequestOptionsWithStore for WasiMessaging {
     /// Creates a new request options resource with no options set.
-    async fn new<T>(accessor: &Accessor<T, Self>) -> anyhow::Result<Resource<RequestOptions>> {
+    fn new<T>(mut host: Access<'_, T, Self>) -> anyhow::Result<Resource<RequestOptions>> {
         let options = RequestOptions::default();
-        Ok(accessor.with(|mut store| store.get().table.push(options))?)
+        Ok(host.get().table.push(options)?)
     }
 
     /// The maximum amount of time to wait for a response. If the timeout value
     /// is not set, then the request/reply operation will block until a message
     /// is received in response.
-    async fn set_timeout_ms<T>(
-        accessor: &Accessor<T, Self>, self_: Resource<RequestOptions>, timeout_ms: u32,
+    fn set_timeout_ms<T>(
+        mut host: Access<'_, T, Self>, self_: Resource<RequestOptions>, timeout_ms: u32,
     ) -> anyhow::Result<()> {
-        accessor.with(|mut store| {
-            let options = store.get().table.get_mut(&self_)?;
-            options.timeout = Some(Duration::from_millis(u64::from(timeout_ms)));
-            Ok(())
-        })
+        let options = host.get().table.get_mut(&self_)?;
+        options.timeout = Some(Duration::from_millis(u64::from(timeout_ms)));
+        Ok(())
     }
 
     /// The maximum number of replies to expect before returning.
     ///
     /// For NATS, this is not configurable so this function does nothing.
-    async fn set_expected_replies<T>(
-        accessor: &Accessor<T, Self>, self_: Resource<RequestOptions>, expected_replies: u32,
+    fn set_expected_replies<T>(
+        mut host: Access<'_, T, Self>, self_: Resource<RequestOptions>, expected_replies: u32,
     ) -> anyhow::Result<()> {
-        accessor.with(|mut store| {
-            let options = store.get().table.get_mut(&self_)?;
-            options.expected_replies = Some(expected_replies);
-            Ok(())
-        })
+        let options = host.get().table.get_mut(&self_)?;
+        options.expected_replies = Some(expected_replies);
+        Ok(())
     }
 
     /// Removes the resource from the resource table.
-    async fn drop<T>(
-        accessor: &Accessor<T, Self>, rep: Resource<RequestOptions>,
+    fn drop<T>(
+        mut accessor: Access<'_, T, Self>, rep: Resource<RequestOptions>,
     ) -> anyhow::Result<()> {
-        accessor.with(|mut store| store.get().table.delete(rep).map(|_| Ok(())))?
+        Ok(accessor.get().table.delete(rep).map(|_| ())?)
     }
 }
 

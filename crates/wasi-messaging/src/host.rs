@@ -16,8 +16,8 @@ mod generated {
         world: "messaging",
         path: "wit",
         imports: {
-            // "wasi:messaging/types.[static]client.connect": ignore_wit,
-            default: async | store | tracing | trappable,
+            // "wasi:messaging/types.[static]client.connect": async | store | tracing | trappable,
+            default:  store | tracing | trappable,
         },
         exports: {
             default: async | store | tracing | trappable,
@@ -30,6 +30,7 @@ mod generated {
         trappable_error_type: {
             "wasi:messaging/types.error" => Error,
         },
+        // include_generated_code_from_file: true,
     });
 }
 
@@ -82,35 +83,63 @@ impl HasData for WasiMessaging {
 #[allow(unused)]
 pub trait WasiMessagingCtx: Debug + Send + Sync + 'static {
     /// Connect to the messaging system and return a client proxy.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the connection fails.
     fn connect(&self) -> FutureResult<Arc<dyn Client>>;
 
     /// Create a new message with the given payload.
-    fn new_message(&self, data: Vec<u8>) -> FutureResult<Arc<dyn Message>>;
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if message creation fails.
+    fn new_message(&self, data: Vec<u8>) -> anyhow::Result<Arc<dyn Message>>;
 
     /// Set the content-type on a message.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the content-type setting fails.
     fn set_content_type(
         &self, message: Arc<dyn Message>, content_type: String,
-    ) -> FutureResult<Arc<dyn Message>>;
+    ) -> anyhow::Result<Arc<dyn Message>>;
 
     /// Set the payload on a message.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the payload setting fails.
     fn set_payload(
         &self, message: Arc<dyn Message>, data: Vec<u8>,
-    ) -> FutureResult<Arc<dyn Message>>;
+    ) -> anyhow::Result<Arc<dyn Message>>;
 
     /// Append a key-value pair to the metadata of a message.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the metadata addition fails.
     fn add_metadata(
         &self, message: Arc<dyn Message>, key: String, value: String,
-    ) -> FutureResult<Arc<dyn Message>>;
+    ) -> anyhow::Result<Arc<dyn Message>>;
 
     /// Set all the metadata on a message.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the metadata setting fails.
     fn set_metadata(
         &self, message: Arc<dyn Message>, metadata: Metadata,
-    ) -> FutureResult<Arc<dyn Message>>;
+    ) -> anyhow::Result<Arc<dyn Message>>;
 
     /// Remove a key-value pair from the metadata of a message.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the metadata removal fails.
     fn remove_metadata(
         &self, message: Arc<dyn Message>, key: String,
-    ) -> FutureResult<Arc<dyn Message>>;
+    ) -> anyhow::Result<Arc<dyn Message>>;
 }
 
 /// View into [`WasiMessagingCtx`] implementation and [`ResourceTable`].

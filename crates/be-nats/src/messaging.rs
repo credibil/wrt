@@ -17,115 +17,98 @@ impl WasiMessagingCtx for crate::Client {
         async move { Ok(Arc::new(client) as Arc<dyn Client>) }.boxed()
     }
 
-    fn new_message(&self, data: Vec<u8>) -> FutureResult<Arc<dyn Message>> {
+    fn new_message(&self, data: Vec<u8>) -> anyhow::Result<Arc<dyn Message>> {
         let length = data.len();
-        async move {
-            let msg = async_nats::Message {
-                subject: String::new().into(),
-                reply: None,
-                payload: data.into(),
-                headers: None,
-                status: None,
-                description: None,
-                length,
-            };
-            Ok(Arc::new(NatsMessage(msg)) as Arc<dyn Message>)
-        }
-        .boxed()
+
+        let msg = async_nats::Message {
+            subject: String::new().into(),
+            reply: None,
+            payload: data.into(),
+            headers: None,
+            status: None,
+            description: None,
+            length,
+        };
+        Ok(Arc::new(NatsMessage(msg)) as Arc<dyn Message>)
     }
 
     fn set_content_type(
         &self, message: Arc<dyn Message>, content_type: String,
-    ) -> FutureResult<Arc<dyn Message>> {
-        async move {
-            let nats_msg = message
-                .as_any()
-                .downcast_ref::<NatsMessage>()
-                .ok_or_else(|| anyhow!("invalid message type"))?;
-            let mut msg = nats_msg.0.clone();
-            let mut headers = nats_msg.0.headers.clone().unwrap_or_default();
-            headers.insert("content-type".to_string(), content_type.clone());
-            msg.headers = Some(headers);
-            Ok(Arc::new(NatsMessage(msg)) as Arc<dyn Message>)
-        }
-        .boxed()
+    ) -> anyhow::Result<Arc<dyn Message>> {
+        let nats_msg = message
+            .as_any()
+            .downcast_ref::<NatsMessage>()
+            .ok_or_else(|| anyhow!("invalid message type"))?;
+        let mut msg = nats_msg.0.clone();
+        let mut headers = nats_msg.0.headers.clone().unwrap_or_default();
+        headers.insert("content-type".to_string(), content_type);
+        msg.headers = Some(headers);
+        Ok(Arc::new(NatsMessage(msg)) as Arc<dyn Message>)
     }
 
     fn set_payload(
         &self, message: Arc<dyn Message>, data: Vec<u8>,
-    ) -> FutureResult<Arc<dyn Message>> {
-        async move {
-            let nats_msg = message
-                .as_any()
-                .downcast_ref::<NatsMessage>()
-                .ok_or_else(|| anyhow!("invalid message type"))?;
-            let mut msg = nats_msg.0.clone();
-            msg.payload = data.clone().into();
-            msg.length = data.len();
-            Ok(Arc::new(NatsMessage(msg)) as Arc<dyn Message>)
-        }
-        .boxed()
+    ) -> anyhow::Result<Arc<dyn Message>> {
+        let nats_msg = message
+            .as_any()
+            .downcast_ref::<NatsMessage>()
+            .ok_or_else(|| anyhow!("invalid message type"))?;
+        let mut msg = nats_msg.0.clone();
+        msg.payload = data.clone().into();
+        msg.length = data.len();
+        Ok(Arc::new(NatsMessage(msg)) as Arc<dyn Message>)
     }
 
     fn add_metadata(
         &self, message: Arc<dyn Message>, key: String, value: String,
-    ) -> FutureResult<Arc<dyn Message>> {
-        async move {
-            let nats_msg = message
-                .as_any()
-                .downcast_ref::<NatsMessage>()
-                .ok_or_else(|| anyhow!("invalid message type"))?;
-            let mut msg = nats_msg.0.clone();
-            let mut headers = nats_msg.0.headers.clone().unwrap_or_default();
-            headers.insert(key.clone(), value.clone());
-            msg.headers = Some(headers);
-            Ok(Arc::new(NatsMessage(msg)) as Arc<dyn Message>)
-        }
-        .boxed()
+    ) -> anyhow::Result<Arc<dyn Message>> {
+        let nats_msg = message
+            .as_any()
+            .downcast_ref::<NatsMessage>()
+            .ok_or_else(|| anyhow!("invalid message type"))?;
+        let mut msg = nats_msg.0.clone();
+        let mut headers = nats_msg.0.headers.clone().unwrap_or_default();
+        headers.insert(key, value);
+        msg.headers = Some(headers);
+        Ok(Arc::new(NatsMessage(msg)) as Arc<dyn Message>)
     }
 
     fn set_metadata(
         &self, message: Arc<dyn Message>, metadata: Metadata,
-    ) -> FutureResult<Arc<dyn Message>> {
-        async move {
-            let nats_msg = message
-                .as_any()
-                .downcast_ref::<NatsMessage>()
-                .ok_or_else(|| anyhow!("invalid message type"))?;
-            let mut msg = nats_msg.0.clone();
-            let mut headers = async_nats::HeaderMap::new();
-            for (k, v) in &metadata.inner {
-                headers.insert(k.as_str(), v.as_str());
-            }
-            msg.headers = Some(headers);
-            Ok(Arc::new(NatsMessage(msg)) as Arc<dyn Message>)
+    ) -> anyhow::Result<Arc<dyn Message>> {
+        let nats_msg = message
+            .as_any()
+            .downcast_ref::<NatsMessage>()
+            .ok_or_else(|| anyhow!("invalid message type"))?;
+        let mut msg = nats_msg.0.clone();
+        let mut headers = async_nats::HeaderMap::new();
+        for (k, v) in &metadata.inner {
+            headers.insert(k.as_str(), v.as_str());
         }
-        .boxed()
+        msg.headers = Some(headers);
+        Ok(Arc::new(NatsMessage(msg)) as Arc<dyn Message>)
     }
 
     fn remove_metadata(
         &self, message: Arc<dyn Message>, key: String,
-    ) -> FutureResult<Arc<dyn Message>> {
-        async move {
-            let nats_msg = message
-                .as_any()
-                .downcast_ref::<NatsMessage>()
-                .ok_or_else(|| anyhow!("invalid message type"))?;
-            let mut msg = nats_msg.0.clone();
-            if let Some(headers) = nats_msg.0.headers.clone() {
-                let mut updated_headers = HeaderMap::new();
-                for (k, v) in headers.iter() {
-                    if k.to_string() != key {
-                        for iv in v {
-                            updated_headers.insert(k.clone(), iv.clone());
-                        }
+    ) -> anyhow::Result<Arc<dyn Message>> {
+        let nats_msg = message
+            .as_any()
+            .downcast_ref::<NatsMessage>()
+            .ok_or_else(|| anyhow!("invalid message type"))?;
+        let mut msg = nats_msg.0.clone();
+        if let Some(headers) = nats_msg.0.headers.clone() {
+            let mut updated_headers = HeaderMap::new();
+            for (k, v) in headers.iter() {
+                if k.to_string() != key {
+                    for iv in v {
+                        updated_headers.insert(k.clone(), iv.clone());
                     }
                 }
-                msg.headers = Some(updated_headers);
             }
-            Ok(Arc::new(NatsMessage(msg)) as Arc<dyn Message>)
+            msg.headers = Some(updated_headers);
         }
-        .boxed()
+        Ok(Arc::new(NatsMessage(msg)) as Arc<dyn Message>)
     }
 }
 

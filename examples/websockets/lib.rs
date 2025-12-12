@@ -24,7 +24,7 @@
 
 use std::println;
 
-use anyhow::{anyhow};
+use anyhow::anyhow;
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use serde_json::{Value, json};
