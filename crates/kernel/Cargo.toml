@@ -23,7 +23,6 @@ jit = ["wasmtime/cranelift"]
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 anyhow.workspace = true
-cfg-if.workspace = true
 clap = { version = "4.5.53", features = ["derive"] }
 credibil-error.workspace = true
 credibil-otel.workspace = true
