@@ -129,6 +129,12 @@ user-id = 6743 # Ed Page (epage)
 start = "2022-04-15"
 end = "2026-09-11"
 
+[[trusted.cmake]]
+criteria = "safe-to-deploy"
+user-id = 55123 # rust-lang-owner
+start = "2022-10-29"
+end = "2026-12-12"
+
 [[trusted.colorchoice]]
 criteria = "safe-to-deploy"
 user-id = 6743 # Ed Page (epage)
