@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 pub use kernel::FutureResult;
-use wasmtime::component::{Accessor, Resource};
+use wasmtime::component::{Access, Accessor, Resource};
 
 use crate::host::generated::wasi::websockets::store::{
     Host, HostServer, HostServerWithStore, HostWithStore,
@@ -47,10 +47,7 @@ impl HostServerWithStore for WasiWebSockets {
         ws_server.health_check().await
     }
 
-    async fn drop<T>(_a: &Accessor<T, Self>, _r: Resource<WebSocketProxy>) -> Result<()>
-    where
-        Self: Sized,
-    {
+    fn drop<T>(_: Access<'_, T, Self>, _r: Resource<WebSocketProxy>) -> Result<()> {
         Ok(())
     }
 }

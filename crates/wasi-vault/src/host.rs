@@ -16,7 +16,7 @@ mod generated {
         world: "vault",
         path: "wit",
         imports: {
-            default: async | store | tracing | trappable,
+            default: store | tracing | trappable,
         },
         with: {
             "wasi:vault/vault.locker": LockerProxy,

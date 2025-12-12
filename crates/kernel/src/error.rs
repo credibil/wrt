@@ -1,8 +1,7 @@
-#![cfg(not(target_arch = "wasm32"))]
-use credibil_error::Error;
+pub use credibil_error::Error;
 use tracing::{error, warn};
 
-pub fn log_with_metrics(err: &Error, service: &str, topic: &str) {
+pub fn to_metric(err: &Error, service: &str, topic: &str) {
     match err {
         Error::ServiceUnavailable(description) => {
             error!(

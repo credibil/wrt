@@ -1,6 +1,6 @@
 use anyhow::{Context, Result, anyhow};
 use bytes::{Bytes, BytesMut};
-use wasmtime::component::{Accessor, Resource};
+use wasmtime::component::{Access, Accessor, Resource};
 use wasmtime_wasi::p2::pipe::MemoryOutputPipe;
 
 use crate::host::generated::wasi::blobstore::container::{
@@ -17,18 +17,17 @@ pub type StreamObjectNames = Vec<String>;
 // impl container::Host for Host<'_> {}
 
 impl HostContainerWithStore for WasiBlobstore {
-    async fn name<T>(
-        accessor: &Accessor<T, Self>, self_: Resource<ContainerProxy>,
-    ) -> Result<String> {
-        let container = get_container(accessor, &self_)?;
-        container.name().await.context("getting name")
+    fn name<T>(mut host: Access<'_, T, Self>, self_: Resource<ContainerProxy>) -> Result<String> {
+        // let container = get_container(accessor, &self_)?;
+        let container = host.get().table.get(&self_).context("Container not found")?;
+        container.name().context("getting name")
     }
 
-    async fn info<T>(
-        accessor: &Accessor<T, Self>, self_: Resource<ContainerProxy>,
+    fn info<T>(
+        mut host: Access<'_, T, Self>, self_: Resource<ContainerProxy>,
     ) -> Result<ContainerMetadata> {
-        let container = get_container(accessor, &self_)?;
-        container.info().await.context("getting info")
+        let container = host.get().table.get(&self_).context("Container not found")?;
+        container.info().context("getting info")
     }
 
     async fn get_data<T>(
@@ -112,8 +111,8 @@ impl HostContainerWithStore for WasiBlobstore {
         Ok(())
     }
 
-    async fn drop<T>(accessor: &Accessor<T, Self>, rep: Resource<ContainerProxy>) -> Result<()> {
-        accessor.with(|mut store| store.get().table.delete(rep).map(|_| Ok(())))?
+    fn drop<T>(mut accessor: Access<'_, T, Self>, rep: Resource<ContainerProxy>) -> Result<()> {
+        Ok(accessor.get().table.delete(rep).map(|_| ())?)
     }
 }
 
@@ -130,8 +129,8 @@ impl HostStreamObjectNamesWithStore for WasiBlobstore {
         unimplemented!()
     }
 
-    async fn drop<T>(accessor: &Accessor<T, Self>, rep: Resource<StreamObjectNames>) -> Result<()> {
-        accessor.with(|mut store| store.get().table.delete(rep).map(|_| Ok(())))?
+    fn drop<T>(mut accessor: Access<'_, T, Self>, rep: Resource<StreamObjectNames>) -> Result<()> {
+        Ok(accessor.get().table.delete(rep).map(|_| ())?)
     }
 }
 

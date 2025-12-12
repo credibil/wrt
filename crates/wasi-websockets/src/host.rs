@@ -17,7 +17,7 @@ mod generated {
         world: "websockets",
         path: "wit",
         imports: {
-            default: async | store | tracing | trappable,
+            default: store | tracing | trappable,
         },
         trappable_error_type: {
             "wasi:websockets/types.error" => anyhow::Error,

@@ -1,5 +1,5 @@
 use anyhow::Result;
-use wasmtime::component::{Accessor, Resource};
+use wasmtime::component::{Access, Accessor, Resource};
 
 use crate::host::generated::wasi::sql::types::{
     Connection, DataType, Error, Host, HostConnection, HostConnectionWithStore, HostError,
@@ -25,10 +25,10 @@ impl HostConnectionWithStore for WasiSql {
         Ok(result)
     }
 
-    async fn drop<T>(
-        accessor: &Accessor<T, Self>, rep: Resource<ConnectionProxy>,
+    fn drop<T>(
+        mut accessor: Access<'_, T, Self>, rep: Resource<ConnectionProxy>,
     ) -> anyhow::Result<()> {
-        accessor.with(|mut store| store.get().table.delete(rep).map(|_| Ok(())))?
+        accessor.get().table.delete(rep).map(|_| Ok(()))?
     }
 }
 
@@ -40,23 +40,19 @@ impl HostStatementWithStore for WasiSql {
         Ok(Ok(accessor.with(|mut store| store.get().table.push(statement))?))
     }
 
-    async fn drop<T>(accessor: &Accessor<T, Self>, rep: Resource<Statement>) -> Result<()> {
-        Ok(accessor.with(|mut store| store.get().table.delete(rep).map(|_| ()))?)
+    fn drop<T>(mut accessor: Access<'_, T, Self>, rep: Resource<Statement>) -> anyhow::Result<()> {
+        Ok(accessor.get().table.delete(rep).map(|_| ())?)
     }
 }
 
 impl HostErrorWithStore for WasiSql {
-    async fn trace<T>(accessor: &Accessor<T, Self>, self_: Resource<Error>) -> Result<String> {
-        let err = accessor.with(|mut store| {
-            let err = store.get().table.get(&self_)?;
-            Ok::<String, anyhow::Error>(err.to_string())
-        })?;
-        tracing::error!("Guest error: {err}",);
-        Ok(err)
+    fn trace<T>(mut host: Access<'_, T, Self>, self_: Resource<Error>) -> Result<String> {
+        let err = host.get().table.get(&self_)?;
+        Ok(err.to_string())
     }
 
-    async fn drop<T>(accessor: &Accessor<T, Self>, rep: Resource<Error>) -> anyhow::Result<()> {
-        accessor.with(|mut store| store.get().table.delete(rep).map(|_| Ok(())))?
+    fn drop<T>(mut accessor: Access<'_, T, Self>, rep: Resource<Error>) -> anyhow::Result<()> {
+        Ok(accessor.get().table.delete(rep).map(|_| ())?)
     }
 }
 

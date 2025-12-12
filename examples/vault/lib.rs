@@ -34,10 +34,7 @@ use wasi_vault::vault;
 use wasip3::exports::http::handler::Guest;
 use wasip3::http::types::{ErrorCode, Request, Response};
 
-/// HTTP handler struct.
 struct Http;
-
-/// Export the HTTP handler for the WASI runtime.
 wasip3::http::proxy::export!(Http);
 
 impl Guest for Http {
@@ -71,15 +68,16 @@ impl Guest for Http {
 async fn handler(body: Bytes) -> Result<Json<Value>> {
     // Open a locker (namespace) for storing secrets.
     // The locker name maps to host configuration.
-    let locker = vault::open("credibil-locker").context("failed to open vault locker")?;
+    let locker =
+        vault::open("credibil-locker".to_string()).await.context("failed to open vault locker")?;
 
     // Store the secret under a key.
     // The data is securely stored by the backend.
-    locker.set("secret-id", &body).context("issue setting secret")?;
+    locker.set("secret-id".to_string(), body.to_vec()).await.context("issue setting secret")?;
 
     // Retrieve the secret to verify storage.
     // Returns Option<Vec<u8>> - None if not found.
-    let secret = locker.get("secret-id").context("issue retriving secret")?;
+    let secret = locker.get("secret-id".to_string()).await.context("issue retriving secret")?;
     assert_eq!(secret.unwrap(), body);
 
     // Return the data (for demo purposes - don't expose real secrets!).

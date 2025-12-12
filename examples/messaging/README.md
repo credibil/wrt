@@ -16,9 +16,5 @@ cargo run --example messaging -- run ./target/wasm32-wasip2/debug/examples/messa
 ## Test
 
 ```bash
-curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://localhost:8080
+curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://localhost:8080/pub-sub
 ```
-
-## What It Does
-
-This example demonstrates basic pub-sub messaging patterns using an in-memory message broker.

@@ -15,11 +15,10 @@ mod generated {
         world: "blobstore",
         path: "wit",
         imports: {
-            default: async | store | tracing | trappable,
+            default: store | tracing | trappable,
         },
         with: {
             "wasi:io": wasmtime_wasi::p2::bindings::io,
-
             "wasi:blobstore/types.incoming-value": IncomingValue,
             "wasi:blobstore/types.outgoing-value": OutgoingValue,
             "wasi:blobstore/container.container": ContainerProxy,

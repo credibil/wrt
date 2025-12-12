@@ -244,8 +244,8 @@ wit-bindgen = { version = "0.49.0", features = ["async-spawn"] }
 
 # credibil registry
 credibil-encoding = { version = "0.6.0", registry = "credibil" }
-credibil-otel = { version = "0.6.0", registry = "credibil" }
 credibil-error = { version = "0.6.0", registry = "credibil" }
+credibil-otel = { version = "0.6.0", registry = "credibil" }
 
 # interally referenced crates
 be-azure = { path = "crates/be-azure", version = "0.19.0", registry = "credibil" }
@@ -257,7 +257,6 @@ be-postgres = { path = "crates/be-postgres", version = "0.19.0", registry = "cre
 be-redis = { path = "crates/be-redis", version = "0.19.0", registry = "credibil" }
 buildgen = { path = "crates/buildgen", version = "0.19.0" }
 kernel = { path = "crates/kernel", version = "0.19.0", registry = "credibil" }
-utils = { path = "crates/utils", version = "0.19.0", registry = "credibil" }
 wasi-blobstore = { path = "crates/wasi-blobstore", version = "0.19.0", registry = "credibil" }
 wasi-http = { path = "crates/wasi-http", version = "0.19.0", registry = "credibil" }
 wasi-identity = { path = "crates/wasi-identity", version = "0.19.0", registry = "credibil" }
@@ -282,7 +281,7 @@ crate-type = ["cdylib"]
 
 [[example]]
 name = "blobstore"
-path = "examples/blobstore/main.rs"
+path = "examples/blobstore/runtime.rs"
 
 [[example]]
 name = "http-wasm"
@@ -291,7 +290,7 @@ crate-type = ["cdylib"]
 
 [[example]]
 name = "http"
-path = "examples/http/main.rs"
+path = "examples/http/runtime.rs"
 
 [[example]]
 name = "http-proxy-wasm"
@@ -300,7 +299,7 @@ crate-type = ["cdylib"]
 
 [[example]]
 name = "http-proxy"
-path = "examples/http-proxy/main.rs"
+path = "examples/http-proxy/runtime.rs"
 
 [[example]]
 name = "identity-wasm"
@@ -309,7 +308,7 @@ crate-type = ["cdylib"]
 
 [[example]]
 name = "identity"
-path = "examples/identity/main.rs"
+path = "examples/identity/runtime.rs"
 
 [[example]]
 name = "keyvalue-wasm"
@@ -318,7 +317,7 @@ crate-type = ["cdylib"]
 
 [[example]]
 name = "keyvalue"
-path = "examples/keyvalue/main.rs"
+path = "examples/keyvalue/runtime.rs"
 
 [[example]]
 name = "messaging-wasm"
@@ -327,7 +326,7 @@ crate-type = ["cdylib"]
 
 [[example]]
 name = "messaging"
-path = "examples/messaging/main.rs"
+path = "examples/messaging/runtime.rs"
 
 [[example]]
 name = "otel-wasm"
@@ -336,7 +335,7 @@ crate-type = ["cdylib"]
 
 [[example]]
 name = "otel"
-path = "examples/otel/main.rs"
+path = "examples/otel/runtime.rs"
 
 [[example]]
 name = "sql-wasm"
@@ -345,7 +344,7 @@ crate-type = ["cdylib"]
 
 [[example]]
 name = "sql"
-path = "examples/sql/main.rs"
+path = "examples/sql/runtime.rs"
 
 [[example]]
 name = "vault-wasm"
@@ -354,7 +353,7 @@ crate-type = ["cdylib"]
 
 [[example]]
 name = "vault"
-path = "examples/vault/main.rs"
+path = "examples/vault/runtime.rs"
 
 [[example]]
 name = "websockets-wasm"
@@ -363,5 +362,4 @@ crate-type = ["cdylib"]
 
 [[example]]
 name = "websockets"
-path = "examples/websockets/main.rs"
-
+path = "examples/websockets/runtime.rs"

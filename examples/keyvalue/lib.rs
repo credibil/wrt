@@ -27,10 +27,7 @@ use wasi_keyvalue::store;
 use wasip3::exports::http::handler::Guest;
 use wasip3::http::types::{ErrorCode, Request, Response};
 
-/// HTTP handler struct implementing the WASI HTTP Guest trait.
 struct Http;
-
-/// Export the HTTP handler for the WASI runtime.
 wasip3::http::proxy::export!(Http);
 
 impl Guest for Http {
@@ -66,16 +63,16 @@ async fn handler(body: Bytes) -> Result<Json<Value>> {
     // Open a named bucket. The bucket name is an application-level concept
     // that maps to whatever namespace/prefix the backend uses.
     // The `.context()` call adds a descriptive prefix to any errors.
-    let bucket = store::open("credibil_bucket").context("opening bucket")?;
+    let bucket = store::open("credibil_bucket".to_string()).await.context("opening bucket")?;
 
     // Store the request body under a fixed key.
     // In a real application, you'd likely derive the key from the request
     // (e.g., from a path parameter or request body field).
-    bucket.set("my_key", &body).context("storing data")?;
+    bucket.set("my_key".to_string(), body.to_vec()).await.context("storing data")?;
 
     // Verify the data was stored by reading it back.
     // This demonstrates the get operation and is useful for debugging.
-    let res = bucket.get("my_key");
+    let res = bucket.get("my_key".to_string()).await.context("reading data")?;
     tracing::debug!("found val: {res:?}");
 
     Ok(Json(json!({

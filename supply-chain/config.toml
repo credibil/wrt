@@ -151,7 +151,7 @@ version = "1.2.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.async-compression]]
-version = "0.4.35"
+version = "0.4.36"
 criteria = "safe-to-deploy"
 
 [[exemptions.async-lock]]
@@ -258,16 +258,12 @@ criteria = "safe-to-deploy"
 version = "0.4.42"
 criteria = "safe-to-deploy"
 
-[[exemptions.cmake]]
-version = "0.1.54"
-criteria = "safe-to-deploy"
-
 [[exemptions.combine]]
 version = "4.6.7"
 criteria = "safe-to-deploy"
 
 [[exemptions.compression-codecs]]
-version = "0.4.34"
+version = "0.4.35"
 criteria = "safe-to-deploy"
 
 [[exemptions.compression-core]]
@@ -307,55 +303,55 @@ version = "0.2.17"
 criteria = "safe-to-deploy"
 
 [[exemptions.cranelift-assembler-x64]]
-version = "0.127.0@git:c242041a2d80b4a78b17713c10573f94707e6e62"
+version = "0.127.0@git:fadd22ab5098f28f8318ca3c20fe59fa9f93baec"
 criteria = "safe-to-deploy"
 
 [[exemptions.cranelift-assembler-x64-meta]]
-version = "0.127.0@git:c242041a2d80b4a78b17713c10573f94707e6e62"
+version = "0.127.0@git:fadd22ab5098f28f8318ca3c20fe59fa9f93baec"
 criteria = "safe-to-deploy"
 
 [[exemptions.cranelift-bforest]]
-version = "0.127.0@git:c242041a2d80b4a78b17713c10573f94707e6e62"
+version = "0.127.0@git:fadd22ab5098f28f8318ca3c20fe59fa9f93baec"
 criteria = "safe-to-deploy"
 
 [[exemptions.cranelift-bitset]]
-version = "0.127.0@git:c242041a2d80b4a78b17713c10573f94707e6e62"
+version = "0.127.0@git:fadd22ab5098f28f8318ca3c20fe59fa9f93baec"
 criteria = "safe-to-deploy"
 
 [[exemptions.cranelift-codegen]]
-version = "0.127.0@git:c242041a2d80b4a78b17713c10573f94707e6e62"
+version = "0.127.0@git:fadd22ab5098f28f8318ca3c20fe59fa9f93baec"
 criteria = "safe-to-deploy"
 
 [[exemptions.cranelift-codegen-meta]]
-version = "0.127.0@git:c242041a2d80b4a78b17713c10573f94707e6e62"
+version = "0.127.0@git:fadd22ab5098f28f8318ca3c20fe59fa9f93baec"
 criteria = "safe-to-deploy"
 
 [[exemptions.cranelift-codegen-shared]]
-version = "0.127.0@git:c242041a2d80b4a78b17713c10573f94707e6e62"
+version = "0.127.0@git:fadd22ab5098f28f8318ca3c20fe59fa9f93baec"
 criteria = "safe-to-deploy"
 
 [[exemptions.cranelift-control]]
-version = "0.127.0@git:c242041a2d80b4a78b17713c10573f94707e6e62"
+version = "0.127.0@git:fadd22ab5098f28f8318ca3c20fe59fa9f93baec"
 criteria = "safe-to-deploy"
 
 [[exemptions.cranelift-entity]]
-version = "0.127.0@git:c242041a2d80b4a78b17713c10573f94707e6e62"
+version = "0.127.0@git:fadd22ab5098f28f8318ca3c20fe59fa9f93baec"
 criteria = "safe-to-deploy"
 
 [[exemptions.cranelift-frontend]]
-version = "0.127.0@git:c242041a2d80b4a78b17713c10573f94707e6e62"
+version = "0.127.0@git:fadd22ab5098f28f8318ca3c20fe59fa9f93baec"
 criteria = "safe-to-deploy"
 
 [[exemptions.cranelift-isle]]
-version = "0.127.0@git:c242041a2d80b4a78b17713c10573f94707e6e62"
+version = "0.127.0@git:fadd22ab5098f28f8318ca3c20fe59fa9f93baec"
 criteria = "safe-to-deploy"
 
 [[exemptions.cranelift-native]]
-version = "0.127.0@git:c242041a2d80b4a78b17713c10573f94707e6e62"
+version = "0.127.0@git:fadd22ab5098f28f8318ca3c20fe59fa9f93baec"
 criteria = "safe-to-deploy"
 
 [[exemptions.cranelift-srcgen]]
-version = "0.127.0@git:c242041a2d80b4a78b17713c10573f94707e6e62"
+version = "0.127.0@git:fadd22ab5098f28f8318ca3c20fe59fa9f93baec"
 criteria = "safe-to-deploy"
 
 [[exemptions.crc32fast]]
@@ -611,14 +607,6 @@ version = "2.1.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.icu_normalizer_data]]
-version = "2.1.1"
-criteria = "safe-to-deploy"
-
-[[exemptions.icu_properties]]
-version = "2.1.1"
-criteria = "safe-to-deploy"
-
-[[exemptions.icu_properties_data]]
 version = "2.1.1"
 criteria = "safe-to-deploy"
 
@@ -919,11 +907,11 @@ version = "0.9.6"
 criteria = "safe-to-deploy"
 
 [[exemptions.pulley-interpreter]]
-version = "40.0.0@git:c242041a2d80b4a78b17713c10573f94707e6e62"
+version = "40.0.0@git:fadd22ab5098f28f8318ca3c20fe59fa9f93baec"
 criteria = "safe-to-deploy"
 
 [[exemptions.pulley-macros]]
-version = "40.0.0@git:c242041a2d80b4a78b17713c10573f94707e6e62"
+version = "40.0.0@git:fadd22ab5098f28f8318ca3c20fe59fa9f93baec"
 criteria = "safe-to-deploy"
 
 [[exemptions.quad-rand]]
@@ -959,7 +947,7 @@ version = "4.9.0+2.10.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.redis]]
-version = "1.0.0"
+version = "1.0.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.redox_syscall]]
@@ -1335,71 +1323,71 @@ version = "0.4.2"
 criteria = "safe-to-deploy"
 
 [[exemptions.wasmtime]]
-version = "40.0.0@git:c242041a2d80b4a78b17713c10573f94707e6e62"
+version = "40.0.0@git:fadd22ab5098f28f8318ca3c20fe59fa9f93baec"
 criteria = "safe-to-deploy"
 
 [[exemptions.wasmtime-environ]]
-version = "40.0.0@git:c242041a2d80b4a78b17713c10573f94707e6e62"
+version = "40.0.0@git:fadd22ab5098f28f8318ca3c20fe59fa9f93baec"
 criteria = "safe-to-deploy"
 
 [[exemptions.wasmtime-internal-component-macro]]
-version = "40.0.0@git:c242041a2d80b4a78b17713c10573f94707e6e62"
+version = "40.0.0@git:fadd22ab5098f28f8318ca3c20fe59fa9f93baec"
 criteria = "safe-to-deploy"
 
 [[exemptions.wasmtime-internal-component-util]]
-version = "40.0.0@git:c242041a2d80b4a78b17713c10573f94707e6e62"
+version = "40.0.0@git:fadd22ab5098f28f8318ca3c20fe59fa9f93baec"
 criteria = "safe-to-deploy"
 
 [[exemptions.wasmtime-internal-cranelift]]
-version = "40.0.0@git:c242041a2d80b4a78b17713c10573f94707e6e62"
+version = "40.0.0@git:fadd22ab5098f28f8318ca3c20fe59fa9f93baec"
 criteria = "safe-to-deploy"
 
 [[exemptions.wasmtime-internal-fiber]]
-version = "40.0.0@git:c242041a2d80b4a78b17713c10573f94707e6e62"
+version = "40.0.0@git:fadd22ab5098f28f8318ca3c20fe59fa9f93baec"
 criteria = "safe-to-deploy"
 
 [[exemptions.wasmtime-internal-jit-debug]]
-version = "40.0.0@git:c242041a2d80b4a78b17713c10573f94707e6e62"
+version = "40.0.0@git:fadd22ab5098f28f8318ca3c20fe59fa9f93baec"
 criteria = "safe-to-deploy"
 
 [[exemptions.wasmtime-internal-jit-icache-coherence]]
-version = "40.0.0@git:c242041a2d80b4a78b17713c10573f94707e6e62"
+version = "40.0.0@git:fadd22ab5098f28f8318ca3c20fe59fa9f93baec"
 criteria = "safe-to-deploy"
 
 [[exemptions.wasmtime-internal-math]]
-version = "40.0.0@git:c242041a2d80b4a78b17713c10573f94707e6e62"
+version = "40.0.0@git:fadd22ab5098f28f8318ca3c20fe59fa9f93baec"
 criteria = "safe-to-deploy"
 
 [[exemptions.wasmtime-internal-slab]]
-version = "40.0.0@git:c242041a2d80b4a78b17713c10573f94707e6e62"
+version = "40.0.0@git:fadd22ab5098f28f8318ca3c20fe59fa9f93baec"
 criteria = "safe-to-deploy"
 
 [[exemptions.wasmtime-internal-unwinder]]
-version = "40.0.0@git:c242041a2d80b4a78b17713c10573f94707e6e62"
+version = "40.0.0@git:fadd22ab5098f28f8318ca3c20fe59fa9f93baec"
 criteria = "safe-to-deploy"
 
 [[exemptions.wasmtime-internal-versioned-export-macros]]
-version = "40.0.0@git:c242041a2d80b4a78b17713c10573f94707e6e62"
+version = "40.0.0@git:fadd22ab5098f28f8318ca3c20fe59fa9f93baec"
 criteria = "safe-to-deploy"
 
 [[exemptions.wasmtime-internal-winch]]
-version = "40.0.0@git:c242041a2d80b4a78b17713c10573f94707e6e62"
+version = "40.0.0@git:fadd22ab5098f28f8318ca3c20fe59fa9f93baec"
 criteria = "safe-to-deploy"
 
 [[exemptions.wasmtime-internal-wit-bindgen]]
-version = "40.0.0@git:c242041a2d80b4a78b17713c10573f94707e6e62"
+version = "40.0.0@git:fadd22ab5098f28f8318ca3c20fe59fa9f93baec"
 criteria = "safe-to-deploy"
 
 [[exemptions.wasmtime-wasi]]
-version = "40.0.0@git:c242041a2d80b4a78b17713c10573f94707e6e62"
+version = "40.0.0@git:fadd22ab5098f28f8318ca3c20fe59fa9f93baec"
 criteria = "safe-to-deploy"
 
 [[exemptions.wasmtime-wasi-http]]
-version = "40.0.0@git:c242041a2d80b4a78b17713c10573f94707e6e62"
+version = "40.0.0@git:fadd22ab5098f28f8318ca3c20fe59fa9f93baec"
 criteria = "safe-to-deploy"
 
 [[exemptions.wasmtime-wasi-io]]
-version = "40.0.0@git:c242041a2d80b4a78b17713c10573f94707e6e62"
+version = "40.0.0@git:fadd22ab5098f28f8318ca3c20fe59fa9f93baec"
 criteria = "safe-to-deploy"
 
 [[exemptions.web-sys]]
@@ -1427,19 +1415,19 @@ version = "1.2.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.wiggle]]
-version = "40.0.0@git:c242041a2d80b4a78b17713c10573f94707e6e62"
+version = "40.0.0@git:fadd22ab5098f28f8318ca3c20fe59fa9f93baec"
 criteria = "safe-to-deploy"
 
 [[exemptions.wiggle-generate]]
-version = "40.0.0@git:c242041a2d80b4a78b17713c10573f94707e6e62"
+version = "40.0.0@git:fadd22ab5098f28f8318ca3c20fe59fa9f93baec"
 criteria = "safe-to-deploy"
 
 [[exemptions.wiggle-macro]]
-version = "40.0.0@git:c242041a2d80b4a78b17713c10573f94707e6e62"
+version = "40.0.0@git:fadd22ab5098f28f8318ca3c20fe59fa9f93baec"
 criteria = "safe-to-deploy"
 
 [[exemptions.winch-codegen]]
-version = "40.0.0@git:c242041a2d80b4a78b17713c10573f94707e6e62"
+version = "40.0.0@git:fadd22ab5098f28f8318ca3c20fe59fa9f93baec"
 criteria = "safe-to-deploy"
 
 [[exemptions.winreg]]

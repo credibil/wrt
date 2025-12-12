@@ -18,7 +18,3 @@ cargo run --example identity -- run ./target/wasm32-wasip2/debug/examples/identi
 ```bash
 curl http://localhost:8080
 ```
-
-## What It Does
-
-This example demonstrates identity/authentication capabilities within a WASI guest module.

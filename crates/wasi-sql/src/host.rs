@@ -18,7 +18,7 @@ mod generated {
         world: "sql",
         path: "wit",
         imports: {
-            default: async | store | tracing | trappable,
+            default: store | tracing | trappable,
         },
         with: {
             "wasi:sql/types.connection": ConnectionProxy,

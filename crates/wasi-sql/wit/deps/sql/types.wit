@@ -37,7 +37,7 @@ interface types {
     /// allows parameterized queries
     /// e.g., prepare("SELECT * FROM users WHERE name = ? AND age = ?", vec![DataType::String("John Doe"), DataType::Int32(32)])
     resource statement {
-        prepare: static func(query: string, params: list<data-type>) -> result<statement, error>;
+        prepare: static async func(query: string, params: list<data-type>) -> result<statement, error>;
     }
     /// An error resource type.
     /// Currently, this provides only one function to return a string representation
@@ -48,6 +48,6 @@ interface types {
     
     /// A connection to a sql store.
     resource connection {
-        open: static func(name: string) -> result<connection, error>;
+        open: static async func(name: string) -> result<connection, error>;
     }
 }

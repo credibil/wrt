@@ -25,7 +25,7 @@ where
 
     // check cache when indicated by request
     if let Some(cache) = maybe_cache.as_ref()
-        && let Some(hit) = cache.get()?
+        && let Some(hit) = cache.get().await?
     {
         tracing::debug!("cache hit");
         return Ok(hit);
@@ -51,7 +51,7 @@ where
     // add ETag header and cache response when indicated by request
     if let Some(cache) = maybe_cache {
         headers.insert(http::header::ETAG, http::HeaderValue::from_str(&cache.etag())?);
-        cache.put(&response)?;
+        cache.put(&response).await?;
         tracing::debug!("response cached");
     }
 

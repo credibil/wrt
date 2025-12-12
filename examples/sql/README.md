@@ -18,7 +18,3 @@ cargo run --example sql -- run ./target/wasm32-wasip2/debug/examples/sql_wasm.wa
 ```bash
 curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://localhost:8080
 ```
-
-## What It Does
-
-This example demonstrates SQL database operations using an in-memory database implementation.

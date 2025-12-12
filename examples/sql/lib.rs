@@ -38,10 +38,7 @@ use wasi_sql::{into_json, readwrite};
 use wasip3::exports::http::handler::Guest;
 use wasip3::http::types::{ErrorCode, Request, Response};
 
-/// HTTP handler struct.
 struct Http;
-
-/// Export the HTTP handler for the WASI runtime.
 wasip3::http::proxy::export!(Http);
 
 impl Guest for Http {
@@ -69,15 +66,17 @@ async fn query() -> Result<Json<Value>> {
     tracing::info!("query database");
 
     // Open connection using named pool from host configuration.
-    let pool =
-        Connection::open("postgres").map_err(|e| anyhow!("failed to open connection: {e:?}"))?;
+    let pool = Connection::open("postgres".to_string())
+        .await
+        .map_err(|e| anyhow!("failed to open connection: {e:?}"))?;
 
     // Prepare a SELECT statement (no parameters needed).
-    let stmt = Statement::prepare("SELECT * from mytable;", &[])
+    let stmt = Statement::prepare("SELECT * from mytable;".to_string(), vec![])
+        .await
         .map_err(|e| anyhow!("failed to prepare statement: {e:?}"))?;
 
     // Execute query and get results.
-    let res = readwrite::query(&pool, &stmt).map_err(|e| anyhow!("query failed: {e:?}"))?;
+    let res = readwrite::query(&pool, &stmt).await.map_err(|e| anyhow!("query failed: {e:?}"))?;
 
     // Convert to JSON for HTTP response.
     Ok(Json(into_json(res)?))
@@ -113,12 +112,15 @@ async fn insert(_body: Bytes) -> Result<Json<Value>> {
 
     tracing::debug!("opening connection");
 
-    let pool = Connection::open("db").map_err(|e| anyhow!("failed to open connection: {e:?}"))?;
-    let stmt = Statement::prepare(insert, &params)
+    let pool = Connection::open("db".to_string())
+        .await
+        .map_err(|e| anyhow!("failed to open connection: {e:?}"))?;
+    let stmt = Statement::prepare(insert.to_string(), params)
+        .await
         .map_err(|e| anyhow!("failed to prepare statement: {e:?}"))?;
 
     // Use exec() for INSERT/UPDATE/DELETE (returns affected row count).
-    let res = readwrite::exec(&pool, &stmt).map_err(|e| anyhow!("query failed: {e:?}"))?;
+    let res = readwrite::exec(&pool, &stmt).await.map_err(|e| anyhow!("query failed: {e:?}"))?;
 
     Ok(Json(json!({
         "message": res

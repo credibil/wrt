@@ -24,123 +24,106 @@ impl WasiMessagingCtx for crate::Client {
         async move { Ok(Arc::new(client) as Arc<dyn Client>) }.boxed()
     }
 
-    fn new_message(&self, data: Vec<u8>) -> FutureResult<Arc<dyn Message>> {
+    fn new_message(&self, data: Vec<u8>) -> anyhow::Result<Arc<dyn Message>> {
         let now = Timestamp::CreateTime(chrono::Utc::now().timestamp_millis());
-        async move {
-            let msg = OwnedMessage::new(
-                Some(data),    // payload
-                None,          // key
-                String::new(), // topic
-                now,           // timestamp,
-                0,             // partition
-                0,             // offset
-                None,          // headers
-            );
-            Ok(Arc::new(KafkaMessage(msg)) as Arc<dyn Message>)
-        }
-        .boxed()
+
+        let msg = OwnedMessage::new(
+            Some(data),    // payload
+            None,          // key
+            String::new(), // topic
+            now,           // timestamp,
+            0,             // partition
+            0,             // offset
+            None,          // headers
+        );
+        Ok(Arc::new(KafkaMessage(msg)) as Arc<dyn Message>)
     }
 
     fn set_content_type(
         &self, message: Arc<dyn Message>, content_type: String,
-    ) -> FutureResult<Arc<dyn Message>> {
-        async move {
-            let kafka_msg = message
-                .as_any()
-                .downcast_ref::<KafkaMessage>()
-                .ok_or_else(|| anyhow!("invalid message type"))?;
-            let msg = kafka_msg.0.clone();
-            let headers = kafka_msg.0.headers().cloned().unwrap_or_default();
-            let content_header = Header {
-                key: "content-type",
-                value: Some(content_type.as_bytes()),
-            };
-            let headers = headers.insert(content_header);
-            let msg = msg.replace_headers(Some(headers));
-            Ok(Arc::new(KafkaMessage(msg)) as Arc<dyn Message>)
-        }
-        .boxed()
+    ) -> anyhow::Result<Arc<dyn Message>> {
+        let kafka_msg = message
+            .as_any()
+            .downcast_ref::<KafkaMessage>()
+            .ok_or_else(|| anyhow!("invalid message type"))?;
+        let msg = kafka_msg.0.clone();
+        let headers = kafka_msg.0.headers().cloned().unwrap_or_default();
+        let content_header = Header {
+            key: "content-type",
+            value: Some(content_type.as_bytes()),
+        };
+        let headers = headers.insert(content_header);
+        let msg = msg.replace_headers(Some(headers));
+        Ok(Arc::new(KafkaMessage(msg)) as Arc<dyn Message>)
     }
 
     fn set_payload(
         &self, message: Arc<dyn Message>, data: Vec<u8>,
-    ) -> FutureResult<Arc<dyn Message>> {
-        async move {
-            let kafka_msg = message
-                .as_any()
-                .downcast_ref::<KafkaMessage>()
-                .ok_or_else(|| anyhow!("invalid message type"))?;
-            let msg = kafka_msg.0.clone();
-            let msg = msg.set_payload(Some(data.clone()));
-            Ok(Arc::new(KafkaMessage(msg)) as Arc<dyn Message>)
-        }
-        .boxed()
+    ) -> anyhow::Result<Arc<dyn Message>> {
+        let kafka_msg = message
+            .as_any()
+            .downcast_ref::<KafkaMessage>()
+            .ok_or_else(|| anyhow!("invalid message type"))?;
+        let msg = kafka_msg.0.clone();
+        let msg = msg.set_payload(Some(data));
+        Ok(Arc::new(KafkaMessage(msg)) as Arc<dyn Message>)
     }
 
     fn add_metadata(
         &self, message: Arc<dyn Message>, key: String, value: String,
-    ) -> FutureResult<Arc<dyn Message>> {
-        async move {
-            let kafka_msg = message
-                .as_any()
-                .downcast_ref::<KafkaMessage>()
-                .ok_or_else(|| anyhow!("invalid message type"))?;
-            let msg = kafka_msg.0.clone();
-            let headers = kafka_msg.0.headers().cloned().unwrap_or_default();
-            let new_header = Header {
-                key: &key,
-                value: Some(value.as_bytes()),
-            };
-            let headers = headers.insert(new_header);
-            let msg = msg.replace_headers(Some(headers));
-            Ok(Arc::new(KafkaMessage(msg)) as Arc<dyn Message>)
-        }
-        .boxed()
+    ) -> anyhow::Result<Arc<dyn Message>> {
+        let kafka_msg = message
+            .as_any()
+            .downcast_ref::<KafkaMessage>()
+            .ok_or_else(|| anyhow!("invalid message type"))?;
+        let msg = kafka_msg.0.clone();
+        let headers = kafka_msg.0.headers().cloned().unwrap_or_default();
+        let new_header = Header {
+            key: &key,
+            value: Some(value.as_bytes()),
+        };
+        let headers = headers.insert(new_header);
+        let msg = msg.replace_headers(Some(headers));
+        Ok(Arc::new(KafkaMessage(msg)) as Arc<dyn Message>)
     }
 
     fn set_metadata(
         &self, message: Arc<dyn Message>, metadata: Metadata,
-    ) -> FutureResult<Arc<dyn Message>> {
-        async move {
-            let kafka_msg = message
-                .as_any()
-                .downcast_ref::<KafkaMessage>()
-                .ok_or_else(|| anyhow!("invalid message type"))?;
-            let msg = kafka_msg.0.clone();
-            let mut headers = OwnedHeaders::new();
-            for (k, v) in &metadata.inner {
-                let header = Header {
-                    key: k,
-                    value: Some(v.as_bytes()),
-                };
-                headers = headers.insert(header);
-            }
-            let msg = msg.replace_headers(Some(headers));
-            Ok(Arc::new(KafkaMessage(msg)) as Arc<dyn Message>)
+    ) -> anyhow::Result<Arc<dyn Message>> {
+        let kafka_msg = message
+            .as_any()
+            .downcast_ref::<KafkaMessage>()
+            .ok_or_else(|| anyhow!("invalid message type"))?;
+        let msg = kafka_msg.0.clone();
+        let mut headers = OwnedHeaders::new();
+        for (k, v) in &metadata.inner {
+            let header = Header {
+                key: k,
+                value: Some(v.as_bytes()),
+            };
+            headers = headers.insert(header);
         }
-        .boxed()
+        let msg = msg.replace_headers(Some(headers));
+        Ok(Arc::new(KafkaMessage(msg)) as Arc<dyn Message>)
     }
 
     fn remove_metadata(
         &self, message: Arc<dyn Message>, key: String,
-    ) -> FutureResult<Arc<dyn Message>> {
-        async move {
-            let kafka_msg = message
-                .as_any()
-                .downcast_ref::<KafkaMessage>()
-                .ok_or_else(|| anyhow!("invalid message type"))?;
-            let msg = kafka_msg.0.clone();
-            let headers = kafka_msg.0.headers().cloned().unwrap_or_default();
-            let mut new_headers = OwnedHeaders::new();
-            for h in headers.iter() {
-                if h.key != key {
-                    new_headers = new_headers.insert(h.clone());
-                }
+    ) -> anyhow::Result<Arc<dyn Message>> {
+        let kafka_msg = message
+            .as_any()
+            .downcast_ref::<KafkaMessage>()
+            .ok_or_else(|| anyhow!("invalid message type"))?;
+        let msg = kafka_msg.0.clone();
+        let headers = kafka_msg.0.headers().cloned().unwrap_or_default();
+        let mut new_headers = OwnedHeaders::new();
+        for h in headers.iter() {
+            if h.key != key {
+                new_headers = new_headers.insert(h.clone());
             }
-            let msg = msg.replace_headers(Some(new_headers));
-            Ok(Arc::new(KafkaMessage(msg)) as Arc<dyn Message>)
         }
-        .boxed()
+        let msg = msg.replace_headers(Some(new_headers));
+        Ok(Arc::new(KafkaMessage(msg)) as Arc<dyn Message>)
     }
 }
 

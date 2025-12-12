@@ -70,19 +70,17 @@ pub struct MongoDbContainer {
 }
 
 impl Container for MongoDbContainer {
-    fn name(&self) -> FutureResult<String> {
+    fn name(&self) -> anyhow::Result<String> {
         tracing::trace!("getting container name");
-        let name = self.name.clone();
-        async move { Ok(name) }.boxed()
+        Ok(self.name.clone())
     }
 
-    fn info(&self) -> FutureResult<ContainerMetadata> {
+    fn info(&self) -> anyhow::Result<ContainerMetadata> {
         tracing::trace!("getting container info");
-        let metadata = ContainerMetadata {
+        Ok(ContainerMetadata {
             name: self.name.clone(),
             created_at: 0,
-        };
-        async move { Ok(metadata) }.boxed()
+        })
     }
 
     /// Get the value associated with the key.

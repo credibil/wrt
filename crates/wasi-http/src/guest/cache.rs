@@ -60,7 +60,7 @@ impl Cache {
     ///
     /// * cache retrieval errors
     /// * deserialization errors
-    pub fn get(&self) -> Result<Option<Response<Bytes>>> {
+    pub async fn get(&self) -> Result<Option<Response<Bytes>>> {
         let ctrl = &self.control;
 
         if ctrl.no_cache || ctrl.no_store || ctrl.etag.is_empty() {
@@ -70,9 +70,10 @@ impl Cache {
 
         tracing::debug!("retrieving cached response with etag `{}`", &ctrl.etag);
 
-        let cache = wasi_keyvalue::cache::open(&self.bucket)?;
+        let cache = wasi_keyvalue::cache::open(&self.bucket).await?;
         cache
             .get(&ctrl.etag)
+            .await
             .context("retrieving cached response")?
             .map_or(Ok(None), |data| deserialize(&data).map(Some))
     }
@@ -83,7 +84,7 @@ impl Cache {
     ///
     /// * serialization errors
     /// * cache storage errors
-    pub fn put(&self, response: &Response<Bytes>) -> Result<()> {
+    pub async fn put(&self, response: &Response<Bytes>) -> Result<()> {
         let ctrl = &self.control;
         if ctrl.no_store || ctrl.etag.is_empty() || ctrl.max_age == 0 {
             return Ok(());
@@ -91,9 +92,10 @@ impl Cache {
 
         tracing::debug!("caching response with etag `{}`", &ctrl.etag);
 
-        let cache = wasi_keyvalue::cache::open(&self.bucket)?;
+        let cache = wasi_keyvalue::cache::open(&self.bucket).await?;
         cache
             .set(&ctrl.etag, &serialize(response)?, Some(ctrl.max_age))
+            .await
             .map_or_else(|e| Err(anyhow!("caching response: {e}")), |_| Ok(()))
     }
 

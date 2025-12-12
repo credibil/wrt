@@ -7,7 +7,7 @@ interface types {
 
     /// A connection to a message-exchange service (e.g., buffer, broker, etc.).
     resource client {
-        connect: static func(name: string) -> result<client, error>;
+        connect: static async func(name: string) -> result<client, error>;
         disconnect: func() -> result<_, error>;
     }
     

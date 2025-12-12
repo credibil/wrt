@@ -2,19 +2,15 @@
 //!
 //! This is a lightweight implementation for development use only.
 
-#![allow(clippy::significant_drop_tightening)]
-#![allow(clippy::used_underscore_binding)]
-#![allow(clippy::assigning_clones)]
-#![allow(clippy::semicolon_outside_block)]
-
 use std::any::Any;
-use std::collections::HashMap;
 use std::sync::Arc;
 
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use futures::FutureExt;
-use futures::stream::{self, StreamExt};
+use futures::stream::StreamExt;
 use kernel::Backend;
+use tokio::sync::broadcast::{self, Receiver, Sender};
+use tokio_stream::wrappers::BroadcastStream;
 use tracing::instrument;
 
 use crate::host::WasiMessagingCtx;
@@ -31,176 +27,154 @@ impl kernel::FromEnv for ConnectOptions {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct WasiMessagingCtxImpl {
-    // Using Arc for shared state across instances
-    store: Arc<parking_lot::RwLock<HashMap<String, Vec<InMemoryMessage>>>>,
+    sender: Sender<MessageProxy>,
+    receiver: Receiver<MessageProxy>,
+}
+
+impl Clone for WasiMessagingCtxImpl {
+    fn clone(&self) -> Self {
+        Self {
+            sender: self.sender.clone(),
+            receiver: self.sender.subscribe(),
+        }
+    }
 }
 
 impl Backend for WasiMessagingCtxImpl {
     type ConnectOptions = ConnectOptions;
 
     #[instrument]
-    async fn connect_with(_options: Self::ConnectOptions) -> Result<Self> {
+    async fn connect_with(options: Self::ConnectOptions) -> Result<Self> {
         tracing::debug!("initializing in-memory messaging");
-        Ok(Self {
-            store: Arc::new(parking_lot::RwLock::new(HashMap::new())),
-        })
+        let (sender, receiver) = broadcast::channel::<MessageProxy>(32);
+        Ok(Self { sender, receiver })
     }
 }
 
 impl WasiMessagingCtx for WasiMessagingCtxImpl {
     fn connect(&self) -> FutureResult<Arc<dyn Client>> {
         tracing::debug!("connecting messaging client");
-        let client = InMemoryClient {
-            store: Arc::clone(&self.store),
-        };
+        let client = self.clone();
         async move { Ok(Arc::new(client) as Arc<dyn Client>) }.boxed()
     }
 
-    fn new_message(&self, data: Vec<u8>) -> FutureResult<Arc<dyn Message>> {
+    fn new_message(&self, data: Vec<u8>) -> anyhow::Result<Arc<dyn Message>> {
         tracing::debug!("creating new message");
-        let message = InMemoryMessage {
-            topic: String::new(),
-            payload: data,
-            metadata: None,
-            description: None,
-            reply: None,
-        };
-        async move { Ok(Arc::new(message) as Arc<dyn Message>) }.boxed()
+        let message = InMemMessage::from(data);
+        Ok(Arc::new(message) as Arc<dyn Message>)
     }
 
     fn set_content_type(
         &self, message: Arc<dyn Message>, content_type: String,
-    ) -> FutureResult<Arc<dyn Message>> {
+    ) -> anyhow::Result<Arc<dyn Message>> {
         tracing::debug!("setting content-type: {}", content_type);
-        async move {
-            let msg = message
-                .as_any()
-                .downcast_ref::<InMemoryMessage>()
-                .ok_or_else(|| anyhow::anyhow!("invalid message type"))?;
 
-            let mut new_msg = msg.clone();
-            let mut metadata = new_msg.metadata.unwrap_or_default();
-            metadata.insert("content-type".to_string(), content_type);
-            new_msg.metadata = Some(metadata);
+        let Some(inmem) = message.as_any().downcast_ref::<InMemMessage>() else {
+            anyhow::bail!("invalid message type");
+        };
 
-            Ok(Arc::new(new_msg) as Arc<dyn Message>)
-        }
-        .boxed()
+        let mut updated = inmem.clone();
+        let mut metadata = updated.metadata.unwrap_or_default();
+        metadata.insert("content-type".to_string(), content_type);
+        updated.metadata = Some(metadata);
+
+        Ok(Arc::new(updated) as Arc<dyn Message>)
     }
 
     fn set_payload(
         &self, message: Arc<dyn Message>, data: Vec<u8>,
-    ) -> FutureResult<Arc<dyn Message>> {
+    ) -> anyhow::Result<Arc<dyn Message>> {
         tracing::debug!("setting payload");
-        async move {
-            let msg = message
-                .as_any()
-                .downcast_ref::<InMemoryMessage>()
-                .ok_or_else(|| anyhow::anyhow!("invalid message type"))?;
 
-            let mut new_msg = msg.clone();
-            new_msg.payload = data;
+        let Some(inmem) = message.as_any().downcast_ref::<InMemMessage>() else {
+            anyhow::bail!("invalid message type");
+        };
 
-            Ok(Arc::new(new_msg) as Arc<dyn Message>)
-        }
-        .boxed()
+        let mut updated = inmem.clone();
+        updated.payload = data;
+
+        Ok(Arc::new(updated) as Arc<dyn Message>)
     }
 
     fn add_metadata(
         &self, message: Arc<dyn Message>, key: String, value: String,
-    ) -> FutureResult<Arc<dyn Message>> {
-        tracing::debug!("adding metadata: {} = {}", key, value);
-        async move {
-            let msg = message
-                .as_any()
-                .downcast_ref::<InMemoryMessage>()
-                .ok_or_else(|| anyhow::anyhow!("invalid message type"))?;
+    ) -> anyhow::Result<Arc<dyn Message>> {
+        tracing::debug!("adding metadata: {key} = {value}");
 
-            let mut new_msg = msg.clone();
-            let mut metadata = new_msg.metadata.unwrap_or_default();
-            metadata.insert(key, value);
-            new_msg.metadata = Some(metadata);
+        let Some(inmem) = message.as_any().downcast_ref::<InMemMessage>() else {
+            anyhow::bail!("invalid message type");
+        };
 
-            Ok(Arc::new(new_msg) as Arc<dyn Message>)
-        }
-        .boxed()
+        let mut updated = inmem.clone();
+        let mut metadata = updated.metadata.unwrap_or_default();
+        metadata.insert(key, value);
+        updated.metadata = Some(metadata);
+
+        Ok(Arc::new(updated) as Arc<dyn Message>)
     }
 
     fn set_metadata(
         &self, message: Arc<dyn Message>, metadata: Metadata,
-    ) -> FutureResult<Arc<dyn Message>> {
+    ) -> anyhow::Result<Arc<dyn Message>> {
         tracing::debug!("setting all metadata");
-        async move {
-            let msg = message
-                .as_any()
-                .downcast_ref::<InMemoryMessage>()
-                .ok_or_else(|| anyhow::anyhow!("invalid message type"))?;
 
-            let mut new_msg = msg.clone();
-            new_msg.metadata = Some(metadata);
+        let Some(inmem) = message.as_any().downcast_ref::<InMemMessage>() else {
+            anyhow::bail!("invalid message type");
+        };
 
-            Ok(Arc::new(new_msg) as Arc<dyn Message>)
-        }
-        .boxed()
+        let mut updated = inmem.clone();
+        updated.metadata = Some(metadata);
+
+        Ok(Arc::new(updated) as Arc<dyn Message>)
     }
 
     fn remove_metadata(
         &self, message: Arc<dyn Message>, key: String,
-    ) -> FutureResult<Arc<dyn Message>> {
+    ) -> anyhow::Result<Arc<dyn Message>> {
         tracing::debug!("removing metadata: {}", key);
-        async move {
-            let msg = message
-                .as_any()
-                .downcast_ref::<InMemoryMessage>()
-                .ok_or_else(|| anyhow::anyhow!("invalid message type"))?;
 
-            let mut new_msg = msg.clone();
-            if let Some(ref mut metadata) = new_msg.metadata {
-                metadata.remove(&key);
-            }
+        let Some(inmem) = message.as_any().downcast_ref::<InMemMessage>() else {
+            anyhow::bail!("invalid message type");
+        };
 
-            Ok(Arc::new(new_msg) as Arc<dyn Message>)
+        let mut updated = inmem.clone();
+        if let Some(ref mut metadata) = updated.metadata {
+            metadata.remove(&key);
         }
-        .boxed()
+
+        Ok(Arc::new(updated) as Arc<dyn Message>)
     }
 }
 
-#[derive(Debug, Clone)]
-struct InMemoryClient {
-    store: Arc<parking_lot::RwLock<HashMap<String, Vec<InMemoryMessage>>>>,
-}
-
-impl Client for InMemoryClient {
+impl Client for WasiMessagingCtxImpl {
     fn subscribe(&self) -> FutureResult<Subscriptions> {
         tracing::debug!("subscribing to messages");
-        // Return an empty stream for the default implementation
-        // A real implementation would return a stream of messages from a topic
+        let stream = BroadcastStream::new(self.receiver.resubscribe());
+
         async move {
-            let stream = stream::empty().boxed();
-            Ok(stream)
+            let stream = stream.filter_map(|res| async move { res.ok() });
+            Ok(Box::pin(stream) as Subscriptions)
         }
         .boxed()
     }
 
     fn send(&self, topic: String, message: MessageProxy) -> FutureResult<()> {
-        tracing::debug!("sending message to topic: {}", topic);
-        let store = Arc::clone(&self.store);
+        tracing::debug!("sending message to topic: {topic}");
+        let sender = self.sender.clone();
 
         async move {
-            let msg = message
-                .as_any()
-                .downcast_ref::<InMemoryMessage>()
-                .ok_or_else(|| anyhow::anyhow!("invalid message type"))?;
+            let Some(inmem) = message.as_any().downcast_ref::<InMemMessage>() else {
+                anyhow::bail!("invalid message type");
+            };
 
-            let mut new_msg = msg.clone();
-            new_msg.topic.clone_from(&topic);
+            let mut updated = inmem.clone();
+            updated.topic.clone_from(&topic);
+            let msg_proxy = MessageProxy(Arc::new(updated) as Arc<dyn Message>);
 
-            {
-                let mut store = store.write();
-                store.entry(topic).or_default().push(new_msg);
-            }
+            sender.send(msg_proxy).map_err(|e| anyhow!("send error: {e}"))?;
+
             Ok(())
         }
         .boxed()
@@ -210,26 +184,23 @@ impl Client for InMemoryClient {
         &self, topic: String, message: MessageProxy, _options: Option<RequestOptions>,
     ) -> FutureResult<MessageProxy> {
         tracing::debug!("sending request to topic: {}", topic);
-        let store = Arc::clone(&self.store);
+        let sender = self.sender.clone();
 
         async move {
             // In a real implementation, this would send a request and wait for a response
             // For the default impl, we'll just create a simple response
-            let msg = message
-                .as_any()
-                .downcast_ref::<InMemoryMessage>()
-                .ok_or_else(|| anyhow::anyhow!("invalid message type"))?;
+            let Some(inmem) = message.as_any().downcast_ref::<InMemMessage>() else {
+                anyhow::bail!("invalid message type");
+            };
 
-            let mut new_msg = msg.clone();
-            new_msg.topic.clone_from(&topic);
+            let mut updated = inmem.clone();
+            updated.topic.clone_from(&topic);
 
-            {
-                let mut store = store.write();
-                store.entry(topic).or_default().push(new_msg);
-            }
+            let msg_proxy = MessageProxy(Arc::new(updated) as Arc<dyn Message>);
+            sender.send(msg_proxy).map_err(|e| anyhow!("send error: {e}"))?;
 
             // Return a simple acknowledgment message
-            let response = InMemoryMessage {
+            let response = InMemMessage {
                 topic: "response".to_string(),
                 payload: b"ACK".to_vec(),
                 metadata: None,
@@ -243,8 +214,8 @@ impl Client for InMemoryClient {
     }
 }
 
-#[derive(Debug, Clone)]
-struct InMemoryMessage {
+#[derive(Debug, Clone, Default)]
+struct InMemMessage {
     topic: String,
     payload: Vec<u8>,
     metadata: Option<Metadata>,
@@ -252,7 +223,19 @@ struct InMemoryMessage {
     reply: Option<Reply>,
 }
 
-impl Message for InMemoryMessage {
+impl From<Vec<u8>> for InMemMessage {
+    fn from(data: Vec<u8>) -> Self {
+        Self {
+            topic: String::new(),
+            payload: data,
+            metadata: None,
+            description: None,
+            reply: None,
+        }
+    }
+}
+
+impl Message for InMemMessage {
     fn topic(&self) -> String {
         self.topic.clone()
     }
@@ -294,21 +277,19 @@ mod tests {
         let client = ctx.connect().await.expect("connect client");
 
         // Test new_message
-        let message = ctx.new_message(b"test payload".to_vec()).await.expect("new message");
+        let message = ctx.new_message(b"test payload".to_vec()).expect("new message");
         assert_eq!(message.payload(), b"test payload".to_vec());
         assert_eq!(message.length(), 12);
 
         // Test set_content_type
         let message = ctx
             .set_content_type(message, "application/json".to_string())
-            .await
             .expect("set content type");
         assert!(message.metadata().is_some());
 
         // Test add_metadata
         let message = ctx
             .add_metadata(message, "custom-key".to_string(), "custom-value".to_string())
-            .await
             .expect("add metadata");
         let metadata = message.metadata().expect("metadata");
         assert_eq!(metadata.get("custom-key"), Some(&"custom-value".to_string()));

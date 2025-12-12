@@ -39,10 +39,7 @@ use wasi_http::{CacheOptions, Result};
 use wasip3::exports::http::handler::Guest;
 use wasip3::http::types::{ErrorCode, Request, Response};
 
-/// HTTP handler struct.
 struct HttpGuest;
-
-/// Export the HTTP handler for the WASI runtime.
 wasip3::http::proxy::export!(HttpGuest);
 
 impl Guest for HttpGuest {

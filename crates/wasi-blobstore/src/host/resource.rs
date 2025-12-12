@@ -10,9 +10,18 @@ use crate::host::generated::wasi::blobstore::container::{ContainerMetadata, Obje
 /// interact with different backend containers.
 pub trait Container: Debug + Send + Sync + 'static {
     /// The name of the container.
-    fn name(&self) -> FutureResult<String>;
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the container name cannot be retrieved.
+    fn name(&self) -> anyhow::Result<String>;
 
-    fn info(&self) -> FutureResult<ContainerMetadata>;
+    /// Returns the metadata for the container.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the container metadata cannot be retrieved.
+    fn info(&self) -> anyhow::Result<ContainerMetadata>;
 
     /// Get the value associated with the key.
     fn get_data(&self, name: String, _start: u64, _end: u64) -> FutureResult<Option<Vec<u8>>>;

@@ -11,8 +11,8 @@ use crate::guest::store::Bucket;
 /// # Errors
 ///
 /// Returns an error if there is an issue opening the bucket.
-pub fn open(bucket: &str) -> Result<Cache> {
-    let bucket = store::open(bucket).context("opening bucket")?;
+pub async fn open(bucket: &str) -> Result<Cache> {
+    let bucket = store::open(bucket.to_string()).await.context("opening bucket")?;
     Ok(Cache { bucket })
 }
 
@@ -28,9 +28,9 @@ impl Cache {
     /// # Errors
     ///
     /// Returns an error if there is an issue getting the value.
-    pub fn get(&self, key: &str) -> Result<Option<Vec<u8>>> {
+    pub async fn get(&self, key: &str) -> Result<Option<Vec<u8>>> {
         // retrieve entry
-        let Some(entry) = self.bucket.get(key).context("reading state")? else {
+        let Some(entry) = self.bucket.get(key.to_string()).await.context("reading state")? else {
             return Ok(None);
         };
 
@@ -42,7 +42,7 @@ impl Cache {
 
         // check expiration
         if ttl_val.is_expired() {
-            self.bucket.delete(key).context("deleting expired state")?;
+            self.bucket.delete(key.to_string()).await.context("deleting expired state")?;
             return Ok(None);
         }
 
@@ -55,7 +55,9 @@ impl Cache {
     /// # Errors
     ///
     /// Returns an error if there is an issue setting the value.
-    pub fn set(&self, key: &str, value: &[u8], ttl_secs: Option<u64>) -> Result<Option<Vec<u8>>> {
+    pub async fn set(
+        &self, key: &str, value: &[u8], ttl_secs: Option<u64>,
+    ) -> Result<Option<Vec<u8>>> {
         // if TTL, create envelope
         let value = if let Some(ttl) = ttl_secs.map(|secs| Duration::seconds(secs.cast_signed())) {
             let envelope = Cacheable::new(value, ttl);
@@ -65,8 +67,8 @@ impl Cache {
         };
 
         // return previous value
-        let previous = self.get(key)?;
-        self.bucket.set(key, value).context("setting state with ttl")?;
+        let previous = self.get(key).await?;
+        self.bucket.set(key.to_string(), value.to_vec()).await.context("setting state with ttl")?;
 
         Ok(previous)
     }
@@ -76,8 +78,8 @@ impl Cache {
     /// # Errors
     ///
     /// Returns an error if there is an issue deleting the value.
-    pub fn delete(&self, key: &str) -> Result<()> {
-        self.bucket.delete(key).context("deleting entry")
+    pub async fn delete(&self, key: &str) -> Result<()> {
+        self.bucket.delete(key.to_string()).await.context("deleting entry")
     }
 }
 

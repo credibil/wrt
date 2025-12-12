@@ -16,7 +16,7 @@ mod generated {
         world: "keyvalue",
         path: "wit",
         imports: {
-            default: async | store | tracing | trappable,
+            default: store | tracing | trappable,
         },
         with: {
             "wasi:keyvalue/store.bucket": BucketProxy,

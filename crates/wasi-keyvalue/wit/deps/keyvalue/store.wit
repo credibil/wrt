@@ -51,7 +51,7 @@ interface store {
     /// `identifier` must refer to a bucket provided by the host.
     ///
     /// `error::no-such-store` will be raised if the `identifier` is not recognized.
-    open: func(identifier: string) -> result<bucket, error>;
+    open: async func(identifier: string) -> result<bucket, error>;
 
     /// A bucket is a collection of key-value pairs. Each key-value pair is stored as a entry in the
     /// bucket, and the bucket itself acts as a collection of all these entries.
@@ -76,7 +76,7 @@ interface store {
         /// store, it returns `Ok(none)`. 
         ///
         /// If any other error occurs, it returns an `Err(error)`.
-        get: func(key: string) -> result<option<list<u8>>, error>;
+        get: async func(key: string) -> result<option<list<u8>>, error>;
 
         /// Set the value associated with the key in the store. If the key already
         /// exists in the store, it overwrites the value.
@@ -84,14 +84,14 @@ interface store {
         /// If the key does not exist in the store, it creates a new key-value pair.
         /// 
         /// If any other error occurs, it returns an `Err(error)`.
-        set: func(key: string, value: list<u8>) -> result<_, error>;
+        set: async func(key: string, value: list<u8>) -> result<_, error>;
 
         /// Delete the key-value pair associated with the key in the store.
         /// 
         /// If the key does not exist in the store, it does nothing.
         ///
         /// If any other error occurs, it returns an `Err(error)`.
-        delete: func(key: string) -> result<_, error>;
+        delete: async func(key: string) -> result<_, error>;
 
         /// Check if the key exists in the store.
         /// 
@@ -99,7 +99,7 @@ interface store {
         /// not exist in the store, it returns `Ok(false)`.
         /// 
         /// If any other error occurs, it returns an `Err(error)`.
-        exists: func(key: string) -> result<bool, error>;
+        exists: async func(key: string) -> result<bool, error>;
 
         /// Get all the keys in the store with an optional cursor (for use in pagination). It
         /// returns a list of keys. Please note that for most KeyValue implementations, this is a
@@ -117,6 +117,6 @@ interface store {
         /// MAY show an out-of-date list of keys if there are concurrent writes to the store.
         /// 
         /// If any error occurs, it returns an `Err(error)`.
-        list-keys: func(cursor: option<string>) -> result<key-response, error>;
+        list-keys: async func(cursor: option<string>) -> result<key-response, error>;
     }
 }

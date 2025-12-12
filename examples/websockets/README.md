@@ -19,6 +19,3 @@ cargo run --example websockets -- run ./target/wasm32-wasip2/debug/examples/webs
 curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://localhost:8080
 ```
 
-## What It Does
-
-This example creates a WebSocket server that can handle real-time, bidirectional communication with clients.

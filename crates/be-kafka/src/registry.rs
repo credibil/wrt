@@ -2,9 +2,9 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 
-use credibil_error::Error;
 use http::StatusCode;
 use jsonschema::validate;
+use kernel::error::Error;
 use schema_registry_client::rest::apis::Error as SchemaRegistryError;
 use schema_registry_client::rest::client_config::ClientConfig as RegistryConfig;
 use schema_registry_client::rest::schema_registry_client::{Client, SchemaRegistryClient};
@@ -12,12 +12,11 @@ use serde_json::Value;
 use tokio::sync::Mutex;
 use tokio::time;
 use tracing::instrument;
-use utils::messaging::log_with_metrics;
 
 use crate::RegistryOptions;
 
 type SchemaMap = HashMap<String, Option<(i32, Value)>>;
-static SERVICE: &str = "schema-registry";
+
 /// Schema Registry client with caching
 #[derive(Clone)]
 pub struct Registry {
@@ -68,7 +67,7 @@ impl Registry {
                 }
                 Ok(None) => buffer,
                 Err(e) => {
-                    log_with_metrics(&e, SERVICE, topic);
+                    tracing::error!("Failed to fetch schema for topic {topic}: {e}");
                     buffer
                 }
             }
@@ -88,7 +87,7 @@ impl Registry {
                     return buffer.to_vec();
                 }
                 Err(e) => {
-                    log_with_metrics(&e, SERVICE, topic);
+                    tracing::warn!("Failed to fetch schema: {e}");
                     return buffer.to_vec();
                 }
             };

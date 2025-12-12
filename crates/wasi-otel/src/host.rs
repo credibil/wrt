@@ -12,7 +12,8 @@ mod generated {
         world: "otel",
         path: "wit",
         imports: {
-            default: async | store | tracing | trappable,
+            "wasi:otel/resource.resource": tracing | trappable,
+            default: store | tracing | trappable,
         },
         trappable_error_type: {
             "wasi:otel/types.error" => Error,

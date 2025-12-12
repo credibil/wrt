@@ -1,5 +1,5 @@
 use anyhow::{Context, anyhow};
-use wasmtime::component::{Accessor, Resource};
+use wasmtime::component::{Access, Accessor, Resource};
 
 use crate::WasiKeyValueCtxView;
 use crate::host::generated::wasi::keyvalue::atomics::{
@@ -75,9 +75,9 @@ impl HostCasWithStore for WasiKeyValue {
     }
 
     /// Drop the CAS handle.
-    async fn drop<T>(accessor: &Accessor<T, Self>, rep: Resource<Cas>) -> anyhow::Result<()> {
+    fn drop<T>(mut accessor: Access<'_, T, Self>, rep: Resource<Cas>) -> anyhow::Result<()> {
         tracing::trace!("atomics::HostCas::drop");
-        accessor.with(|mut store| store.get().table.delete(rep).map(|_| Ok(())))?
+        Ok(accessor.get().table.delete(rep).map(|_| ())?)
     }
 }
 

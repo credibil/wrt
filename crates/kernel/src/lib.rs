@@ -5,6 +5,7 @@
 #[cfg(feature = "jit")]
 mod compile;
 mod create;
+pub mod error;
 mod traits;
 
 use std::path::PathBuf;

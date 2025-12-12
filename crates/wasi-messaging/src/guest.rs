@@ -11,13 +11,11 @@ wit_bindgen::generate!({
     additional_derives: [Clone],
     generate_all,
     pub_export_macro: true,
-    async: [
-        "wasi:messaging/producer@0.2.0-draft#send",
-        "wasi:messaging/request-reply@0.2.0-draft#request",
-        "wasi:messaging/incoming-handler@0.2.0-draft#handle",
-        // "-export:wasi:http/handler@0.3.0-draft#handle",
-        // "all",
-    ],
+    // async: [
+    //     "wasi:messaging/producer@0.2.0-draft#send",
+    //     "wasi:messaging/request-reply@0.2.0-draft#request",
+    //     "wasi:messaging/incoming-handler@0.2.0-draft#handle",
+    // ],
 });
 
 pub use self::exports::wasi::messaging::*;

@@ -1,4 +1,6 @@
-use wasmtime::component::{Accessor, Resource};
+use std::sync::Arc;
+
+use wasmtime::component::{Access, Accessor, Resource};
 
 use crate::host::generated::wasi::messaging::types;
 pub use crate::host::generated::wasi::messaging::types::{
@@ -16,42 +18,42 @@ impl HostClientWithStore for WasiMessaging {
         Ok(accessor.with(|mut store| store.get().table.push(proxy))?)
     }
 
-    async fn disconnect<T>(_: &Accessor<T, Self>, _rep: Resource<ClientProxy>) -> Result<()> {
+    fn disconnect<T>(_: Access<'_, T, Self>, _: Resource<ClientProxy>) -> Result<()> {
         Ok(())
     }
 
-    async fn drop<T>(
-        accessor: &Accessor<T, Self>, rep: Resource<ClientProxy>,
+    fn drop<T>(
+        mut accessor: Access<'_, T, Self>, rep: Resource<ClientProxy>,
     ) -> anyhow::Result<()> {
-        accessor.with(|mut store| store.get().table.delete(rep).map(|_| Ok(())))?
+        Ok(accessor.get().table.delete(rep).map(|_| ())?)
     }
 }
 
 impl HostMessageWithStore for WasiMessaging {
     /// Create a new message with the given payload.
-    async fn new<T>(
-        accessor: &Accessor<T, Self>, data: Vec<u8>,
+    fn new<T>(
+        mut host: Access<'_, T, Self>, data: Vec<u8>,
     ) -> anyhow::Result<Resource<MessageProxy>> {
-        let message = accessor.with(|mut store| store.get().ctx.new_message(data)).await?;
+        let message = host.get().ctx.new_message(data)?;
         let proxy = MessageProxy(message);
-        Ok(accessor.with(|mut store| store.get().table.push(proxy))?)
+        Ok(host.get().table.push(proxy)?)
     }
 
     /// The topic/subject/channel this message was received on, if any.
-    async fn topic<T>(
-        accessor: &Accessor<T, Self>, self_: Resource<MessageProxy>,
+    fn topic<T>(
+        mut host: Access<'_, T, Self>, self_: Resource<MessageProxy>,
     ) -> anyhow::Result<Option<Topic>> {
-        let message = get_message(accessor, &self_)?;
+        let message = host.get().table.get(&self_)?;
         let topic = message.topic();
         if topic.is_empty() { Ok(None) } else { Ok(Some(topic)) }
     }
 
     /// An optional content-type describing the format of the data in the
     /// message. This is sometimes described as the "format" type".
-    async fn content_type<T>(
-        accessor: &Accessor<T, Self>, self_: Resource<MessageProxy>,
+    fn content_type<T>(
+        mut host: Access<'_, T, Self>, self_: Resource<MessageProxy>,
     ) -> anyhow::Result<Option<String>> {
-        let message = get_message(accessor, &self_)?;
+        let message = host.get().table.get(&self_)?;
         if let Some(md) = message.metadata() {
             if let Some(content_type) = md.get("content-type") {
                 return Ok(Some(content_type.clone()));
@@ -63,82 +65,83 @@ impl HostMessageWithStore for WasiMessaging {
 
     /// Set the content-type describing the format of the data in the message.
     /// This is sometimes described as the "format" type.
-    async fn set_content_type<T>(
-        accessor: &Accessor<T, Self>, self_: Resource<MessageProxy>, content_type: String,
+    fn set_content_type<T>(
+        mut host: Access<'_, T, Self>, self_: Resource<MessageProxy>, content_type: String,
     ) -> anyhow::Result<()> {
-        let message = get_message(accessor, &self_)?;
-        let updated_message = accessor
-            .with(|mut store| store.get().ctx.set_content_type(message.0, content_type))
-            .await?;
-        accessor.with(|mut store| store.get().table.push(updated_message))?;
+        let store = host.get();
+        let message = store.table.get(&self_)?;
+        let updated_message = store.ctx.set_content_type(Arc::clone(&message.0), content_type)?;
+        store.table.push(updated_message)?;
         Ok(())
     }
 
     /// An opaque blob of data.
-    async fn data<T>(
-        accessor: &Accessor<T, Self>, self_: Resource<MessageProxy>,
+    fn data<T>(
+        mut host: Access<'_, T, Self>, self_: Resource<MessageProxy>,
     ) -> anyhow::Result<Vec<u8>> {
-        let message = get_message(accessor, &self_)?;
+        let message = host.get().table.get(&self_)?;
         Ok(message.payload())
     }
 
     /// Set the opaque blob of data for this message, discarding the old value.
-    async fn set_data<T>(
-        accessor: &Accessor<T, Self>, self_: Resource<MessageProxy>, data: Vec<u8>,
+    fn set_data<T>(
+        mut host: Access<'_, T, Self>, self_: Resource<MessageProxy>, data: Vec<u8>,
     ) -> anyhow::Result<()> {
-        let message = get_message(accessor, &self_)?;
-        let updated_message =
-            accessor.with(|mut store| store.get().ctx.set_payload(message.0, data)).await?;
-        accessor.with(|mut store| store.get().table.push(updated_message))?;
+        let store = host.get();
+        let message = store.table.get(&self_)?;
+        let updated_message = store.ctx.set_payload(Arc::clone(&message.0), data)?;
+        store.table.push(updated_message)?;
         Ok(())
     }
 
     /// Get the metadata associated with this message.    
-    async fn metadata<T>(
-        accessor: &Accessor<T, Self>, self_: Resource<MessageProxy>,
+    fn metadata<T>(
+        mut host: Access<'_, T, Self>, self_: Resource<MessageProxy>,
     ) -> anyhow::Result<Option<types::Metadata>> {
-        let message = get_message(accessor, &self_)?;
-        let md = message.metadata().map(std::convert::Into::into);
-        Ok(md)
+        let message = host.get().table.get(&self_)?;
+        if let Some(md) = message.metadata() {
+            return Ok(Some(md.into()));
+        }
+        Ok(None)
     }
 
     /// Append a key-value pair to the metadata of this message.
-    async fn add_metadata<T>(
-        accessor: &Accessor<T, Self>, self_: Resource<MessageProxy>, key: String, value: String,
+    fn add_metadata<T>(
+        mut host: Access<'_, T, Self>, self_: Resource<MessageProxy>, key: String, value: String,
     ) -> anyhow::Result<()> {
-        let message = get_message(accessor, &self_)?;
-        let updated_message =
-            accessor.with(|mut store| store.get().ctx.add_metadata(message.0, key, value)).await?;
-        accessor.with(|mut store| store.get().table.push(updated_message))?;
+        let store = host.get();
+        let message = store.table.get(&self_)?;
+        let updated_message = store.ctx.add_metadata(Arc::clone(&message.0), key, value)?;
+        store.table.push(updated_message)?;
         Ok(())
     }
 
     /// Set all the metadata on this message, replacing any existing metadata.
-    async fn set_metadata<T>(
-        accessor: &Accessor<T, Self>, self_: Resource<MessageProxy>, meta: types::Metadata,
+    fn set_metadata<T>(
+        mut host: Access<'_, T, Self>, self_: Resource<MessageProxy>, meta: types::Metadata,
     ) -> anyhow::Result<()> {
-        let message = get_message(accessor, &self_)?;
-        let updated_message =
-            accessor.with(|mut store| store.get().ctx.set_metadata(message.0, meta.into())).await?;
-        accessor.with(|mut store| store.get().table.push(updated_message))?;
+        let store = host.get();
+        let message = store.table.get(&self_)?;
+        let updated_message = store.ctx.set_metadata(Arc::clone(&message.0), meta.into())?;
+        store.table.push(updated_message)?;
         Ok(())
     }
 
     /// Remove a key-value pair from the metadata of a message.
-    async fn remove_metadata<T>(
-        accessor: &Accessor<T, Self>, self_: Resource<MessageProxy>, key: String,
+    fn remove_metadata<T>(
+        mut host: Access<'_, T, Self>, self_: Resource<MessageProxy>, key: String,
     ) -> anyhow::Result<()> {
-        let message = get_message(accessor, &self_)?;
-        let updated_message =
-            accessor.with(|mut store| store.get().ctx.remove_metadata(message.0, key)).await?;
-        accessor.with(|mut store| store.get().table.push(updated_message))?;
+        let store = host.get();
+        let message = store.table.get(&self_)?;
+        let updated_message = store.ctx.remove_metadata(Arc::clone(&message.0), key)?;
+        store.table.push(updated_message)?;
         Ok(())
     }
 
-    async fn drop<T>(
-        accessor: &Accessor<T, Self>, rep: Resource<MessageProxy>,
+    fn drop<T>(
+        mut accessor: Access<'_, T, Self>, rep: Resource<MessageProxy>,
     ) -> anyhow::Result<()> {
-        accessor.with(|mut store| store.get().table.delete(rep).map(|_| Ok(())))?
+        Ok(accessor.get().table.delete(rep).map(|_| ())?)
     }
 }
 

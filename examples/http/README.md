@@ -22,7 +22,3 @@ curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://loca
 # GET request
 curl http://localhost:8080
 ```
-
-## What It Does
-
-This example creates a simple HTTP server with GET and POST endpoints that echo back JSON responses.

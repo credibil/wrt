@@ -36,10 +36,7 @@ use wit_bindgen::block_on;
 /// Scopes define what resources the token can access.
 const SCOPE: &str = "https://management.azure.com/.default";
 
-/// HTTP handler struct.
 struct Http;
-
-/// Export the HTTP handler for the WASI runtime.
 wasip3::http::proxy::export!(Http);
 
 impl Guest for Http {
