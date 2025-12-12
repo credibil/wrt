@@ -18,4 +18,3 @@ cargo run --example blobstore -- run ./target/wasm32-wasip2/debug/examples/blobs
 ```bash
 curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://localhost:8080
 ```
-
