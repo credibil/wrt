@@ -22,8 +22,6 @@
 
 #![cfg(target_arch = "wasm32")]
 
-use std::println;
-
 use anyhow::anyhow;
 use axum::routing::{get, post};
 use axum::{Json, Router};
@@ -57,10 +55,10 @@ impl Guest for HttpGuest {
 #[axum::debug_handler]
 async fn get_handler() -> Result<Json<Value>> {
     // Get the WebSocket server handle from the host.
-    let server = store::get_server().map_err(|e| anyhow!("getting websocket server: {e}"))?;
+    let server = store::get_server().await.map_err(|e| anyhow!("getting websocket server: {e}"))?;
 
     // Query the server's health status.
-    let message = server.health_check().unwrap_or_else(|_| "Service is unhealthy".to_string());
+    let message = server.health_check().await.map_err(|e| anyhow!("health check failed: {e}"))?;
 
     Ok(Json(json!({
         "message": message
@@ -82,25 +80,20 @@ async fn get_handler() -> Result<Json<Value>> {
 #[axum::debug_handler]
 async fn post_handler(body: String) -> Result<Json<Value>> {
     // Get the WebSocket server handle.
-    let server = store::get_server().map_err(|e| anyhow!("getting websocket server: {e}"))?;
+    let server = store::get_server().await.map_err(|e| anyhow!("getting websocket server: {e}"))?;
 
     // Get list of all connected peers.
-    let peers = server.get_peers();
-    let client_peers = match peers {
-        Ok(p) => p,
-        Err(e) => {
-            println!("Error retrieving websocket peers: {e}");
-            return Err(anyhow!("error retrieving websocket peers").into());
-        }
-    };
+    let client_peers =
+        server.get_peers().await.map_err(|e| anyhow!("getting websocket peers: {e}"))?;
 
     // Extract peer addresses for the broadcast.
     let recipients: Vec<String> = client_peers.iter().map(|p| p.address.clone()).collect();
 
     // Send the message to all peers.
-    if let Err(e) = server.send_peers(&body, &recipients) {
-        println!("Error sending websocket message: {e}");
-    }
+    server
+        .send_peers(body.to_string(), recipients)
+        .await
+        .map_err(|e| anyhow!("sending websocket message: {e}"))?;
 
     Ok(Json(json!({
         "message": "message received"

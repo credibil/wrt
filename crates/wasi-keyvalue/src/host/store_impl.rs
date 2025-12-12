@@ -1,5 +1,5 @@
 use anyhow::Context;
-use wasmtime::component::{Accessor, Resource};
+use wasmtime::component::{Access, Accessor, Resource};
 
 use crate::host::generated::wasi::keyvalue::store::{
     Error, HostBucketWithStore, HostWithStore, KeyResponse,
@@ -60,10 +60,10 @@ impl HostBucketWithStore for WasiKeyValue {
         Ok(KeyResponse { keys, cursor })
     }
 
-    async fn drop<T>(
-        accessor: &Accessor<T, Self>, rep: Resource<BucketProxy>,
+    fn drop<T>(
+        mut accessor: Access<'_, T, Self>, rep: Resource<BucketProxy>,
     ) -> anyhow::Result<()> {
-        accessor.with(|mut store| store.get().table.delete(rep).map(|_| Ok(())))?
+        Ok(accessor.get().table.delete(rep).map(|_| ())?)
     }
 }
 

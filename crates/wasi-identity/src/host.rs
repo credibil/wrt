@@ -17,7 +17,7 @@ mod generated {
         world: "identity",
         path: "wit",
         imports: {
-            default: async | store | tracing | trappable,
+            default: store | tracing | trappable,
         },
         with: {
             "wasi:identity/credentials.identity": IdentityProxy,

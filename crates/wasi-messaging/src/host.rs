@@ -16,11 +16,11 @@ mod generated {
         world: "messaging",
         path: "wit",
         imports: {
-            // "wasi:messaging/types.[static]client.connect": async | store | tracing | trappable,
+            // "wasi:messaging/types.[static]client.connect": store | tracing | trappable,
             default:  store | tracing | trappable,
         },
         exports: {
-            default: async | store | tracing | trappable,
+            default: store | tracing | trappable,
         },
         with: {
             "wasi:messaging/request-reply.request-options": RequestOptions,

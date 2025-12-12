@@ -1,5 +1,5 @@
 use anyhow::Context;
-use wasmtime::component::{Accessor, Resource, ResourceTableError};
+use wasmtime::component::{Access, Accessor, Resource, ResourceTableError};
 
 use crate::host::generated::wasi::vault::vault::Error;
 use crate::host::resource::LockerProxy;
@@ -60,10 +60,10 @@ impl HostLockerWithStore for WasiVault {
         Ok(secret_ids)
     }
 
-    async fn drop<T>(
-        accessor: &Accessor<T, Self>, rep: Resource<LockerProxy>,
+    fn drop<T>(
+        mut accessor: Access<'_, T, Self>, rep: Resource<LockerProxy>,
     ) -> anyhow::Result<()> {
-        accessor.with(|mut store| store.get().table.delete(rep).map(|_| Ok(())))?
+        accessor.get().table.delete(rep).map(|_| Ok(()))?
     }
 }
 

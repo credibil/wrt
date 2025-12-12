@@ -15,28 +15,28 @@ interface vault {
     /// Open the specified locker.
     /// 
     /// `error::no-such-store` will be raised if the `identifier` is not recognized.
-    open: func(locker-id: string) -> result<locker, error>;
+    open: async func(locker-id: string) -> result<locker, error>;
 
     /// A locker contains collection of related secrets.
     resource locker {
         /// Get the specified secret.
         ///
         /// Returns `none` if the specified secret does not exist.
-        get: func(secret-id: string) -> result<option<list<u8>>, error>;
+        get: async func(secret-id: string) -> result<option<list<u8>>, error>;
 
         /// Store a secret in the vault. If the `id` already exists, the
         /// secret will be overwritten.
-        set: func(secret-id: string, value: list<u8>) -> result<_, error>;
+        set: async func(secret-id: string, value: list<u8>) -> result<_, error>;
 
         /// Delete the specified secret.
         /// 
         /// Will do nothing if the secret does not exist.
-        delete: func(secret-id: string) -> result<_, error>;
+        delete: async func(secret-id: string) -> result<_, error>;
 
         /// Check if the specified secret exists.
-        exists: func(secret-id: string) -> result<bool, error>;
+        exists: async func(secret-id: string) -> result<bool, error>;
 
         /// List all `secret-id`s in the locker.
-        list-ids: func() -> result<list<string>, error>;
+        list-ids: async func() -> result<list<string>, error>;
     }
 }

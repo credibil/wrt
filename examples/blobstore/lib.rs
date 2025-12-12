@@ -68,19 +68,25 @@ async fn handler(body: Bytes) -> Result<Json<Value>> {
 
     // Create or open a container (like a bucket or namespace).
     // Containers group related blobs together.
-    let container = blobstore::create_container("container")
+    let container = blobstore::create_container("container".to_string())
+        .await
         .map_err(|e| anyhow!("failed to create container: {e}"))?;
 
     // Write the blob to the container under the key "request".
-    container.write_data("request", &outgoing).map_err(|e| anyhow!("failed to write data: {e}"))?;
+    container
+        .write_data("request".to_string(), &outgoing)
+        .await
+        .map_err(|e| anyhow!("failed to write data: {e}"))?;
 
     // Finalize the outgoing value (flushes any buffered data).
     OutgoingValue::finish(outgoing).map_err(|e| anyhow!("issue finishing: {e}"))?;
 
     // Read the blob back from the container.
     // Parameters: key, offset (0 = start), length (0 = read all).
-    let incoming =
-        container.get_data("request", 0, 0).map_err(|e| anyhow!("failed to read data: {e}"))?;
+    let incoming = container
+        .get_data("request".to_string(), 0, 0)
+        .await
+        .map_err(|e| anyhow!("failed to read data: {e}"))?;
 
     // Consume the incoming stream synchronously to get the data.
     let data = IncomingValue::incoming_value_consume_sync(incoming)
