@@ -122,25 +122,21 @@ impl InMemoryContainer {
 }
 
 impl Container for InMemoryContainer {
-    fn name(&self) -> FutureResult<String> {
-        let name = self.name.clone();
-        async move { Ok(name) }.boxed()
+    fn name(&self) -> anyhow::Result<String> {
+        Ok(self.name.clone())
     }
 
-    fn info(&self) -> FutureResult<ContainerMetadata> {
+    fn info(&self) -> anyhow::Result<ContainerMetadata> {
         let name = self.name.clone();
         let created_at = self.created_at;
 
-        async move {
-            Ok(ContainerMetadata {
-                name,
-                created_at: created_at
-                    .duration_since(std::time::UNIX_EPOCH)
-                    .unwrap_or_default()
-                    .as_secs(),
-            })
-        }
-        .boxed()
+        Ok(ContainerMetadata {
+            name,
+            created_at: created_at
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_secs(),
+        })
     }
 
     fn get_data(&self, name: String, _start: u64, _end: u64) -> FutureResult<Option<Vec<u8>>> {
@@ -268,7 +264,7 @@ mod tests {
         assert!(!container.has_object("object1".to_string()).await.expect("has object"));
 
         // Test container metadata
-        let info = container.info().await.expect("container info");
+        let info = container.info().expect("container info");
         assert_eq!(info.name, "test-container");
     }
 }

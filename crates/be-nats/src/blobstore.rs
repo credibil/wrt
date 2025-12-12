@@ -95,15 +95,13 @@ impl Debug for NatsContainer {
 }
 
 impl Container for NatsContainer {
-    fn name(&self) -> FutureResult<String> {
+    fn name(&self) -> anyhow::Result<String> {
         tracing::trace!("getting container name");
-        let name = self.metadata.name.clone();
-        async move { Ok(name) }.boxed()
+        Ok(self.metadata.name.clone())
     }
 
-    fn info(&self) -> FutureResult<ContainerMetadata> {
-        let metadata = self.metadata.clone();
-        async move { Ok(metadata) }.boxed()
+    fn info(&self) -> anyhow::Result<ContainerMetadata> {
+        Ok(self.metadata.clone())
     }
 
     fn get_data(&self, name: String, _start: u64, _end: u64) -> FutureResult<Option<Vec<u8>>> {
