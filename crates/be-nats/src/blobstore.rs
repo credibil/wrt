@@ -84,8 +84,8 @@ fn metadata(name: String) -> ContainerMetadata {
 }
 
 pub struct NatsContainer {
-    pub metadata: ContainerMetadata,
-    pub store: ObjectStore,
+    metadata: ContainerMetadata,
+    store: ObjectStore,
 }
 
 impl Debug for NatsContainer {
