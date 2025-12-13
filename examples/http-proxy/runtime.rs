@@ -10,6 +10,6 @@ cfg_if::cfg_if! {
             WasiOtel: OtelDefault,
         });
     } else {
-        pub fn main() {}
+        fn main() {}
     }
 }

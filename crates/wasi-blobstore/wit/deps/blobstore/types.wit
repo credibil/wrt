@@ -62,7 +62,7 @@ interface types {
     /// Returns success on the first call: the `output-stream` resource for
     /// this `outgoing-value` may be retrieved at most once. Subsequent calls
     /// will return error.
-    outgoing-value-write-body: func() -> result<output-stream>;
+    outgoing-value-write-body: async func() -> result<output-stream>;
 
     /// Finalize an outgoing value. This must be
     /// called to signal that the outgoing value is complete. If the `outgoing-value`
@@ -82,7 +82,7 @@ interface types {
   // Soon: switch to `resource incoming-value { ... }`
   resource incoming-value {
       incoming-value-consume-sync: static func(this: incoming-value) -> result<incoming-value-sync-body, error>;
-      incoming-value-consume-async: static func(this: incoming-value) -> result<incoming-value-async-body, error>;
+      incoming-value-consume-async: static async func(this: incoming-value) -> result<incoming-value-async-body, error>;
       size: func() -> u64;
   }
 

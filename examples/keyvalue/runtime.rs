@@ -10,6 +10,6 @@ cfg_if::cfg_if! {
             WasiKeyValue: KeyValueDefault,
         });
     } else {
-        pub fn main() {}
+        fn main() {}
     }
 }

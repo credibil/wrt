@@ -10,6 +10,6 @@ cfg_if::cfg_if! {
             WasiBlobstore: BlobstoreDefault,
         });
     } else {
-        pub fn main() {}
+        fn main() {}
     }
 }

@@ -10,6 +10,6 @@ cfg_if::cfg_if! {
             WasiWebSockets: WebSocketsDefault,
         });
     } else {
-        pub fn main() {}
+        fn main() {}
     }
 }
