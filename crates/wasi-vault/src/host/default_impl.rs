@@ -2,10 +2,6 @@
 //!
 //! This is a lightweight implementation for development use only.
 
-#![allow(clippy::significant_drop_tightening)]
-#![allow(clippy::used_underscore_binding)]
-#![allow(clippy::semicolon_outside_block)]
-
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -38,7 +34,7 @@ impl Backend for WasiVaultCtxImpl {
     type ConnectOptions = ConnectOptions;
 
     #[instrument]
-    async fn connect_with(_options: Self::ConnectOptions) -> Result<Self> {
+    async fn connect_with(options: Self::ConnectOptions) -> Result<Self> {
         tracing::debug!("initializing in-memory vault");
         Ok(Self {
             store: Arc::new(parking_lot::RwLock::new(HashMap::new())),
@@ -57,8 +53,8 @@ impl WasiVaultCtx for WasiVaultCtxImpl {
         // Ensure locker exists in store
         {
             let mut store = self.store.write();
-            store.entry(identifier).or_default();
-        }
+            store.entry(identifier).or_default()
+        };
 
         async move { Ok(Arc::new(locker) as Arc<dyn Locker>) }.boxed()
     }
@@ -96,8 +92,10 @@ impl Locker for InMemoryLocker {
         let locker_id = self.identifier.clone();
 
         async move {
-            let mut store = store.write();
-            store.entry(locker_id).or_default().insert(secret_id, value);
+            {
+                let mut store = store.write();
+                store.entry(locker_id).or_default().insert(secret_id, value)
+            };
             Ok(())
         }
         .boxed()
