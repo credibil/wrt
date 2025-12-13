@@ -60,8 +60,10 @@ async fn handler(body: Bytes) -> Result<Json<Value>> {
     // Create an outgoing value to hold the data we want to store.
     // This is the write side of the streaming API.
     let outgoing = OutgoingValue::new_outgoing_value();
-    let stream =
-        outgoing.outgoing_value_write_body().map_err(|()| anyhow!("failed to create stream"))?;
+    let stream = outgoing
+        .outgoing_value_write_body()
+        .await
+        .map_err(|()| anyhow!("failed to create stream"))?;
     stream.blocking_write_and_flush(&body).map_err(|e| anyhow!("writing body: {e}"))?;
 
     // Create or open a container (like a bucket or namespace).

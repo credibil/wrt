@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use bytes::Bytes;
-use wasmtime::component::{Access, Resource};
+use wasmtime::component::{Access, Accessor, Resource};
 use wasmtime_wasi::p2::bindings::io::streams::{InputStream, OutputStream};
 use wasmtime_wasi::p2::pipe::{MemoryInputPipe, MemoryOutputPipe};
 
@@ -21,13 +21,16 @@ impl HostIncomingValueWithStore for WasiBlobstore {
         Ok(value.to_vec())
     }
 
-    fn incoming_value_consume_async<T>(
-        mut host: Access<'_, T, Self>, this: Resource<IncomingValue>,
+    async fn incoming_value_consume_async<T>(
+        accessor: &Accessor<T, Self>, this: Resource<IncomingValue>,
     ) -> Result<Resource<InputStream>> {
-        let value = host.get().table.get(&this).context("IncomingValue not found")?;
-        let rs = MemoryInputPipe::new(value.clone());
+        let value = accessor.with(|mut store| {
+            let incoming = store.get().table.get(&this).context("IncomingValue not found")?;
+            Ok::<_, anyhow::Error>(incoming.clone())
+        })?;
+        let rs = MemoryInputPipe::new(value);
         let stream: InputStream = Box::new(rs);
-        Ok(host.get().table.push(stream)?)
+        Ok(accessor.with(|mut store| store.get().table.push(stream))?)
     }
 
     fn size<T>(mut host: Access<'_, T, Self>, self_: Resource<IncomingValue>) -> Result<u64> {
@@ -45,12 +48,15 @@ impl HostOutgoingValueWithStore for WasiBlobstore {
         Ok(host.get().table.push(OutgoingValue::new(1024))?)
     }
 
-    fn outgoing_value_write_body<T>(
-        mut host: Access<'_, T, Self>, self_: Resource<OutgoingValue>,
+    async fn outgoing_value_write_body<T>(
+        accessor: &Accessor<T, Self>, self_: Resource<OutgoingValue>,
     ) -> Result<Result<Resource<OutputStream>, ()>> {
-        let value = host.get().table.get(&self_).context("OutgoingValue not found")?;
-        let stream: OutputStream = Box::new(value.clone());
-        Ok(host.get().table.push(stream).map_err(|_e| ()))
+        let value = accessor.with(|mut store| {
+            let outgoing = store.get().table.get(&self_).context("OutgoingValue not found")?;
+            Ok::<_, anyhow::Error>(outgoing.clone())
+        })?;
+        let stream: OutputStream = Box::new(value);
+        Ok(accessor.with(|mut store| store.get().table.push(stream).map_err(|_e| ())))
     }
 
     fn finish<T>(_: Access<'_, T, Self>, _self_: Resource<OutgoingValue>) -> Result<()> {

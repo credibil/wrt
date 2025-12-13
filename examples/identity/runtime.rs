@@ -10,6 +10,6 @@ cfg_if::cfg_if! {
             WasiIdentity: IdentityDefault,
         });
     } else {
-        pub fn main() {}
+        fn main() {}
     }
 }

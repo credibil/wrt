@@ -1,7 +1,7 @@
 [blobstore]
-url = "https://github.com/WebAssembly/wasi-blobstore/archive/main.tar.gz"
-sha256 = "c7ea6547bf52fe3bbf5e9e2d7f06ac99ce87ed95ec11579a03d9b8d895b5be12"
-sha512 = "7540f24272901a12bf65c12a6db3636c87d8ff9f8cdfe6c8a4fcdbd426feabec00688bf27c60d8a390461009ece4b7a18b8c814c7af8866e865583c676182a23"
+url = "https://github.com/credibil/wasi-blobstore/archive/main.tar.gz"
+sha256 = "4e226ffdc8f17afa5af22b039b7737332502e07b921230c83e39f7f5339eb0cd"
+sha512 = "166027cb95f0718bfee9d98cd628f49e3b95a890a4e8fe7fd0f9868ae2f7f49302162ff52a13dda05539820f460e7928a2f7e452995c4365c0629742f7cf9270"
 deps = ["io"]
 
 [io]

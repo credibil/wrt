@@ -10,6 +10,6 @@ cfg_if::cfg_if! {
             WasiVault: VaultDefault,
         });
     } else {
-        pub fn main() {}
+        fn main() {}
     }
 }
