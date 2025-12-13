@@ -44,7 +44,7 @@ impl Registry {
     }
 
     /// Serialize payload to JSON with optional schema registry
-    #[instrument( skip(self, buffer))]
+    #[instrument(skip(self, buffer))]
     pub async fn encode(&self, topic: &str, buffer: Vec<u8>) -> Vec<u8> {
         // If schema registry is available, use it
         if self.client.is_some() {
@@ -78,7 +78,7 @@ impl Registry {
 
     /// Deserialize payload to JSON with optional schema registry
     #[allow(unused)]
-    #[instrument( skip(self, buffer))]
+    #[instrument(skip(self, buffer))]
     pub async fn decode(&self, topic: &str, buffer: &[u8]) -> Vec<u8> {
         if self.client.is_some() {
             let (_id, schema) = match self.get_schema(topic).await {
@@ -116,9 +116,7 @@ impl Registry {
     ///
     /// Validate a JSON payload against a provided `RegisteredSchema`
     #[allow(clippy::unused_self)]
-    pub fn validate(
-        &self, schema: &Value, payload: &Value,
-    ) -> Result<(), String> {
+    pub fn validate(&self, schema: &Value, payload: &Value) -> Result<(), String> {
         validate(schema, payload).map_err(|e| format!("Validation error: {e}"))?;
         Ok(())
     }
