@@ -161,7 +161,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_in_memory_locker_operations() {
+    async fn locker_operations() {
         let ctx = WasiVaultCtxImpl::connect_with(ConnectOptions).await.expect("connect");
 
         let locker = ctx.open_locker("test-locker".to_string()).await.expect("open locker");

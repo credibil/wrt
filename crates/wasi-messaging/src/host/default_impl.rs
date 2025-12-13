@@ -270,7 +270,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_in_memory_messaging() {
+    async fn messaging() {
         let ctx = WasiMessagingCtxImpl::connect_with(ConnectOptions).await.expect("connect");
 
         // Test connect

@@ -156,7 +156,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_in_memory_bucket_operations() {
+    async fn bucket_operations() {
         let ctx = WasiKeyValueCtxImpl::connect_with(ConnectOptions).await.expect("connect");
 
         let bucket = ctx.open_bucket("test-bucket".to_string()).await.expect("open bucket");

@@ -1,9 +1,6 @@
-use std::str::FromStr;
-
-use anyhow::Result;
-use credibil_error::Error;
+use anyhow::{Context, Result, anyhow};
 use futures::StreamExt;
-use kernel::{State, error};
+use kernel::State;
 use tracing::{Instrument, debug_span, instrument};
 use wasmtime::Store;
 
@@ -19,12 +16,7 @@ where
 {
     tracing::info!("starting messaging server");
 
-    let service = std::env::var("COMPONENT").unwrap_or_else(|_| "unknown".into());
-
-    let handler = Handler {
-        state: state.clone(),
-        service,
-    };
+    let handler = Handler { state: state.clone() };
     let mut stream = handler.subscriptions().await?;
 
     while let Some(message) = stream.next().await {
@@ -46,7 +38,6 @@ where
     S::StoreCtx: WasiMessagingView,
 {
     state: S,
-    service: String,
 }
 
 impl<S> Handler<S>
@@ -69,34 +60,25 @@ where
     }
 
     // Forward message to the wasm guest.
-    async fn send(&self, message: MessageProxy) -> Result<(), Error> {
+    async fn send(&self, message: MessageProxy) -> Result<()> {
         let mut store_data = self.state.store();
         let be_msg = store_data
             .messaging()
             .table
             .push(message.clone())
-            .map_err(|e| Error::ServerError(e.to_string()))?;
+            .map_err(|e| anyhow!("failed to push message: {e}"))?;
 
         let instance_pre = self.state.instance_pre();
         let mut store = Store::new(instance_pre.engine(), store_data);
         let instance = instance_pre.instantiate_async(&mut store).await?;
         let messaging = Messaging::new(&mut store, &instance)?;
 
-        if let Err(e) = store
+        store
             .run_concurrent(async |store| {
                 let guest = messaging.wasi_messaging_incoming_handler();
-                guest.call_handle(store, be_msg).await.map(|_| ()).map_err(Error::from)
+                guest.call_handle(store, be_msg).await.map(|_| ()).context("issue sending message")
             })
             .instrument(debug_span!("messaging-handle"))
-            .await
-        {
-            match Error::from_str(e.to_string().as_str()) {
-                Ok(err) | Err(err) => {
-                    error::to_metric(&err, &self.service, &message.topic());
-                }
-            }
-        }
-
-        Ok(())
+            .await?
     }
 }

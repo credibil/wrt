@@ -229,7 +229,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_in_memory_container_operations() {
+    async fn container_operations() {
         let ctx = WasiBlobstoreCtxImpl::connect_with(ConnectOptions).await.expect("connect");
 
         // Test create and get container
