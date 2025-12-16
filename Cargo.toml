@@ -50,6 +50,7 @@ keyvalue = ["dep:wasi-keyvalue"]
 messaging = ["dep:wasi-messaging"]
 otel = ["dep:wasi-otel"]
 sql = ["dep:wasi-sql"]
+sql-pg = ["dep:wasi-sql"]
 vault = ["dep:wasi-vault"]
 websockets = ["dep:wasi-websockets"]
 
@@ -110,9 +111,15 @@ wasi-websockets.workspace = true
 axum = { workspace = true, features = ["macros"] }
 base64ct.workspace = true
 bytes.workspace = true
+credibil-api = { version = "0.5.0", registry = "credibil" }
+credibil-error.workspace = true
+fromenv.workspace = true
+futures.workspace = true
 http.workspace = true
+http-body = "1.0.1"
 http-body-util.workspace = true
 opentelemetry.workspace = true
+serde.workspace = true
 serde_json.workspace = true
 tower-http.workspace = true
 tracing.workspace = true
@@ -336,13 +343,22 @@ name = "otel"
 path = "examples/otel/runtime.rs"
 
 [[example]]
+name = "sql"
+path = "examples/sql/runtime.rs"
+
+[[example]]
 name = "sql-wasm"
 path = "examples/sql/guest.rs"
 crate-type = ["cdylib"]
 
 [[example]]
-name = "sql"
-path = "examples/sql/runtime.rs"
+name = "sql-pg"
+path = "examples/sql-pg/runtime.rs"
+
+[[example]]
+name = "sql-pg-wasm"
+path = "examples/sql-pg/lib.rs"
+crate-type = ["cdylib"]
 
 [[example]]
 name = "vault-wasm"

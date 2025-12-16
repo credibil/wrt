@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use anyhow::{Context, anyhow, bail};
-use chrono::NaiveDate;
+use chrono::{NaiveDate, Utc};
 use deadpool_postgres::Object;
 use futures::future::FutureExt;
 use tokio_postgres::row::Row as PgRow;
@@ -16,8 +16,15 @@ type ParamRef<'a> = &'a (dyn ToSql + Sync);
 impl WasiSqlCtx for Client {
     fn open(&self, name: String) -> FutureResult<Arc<dyn Connection>> {
         tracing::debug!("getting connection {name}");
-        let pool = self.0.clone();
 
+        let pool = match self.0.get(&name.to_ascii_uppercase()) {
+            // Clone the pool to move it into the 'async move' block below
+            Some(p) => p.clone(),
+            None => {
+                return futures::future::ready(Err(anyhow!("unknown postgres pool '{name}'")))
+                    .boxed();
+            }
+        };
         async move {
             let cnn = pool.get().await.context("issue getting connection")?;
             Ok(Arc::new(PostgresConnection(Arc::new(cnn))) as Arc<dyn Connection>)
@@ -27,7 +34,7 @@ impl WasiSqlCtx for Client {
 }
 
 #[derive(Debug)]
-struct PostgresConnection(Arc<Object>);
+pub struct PostgresConnection(Arc<Object>);
 
 impl Connection for PostgresConnection {
     fn query(&self, query: String, params: Vec<DataType>) -> FutureResult<Vec<Row>> {
@@ -194,6 +201,21 @@ fn into_wasi_row(pg_row: &PgRow, idx: usize) -> anyhow::Result<Row> {
                     value,
                     format: format_str.to_string(),
                 }))
+            }
+            "timestamptz" => {
+                let v: Option<chrono::DateTime<Utc>> = pg_row.try_get(i)?;
+                let format_str = "%Y-%m-%d %H:%M:%S%.6f%z";
+                let formatted = v.map(|dtz| dtz.format(format_str).to_string());
+                DataType::Timestamp(formatted.map(|value| FormattedValue {
+                    value,
+                    format: format_str.to_string(),
+                }))
+            }
+            "json" | "jsonb" => {
+                let v: Option<tokio_postgres::types::Json<serde_json::Value>> =
+                    pg_row.try_get(i)?;
+                let as_str = v.map(|json| json.0.to_string());
+                DataType::Str(as_str)
             }
             "bytea" => {
                 let v: Option<Vec<u8>> = pg_row.try_get(i)?;

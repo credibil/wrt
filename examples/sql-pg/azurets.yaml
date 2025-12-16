@@ -1,0 +1,5 @@
+name: sql-pg
+
+include:
+  - oci://ghcr.io/credibil/compose-azurets:latest
+  - oci://ghcr.io/credibil/compose-otelcol:latest
