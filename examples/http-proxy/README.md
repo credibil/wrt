@@ -22,7 +22,11 @@ cargo run --example http-proxy -- run ./target/wasm32-wasip2/debug/examples/http
 ## Test
 
 ```bash
-curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://localhost:8080
+# GET with cached response (2nd+ requests)
+curl http://localhost:8080/cache
+
+# POST to origin and cache the response
+curl --header 'Content-Type: application/json' -d '{"text":"hello"}' http://localhost:8080/origin
 ```
 
 ## Implementing Caching

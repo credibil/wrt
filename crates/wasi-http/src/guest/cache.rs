@@ -1,11 +1,11 @@
 //! Cache header parsing and cache get/put
 
 use anyhow::{Context, Result, anyhow, bail};
-use bincode::{Decode, Encode, config};
 use bytes::Bytes;
 use http::header::{CACHE_CONTROL, IF_NONE_MATCH};
 use http::{Request, Response};
 use http_body::Body;
+use rkyv::{Archive, Deserialize as RkyvDeserialize, Serialize as RkyvSerialize};
 
 pub const CACHE_BUCKET: &str = "default-cache";
 
@@ -199,16 +199,18 @@ impl TryFrom<&http::HeaderMap> for Control {
 
 fn serialize(response: &Response<Bytes>) -> Result<Vec<u8>> {
     let ser = Serialized::try_from(response)?;
-    bincode::encode_to_vec(&ser, config::standard()).context("serializing response")
+    rkyv::to_bytes::<rkyv::rancor::Error>(&ser)
+        .map(|bytes| bytes.to_vec())
+        .map_err(|e| anyhow!("serializing response: {e}"))
 }
 
 fn deserialize(data: &[u8]) -> Result<Response<Bytes>> {
-    let (ser, _): (Serialized, _) = bincode::decode_from_slice(data, config::standard())
-        .context("deserializing cached response")?;
+    let ser: Serialized = rkyv::from_bytes::<Serialized, rkyv::rancor::Error>(data)
+        .map_err(|e| anyhow!("deserializing cached response: {e}"))?;
     Response::<Bytes>::try_from(ser)
 }
 
-#[derive(Decode, Encode)]
+#[derive(Archive, RkyvDeserialize, RkyvSerialize)]
 struct Serialized {
     status: u16,
     headers: Vec<(String, String)>,

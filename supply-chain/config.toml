@@ -206,10 +206,6 @@ criteria = "safe-to-deploy"
 version = "0.4.9"
 criteria = "safe-to-deploy"
 
-[[exemptions.bincode]]
-version = "3.0.0"
-criteria = "safe-to-deploy"
-
 [[exemptions.bitvec]]
 version = "1.0.1"
 criteria = "safe-to-deploy"
@@ -228,6 +224,14 @@ criteria = "safe-to-deploy"
 
 [[exemptions.bson]]
 version = "2.15.0"
+criteria = "safe-to-deploy"
+
+[[exemptions.bytecheck]]
+version = "0.8.2"
+criteria = "safe-to-deploy"
+
+[[exemptions.bytecheck_derive]]
+version = "0.8.2"
 criteria = "safe-to-deploy"
 
 [[exemptions.bytecount]]
@@ -722,6 +726,14 @@ criteria = "safe-to-deploy"
 version = "0.10.1"
 criteria = "safe-to-deploy"
 
+[[exemptions.munge]]
+version = "0.4.7"
+criteria = "safe-to-deploy"
+
+[[exemptions.munge_macro]]
+version = "0.4.7"
+criteria = "safe-to-deploy"
+
 [[exemptions.nkeys]]
 version = "0.4.5"
 criteria = "safe-to-deploy"
@@ -898,6 +910,14 @@ criteria = "safe-to-deploy"
 version = "0.13.1"
 criteria = "safe-to-deploy"
 
+[[exemptions.ptr_meta]]
+version = "0.3.1"
+criteria = "safe-to-deploy"
+
+[[exemptions.ptr_meta_derive]]
+version = "0.3.1"
+criteria = "safe-to-deploy"
+
 [[exemptions.pulldown-cmark]]
 version = "0.9.6"
 criteria = "safe-to-deploy"
@@ -928,6 +948,10 @@ criteria = "safe-to-deploy"
 
 [[exemptions.radium]]
 version = "0.7.0"
+criteria = "safe-to-deploy"
+
+[[exemptions.rancor]]
+version = "0.1.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.rand_xorshift]]
@@ -966,12 +990,24 @@ criteria = "safe-to-deploy"
 version = "0.1.8"
 criteria = "safe-to-deploy"
 
+[[exemptions.rend]]
+version = "0.5.3"
+criteria = "safe-to-deploy"
+
 [[exemptions.resolv-conf]]
 version = "0.7.6"
 criteria = "safe-to-deploy"
 
 [[exemptions.ring]]
 version = "0.17.14"
+criteria = "safe-to-deploy"
+
+[[exemptions.rkyv]]
+version = "0.8.12"
+criteria = "safe-to-deploy"
+
+[[exemptions.rkyv_derive]]
+version = "0.8.12"
 criteria = "safe-to-deploy"
 
 [[exemptions.rusqlite]]
@@ -1068,6 +1104,10 @@ criteria = "safe-to-deploy"
 
 [[exemptions.simd-adler32]]
 version = "0.3.8"
+criteria = "safe-to-deploy"
+
+[[exemptions.simdutf8]]
+version = "0.1.5"
 criteria = "safe-to-deploy"
 
 [[exemptions.siphasher]]
