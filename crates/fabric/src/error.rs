@@ -159,7 +159,7 @@ mod tests {
     #[test]
     fn error_display() {
         let err = bad_request!("invalid input");
-        assert_eq!(format!("{err}",), "code: 400, description: invalid input");
+        assert_eq!(format!("{err}",), "code: bad_request, description: invalid input");
     }
 
     #[test]
@@ -177,7 +177,7 @@ mod tests {
         assert_eq!(
             result.unwrap_err().to_string(),
             bad_request!(
-                "more context -> doing something -> code: 400, description: invalid input"
+                "more context: doing something: code: bad_request, description: invalid input"
             )
             .to_string()
         );
@@ -191,7 +191,7 @@ mod tests {
 
         assert_eq!(
             err.to_string(),
-            "code: 500, description: request context -> code: 500, description: server error"
+            "code: server_error, description: request context: code: server_error, description: server error"
         );
     }
 
@@ -200,7 +200,10 @@ mod tests {
         let result = Err::<(), anyhow::Error>(anyhow!("one-off error")).context("error context");
         let err: Error = result.unwrap_err().into();
 
-        assert_eq!(err.to_string(), "code: 500, description: error context -> one-off error");
+        assert_eq!(
+            err.to_string(),
+            "code: server_error, description: error context: one-off error"
+        );
     }
 
     #[test]
@@ -211,7 +214,7 @@ mod tests {
 
         assert_eq!(
             err.to_string(),
-            "code: 500, description: error context -> EOF while parsing an object at line 1 column 13"
+            "code: server_error, description: error context: EOF while parsing an object at line 1 column 13"
         );
     }
 }
