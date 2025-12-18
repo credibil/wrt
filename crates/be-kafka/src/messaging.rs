@@ -205,15 +205,15 @@ impl Client for crate::Client {
                         let sender = sender.clone();
                         let registry = registry.clone();
                         async move {
-                            let decoded_payload = if let Some(sr) = &registry {
+                            let decoded = if let Some(sr) = &registry {
                                 let topic = msg.topic();
-                                let payload_bytes = msg.payload().unwrap_or_default().to_vec();
-                                sr.validate_and_decode_json(topic, &payload_bytes).await
+                                let payload = msg.payload().unwrap_or_default().to_vec();
+                                sr.decode(topic, &payload).await
                             } else {
                                 msg.payload().unwrap_or_default().to_vec()
                             };
                             let message = MessageProxy(Arc::new(KafkaMessage(
-                                msg.detach().set_payload(Some(decoded_payload)),
+                                msg.detach().set_payload(Some(decoded)),
                             ))
                                 as Arc<dyn Message>);
                             if let Err(e) = sender.send(message).await {
@@ -237,7 +237,7 @@ impl Client for crate::Client {
         async move {
             // schema registry validation when available
             let payload = if let Some(sr) = &client.registry {
-                sr.validate_and_encode_json(&topic, message.payload()).await
+                sr.encode(&topic, message.payload()).await
             } else {
                 message.payload()
             };

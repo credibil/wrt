@@ -2,9 +2,9 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 
+use anyhow::{Result, anyhow};
 use http::StatusCode;
 use jsonschema::validate;
-use kernel::error::Error;
 use schema_registry_client::rest::apis::Error as SchemaRegistryError;
 use schema_registry_client::rest::client_config::ClientConfig as RegistryConfig;
 use schema_registry_client::rest::schema_registry_client::{Client, SchemaRegistryClient};
@@ -44,11 +44,11 @@ impl Registry {
     }
 
     /// Serialize payload to JSON with optional schema registry
-    #[instrument(name = "registry-validate-encode-json", skip(self, buffer))]
-    pub async fn validate_and_encode_json(&self, topic: &str, buffer: Vec<u8>) -> Vec<u8> {
+    #[instrument(skip(self, buffer))]
+    pub async fn encode(&self, topic: &str, buffer: Vec<u8>) -> Vec<u8> {
         // If schema registry is available, use it
         if self.client.is_some() {
-            match self.get_or_fetch_schema(topic).await {
+            match self.get_schema(topic).await {
                 Ok(Some((id, schema))) => {
                     let payload: Value = match serde_json::from_slice(&buffer) {
                         Ok(p) => p,
@@ -58,7 +58,7 @@ impl Registry {
                         }
                     };
 
-                    if let Err(e) = self.validate_payload_with_schema(&schema, &payload) {
+                    if let Err(e) = self.validate(&schema, &payload) {
                         tracing::error!("JSON validation failed: {}", e);
                         return buffer;
                     }
@@ -78,10 +78,10 @@ impl Registry {
 
     /// Deserialize payload to JSON with optional schema registry
     #[allow(unused)]
-    #[instrument(name = "registry-validate-decode-json", skip(self, buffer))]
-    pub async fn validate_and_decode_json(&self, topic: &str, buffer: &[u8]) -> Vec<u8> {
+    #[instrument(skip(self, buffer))]
+    pub async fn decode(&self, topic: &str, buffer: &[u8]) -> Vec<u8> {
         if self.client.is_some() {
-            let (_id, schema) = match self.get_or_fetch_schema(topic).await {
+            let (_id, schema) = match self.get_schema(topic).await {
                 Ok(Some((id, schema))) => (id, schema),
                 Ok(None) => {
                     return buffer.to_vec();
@@ -102,7 +102,7 @@ impl Registry {
                 }
             };
 
-            if let Err(e) = self.validate_payload_with_schema(&schema, &payload) {
+            if let Err(e) = self.validate(&schema, &payload) {
                 tracing::error!("Schema validation failed: {}", e);
             }
 
@@ -116,18 +116,14 @@ impl Registry {
     ///
     /// Validate a JSON payload against a provided `RegisteredSchema`
     #[allow(clippy::unused_self)]
-    pub fn validate_payload_with_schema(
-        &self, schema: &Value, payload: &Value,
-    ) -> Result<(), String> {
+    pub fn validate(&self, schema: &Value, payload: &Value) -> Result<(), String> {
         validate(schema, payload).map_err(|e| format!("Validation error: {e}"))?;
         Ok(())
     }
 
-    async fn get_or_fetch_schema(&self, topic: &str) -> Result<Option<(i32, Value)>, Error> {
-        let sr = self
-            .client
-            .as_ref()
-            .ok_or_else(|| Error::ServerError("No schema registry client available".to_string()))?;
+    async fn get_schema(&self, topic: &str) -> Result<Option<(i32, Value)>> {
+        let sr =
+            self.client.as_ref().ok_or_else(|| anyhow!("No schema registry client available"))?;
 
         let mut schemas = self.schemas.lock().await;
         if let Some(schema_entry) = schemas.get(topic) {
@@ -141,19 +137,15 @@ impl Registry {
                     SchemaRegistryError::ResponseError(e) => {
                         if e.status == StatusCode::NOT_FOUND {
                             schemas.insert(topic.to_string(), None);
-                            return Err(Error::NotFound(format!(
-                                "Schema not found for topic {topic}"
-                            )));
+                            return Err(anyhow!("Schema not found for topic {topic}"));
                         }
-                        return Err(Error::BadGateway(format!(
+                        return Err(anyhow!(
                             "Error fetching schema for topic {topic}: {}",
                             e.content
-                        )));
+                        ));
                     }
                     _ => {
-                        return Err(Error::ServerError(format!(
-                            "Error fetching schema for topic {topic}: {e:?}"
-                        )));
+                        return Err(anyhow!("Error fetching schema for topic {topic}: {e:?}"));
                     }
                 },
             };
@@ -161,14 +153,14 @@ impl Registry {
             let schema_str = schema_response
                 .schema
                 .as_ref()
-                .ok_or_else(|| Error::BadGateway("Schema string is missing".to_string()))?;
+                .ok_or_else(|| anyhow!("Schema string is missing"))?;
 
             let schema_json: Value = serde_json::from_str(schema_str)
-                .map_err(|e| Error::BadGateway(format!("Invalid schema JSON: {e:?}")))?;
+                .map_err(|e| anyhow!("Invalid schema JSON: {e:?}"))?;
 
-            let registry_id = schema_response.id.ok_or_else(|| {
-                Error::BadGateway(format!("Registry ID missing for topic {topic}"))
-            })?;
+            let registry_id = schema_response
+                .id
+                .ok_or_else(|| anyhow!("Registry ID missing for topic {topic}"))?;
             schemas.insert(topic.to_string(), Some((registry_id, schema_json.clone())));
             drop(schemas);
             Ok(Some((registry_id, schema_json)))

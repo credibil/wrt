@@ -207,11 +207,7 @@ version = "0.4.9"
 criteria = "safe-to-deploy"
 
 [[exemptions.bincode]]
-version = "2.0.1"
-criteria = "safe-to-deploy"
-
-[[exemptions.bincode_derive]]
-version = "2.0.1"
+version = "3.0.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.bitvec]]
@@ -239,7 +235,7 @@ version = "0.6.9"
 criteria = "safe-to-deploy"
 
 [[exemptions.camino]]
-version = "1.2.1"
+version = "1.2.2"
 criteria = "safe-to-deploy"
 
 [[exemptions.cargo-platform]]
@@ -647,7 +643,7 @@ version = "0.37.4"
 criteria = "safe-to-deploy"
 
 [[exemptions.libredox]]
-version = "0.1.10"
+version = "0.1.11"
 criteria = "safe-to-deploy"
 
 [[exemptions.libsqlite3-sys]]
@@ -954,6 +950,10 @@ criteria = "safe-to-deploy"
 version = "0.5.18"
 criteria = "safe-to-deploy"
 
+[[exemptions.redox_syscall]]
+version = "0.6.0"
+criteria = "safe-to-deploy"
+
 [[exemptions.referencing]]
 version = "0.30.0"
 criteria = "safe-to-deploy"
@@ -1003,7 +1003,7 @@ version = "2.2.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.rustls-pki-types]]
-version = "1.13.1"
+version = "1.13.2"
 criteria = "safe-to-deploy"
 
 [[exemptions.rustls-webpki]]
@@ -1262,10 +1262,6 @@ criteria = "safe-to-deploy"
 version = "0.9.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.unty]]
-version = "0.0.4"
-criteria = "safe-to-deploy"
-
 [[exemptions.utf-8]]
 version = "0.7.6"
 criteria = "safe-to-deploy"
@@ -1280,10 +1276,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.version_check]]
 version = "0.9.5"
-criteria = "safe-to-deploy"
-
-[[exemptions.virtue]]
-version = "0.0.18"
 criteria = "safe-to-deploy"
 
 [[exemptions.vsimd]]

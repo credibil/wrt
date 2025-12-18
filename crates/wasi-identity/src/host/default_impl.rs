@@ -166,7 +166,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn uses_cached_token_when_not_expired() {
+    async fn uses_cached_token() {
         let manager = TokenManager::new(ConnectOptions {
             client_id: "test-client".to_string(),
             client_secret: "test-secret".to_string(),

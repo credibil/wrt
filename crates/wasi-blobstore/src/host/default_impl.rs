@@ -2,16 +2,14 @@
 //!
 //! This is a lightweight implementation for development use only.
 
-#![allow(clippy::significant_drop_tightening)]
-#![allow(clippy::used_underscore_binding)]
-#![allow(clippy::semicolon_outside_block)]
-
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::time::{SystemTime, UNIX_EPOCH};
 
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use futures::FutureExt;
 use kernel::Backend;
+use parking_lot::RwLock;
 use tracing::instrument;
 
 use crate::host::WasiBlobstoreCtx;
@@ -29,49 +27,45 @@ impl kernel::FromEnv for ConnectOptions {
 
 #[derive(Debug, Clone)]
 pub struct WasiBlobstoreCtxImpl {
-    store: Arc<parking_lot::RwLock<HashMap<String, InMemoryContainer>>>,
+    store: Arc<RwLock<HashMap<String, InMemContainer>>>,
 }
 
 impl Backend for WasiBlobstoreCtxImpl {
     type ConnectOptions = ConnectOptions;
 
     #[instrument]
-    async fn connect_with(_options: Self::ConnectOptions) -> Result<Self> {
+    async fn connect_with(options: Self::ConnectOptions) -> Result<Self> {
         tracing::debug!("initializing in-memory blobstore");
         Ok(Self {
-            store: Arc::new(parking_lot::RwLock::new(HashMap::new())),
+            store: Arc::new(RwLock::new(HashMap::new())),
         })
     }
 }
 
 impl WasiBlobstoreCtx for WasiBlobstoreCtxImpl {
     fn create_container(&self, name: String) -> FutureResult<Arc<dyn Container>> {
-        tracing::debug!("creating container: {}", name);
+        tracing::debug!("creating container: {name}");
         let store = Arc::clone(&self.store);
-        let container_name = name;
 
         async move {
-            let container = InMemoryContainer::new(container_name.clone());
+            let container = InMemContainer::new(name.clone());
             {
                 let mut store = store.write();
-                store.insert(container_name, container.clone());
-            }
+                store.insert(name, container.clone())
+            };
             Ok(Arc::new(container) as Arc<dyn Container>)
         }
         .boxed()
     }
 
     fn get_container(&self, name: String) -> FutureResult<Arc<dyn Container>> {
-        tracing::debug!("getting container: {}", name);
+        tracing::debug!("getting container: {name}");
         let store = Arc::clone(&self.store);
 
         async move {
             let container = {
                 let store = store.read();
-                store
-                    .get(&name)
-                    .cloned()
-                    .ok_or_else(|| anyhow::anyhow!("container not found: {name}"))?
+                store.get(&name).cloned().ok_or_else(|| anyhow!("container not found: {name}"))?
             };
             Ok(Arc::new(container) as Arc<dyn Container>)
         }
@@ -79,21 +73,21 @@ impl WasiBlobstoreCtx for WasiBlobstoreCtxImpl {
     }
 
     fn delete_container(&self, name: String) -> FutureResult<()> {
-        tracing::debug!("deleting container: {}", name);
+        tracing::debug!("deleting container: {name}");
         let store = Arc::clone(&self.store);
 
         async move {
             {
                 let mut store = store.write();
-                store.remove(&name);
-            }
+                store.remove(&name)
+            };
             Ok(())
         }
         .boxed()
     }
 
     fn container_exists(&self, name: String) -> FutureResult<bool> {
-        tracing::debug!("checking existence of container: {}", name);
+        tracing::debug!("checking existence of container: {name}");
         let store = Arc::clone(&self.store);
 
         async move {
@@ -105,23 +99,23 @@ impl WasiBlobstoreCtx for WasiBlobstoreCtxImpl {
 }
 
 #[derive(Debug, Clone)]
-struct InMemoryContainer {
+struct InMemContainer {
     name: String,
-    objects: Arc<parking_lot::RwLock<HashMap<String, Vec<u8>>>>,
-    created_at: std::time::SystemTime,
+    objects: Arc<RwLock<HashMap<String, Vec<u8>>>>,
+    created_at: SystemTime,
 }
 
-impl InMemoryContainer {
+impl InMemContainer {
     fn new(name: String) -> Self {
         Self {
             name,
-            objects: Arc::new(parking_lot::RwLock::new(HashMap::new())),
-            created_at: std::time::SystemTime::now(),
+            objects: Arc::new(RwLock::new(HashMap::new())),
+            created_at: SystemTime::now(),
         }
     }
 }
 
-impl Container for InMemoryContainer {
+impl Container for InMemContainer {
     fn name(&self) -> anyhow::Result<String> {
         Ok(self.name.clone())
     }
@@ -132,15 +126,12 @@ impl Container for InMemoryContainer {
 
         Ok(ContainerMetadata {
             name,
-            created_at: created_at
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap_or_default()
-                .as_secs(),
+            created_at: created_at.duration_since(UNIX_EPOCH).unwrap_or_default().as_secs(),
         })
     }
 
     fn get_data(&self, name: String, _start: u64, _end: u64) -> FutureResult<Option<Vec<u8>>> {
-        tracing::debug!("getting object: {} from container: {}", name, self.name);
+        tracing::debug!("getting object: {name} from container: {}", self.name);
         let objects = Arc::clone(&self.objects);
 
         async move {
@@ -156,12 +147,14 @@ impl Container for InMemoryContainer {
     }
 
     fn write_data(&self, name: String, data: Vec<u8>) -> FutureResult<()> {
-        tracing::debug!("writing object: {} to container: {}", name, self.name);
+        tracing::debug!("writing object: {name} to container: {}", self.name);
         let objects = Arc::clone(&self.objects);
 
         async move {
-            let mut objects = objects.write();
-            objects.insert(name, data);
+            {
+                let mut objects = objects.write();
+                objects.insert(name, data)
+            };
             Ok(())
         }
         .boxed()
@@ -182,21 +175,21 @@ impl Container for InMemoryContainer {
     }
 
     fn delete_object(&self, name: String) -> FutureResult<()> {
-        tracing::debug!("deleting object: {} from container: {}", name, self.name);
+        tracing::debug!("deleting object: {name} from container: {}", self.name);
         let objects = Arc::clone(&self.objects);
 
         async move {
             {
                 let mut objects = objects.write();
-                objects.remove(&name);
-            }
+                objects.remove(&name)
+            };
             Ok(())
         }
         .boxed()
     }
 
     fn has_object(&self, name: String) -> FutureResult<bool> {
-        tracing::debug!("checking existence of object: {} in container: {}", name, self.name);
+        tracing::debug!("checking existence of object: {name} in container: {}", self.name);
         let objects = Arc::clone(&self.objects);
 
         async move {
@@ -207,21 +200,21 @@ impl Container for InMemoryContainer {
     }
 
     fn object_info(&self, name: String) -> FutureResult<ObjectMetadata> {
-        tracing::debug!("getting info for object: {} in container: {}", name, self.name);
+        tracing::debug!("getting info for object: {name} in container: {}", self.name);
         let objects = Arc::clone(&self.objects);
         let container_name = self.name.clone();
 
         async move {
             let size = {
                 let objects = objects.read();
-                objects.get(&name).ok_or_else(|| anyhow::anyhow!("object not found: {name}"))?.len()
+                objects.get(&name).ok_or_else(|| anyhow!("object not found: {name}"))?.len()
             };
 
             Ok(ObjectMetadata {
                 name,
                 container: container_name,
-                created_at: std::time::SystemTime::now()
-                    .duration_since(std::time::UNIX_EPOCH)
+                created_at: SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
                     .unwrap_or_default()
                     .as_secs(),
                 size: size as u64,
@@ -236,7 +229,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_in_memory_container_operations() {
+    async fn container_operations() {
         let ctx = WasiBlobstoreCtxImpl::connect_with(ConnectOptions).await.expect("connect");
 
         // Test create and get container

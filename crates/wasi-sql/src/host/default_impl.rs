@@ -185,7 +185,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_sqlite_operations() {
+    async fn sqlite_operations() {
         let ctx = WasiSqlCtxImpl::connect_with(ConnectOptions {
             database: ":memory:".to_string(),
         })

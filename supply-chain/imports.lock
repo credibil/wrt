@@ -65,8 +65,8 @@ user-login = "dtolnay"
 user-name = "David Tolnay"
 
 [[publisher.bumpalo]]
-version = "3.19.0"
-when = "2025-06-24"
+version = "3.19.1"
+when = "2025-12-16"
 user-id = 696
 user-login = "fitzgen"
 user-name = "Nick Fitzgerald"
@@ -149,8 +149,8 @@ user-login = "epage"
 user-name = "Ed Page"
 
 [[publisher.cmake]]
-version = "0.1.55"
-when = "2025-12-12"
+version = "0.1.57"
+when = "2025-12-17"
 user-id = 55123
 user-login = "rust-lang-owner"
 
@@ -501,8 +501,8 @@ user-login = "BurntSushi"
 user-name = "Andrew Gallant"
 
 [[publisher.reqwest]]
-version = "0.12.25"
-when = "2025-12-08"
+version = "0.12.26"
+when = "2025-12-15"
 user-id = 359
 user-login = "seanmonstar"
 user-name = "Sean McArthur"
@@ -683,22 +683,22 @@ user-login = "Darksonn"
 user-name = "Alice Ryhl"
 
 [[publisher.toml_datetime]]
-version = "0.7.3"
-when = "2025-10-09"
+version = "0.7.4+spec-1.0.0"
+when = "2025-12-17"
 user-id = 6743
 user-login = "epage"
 user-name = "Ed Page"
 
 [[publisher.toml_edit]]
-version = "0.23.9"
-when = "2025-12-06"
+version = "0.23.10+spec-1.0.0"
+when = "2025-12-17"
 user-id = 6743
 user-login = "epage"
 user-name = "Ed Page"
 
 [[publisher.toml_parser]]
-version = "1.0.4"
-when = "2025-10-09"
+version = "1.0.5+spec-1.0.0"
+when = "2025-12-17"
 user-id = 6743
 user-login = "epage"
 user-name = "Ed Page"
