@@ -207,11 +207,7 @@ version = "0.4.9"
 criteria = "safe-to-deploy"
 
 [[exemptions.bincode]]
-version = "2.0.1"
-criteria = "safe-to-deploy"
-
-[[exemptions.bincode_derive]]
-version = "2.0.1"
+version = "3.0.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.bitvec]]
@@ -1266,10 +1262,6 @@ criteria = "safe-to-deploy"
 version = "0.9.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.unty]]
-version = "0.0.4"
-criteria = "safe-to-deploy"
-
 [[exemptions.utf-8]]
 version = "0.7.6"
 criteria = "safe-to-deploy"
@@ -1284,10 +1276,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.version_check]]
 version = "0.9.5"
-criteria = "safe-to-deploy"
-
-[[exemptions.virtue]]
-version = "0.0.18"
 criteria = "safe-to-deploy"
 
 [[exemptions.vsimd]]
