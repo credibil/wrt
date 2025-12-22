@@ -39,7 +39,7 @@ use store_impl::FutureResult;
 use wasmtime::component::{HasData, Linker};
 use wasmtime_wasi::ResourceTable;
 
-pub use self::default_impl::WasiWebSocketsCtxImpl;
+pub use self::default_impl::WebSocketsDefault;
 use self::generated::wasi::websockets::{store, types as generated_types};
 
 #[derive(Clone, Debug)]

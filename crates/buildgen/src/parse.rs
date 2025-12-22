@@ -10,7 +10,7 @@ mod kw {
 /// Parses input in the form of 'host:backend' pairs. For example:
 /// ```ignore
 /// {
-///     WasiHttp: WasiHttpCtxImpl,
+///     WasiHttp: HttpDefault,
 ///     WasiOtel: DefaultOtel,
 ///     ...
 /// }

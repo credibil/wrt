@@ -28,12 +28,12 @@ impl kernel::FromEnv for ConnectOptions {
 }
 
 #[derive(Debug)]
-pub struct WasiMessagingCtxImpl {
+pub struct MessagingDefault {
     sender: Sender<MessageProxy>,
     receiver: Receiver<MessageProxy>,
 }
 
-impl Clone for WasiMessagingCtxImpl {
+impl Clone for MessagingDefault {
     fn clone(&self) -> Self {
         Self {
             sender: self.sender.clone(),
@@ -42,7 +42,7 @@ impl Clone for WasiMessagingCtxImpl {
     }
 }
 
-impl Backend for WasiMessagingCtxImpl {
+impl Backend for MessagingDefault {
     type ConnectOptions = ConnectOptions;
 
     #[instrument]
@@ -53,7 +53,7 @@ impl Backend for WasiMessagingCtxImpl {
     }
 }
 
-impl WasiMessagingCtx for WasiMessagingCtxImpl {
+impl WasiMessagingCtx for MessagingDefault {
     fn connect(&self) -> FutureResult<Arc<dyn Client>> {
         tracing::debug!("connecting messaging client");
         let client = self.clone();
@@ -148,7 +148,7 @@ impl WasiMessagingCtx for WasiMessagingCtxImpl {
     }
 }
 
-impl Client for WasiMessagingCtxImpl {
+impl Client for MessagingDefault {
     fn subscribe(&self) -> FutureResult<Subscriptions> {
         tracing::debug!("subscribing to messages");
         let stream = BroadcastStream::new(self.receiver.resubscribe());
@@ -271,7 +271,7 @@ mod tests {
 
     #[tokio::test]
     async fn messaging() {
-        let ctx = WasiMessagingCtxImpl::connect_with(ConnectOptions).await.expect("connect");
+        let ctx = MessagingDefault::connect_with(ConnectOptions).await.expect("connect");
 
         // Test connect
         let client = ctx.connect().await.expect("connect client");

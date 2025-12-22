@@ -35,7 +35,7 @@ use kernel::{Host, Server, State};
 use wasmtime::component::{HasData, Linker, ResourceTableError};
 use wasmtime_wasi::ResourceTable;
 
-pub use self::default_impl::WasiKeyValueCtxImpl;
+pub use self::default_impl::KeyValueDefault;
 use self::generated::wasi::keyvalue::store::Error;
 use self::generated::wasi::keyvalue::{atomics, batch, store};
 pub use self::resource::*;

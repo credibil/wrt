@@ -1,10 +1,10 @@
 #![cfg(not(target_arch = "wasm32"))]
 
 use be_kafka::Client as Kafka;
-use wasi_http::{WasiHttp, WasiHttpCtxImpl as HttpDefault};
+use wasi_http::{WasiHttp, HttpDefault};
 use wasi_messaging::WasiMessaging;
-use wasi_otel::{WasiOtel, WasiOtelCtxImpl as OtelDefault};
-use wasi_websockets::{WasiWebSockets, WasiWebSocketsCtxImpl as WebSocketsDefault};
+use wasi_otel::{WasiOtel, OtelDefault};
+use wasi_websockets::{WasiWebSockets, WebSocketsDefault};
 
 buildgen::runtime!(main, {
     WasiHttp: HttpDefault,

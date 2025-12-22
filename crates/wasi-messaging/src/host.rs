@@ -41,7 +41,7 @@ use kernel::{Host, Server, State};
 use wasmtime::component::{HasData, Linker};
 use wasmtime_wasi::{ResourceTable, ResourceTableError};
 
-pub use self::default_impl::WasiMessagingCtxImpl;
+pub use self::default_impl::MessagingDefault;
 pub use self::generated::Messaging;
 pub use self::generated::wasi::messaging::types::Error;
 use self::generated::wasi::messaging::{producer, request_reply, types};

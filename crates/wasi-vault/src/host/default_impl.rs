@@ -25,12 +25,12 @@ impl kernel::FromEnv for ConnectOptions {
 }
 
 #[derive(Debug, Clone)]
-pub struct WasiVaultCtxImpl {
+pub struct VaultDefault {
     // Using Arc for shared state across instances
     store: Store,
 }
 
-impl Backend for WasiVaultCtxImpl {
+impl Backend for VaultDefault {
     type ConnectOptions = ConnectOptions;
 
     #[instrument]
@@ -42,7 +42,7 @@ impl Backend for WasiVaultCtxImpl {
     }
 }
 
-impl WasiVaultCtx for WasiVaultCtxImpl {
+impl WasiVaultCtx for VaultDefault {
     fn open_locker(&self, identifier: String) -> FutureResult<Arc<dyn Locker>> {
         tracing::debug!("opening locker: {}", identifier);
         let locker = InMemoryLocker {
@@ -162,7 +162,7 @@ mod tests {
 
     #[tokio::test]
     async fn locker_operations() {
-        let ctx = WasiVaultCtxImpl::connect_with(ConnectOptions).await.expect("connect");
+        let ctx = VaultDefault::connect_with(ConnectOptions).await.expect("connect");
 
         let locker = ctx.open_locker("test-locker".to_string()).await.expect("open locker");
 

@@ -26,11 +26,11 @@ impl kernel::FromEnv for ConnectOptions {
 }
 
 #[derive(Debug, Clone)]
-pub struct WasiKeyValueCtxImpl {
+pub struct KeyValueDefault {
     store: Store,
 }
 
-impl Backend for WasiKeyValueCtxImpl {
+impl Backend for KeyValueDefault {
     type ConnectOptions = ConnectOptions;
 
     #[instrument]
@@ -42,7 +42,7 @@ impl Backend for WasiKeyValueCtxImpl {
     }
 }
 
-impl WasiKeyValueCtx for WasiKeyValueCtxImpl {
+impl WasiKeyValueCtx for KeyValueDefault {
     fn open_bucket(&self, identifier: String) -> FutureResult<Arc<dyn Bucket>> {
         tracing::debug!("opening bucket: {identifier}");
 
@@ -157,7 +157,7 @@ mod tests {
 
     #[tokio::test]
     async fn bucket_operations() {
-        let ctx = WasiKeyValueCtxImpl::connect_with(ConnectOptions).await.expect("connect");
+        let ctx = KeyValueDefault::connect_with(ConnectOptions).await.expect("connect");
 
         let bucket = ctx.open_bucket("test-bucket".to_string()).await.expect("open bucket");
 

@@ -25,9 +25,9 @@ impl kernel::FromEnv for ConnectOptions {
 }
 
 #[derive(Debug, Clone)]
-pub struct WasiOtelCtxImpl;
+pub struct OtelDefault;
 
-impl Backend for WasiOtelCtxImpl {
+impl Backend for OtelDefault {
     type ConnectOptions = ConnectOptions;
 
     #[instrument]
@@ -40,7 +40,7 @@ impl Backend for WasiOtelCtxImpl {
     }
 }
 
-impl WasiOtelCtx for WasiOtelCtxImpl {
+impl WasiOtelCtx for OtelDefault {
     /// Log traces but don't export them.
     ///
     /// This is a no-op implementation for development use only.

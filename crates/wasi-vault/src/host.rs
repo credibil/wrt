@@ -35,7 +35,7 @@ use wasmtime::component::{HasData, Linker};
 use wasmtime_wasi::ResourceTable;
 
 use self::generated::wasi::vault::vault;
-pub use crate::host::default_impl::WasiVaultCtxImpl;
+pub use crate::host::default_impl::VaultDefault;
 pub use crate::host::resource::*;
 
 #[derive(Debug)]

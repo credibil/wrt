@@ -35,7 +35,7 @@ use kernel::{Host, Server, State};
 use wasmtime::component::{HasData, Linker};
 use wasmtime_wasi::ResourceTable;
 
-pub use self::default_impl::WasiIdentityCtxImpl;
+pub use self::default_impl::IdentityDefault;
 use self::generated::wasi::identity::credentials;
 pub use self::resource::*;
 

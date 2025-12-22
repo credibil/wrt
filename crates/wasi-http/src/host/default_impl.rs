@@ -29,9 +29,9 @@ impl kernel::FromEnv for ConnectOptions {
 }
 
 #[derive(Debug, Clone)]
-pub struct WasiHttpCtxImpl;
+pub struct HttpDefault;
 
-impl Backend for WasiHttpCtxImpl {
+impl Backend for HttpDefault {
     type ConnectOptions = ConnectOptions;
 
     #[instrument]
@@ -40,7 +40,7 @@ impl Backend for WasiHttpCtxImpl {
     }
 }
 
-impl p3::WasiHttpCtx for WasiHttpCtxImpl {
+impl p3::WasiHttpCtx for HttpDefault {
     fn send_request(
         &mut self, request: Request<UnsyncBoxBody<Bytes, ErrorCode>>,
         _options: Option<RequestOptions>, fut: FutureResult<()>,

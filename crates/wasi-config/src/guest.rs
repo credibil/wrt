@@ -1,4 +1,4 @@
-//! # WASI Blobstore Guest
+//! # WASI Config Guest
 
 // Bindings for the `wasi:config` world.
 // See (<https://github.com/WebAssembly/wasi-config/>)

@@ -10,7 +10,8 @@ use anyhow::Result;
 pub use default_impl::ConfigDefault;
 use kernel::{Host, Server, State};
 use wasmtime::component::Linker;
-pub use wasmtime_wasi_config::{self, WasiConfigVariables};
+pub use wasmtime_wasi_config;
+use wasmtime_wasi_config::WasiConfigVariables;
 
 #[derive(Debug)]
 pub struct WasiConfig;
@@ -40,7 +41,7 @@ pub trait WasiConfigCtx: Debug + Send + Sync + 'static {
 /// This is implemented by the `T` in `Linker<T>` — a single type shared across
 /// all WASI components for the runtime build.
 pub trait WasiConfigView: Send {
-    /// Return a [`WasiConfigCtxView`] from mutable reference to self.
+    /// Return a [`WasiConfig`] from mutable reference to self.
     fn config(&mut self) -> wasmtime_wasi_config::WasiConfig<'_>;
 }
 
