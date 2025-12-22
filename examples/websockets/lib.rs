@@ -36,9 +36,6 @@ wasip3::http::proxy::export!(HttpGuest);
 
 impl Guest for HttpGuest {
     /// Routes HTTP requests to WebSocket management endpoints.
-    ///
-    /// Note: WebSocket upgrade requests are handled by the host, not this handler.
-    /// This handler provides HTTP endpoints for managing WebSocket peers.
     async fn handle(request: Request) -> Result<Response, ErrorCode> {
         let router =
             Router::new().route("/health", get(get_handler)).route("/socket", post(post_handler));
@@ -47,17 +44,10 @@ impl Guest for HttpGuest {
 }
 
 /// Health check endpoint for the WebSocket server.
-///
-/// Returns the server's health status, which can be used for:
-/// - Load balancer health checks
-/// - Monitoring systems
-/// - Debugging connection issues
 #[axum::debug_handler]
 async fn get_handler() -> Result<Json<Value>> {
-    // Get the WebSocket server handle from the host.
     let server = store::get_server().await.map_err(|e| anyhow!("getting websocket server: {e}"))?;
 
-    // Query the server's health status.
     let message = server.health_check().await.map_err(|e| anyhow!("health check failed: {e}"))?;
 
     Ok(Json(json!({
@@ -66,30 +56,15 @@ async fn get_handler() -> Result<Json<Value>> {
 }
 
 /// Sends a message to all connected WebSocket peers.
-///
-/// This demonstrates the broadcast pattern:
-/// 1. Get the WebSocket server handle
-/// 2. List all connected peers
-/// 3. Send the message to each peer
-///
-/// ## Parameters
-/// - `body`: The message to broadcast (as a string)
-///
-/// ## Returns
-/// Confirmation that the message was received for processing
 #[axum::debug_handler]
 async fn post_handler(body: String) -> Result<Json<Value>> {
-    // Get the WebSocket server handle.
     let server = store::get_server().await.map_err(|e| anyhow!("getting websocket server: {e}"))?;
 
-    // Get list of all connected peers.
     let client_peers =
         server.get_peers().await.map_err(|e| anyhow!("getting websocket peers: {e}"))?;
 
-    // Extract peer addresses for the broadcast.
     let recipients: Vec<String> = client_peers.iter().map(|p| p.address.clone()).collect();
 
-    // Send the message to all peers.
     server
         .send_peers(body.to_string(), recipients)
         .await

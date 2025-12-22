@@ -47,40 +47,16 @@ impl Guest for Http {
 }
 
 /// Stores and retrieves a secret from the vault.
-///
-/// This handler demonstrates the WASI Vault workflow:
-/// 1. Open a locker (named secret namespace)
-/// 2. Store a secret under a key
-/// 3. Retrieve the secret to verify storage
-///
-/// ## Lockers
-///
-/// A "locker" is a named namespace for secrets, similar to:
-/// - Azure Key Vault vault
-/// - HashiCorp Vault path
-/// - AWS Secrets Manager prefix
-///
-/// ## Secret Versioning
-///
-/// Depending on the backend, secrets may be versioned.
-/// The `get` operation returns the latest version.
 #[wasi_otel::instrument]
 async fn handler(body: Bytes) -> Result<Json<Value>> {
-    // Open a locker (namespace) for storing secrets.
-    // The locker name maps to host configuration.
     let locker =
         vault::open("credibil-locker".to_string()).await.context("failed to open vault locker")?;
 
-    // Store the secret under a key.
-    // The data is securely stored by the backend.
     locker.set("secret-id".to_string(), body.to_vec()).await.context("issue setting secret")?;
 
-    // Retrieve the secret to verify storage.
-    // Returns Option<Vec<u8>> - None if not found.
     let secret = locker.get("secret-id".to_string()).await.context("issue retriving secret")?;
     assert_eq!(secret.unwrap(), body);
 
-    // Return the data (for demo purposes - don't expose real secrets!).
     let response = serde_json::from_slice::<Value>(&body).context("deserializing data")?;
     tracing::debug!("sending response: {response:?}");
     Ok(Json(response))

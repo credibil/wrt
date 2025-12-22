@@ -44,10 +44,6 @@ wasip3::http::proxy::export!(Http);
 
 impl Guest for Http {
     /// Routes HTTP requests to messaging operations.
-    ///
-    /// - `POST /pub-sub`: Publish a message (triggers fan-out)
-    /// - `POST /request-reply`: Send message and wait for reply
-    // #[wasi_otel::instrument]
     async fn handle(request: Request) -> Result<Response, ErrorCode> {
         let router = Router::new()
             .route("/pub-sub", post(pub_sub))
@@ -56,11 +52,7 @@ impl Guest for Http {
     }
 }
 
-/// Publish a message using the pub-sub pattern.
-///
-/// Creates a message with content-type and metadata, then publishes
-/// it to topic "a". The incoming message handler will receive this
-/// and fan out to topic "b".
+/// Publishes a message using the pub-sub pattern.
 async fn pub_sub(Json(body): Json<Value>) -> Result<Json<Value>> {
     tracing::debug!("sending message to topic 'a'");
 
@@ -79,10 +71,7 @@ async fn pub_sub(Json(body): Json<Value>) -> Result<Json<Value>> {
     Ok(Json(json!({"message": "message published"})))
 }
 
-/// Send a message and wait for a reply.
-///
-/// Demonstrates the request-reply pattern where the caller
-/// blocks until a response is received.
+/// Sends a message and waits for a reply.
 async fn request_reply_handler(body: Bytes) -> Json<Value> {
     let client = Client::connect("default".to_string()).await.expect("should connect");
     let message = Message::new(&body);
@@ -105,12 +94,7 @@ pub struct Messaging;
 wasi_messaging::export!(Messaging with_types_in wasi_messaging);
 
 impl wasi_messaging::incoming_handler::Guest for Messaging {
-    /// Handle incoming messages from subscribed topics.
-    ///
-    /// Routes messages based on topic:
-    /// - `"a"`: Fan-out 1000 messages to topic "b"
-    /// - `"b"`: Log receipt
-    /// - `"c"`: Send reply (for request-reply pattern)
+    /// Handles incoming messages from subscribed topics.
     async fn handle(message: Message) -> anyhow::Result<(), Error> {
         tracing::debug!("start processing msg");
 
@@ -134,7 +118,6 @@ impl wasi_messaging::incoming_handler::Guest for Messaging {
 
                 let timer = Instant::now();
 
-                // Fan-out: spawn 1000 concurrent message sends.
                 for i in 0..1000 {
                     wit_bindgen::spawn(async move {
                         tracing::debug!("sending message iteration {i}");
