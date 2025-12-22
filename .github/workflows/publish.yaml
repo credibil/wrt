@@ -4,39 +4,39 @@ on:
   workflow_dispatch:
 
 jobs:
-  skip:
-    name: Skipped
-    if: ${{ !startsWith(github.ref_name, 'release-') }}
-    runs-on: ubuntu-latest
-    steps:
-      - run: |
-          echo "This workflow only runs on the 'release-*' branches"
-          exit 1
+  # skip:
+  #   name: Skipped
+  #   if: ${{ !startsWith(github.ref_name, 'release-') }}
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - run: |
+  #         echo "This workflow only runs on the 'release-*' branches"
+  #         exit 1
 
-  ci:
-    name: CI
-    if: ${{ startsWith(github.ref_name, 'release-') }}
-    uses: credibil/pipeline/.github/workflows/ci.yaml@main
-    secrets: inherit
+  # ci:
+  #   name: CI
+  #   if: ${{ startsWith(github.ref_name, 'release-') }}
+  #   uses: credibil/pipeline/.github/workflows/ci.yaml@main
+  #   secrets: inherit
 
-  publish:
-    name: Publish
-    needs: ci
-    uses: credibil/pipeline/.github/workflows/publish.yaml@main
+  # publish:
+  #   name: Publish
+  #   needs: ci
+  #   uses: credibil/pipeline/.github/workflows/publish.yaml@main
 
-  crates:
-    name: Publish crates
-    needs: publish
-    uses: credibil/pipeline/.github/workflows/crates.yaml@main
-    secrets: inherit
+  # crates:
+  #   name: Publish crates
+  #   needs: publish
+  #   uses: credibil/pipeline/.github/workflows/crates.yaml@main
+  #   secrets: inherit
 
   package:
     name: Package
-    needs: publish
+    # needs: publish
     runs-on: ${{ matrix.platform == 'linux/amd64' && 'ubuntu-latest' || 'ubuntu-24.04-arm' }}
     strategy:
       matrix:
-        bin: [realtime, realtime-http, realtime-websockets]
+        features: [realtime, realtime-http, realtime-websockets]
         platform: [linux/amd64, linux/arm64]
     outputs:
       sources: ${{ steps.source.outputs.json }}
@@ -56,7 +56,7 @@ jobs:
           tags: |
             type=semver,pattern={{version}},value=v${{ needs.publish.outputs.version }}
           images: |
-            ghcr.io/${{ github.repository_owner }}/${{ matrix.bin }}
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.features }}
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -72,31 +72,31 @@ jobs:
           push: true
           platforms: ${{ matrix.platform }}
           build-args: |
-            BIN=${{ matrix.bin }}
+            BIN=realtime
           secrets: |
             credibil=${{ secrets.CARGO_REGISTRIES_CREDIBIL_TOKEN }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-to: type=gha,scope=${{ matrix.bin }}-${{ matrix.platform }},mode=max
-          cache-from: type=gha,scope=${{ matrix.bin }}-${{ matrix.platform }}
+          cache-to: type=gha,scope=${{ matrix.features }}-${{ matrix.platform }},mode=max
+          cache-from: type=gha,scope=${{ matrix.features }}-${{ matrix.platform }}
 
       - name: Export image source
         uses: beacon-biosignals/matrix-output@v1
         id: source
         with:
           yaml: |
-            ${{ matrix.bin }}: ghcr.io/${{ github.repository_owner }}/${{ matrix.bin }}@${{ steps.build.outputs.digest }}
+            ${{ matrix.features }}: ghcr.io/${{ github.repository_owner }}/${{ matrix.features }}@${{ steps.build.outputs.digest }}
 
   # Create and push manifests for each image. This job resolves an issue GitHub
   # has with matrix builds for multi-arch images where the architecture of the
   # last image is shown as 'unknown/unknown'.
   manifest:
     name: Manifest
-    needs: [publish, package]
+    needs: package
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        bin: [realtime, realtime-http, realtime-websockets]
+        features: [realtime, realtime-http, realtime-websockets]
     permissions:
       contents: read
       packages: write
@@ -105,7 +105,7 @@ jobs:
       - name: Select image sources
         id: select
         run: |
-          SOURCES=$(echo '${{ needs.package.outputs.sources }}' | jq -r '.[]."${{ matrix.bin }}" | select(. != null)')
+          SOURCES=$(echo '${{ needs.package.outputs.sources }}' | jq -r '.[]."${{ matrix.features }}" | select(. != null)')
           {
             echo 'sources<<EOF'
             echo "${SOURCES}"
@@ -119,7 +119,7 @@ jobs:
           tags: |
             type=semver,pattern={{version}},value=v${{ needs.publish.outputs.version }}
           images: |
-            ghcr.io/${{ github.repository_owner }}/${{ matrix.bin }}
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.features }}
 
       - name: Log in to GHCR
         uses: docker/login-action@v3

@@ -17,30 +17,24 @@ default-run = "realtime"
 [[bin]]
 name = "realtime"
 path = "src/realtime.rs"
-required-features = [
-    "http",
-    "identity",
-    "keyvalue",
-    "messaging",
-    "otel",
-    "opentelemetry",
-    "redis",
-    "kafka",
-    "azure",
-]
+# required-features = ["realtime"]
 
-[[bin]]
-name = "realtime-http"
-path = "src/realtime-http.rs"
-required-features = ["http", "keyvalue", "otel", "opentelemetry", "redis"]
+# [[bin]]
+# name = "realtime-http"
+# path = "src/realtime-http.rs"
+# required-features = ["realtime-http"]
 
-[[bin]]
-name = "realtime-websockets"
-path = "src/realtime-websockets.rs"
-required-features = ["http", "messaging", "otel", "websockets"]
+# [[bin]]
+# name = "realtime-websockets"
+# path = "src/realtime-websockets.rs"
+# required-features = ["realtime-websockets"]
 
 [features]
 default = ["jit", "http"]
+
+realtime = ["http", "identity", "azure", "keyvalue", "redis", "messaging", "kafka", "otel", "opentelemetry"]
+realtime-http = ["http", "keyvalue", "redis", "otel", "opentelemetry"]
+realtime-websockets = ["http", "messaging", "kafka", "otel", "opentelemetry", "websockets"]
 
 # WASI components (not intended to be used directly)
 blobstore = ["dep:wasi-blobstore"]

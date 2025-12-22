@@ -6,26 +6,34 @@ for ergonomic integration of host-based services for WASI components.
 We consider this a stop-gap solution until production-grade runtimes support dynamic inclusion of
 host-based services.
 
-## Example Runtimes
+## Examples
 
-There are a number of examples provided in the `examples` directory and a Docker compose file that
-can be used to run them.
+There are a number of examples provided in the `examples` directory that can be used to experiment
+with the runtime and see it in action.
+
+Each example contains a Wasm guest and the runtime required to run it.
 
 See [examples/README.md](./examples/README.md) for more details.
 
-## Example Guests
+## Building
 
-Example guests can be found in the [examples](./examples) directory. Instructions for building and
-running each example can be found in the respective README files.
+There are multiple ways to build a runtime by combining `--bin` and `--features` flags.
+For example, to build the `realtime` runtime with all features enabled:
 
-## Docker Build
+```bash
+cargo build --bin=realtime --features=realtime --release
+```
+
+### Docker
+
+Building with Docker:
 
 ```bash
 export CARGO_REGISTRIES_CREDIBIL_TOKEN="<registry token>"
 
 docker build \
-  --build-arg BIN="websockets" \
-  --build-arg FEATURES="websockets-default" \
+  --build-arg BIN="realtime" \
+  --build-arg FEATURES="realtime" \
   --secret id=credibil,env=CARGO_REGISTRIES_CREDIBIL_TOKEN \
-  --tag ghcr.io/credibil/websockets .
+  --tag ghcr.io/credibil/realtime .
 ```
