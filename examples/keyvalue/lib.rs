@@ -1,4 +1,4 @@
-//! # KeyValue Store Guest Module
+//! # KeyValue Store Wasm Guest
 //!
 //! This module demonstrates the WASI KeyValue interface. It shows how to:
 //! - Open a named bucket (key-value namespace)

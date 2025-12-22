@@ -1,4 +1,4 @@
-//! # SQL Guest Module (Default Backend)
+//! # SQL Wasm Guest (Default Backend)
 //!
 //! This module demonstrates the WASI SQL interface with the default backend.
 //! It shows how to perform database operations that work with any SQL-compatible

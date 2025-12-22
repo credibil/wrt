@@ -1,4 +1,4 @@
-//! # HTTP Server Guest Module
+//! # HTTP Server Wasm Guest
 //!
 //! This module demonstrates the basic WASI HTTP handler pattern. It shows how to:
 //! - Implement the WASI HTTP `Guest` trait

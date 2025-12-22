@@ -1,4 +1,4 @@
-//! # Vault Guest Module
+//! # Vault Wasm Guest
 //!
 //! This module demonstrates the WASI Vault interface for secure secret storage.
 //! It shows how to:

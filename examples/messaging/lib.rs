@@ -1,4 +1,4 @@
-//! # Messaging Guest Module (Default Backend)
+//! # Messaging Wasm Guest (Default Backend)
 //!
 //! This module demonstrates the WASI Messaging interface with the default
 //! (in-memory) backend. It shows the same patterns as the Kafka and NATS

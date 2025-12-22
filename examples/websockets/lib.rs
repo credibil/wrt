@@ -1,4 +1,4 @@
-//! # WebSockets Guest Module
+//! # WebSockets Wasm Guest
 //!
 //! This module demonstrates the WASI WebSockets interface for real-time
 //! bidirectional communication. It shows how to:

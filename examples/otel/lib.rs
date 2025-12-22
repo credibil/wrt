@@ -1,4 +1,4 @@
-//! # OpenTelemetry Guest Module
+//! # OpenTelemetry Wasm Guest
 //!
 //! This module demonstrates comprehensive OpenTelemetry instrumentation in a
 //! WebAssembly guest. It showcases both the `tracing` API and the native

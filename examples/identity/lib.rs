@@ -1,4 +1,4 @@
-//! # Identity Guest Module
+//! # Identity Wasm Guest
 //!
 //! This module demonstrates the WASI Identity interface for obtaining
 //! authentication credentials. It shows how to:

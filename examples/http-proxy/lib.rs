@@ -1,4 +1,4 @@
-//! # HTTP Proxy Guest Module
+//! # HTTP Proxy Wasm Guest
 //!
 //! This module demonstrates an HTTP proxy pattern with caching using WASI HTTP.
 //! It shows how to:
