@@ -6,7 +6,7 @@ use be_azure::Client as Azure;
 use be_kafka::Client as Kafka;
 use be_opentelemetry::Client as OpenTelemetry;
 use be_redis::Client as Redis;
-use wasi_http::{WasiHttp, HttpDefault};
+use wasi_http::{HttpDefault, WasiHttp};
 use wasi_identity::WasiIdentity;
 use wasi_keyvalue::WasiKeyValue;
 use wasi_messaging::WasiMessaging;

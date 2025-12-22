@@ -4,7 +4,7 @@
 
 use be_opentelemetry::Client as OpenTelemetry;
 use be_redis::Client as Redis;
-use wasi_http::{WasiHttp, HttpDefault};
+use wasi_http::{HttpDefault, WasiHttp};
 use wasi_keyvalue::WasiKeyValue;
 use wasi_otel::WasiOtel;
 

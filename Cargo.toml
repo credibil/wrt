@@ -119,20 +119,13 @@ tracing.workspace = true
 wasip3.workspace = true
 wit-bindgen.workspace = true
 
-# example host dependencies
-[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
-be-azure.workspace = true
-be-kafka.workspace = true
-be-mongodb.workspace = true
-be-nats.workspace = true
-be-opentelemetry.workspace = true
-be-postgres.workspace = true
-be-redis.workspace = true
-
 [profile.release]
 lto = true
 opt-level = "s"
 strip = true
+
+[package.metadata.cargo-udeps.ignore]
+normal = ["openssl"]
 
 [package.metadata.cargo-machete]
 ignored = ["openssl"]
@@ -276,7 +269,7 @@ wasmtime-wasi-io = { git = "https://github.com/bytecodealliance/wasmtime", branc
 
 [[example]]
 name = "blobstore-wasm"
-path = "examples/blobstore/lib.rs"
+path = "examples/blobstore/guest.rs"
 crate-type = ["cdylib"]
 
 [[example]]
@@ -285,7 +278,7 @@ path = "examples/blobstore/runtime.rs"
 
 [[example]]
 name = "config-wasm"
-path = "examples/config/lib.rs"
+path = "examples/config/guest.rs"
 crate-type = ["cdylib"]
 
 [[example]]
@@ -294,7 +287,7 @@ path = "examples/config/runtime.rs"
 
 [[example]]
 name = "http-wasm"
-path = "examples/http/lib.rs"
+path = "examples/http/guest.rs"
 crate-type = ["cdylib"]
 
 [[example]]
@@ -303,7 +296,7 @@ path = "examples/http/runtime.rs"
 
 [[example]]
 name = "http-proxy-wasm"
-path = "examples/http-proxy/lib.rs"
+path = "examples/http-proxy/guest.rs"
 crate-type = ["cdylib"]
 
 [[example]]
@@ -312,7 +305,7 @@ path = "examples/http-proxy/runtime.rs"
 
 [[example]]
 name = "identity-wasm"
-path = "examples/identity/lib.rs"
+path = "examples/identity/guest.rs"
 crate-type = ["cdylib"]
 
 [[example]]
@@ -321,7 +314,7 @@ path = "examples/identity/runtime.rs"
 
 [[example]]
 name = "keyvalue-wasm"
-path = "examples/keyvalue/lib.rs"
+path = "examples/keyvalue/guest.rs"
 crate-type = ["cdylib"]
 
 [[example]]
@@ -330,7 +323,7 @@ path = "examples/keyvalue/runtime.rs"
 
 [[example]]
 name = "messaging-wasm"
-path = "examples/messaging/lib.rs"
+path = "examples/messaging/guest.rs"
 crate-type = ["cdylib"]
 
 [[example]]
@@ -339,7 +332,7 @@ path = "examples/messaging/runtime.rs"
 
 [[example]]
 name = "otel-wasm"
-path = "examples/otel/lib.rs"
+path = "examples/otel/guest.rs"
 crate-type = ["cdylib"]
 
 [[example]]
@@ -348,7 +341,7 @@ path = "examples/otel/runtime.rs"
 
 [[example]]
 name = "sql-wasm"
-path = "examples/sql/lib.rs"
+path = "examples/sql/guest.rs"
 crate-type = ["cdylib"]
 
 [[example]]
@@ -357,7 +350,7 @@ path = "examples/sql/runtime.rs"
 
 [[example]]
 name = "vault-wasm"
-path = "examples/vault/lib.rs"
+path = "examples/vault/guest.rs"
 crate-type = ["cdylib"]
 
 [[example]]
@@ -366,7 +359,7 @@ path = "examples/vault/runtime.rs"
 
 [[example]]
 name = "websockets-wasm"
-path = "examples/websockets/lib.rs"
+path = "examples/websockets/guest.rs"
 crate-type = ["cdylib"]
 
 [[example]]
