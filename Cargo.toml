@@ -35,8 +35,8 @@ path = "src/realtime-http.rs"
 required-features = ["http", "keyvalue", "otel", "opentelemetry", "redis"]
 
 [[bin]]
-name = "websockets"
-path = "src/websockets.rs"
+name = "realtime-websockets"
+path = "src/realtime-websockets.rs"
 required-features = ["http", "messaging", "otel", "websockets"]
 
 [features]
