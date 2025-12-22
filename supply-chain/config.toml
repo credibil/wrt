@@ -454,6 +454,10 @@ criteria = "safe-to-deploy"
 version = "2.1.1"
 criteria = "safe-to-deploy"
 
+[[exemptions.inherent]]
+version = "1.0.13"
+criteria = "safe-to-run"
+
 [[exemptions.integer-encoding]]
 version = "4.1.0"
 criteria = "safe-to-deploy"
@@ -897,6 +901,10 @@ criteria = "safe-to-deploy"
 [[exemptions.schema-registry-client]]
 version = "0.4.1"
 criteria = "safe-to-deploy"
+
+[[exemptions.sea-query]]
+version = "0.32.7"
+criteria = "safe-to-run"
 
 [[exemptions.security-framework]]
 version = "2.11.1"

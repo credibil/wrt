@@ -111,6 +111,7 @@ wasi-websockets.workspace = true
 axum = { workspace = true, features = ["macros"] }
 base64ct.workspace = true
 bytes.workspace = true
+chrono.workspace = true
 credibil-api = { version = "0.5.0", registry = "credibil" }
 credibil-error.workspace = true
 fromenv.workspace = true
@@ -121,6 +122,7 @@ http-body-util.workspace = true
 opentelemetry.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+sea-query = { version = "0.32", default-features = false, features = ["thread-safe", "backend-postgres", "with-chrono"] }
 tower-http.workspace = true
 tracing.workspace = true
 wasip3.workspace = true

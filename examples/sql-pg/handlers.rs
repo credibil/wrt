@@ -1,11 +1,14 @@
+use chrono::{DateTime, Utc};
 use credibil_api::{Handler, Request, Response};
 use credibil_error::Error;
+use sea_query::Expr;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
-use wasi_sql::into_json;
+use wasi_sql::types::Row;
 
 use crate::error::ApiError;
+use crate::orm::{FetchValue, SelectBuilder, SqlModel, table_column};
 use crate::provider::GuestProvider;
+use crate::sql_model;
 
 /// Result type used across the example
 pub type Result<T> = anyhow::Result<T, ApiError>;
@@ -15,30 +18,16 @@ async fn handle(
 ) -> Result<Response<EventStoreResponse>> {
     const POOL_NAME: &str = "eventstore";
 
-    // Execute query and get results.
-    let query =
-        "SELECT received_at, event_id, event_time, data FROM az_realtime_gtfs_tu LIMIT 100;"
-            .to_string();
-    let res = provider
-        .query(String::from(POOL_NAME), query, vec![])
+    let cutoff = Utc::now();
+    let events = SelectBuilder::<Event>::new()
+        .r#where(Expr::col(table_column(Event::TABLE, "event_time")).gt(cutoff))
+        .order_by_desc(None, "event_time")
+        .limit(100)
+        .fetch_all(provider, POOL_NAME)
         .await
-        .map_err(|e| Error::ServerError(format!("query failed: {e:?}")))?;
+        .map_err(|e| Error::ServerError(format!("failed building query: {e:?}")))?;
 
-    let mut rows = into_json(res)
-        .map_err(|e| Error::ServerError(format!("failed converting to json: {e:?}")))?;
-
-    if let Some(array) = rows.as_array_mut() {
-        for row in array {
-            if let Some(value) = row.get_mut("data")
-                && let serde_json::Value::String(raw) = value
-                && let Ok(parsed) = serde_json::from_str(raw)
-            {
-                *value = parsed;
-            }
-        }
-    }
-
-    Ok(EventStoreResponse { rows }.into())
+    Ok(EventStoreResponse { events }.into())
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -47,8 +36,19 @@ pub struct EventStoreRequest();
 #[derive(Debug, Clone, Serialize)]
 #[serde(transparent)]
 pub struct EventStoreResponse {
-    pub rows: Value,
+    pub events: Vec<Event>,
 }
+
+sql_model!(
+    table = "az_realtime_gtfs_tu",
+    #[derive(Debug, Clone, Serialize)]
+    pub struct Event {
+        pub received_at: DateTime<Utc>,
+        pub event_id: String,
+        pub event_time: DateTime<Utc>,
+        pub data: serde_json::Value,
+    }
+);
 
 impl<P: GuestProvider> Handler<EventStoreResponse, P> for Request<EventStoreRequest> {
     type Error = ApiError;

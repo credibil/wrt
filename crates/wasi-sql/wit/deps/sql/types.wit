@@ -28,9 +28,9 @@ interface types {
         double(option<f64>),
         str(option<string>),
         boolean(option<bool>),
-        date(option<formatted-value>),
-        time(option<formatted-value>),
-        timestamp(option<formatted-value>),
+        date(option<string>),
+        time(option<string>),
+        timestamp(option<string>),
         binary(option<list<u8>>),
     }
 

@@ -33,7 +33,7 @@ use bytes::Bytes;
 use serde_json::{Value, json};
 use tracing::Level;
 use wasi_http::Result;
-use wasi_sql::types::{Connection, DataType, FormattedValue, Statement};
+use wasi_sql::types::{Connection, DataType, Statement};
 use wasi_sql::{into_json, readwrite};
 use wasip3::exports::http::handler::Guest;
 use wasip3::http::types::{ErrorCode, Request, Response};
@@ -84,10 +84,7 @@ async fn insert(_body: Bytes) -> Result<Json<Value>> {
         DataType::Str(Some("name1".to_string())),
         DataType::Str(Some("url1".to_string())),
         DataType::Str(Some("NZL".to_string())),
-        DataType::Timestamp(Some(FormattedValue {
-            value: "2025-11-06T00:05:30".to_string(),
-            format: "%Y-%m-%dT%H:%M:%S".to_string(),
-        })),
+        DataType::Timestamp(Some("2025-11-06 00:05:30".to_string())),
     ]
     .to_vec();
 

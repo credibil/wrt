@@ -8,6 +8,7 @@
 //! coverage with less effort.
 
 mod sql;
+mod types;
 
 use std::collections::HashMap;
 use std::str;
