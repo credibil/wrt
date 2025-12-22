@@ -16,11 +16,6 @@ pub type HttpResult<T> = Result<T, HttpError>;
 pub type HttpError = TrappableError<ErrorCode>;
 pub type FutureResult<T> = Box<dyn Future<Output = Result<T, ErrorCode>> + Send>;
 
-// pub type HeaderResult<T> = Result<T, HeaderError>;
-// pub type HeaderError = TrappableError<types::HeaderError>;
-// pub type RequestOptionsResult<T> = Result<T, RequestOptionsError>;
-// pub type RequestOptionsError = TrappableError<types::RequestOptionsError>;
-
 #[derive(Debug, Clone, FromEnv)]
 pub struct ConnectOptions {
     #[env(from = "HTTP_ADDR", default = "http://localhost:8080")]

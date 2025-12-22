@@ -6,7 +6,6 @@ use wasi_messaging::WasiMessaging;
 use wasi_otel::{WasiOtel, WasiOtelCtxImpl as OtelDefault};
 use wasi_websockets::{WasiWebSockets, WasiWebSocketsCtxImpl as WebSocketsDefault};
 
-// Generate runtime infrastructure for the credibil feature set
 buildgen::runtime!(main, {
     WasiHttp: HttpDefault,
     WasiMessaging: Kafka,

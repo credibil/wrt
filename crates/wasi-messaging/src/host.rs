@@ -49,6 +49,13 @@ pub use self::resource::*;
 
 pub type Result<T, E = Error> = anyhow::Result<T, E>;
 
+#[derive(Debug)]
+pub struct WasiMessaging;
+
+impl HasData for WasiMessaging {
+    type Data<'a> = WasiMessagingCtxView<'a>;
+}
+
 impl<T> Host<T> for WasiMessaging
 where
     T: WasiMessagingView + 'static,
@@ -68,12 +75,6 @@ where
     async fn run(&self, state: &S) -> anyhow::Result<()> {
         server::run(state).await
     }
-}
-
-#[derive(Debug)]
-pub struct WasiMessaging;
-impl HasData for WasiMessaging {
-    type Data<'a> = WasiMessagingCtxView<'a>;
 }
 
 /// A trait which provides internal WASI Messaging context.

@@ -33,6 +33,7 @@ mod generated {
 use std::fmt::Debug;
 use std::sync::Arc;
 
+use anyhow::Result;
 use bytes::Bytes;
 pub use kernel::FutureResult;
 use kernel::{Host, Server, State};
@@ -48,11 +49,18 @@ pub type IncomingValue = Bytes;
 pub type OutgoingValue = MemoryOutputPipe;
 pub type StreamObjectNames = Vec<String>;
 
+#[derive(Debug)]
+pub struct WasiBlobstore;
+
+impl HasData for WasiBlobstore {
+    type Data<'a> = WasiBlobstoreCtxView<'a>;
+}
+
 impl<T> Host<T> for WasiBlobstore
 where
     T: WasiBlobstoreView + 'static,
 {
-    fn add_to_linker(linker: &mut Linker<T>) -> anyhow::Result<()> {
+    fn add_to_linker(linker: &mut Linker<T>) -> Result<()> {
         blobstore::add_to_linker::<_, Self>(linker, T::blobstore)?;
         container::add_to_linker::<_, Self>(linker, T::blobstore)?;
         types::add_to_linker::<_, Self>(linker, T::blobstore)
@@ -60,12 +68,6 @@ where
 }
 
 impl<S> Server<S> for WasiBlobstore where S: State {}
-
-#[derive(Debug)]
-pub struct WasiBlobstore;
-impl HasData for WasiBlobstore {
-    type Data<'a> = WasiBlobstoreCtxView<'a>;
-}
 
 /// A trait which provides internal WASI Blobstore context.
 ///

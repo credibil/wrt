@@ -23,7 +23,6 @@ required-features = [
     "keyvalue",
     "messaging",
     "otel",
-    "vault",
     "opentelemetry",
     "redis",
     "kafka",
@@ -38,12 +37,7 @@ required-features = ["http", "keyvalue", "otel", "opentelemetry", "redis"]
 [[bin]]
 name = "websockets"
 path = "src/websockets.rs"
-required-features = [
-    "http",
-    "messaging",
-    "otel",
-    "websockets",
-]
+required-features = ["http", "messaging", "otel", "websockets"]
 
 [features]
 default = ["jit", "http"]
@@ -101,6 +95,7 @@ openssl = { version = "0.10.75", features = ["vendored"] }
 [dev-dependencies]
 cfg-if.workspace = true
 wasi-blobstore.workspace = true
+wasi-config.workspace = true
 wasi-http.workspace = true
 wasi-identity.workspace = true
 wasi-keyvalue.workspace = true
@@ -226,8 +221,8 @@ reqwest = "0.12.24"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"
 syn = { version = "2.0.106", features = ["parsing"] }
-time = "0.3.44"
 thiserror = "2.0"
+time = "0.3.44"
 tokio = { version = "1.47.1", default-features = false }
 tower = "0.5.2"
 tower-http = { version = "0.6.6", features = ["cors", "trace"] }
@@ -240,6 +235,7 @@ wasmtime = { version = "40.0.0", default-features = false, features = [
     "parallel-compilation",
 ] }
 wasmtime-wasi = { version = "40.0.0", features = ["p3"] }
+wasmtime-wasi-config = "40.0.0"
 wasmtime-wasi-http = { version = "40.0.0", features = ["p3"] }
 wasmtime-wasi-io = "40.0.0"
 wit-bindgen = { version = "0.49.0", features = ["async-spawn"] }
@@ -260,6 +256,7 @@ be-redis = { path = "crates/be-redis", version = "0.19.0", registry = "credibil"
 buildgen = { path = "crates/buildgen", version = "0.19.0" }
 kernel = { path = "crates/kernel", version = "0.19.0", registry = "credibil" }
 wasi-blobstore = { path = "crates/wasi-blobstore", version = "0.19.0", registry = "credibil" }
+wasi-config = { path = "crates/wasi-config", version = "0.19.0", registry = "credibil" }
 wasi-http = { path = "crates/wasi-http", version = "0.19.0", registry = "credibil" }
 wasi-identity = { path = "crates/wasi-identity", version = "0.19.0", registry = "credibil" }
 wasi-keyvalue = { path = "crates/wasi-keyvalue", version = "0.19.0", registry = "credibil" }
@@ -273,6 +270,7 @@ wasi-websockets = { path = "crates/wasi-websockets", version = "0.19.0", registr
 [patch.crates-io]
 wasmtime = { git = "https://github.com/bytecodealliance/wasmtime", branch = "release-40.0.0" }
 wasmtime-wasi = { git = "https://github.com/bytecodealliance/wasmtime", branch = "release-40.0.0" }
+wasmtime-wasi-config = { git = "https://github.com/bytecodealliance/wasmtime", branch = "release-40.0.0" }
 wasmtime-wasi-http = { git = "https://github.com/bytecodealliance/wasmtime", branch = "release-40.0.0" }
 wasmtime-wasi-io = { git = "https://github.com/bytecodealliance/wasmtime", branch = "release-40.0.0" }
 
@@ -284,6 +282,15 @@ crate-type = ["cdylib"]
 [[example]]
 name = "blobstore"
 path = "examples/blobstore/runtime.rs"
+
+[[example]]
+name = "config-wasm"
+path = "examples/config/lib.rs"
+crate-type = ["cdylib"]
+
+[[example]]
+name = "config"
+path = "examples/config/runtime.rs"
 
 [[example]]
 name = "http-wasm"

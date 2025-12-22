@@ -45,6 +45,10 @@ use self::generated::wasi::websockets::{store, types as generated_types};
 #[derive(Clone, Debug)]
 pub struct WasiWebSockets;
 
+impl HasData for WasiWebSockets {
+    type Data<'a> = WasiWebSocketsCtxView<'a>;
+}
+
 impl<T> Host<T> for WasiWebSockets
 where
     T: WebSocketsView + 'static,
@@ -52,10 +56,6 @@ where
     fn add_to_linker(linker: &mut Linker<T>) -> Result<()> {
         store::add_to_linker::<_, Self>(linker, T::websockets)
     }
-}
-
-impl HasData for WasiWebSockets {
-    type Data<'a> = WasiWebSocketsCtxView<'a>;
 }
 
 impl<S> Server<S> for WasiWebSockets

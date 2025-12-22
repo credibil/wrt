@@ -34,6 +34,10 @@ use self::generated::wasi::otel::{metrics, resource, tracing, types};
 #[derive(Debug)]
 pub struct WasiOtel;
 
+impl HasData for WasiOtel {
+    type Data<'a> = WasiOtelCtxView<'a>;
+}
+
 impl<T> Host<T> for WasiOtel
 where
     T: WasiOtelView + 'static,
@@ -47,10 +51,6 @@ where
 }
 
 impl<S: State> Server<S> for WasiOtel {}
-
-impl HasData for WasiOtel {
-    type Data<'a> = WasiOtelCtxView<'a>;
-}
 
 /// A trait which provides internal WASI OpenTelemetry state.
 ///

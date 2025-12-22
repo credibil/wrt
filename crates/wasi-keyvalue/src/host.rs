@@ -42,6 +42,13 @@ pub use self::resource::*;
 
 pub type Result<T, E = Error> = anyhow::Result<T, E>;
 
+#[derive(Debug)]
+pub struct WasiKeyValue;
+
+impl HasData for WasiKeyValue {
+    type Data<'a> = WasiKeyValueCtxView<'a>;
+}
+
 impl<T> Host<T> for WasiKeyValue
 where
     T: WasiKeyValueView + 'static,
@@ -54,12 +61,6 @@ where
 }
 
 impl<S> Server<S> for WasiKeyValue where S: State {}
-
-#[derive(Debug)]
-pub struct WasiKeyValue;
-impl HasData for WasiKeyValue {
-    type Data<'a> = WasiKeyValueCtxView<'a>;
-}
 
 /// A trait which provides internal WASI Key-Value context.
 ///

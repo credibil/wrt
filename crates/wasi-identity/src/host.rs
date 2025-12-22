@@ -42,6 +42,10 @@ pub use self::resource::*;
 #[derive(Debug)]
 pub struct WasiIdentity;
 
+impl HasData for WasiIdentity {
+    type Data<'a> = WasiIdentityCtxView<'a>;
+}
+
 impl<T> Host<T> for WasiIdentity
 where
     T: WasiIdentityView + 'static,
@@ -52,10 +56,6 @@ where
 }
 
 impl<S> Server<S> for WasiIdentity where S: State {}
-
-impl HasData for WasiIdentity {
-    type Data<'a> = WasiIdentityCtxView<'a>;
-}
 
 //===============================================
 // TODO: this could be a generic trait for all WASI hosts
