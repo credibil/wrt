@@ -261,11 +261,7 @@ wasi-vault = { path = "crates/wasi-vault", version = "0.19.0", registry = "credi
 wasi-websockets = { path = "crates/wasi-websockets", version = "0.19.0", registry = "credibil" }
 
 [patch.crates-io]
-wasmtime = { git = "https://github.com/bytecodealliance/wasmtime", branch = "release-40.0.0" }
-wasmtime-wasi = { git = "https://github.com/bytecodealliance/wasmtime", branch = "release-40.0.0" }
-wasmtime-wasi-config = { git = "https://github.com/bytecodealliance/wasmtime", branch = "release-40.0.0" }
-wasmtime-wasi-http = { git = "https://github.com/bytecodealliance/wasmtime", branch = "release-40.0.0" }
-wasmtime-wasi-io = { git = "https://github.com/bytecodealliance/wasmtime", branch = "release-40.0.0" }
+# wasmtime = { git = "https://github.com/bytecodealliance/wasmtime", branch = "release-40.0.0" }
 
 [[example]]
 name = "blobstore-wasm"
