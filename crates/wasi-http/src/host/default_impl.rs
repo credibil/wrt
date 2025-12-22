@@ -16,11 +16,6 @@ pub type HttpResult<T> = Result<T, HttpError>;
 pub type HttpError = TrappableError<ErrorCode>;
 pub type FutureResult<T> = Box<dyn Future<Output = Result<T, ErrorCode>> + Send>;
 
-// pub type HeaderResult<T> = Result<T, HeaderError>;
-// pub type HeaderError = TrappableError<types::HeaderError>;
-// pub type RequestOptionsResult<T> = Result<T, RequestOptionsError>;
-// pub type RequestOptionsError = TrappableError<types::RequestOptionsError>;
-
 #[derive(Debug, Clone, FromEnv)]
 pub struct ConnectOptions {
     #[env(from = "HTTP_ADDR", default = "http://localhost:8080")]
@@ -34,9 +29,9 @@ impl kernel::FromEnv for ConnectOptions {
 }
 
 #[derive(Debug, Clone)]
-pub struct WasiHttpCtxImpl;
+pub struct HttpDefault;
 
-impl Backend for WasiHttpCtxImpl {
+impl Backend for HttpDefault {
     type ConnectOptions = ConnectOptions;
 
     #[instrument]
@@ -45,7 +40,7 @@ impl Backend for WasiHttpCtxImpl {
     }
 }
 
-impl p3::WasiHttpCtx for WasiHttpCtxImpl {
+impl p3::WasiHttpCtx for HttpDefault {
     fn send_request(
         &mut self, request: Request<UnsyncBoxBody<Bytes, ErrorCode>>,
         _options: Option<RequestOptions>, fut: FutureResult<()>,

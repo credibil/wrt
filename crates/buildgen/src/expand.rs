@@ -22,15 +22,18 @@ pub fn expand(generated: Generated) -> TokenStream {
         mod runtime {
             use super::*;
 
+            use std::path::PathBuf;
+
+            use anyhow::Result;
             use kernel::anyhow::Context as _;
             use kernel::futures::future::{BoxFuture, try_join_all};
             use kernel::tokio;
             use kernel::wasmtime::component::InstancePre;
-            use kernel::wasmtime_wasi;
-            use kernel::{Backend, Server};
+            use kernel::wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
+            use kernel::{Backend, Compiled, Server, State};
 
             /// Run the specified wasm guest using the configured runtime.
-            pub async fn run(wasm: std::path::PathBuf) -> anyhow::Result<()> {
+            pub async fn run(wasm: PathBuf) -> Result<()> {
                 let mut compiled = kernel::create(&wasm)
                     .with_context(|| format!("compiling {}", wasm.display()))?;
                 let run_state = Context::new(&mut compiled)
@@ -50,7 +53,7 @@ pub fn expand(generated: Generated) -> TokenStream {
             impl Context {
                 /// Creates a new runtime state by linking WASI interfaces and
                 /// connecting to backends.
-                async fn new(compiled: &mut kernel::Compiled<StoreCtx>) -> anyhow::Result<Self> {
+                async fn new(compiled: &mut Compiled<StoreCtx>) -> Result<Self> {
                     // link enabled WASI components
                     #(compiled.link(#host_trait_impls)?;)*
 
@@ -63,8 +66,8 @@ pub fn expand(generated: Generated) -> TokenStream {
                 /// Start servers
                 /// N.B. for simplicity, all hosts are "servers" with a default
                 /// implementation the does nothing
-                async fn start(&self) -> anyhow::Result<()> {
-                    let futures: Vec<BoxFuture<'_, anyhow::Result<()>>> = vec![
+                async fn start(&self) -> Result<()> {
+                    let futures: Vec<BoxFuture<'_, Result<()>>> = vec![
                         #(Box::pin(#server_trait_impls.run(self)),)*
                     ];
                     try_join_all(futures).await?;
@@ -72,7 +75,7 @@ pub fn expand(generated: Generated) -> TokenStream {
                 }
             }
 
-            impl kernel::State for Context {
+            impl State for Context {
                 type StoreCtx = StoreCtx;
 
                 fn instance_pre(&self) -> &InstancePre<Self::StoreCtx> {
@@ -80,16 +83,16 @@ pub fn expand(generated: Generated) -> TokenStream {
                 }
 
                 fn store(&self) -> Self::StoreCtx {
-                    let wasi_ctx = wasmtime_wasi::WasiCtxBuilder::new()
-                        .inherit_args()
-                        .inherit_env()
+                    let wasi_ctx = WasiCtxBuilder::new()
+                        // .inherit_args()
+                        // .inherit_env()
                         .inherit_stdin()
                         .stdout(tokio::io::stdout())
                         .stderr(tokio::io::stderr())
                         .build();
 
                     StoreCtx {
-                        table: wasmtime_wasi::ResourceTable::new(),
+                        table: ResourceTable::new(),
                         wasi: wasi_ctx,
                         #(#store_ctx_values,)*
                     }
@@ -98,15 +101,15 @@ pub fn expand(generated: Generated) -> TokenStream {
 
             /// Per-guest instance data shared between the runtime and guest
             pub struct StoreCtx {
-                pub table: wasmtime_wasi::ResourceTable,
-                pub wasi: wasmtime_wasi::WasiCtx,
+                pub table: ResourceTable,
+                pub wasi: WasiCtx,
                 #(pub #store_ctx_fields,)*
             }
 
-            // WASI View Implementations
-            impl wasmtime_wasi::WasiView for StoreCtx {
-                fn ctx(&mut self) -> wasmtime_wasi::WasiCtxView<'_> {
-                    wasmtime_wasi::WasiCtxView {
+            /// WASI View Implementations
+            impl WasiView for StoreCtx {
+                fn ctx(&mut self) -> WasiCtxView<'_> {
+                    WasiCtxView {
                         ctx: &mut self.wasi,
                         table: &mut self.table,
                     }
@@ -115,6 +118,8 @@ pub fn expand(generated: Generated) -> TokenStream {
 
             #(#wasi_view_impls)*
         }
+
+        /// Main function
         #main_fn
     }
 }

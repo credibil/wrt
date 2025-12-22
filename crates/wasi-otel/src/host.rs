@@ -28,11 +28,15 @@ use opentelemetry_proto::tonic::collector::metrics::v1::ExportMetricsServiceRequ
 use opentelemetry_proto::tonic::collector::trace::v1::ExportTraceServiceRequest;
 use wasmtime::component::{HasData, Linker, ResourceTable};
 
-pub use self::default_impl::WasiOtelCtxImpl;
+pub use self::default_impl::OtelDefault;
 use self::generated::wasi::otel::{metrics, resource, tracing, types};
 
 #[derive(Debug)]
 pub struct WasiOtel;
+
+impl HasData for WasiOtel {
+    type Data<'a> = WasiOtelCtxView<'a>;
+}
 
 impl<T> Host<T> for WasiOtel
 where
@@ -47,10 +51,6 @@ where
 }
 
 impl<S: State> Server<S> for WasiOtel {}
-
-impl HasData for WasiOtel {
-    type Data<'a> = WasiOtelCtxView<'a>;
-}
 
 /// A trait which provides internal WASI OpenTelemetry state.
 ///

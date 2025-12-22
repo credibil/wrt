@@ -33,12 +33,12 @@ impl kernel::FromEnv for ConnectOptions {
 }
 
 #[derive(Debug, Clone)]
-pub struct WasiSqlCtxImpl {
+pub struct SqlDefault {
     // Store the database path to create new connections on demand
     database_path: String,
 }
 
-impl Backend for WasiSqlCtxImpl {
+impl Backend for SqlDefault {
     type ConnectOptions = ConnectOptions;
 
     #[instrument]
@@ -55,7 +55,7 @@ impl Backend for WasiSqlCtxImpl {
     }
 }
 
-impl WasiSqlCtx for WasiSqlCtxImpl {
+impl WasiSqlCtx for SqlDefault {
     fn open(&self, _name: String) -> FutureResult<Arc<dyn Connection>> {
         tracing::debug!("opening SQL connection");
         let database_path = self.database_path.clone();
@@ -186,7 +186,7 @@ mod tests {
 
     #[tokio::test]
     async fn sqlite_operations() {
-        let ctx = WasiSqlCtxImpl::connect_with(ConnectOptions {
+        let ctx = SqlDefault::connect_with(ConnectOptions {
             database: ":memory:".to_string(),
         })
         .await

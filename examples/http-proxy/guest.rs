@@ -1,4 +1,4 @@
-//! # HTTP Proxy Guest Module
+//! # HTTP Proxy Wasm Guest
 //!
 //! This module demonstrates an HTTP proxy pattern with caching using WASI HTTP.
 //! It shows how to:
@@ -65,26 +65,13 @@ async fn echo(Json(body): Json<Value>) -> Result<Json<Value>> {
 }
 
 /// Fetches data with HTTP caching enabled.
-///
-/// This handler demonstrates cache-aware HTTP requests:
-/// 1. Sets `Cache-Control: max-age=300` to enable caching for 5 minutes
-/// 2. Provides `If-None-Match` with an ETag for cache key lookup
-/// 3. If cached response exists with matching ETag, returns it immediately
-/// 4. Otherwise, fetches from origin and caches the response
-///
-/// ## Cache Extension
-///
-/// The `CacheOptions` extension tells the host which bucket to use for caching.
 #[wasi_otel::instrument]
 async fn cache() -> Result<impl IntoResponse, Infallible> {
     let request = http::Request::builder()
         .method(Method::GET)
         .uri("https://jsonplaceholder.cypress.io/posts/1")
-        // Enable caching for 5 minutes
         .header(CACHE_CONTROL, "max-age=300")
-        // Provide cache key (ETag) for lookup
         .header(IF_NONE_MATCH, "qf55low9rjsrup46vsiz9r73")
-        // Specify the cache bucket to use
         .extension(CacheOptions {
             bucket_name: "example-bucket".to_string(),
         })
@@ -99,18 +86,11 @@ async fn cache() -> Result<impl IntoResponse, Infallible> {
 }
 
 /// Fetches from origin and caches the response.
-///
-/// Uses `no-cache` with `max-age` to:
-/// - Always fetch fresh data from origin
-/// - Cache the response for future requests
-///
-/// This is useful when you want to update the cache on every request.
 #[wasi_otel::instrument]
 async fn origin(body: Bytes) -> Result<Json<Value>> {
     let request = http::Request::builder()
         .method(Method::POST)
         .uri("https://jsonplaceholder.cypress.io/posts")
-        // Always go to origin, but cache the response for 5 minutes
         .header(CACHE_CONTROL, "no-cache, max-age=300")
         .body(Full::new(body))
         .expect("failed to build request");
@@ -123,17 +103,8 @@ async fn origin(body: Bytes) -> Result<Json<Value>> {
 }
 
 /// Demonstrates mTLS client certificate authentication.
-///
-/// Sends a request with a client certificate for mutual TLS authentication.
-/// The certificate and private key are base64-encoded in the `Client-Cert` header.
-///
-/// ## Security Note
-///
-/// In production, certificates should be loaded from secure storage
-/// (e.g., WASI Vault) rather than hardcoded.
 #[wasi_otel::instrument]
 async fn client_cert() -> Result<Json<Value>> {
-    // PEM-encoded private key and certificate (placeholder).
     let auth_cert = "
         -----BEGIN CERTIFICATE-----
         ...Your Certificate Here...
@@ -146,7 +117,6 @@ async fn client_cert() -> Result<Json<Value>> {
     let request = http::Request::builder()
         .method(Method::GET)
         .uri("https://jsonplaceholder.cypress.io/posts/1")
-        // Client certificate for mTLS
         .header("Client-Cert", &encoded_cert)
         .extension(CacheOptions {
             bucket_name: "example-bucket".to_string(),

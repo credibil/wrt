@@ -35,8 +35,15 @@ use wasmtime::component::{HasData, Linker};
 use wasmtime_wasi::ResourceTable;
 
 use self::generated::wasi::vault::vault;
-pub use crate::host::default_impl::WasiVaultCtxImpl;
+pub use crate::host::default_impl::VaultDefault;
 pub use crate::host::resource::*;
+
+#[derive(Debug)]
+pub struct WasiVault;
+
+impl HasData for WasiVault {
+    type Data<'a> = WasiVaultCtxView<'a>;
+}
 
 impl<T> Host<T> for WasiVault
 where
@@ -48,12 +55,6 @@ where
 }
 
 impl<S> Server<S> for WasiVault where S: State {}
-
-#[derive(Debug)]
-pub struct WasiVault;
-impl HasData for WasiVault {
-    type Data<'a> = WasiVaultCtxView<'a>;
-}
 
 /// A trait which provides internal WASI Key-Value context.
 ///

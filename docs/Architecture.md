@@ -192,7 +192,7 @@ The `buildgen` crate provides the `runtime!` macro that generates runtime infras
 use buildgen::runtime;
 
 runtime!({
-    WasiHttp: WasiHttpCtxImpl,
+    WasiHttp: HttpDefault,
     WasiOtel: OpenTelemetry,
     WasiKeyValue: Redis,
     WasiMessaging: Kafka,

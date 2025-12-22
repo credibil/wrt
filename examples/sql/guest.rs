@@ -1,4 +1,4 @@
-//! # SQL Guest Module (Default Backend)
+//! # SQL Wasm Guest (Default Backend)
 //!
 //! This module demonstrates the WASI SQL interface with the default backend.
 //! It shows how to perform database operations that work with any SQL-compatible
@@ -43,9 +43,6 @@ wasip3::http::proxy::export!(Http);
 
 impl Guest for Http {
     /// Routes HTTP requests to database operations.
-    ///
-    /// - `GET /`: Query all rows from the sample table
-    /// - `POST /`: Insert a new row into the sample table
     #[wasi_otel::instrument(name = "http_guest_handle", level = Level::DEBUG)]
     async fn handle(request: Request) -> Result<Response, ErrorCode> {
         tracing::debug!("received request: {:?}", request);
@@ -54,49 +51,33 @@ impl Guest for Http {
     }
 }
 
-/// Query all rows from the sample table.
-///
-/// Demonstrates:
-/// - Opening a named database connection
-/// - Preparing a SELECT statement
-/// - Executing a query and converting results to JSON
+/// Queries all rows from the sample table.
 #[axum::debug_handler]
 #[wasi_otel::instrument]
 async fn query() -> Result<Json<Value>> {
     tracing::info!("query database");
 
-    // Open connection using named pool from host configuration.
     let pool = Connection::open("postgres".to_string())
         .await
         .map_err(|e| anyhow!("failed to open connection: {e:?}"))?;
 
-    // Prepare a SELECT statement (no parameters needed).
     let stmt = Statement::prepare("SELECT * from mytable;".to_string(), vec![])
         .await
         .map_err(|e| anyhow!("failed to prepare statement: {e:?}"))?;
 
-    // Execute query and get results.
     let res = readwrite::query(&pool, &stmt).await.map_err(|e| anyhow!("query failed: {e:?}"))?;
 
-    // Convert to JSON for HTTP response.
     Ok(Json(into_json(res)?))
 }
 
-/// Insert a new row into the sample table.
-///
-/// Demonstrates:
-/// - Parameterized INSERT statements
-/// - Various DataType variants (Int32, Str, Timestamp)
-/// - Using exec() for non-SELECT statements
+/// Inserts a new row into the sample table.
 #[axum::debug_handler]
 #[wasi_otel::instrument]
 async fn insert(_body: Bytes) -> Result<Json<Value>> {
     tracing::info!("insert data");
 
-    // Parameterized INSERT - use $1, $2, etc. for placeholders.
     let insert = "insert into mytable (feed_id, agency_id, agency_name, agency_url, agency_timezone, created_at) values ($1, $2, $3, $4, $5, $6);";
 
-    // Define parameters with their types.
     let params: Vec<DataType> = [
         DataType::Int32(Some(1224)),
         DataType::Str(Some("test1".to_string())),
@@ -119,7 +100,6 @@ async fn insert(_body: Bytes) -> Result<Json<Value>> {
         .await
         .map_err(|e| anyhow!("failed to prepare statement: {e:?}"))?;
 
-    // Use exec() for INSERT/UPDATE/DELETE (returns affected row count).
     let res = readwrite::exec(&pool, &stmt).await.map_err(|e| anyhow!("query failed: {e:?}"))?;
 
     Ok(Json(json!({

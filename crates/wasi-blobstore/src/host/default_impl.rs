@@ -26,11 +26,11 @@ impl kernel::FromEnv for ConnectOptions {
 }
 
 #[derive(Debug, Clone)]
-pub struct WasiBlobstoreCtxImpl {
+pub struct BlobstoreDefault {
     store: Arc<RwLock<HashMap<String, InMemContainer>>>,
 }
 
-impl Backend for WasiBlobstoreCtxImpl {
+impl Backend for BlobstoreDefault {
     type ConnectOptions = ConnectOptions;
 
     #[instrument]
@@ -42,7 +42,7 @@ impl Backend for WasiBlobstoreCtxImpl {
     }
 }
 
-impl WasiBlobstoreCtx for WasiBlobstoreCtxImpl {
+impl WasiBlobstoreCtx for BlobstoreDefault {
     fn create_container(&self, name: String) -> FutureResult<Arc<dyn Container>> {
         tracing::debug!("creating container: {name}");
         let store = Arc::clone(&self.store);
@@ -230,7 +230,7 @@ mod tests {
 
     #[tokio::test]
     async fn container_operations() {
-        let ctx = WasiBlobstoreCtxImpl::connect_with(ConnectOptions).await.expect("connect");
+        let ctx = BlobstoreDefault::connect_with(ConnectOptions).await.expect("connect");
 
         // Test create and get container
         let container =

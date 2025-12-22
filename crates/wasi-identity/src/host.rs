@@ -35,12 +35,16 @@ use kernel::{Host, Server, State};
 use wasmtime::component::{HasData, Linker};
 use wasmtime_wasi::ResourceTable;
 
-pub use self::default_impl::WasiIdentityCtxImpl;
+pub use self::default_impl::IdentityDefault;
 use self::generated::wasi::identity::credentials;
 pub use self::resource::*;
 
 #[derive(Debug)]
 pub struct WasiIdentity;
+
+impl HasData for WasiIdentity {
+    type Data<'a> = WasiIdentityCtxView<'a>;
+}
 
 impl<T> Host<T> for WasiIdentity
 where
@@ -52,10 +56,6 @@ where
 }
 
 impl<S> Server<S> for WasiIdentity where S: State {}
-
-impl HasData for WasiIdentity {
-    type Data<'a> = WasiIdentityCtxView<'a>;
-}
 
 //===============================================
 // TODO: this could be a generic trait for all WASI hosts

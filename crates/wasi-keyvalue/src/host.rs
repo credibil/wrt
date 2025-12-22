@@ -35,12 +35,19 @@ use kernel::{Host, Server, State};
 use wasmtime::component::{HasData, Linker, ResourceTableError};
 use wasmtime_wasi::ResourceTable;
 
-pub use self::default_impl::WasiKeyValueCtxImpl;
+pub use self::default_impl::KeyValueDefault;
 use self::generated::wasi::keyvalue::store::Error;
 use self::generated::wasi::keyvalue::{atomics, batch, store};
 pub use self::resource::*;
 
 pub type Result<T, E = Error> = anyhow::Result<T, E>;
+
+#[derive(Debug)]
+pub struct WasiKeyValue;
+
+impl HasData for WasiKeyValue {
+    type Data<'a> = WasiKeyValueCtxView<'a>;
+}
 
 impl<T> Host<T> for WasiKeyValue
 where
@@ -54,12 +61,6 @@ where
 }
 
 impl<S> Server<S> for WasiKeyValue where S: State {}
-
-#[derive(Debug)]
-pub struct WasiKeyValue;
-impl HasData for WasiKeyValue {
-    type Data<'a> = WasiKeyValueCtxView<'a>;
-}
 
 /// A trait which provides internal WASI Key-Value context.
 ///

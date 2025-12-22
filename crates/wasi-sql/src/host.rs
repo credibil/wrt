@@ -39,9 +39,16 @@ use wasmtime::component::{HasData, Linker};
 use wasmtime_wasi::ResourceTable;
 
 use self::generated::wasi::sql::{readwrite, types};
-pub use crate::host::default_impl::WasiSqlCtxImpl;
+pub use crate::host::default_impl::SqlDefault;
 pub use crate::host::generated::wasi::sql::types::{DataType, Field, FormattedValue, Row};
 pub use crate::host::resource::*;
+
+#[derive(Debug)]
+pub struct WasiSql;
+
+impl HasData for WasiSql {
+    type Data<'a> = WasiSqlCtxView<'a>;
+}
 
 impl<T> Host<T> for WasiSql
 where
@@ -54,12 +61,6 @@ where
 }
 
 impl<S> Server<S> for WasiSql where S: State {}
-
-#[derive(Debug)]
-pub struct WasiSql;
-impl HasData for WasiSql {
-    type Data<'a> = WasiSqlCtxView<'a>;
-}
 
 /// A trait which provides internal WASI SQL context.
 ///

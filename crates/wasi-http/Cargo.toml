@@ -1,6 +1,6 @@
 [package]
 name = "wasi-http"
-description = "WASI http WIT implementation"
+description = "WASI HTTP WIT implementation"
 readme = "README.md"
 authors.workspace = true
 categories.workspace = true

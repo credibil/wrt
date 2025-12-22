@@ -6,7 +6,7 @@ use be_azure::Client as Azure;
 use be_kafka::Client as Kafka;
 use be_opentelemetry::Client as OpenTelemetry;
 use be_redis::Client as Redis;
-use wasi_http::{WasiHttp, WasiHttpCtxImpl};
+use wasi_http::{HttpDefault, WasiHttp};
 use wasi_identity::WasiIdentity;
 use wasi_keyvalue::WasiKeyValue;
 use wasi_messaging::WasiMessaging;
@@ -15,7 +15,7 @@ use wasi_vault::WasiVault;
 
 // Generate runtime
 buildgen::runtime!(main, {
-    WasiHttp: WasiHttpCtxImpl,
+    WasiHttp: HttpDefault,
     WasiOtel: OpenTelemetry,
     WasiIdentity: Azure,
     WasiKeyValue: Redis,
