@@ -6,6 +6,40 @@ Unreleased
 
 ### Changed
 
+<!-- Release notes generated using configuration in .github/release.yaml at main -->
+
+## What's Changed
+* Bump to 0.18.0 by @github-actions[bot] in https://github.com/credibil/wrt/pull/114
+* Release issues by @andrewweston in https://github.com/credibil/wrt/pull/117
+* Delete .DS_Store by @andrewweston in https://github.com/credibil/wrt/pull/118
+* Delete tmp.txt by @andrewweston in https://github.com/credibil/wrt/pull/119
+* add container_name to shared compose files by @andrewweston in https://github.com/credibil/wrt/pull/120
+* rename opentelemetry compose by @andrewweston in https://github.com/credibil/wrt/pull/121
+* Rewrite OpenTelemetry export from HTTP to gRPC by @Copilot in https://github.com/credibil/wrt/pull/122
+* Fix for the "cached response headers serialization" issue by @karthik-phl in https://github.com/credibil/wrt/pull/123
+* Simplify Examples by @andrewweston in https://github.com/credibil/wrt/pull/124
+* Bump to 0.19.0 by @github-actions[bot] in https://github.com/credibil/wrt/pull/125
+* Use git ref for wasmtime by @andrewweston in https://github.com/credibil/wrt/pull/127
+* Client credentials by @andrewweston in https://github.com/credibil/wrt/pull/128
+* Enable parallel wasm compilation by @moritzdrexl-PHL in https://github.com/credibil/wrt/pull/116
+* Runtime Build Generator by @andrewweston in https://github.com/credibil/wrt/pull/129
+* Feature/centralise error handling by @quynhduongphl in https://github.com/credibil/wrt/pull/115
+* Change log_with_metrics to only target non-wasm32 by @quynhduongphl in https://github.com/credibil/wrt/pull/130
+* Refactor examples by @andrewweston in https://github.com/credibil/wrt/pull/131
+* Comply with wasmtime's stricter linking requirements by @andrewweston in https://github.com/credibil/wrt/pull/134
+* Providers by @andrewweston in https://github.com/credibil/wrt/pull/135
+* Async WITs by @andrewweston in https://github.com/credibil/wrt/pull/136
+* Capabilities by @andrewweston in https://github.com/credibil/wrt/pull/137
+* Bincode by @andrewweston in https://github.com/credibil/wrt/pull/138
+* Wasi Config by @andrewweston in https://github.com/credibil/wrt/pull/139
+
+## New Contributors
+* @Copilot made their first contribution in https://github.com/credibil/wrt/pull/122
+* @karthik-phl made their first contribution in https://github.com/credibil/wrt/pull/123
+* @moritzdrexl-PHL made their first contribution in https://github.com/credibil/wrt/pull/116
+
+**Full Changelog**: https://github.com/credibil/wrt/compare/v0.17.0...v0.19.0
+
 ---
 
 Release notes for previous releases can be found on the respective release 
