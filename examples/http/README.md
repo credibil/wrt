@@ -9,7 +9,8 @@ Demonstrates a basic HTTP server using `wasi-http` with GET and POST endpoints.
 cargo build --example http-wasm --target wasm32-wasip2
 
 # run the host
-set -a && source .env && set +a
+# set -a && source .env && set +a
+export RUST_LOG="info,wasi_http=debug,http=debug"
 cargo run --example http -- run ./target/wasm32-wasip2/debug/examples/http_wasm.wasm
 ```
 

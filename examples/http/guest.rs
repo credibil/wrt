@@ -32,7 +32,7 @@ impl Guest for HttpGuest {
 #[wasi_otel::instrument]
 async fn echo_get(Json(body): Json<Value>) -> Result<Json<Value>> {
     Ok(Json(json!({
-        "message": "Hello, World!",
+        "message": "Hello from echo_get!",
         "request": body
     })))
 }
@@ -41,7 +41,7 @@ async fn echo_get(Json(body): Json<Value>) -> Result<Json<Value>> {
 #[wasi_otel::instrument]
 async fn echo_post(Json(body): Json<Value>) -> Result<Json<Value>> {
     Ok(Json(json!({
-        "message": "Hello, World!",
+        "message": "Hello from echo_post!",
         "request": body
     })))
 }

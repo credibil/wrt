@@ -142,7 +142,7 @@ homepage = "https://credibil.io"
 keywords = ["decentralized", "identity"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/credibil/wrt"
-rust-version = "1.91"
+rust-version = "1.92"
 version = "0.20.0"
 
 [workspace.lints.rust]
