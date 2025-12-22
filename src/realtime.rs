@@ -53,7 +53,7 @@ buildgen::runtime!(main, {
 });
 
 // Generate runtime
-#[cfg(feature = "http")]
+#[cfg(not(any(feature = "realtime", feature = "realtime-http", feature = "realtime-websockets")))]
 buildgen::runtime!(main, {
     WasiHttp: HttpDefault,
 });
