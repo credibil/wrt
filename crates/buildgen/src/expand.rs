@@ -85,7 +85,7 @@ pub fn expand(generated: Generated) -> TokenStream {
                 fn store(&self) -> Self::StoreCtx {
                     let wasi_ctx = WasiCtxBuilder::new()
                         // .inherit_args()
-                        // .inherit_env()
+                        .inherit_env()
                         .inherit_stdin()
                         .stdout(tokio::io::stdout())
                         .stderr(tokio::io::stderr())
