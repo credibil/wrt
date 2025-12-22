@@ -1,7 +1,6 @@
 # Dockerfile for building runtime examples
 
 FROM rust:alpine AS build
-ARG FEATURES=default
 ARG BIN=http
 
 RUN apk add --no-cache build-base cmake perl
@@ -19,7 +18,7 @@ RUN \
     --mount=type=bind,source=examples,target=examples \
     --mount=type=cache,target=$CARGO_HOME/git/db \
     --mount=type=cache,target=$CARGO_HOME/registry \
-    cargo build --bin $BIN --features $FEATURES --release
+    cargo build --bin $BIN --release
 
 # N.B. 'alpine' is ~10Mb larger than 'scratch' but appears to perform better
 FROM alpine:latest
