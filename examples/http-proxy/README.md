@@ -15,7 +15,7 @@ This example shows how to:
 cargo build --example http-proxy-wasm --target wasm32-wasip2
 
 # run the host
-set -a && source .env && set +a
+export RUST_LOG="info,wasi_http=debug,http_proxy=debug"
 cargo run --example http-proxy -- run ./target/wasm32-wasip2/debug/examples/http_proxy_wasm.wasm
 ```
 
