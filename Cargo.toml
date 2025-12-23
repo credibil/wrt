@@ -17,21 +17,11 @@ default-run = "realtime"
 [[bin]]
 name = "realtime"
 path = "src/realtime.rs"
-# required-features = ["realtime"]
-
-# [[bin]]
-# name = "realtime-http"
-# path = "src/realtime-http.rs"
-# required-features = ["realtime-http"]
-
-# [[bin]]
-# name = "realtime-websockets"
-# path = "src/realtime-websockets.rs"
-# required-features = ["realtime-websockets"]
 
 [features]
 default = ["jit", "http"]
 
+# Realtime build features
 realtime = ["http", "identity", "azure", "keyvalue", "redis", "messaging", "kafka", "otel", "opentelemetry"]
 realtime-http = ["http", "keyvalue", "redis", "otel", "opentelemetry"]
 realtime-websockets = ["http", "messaging", "kafka", "otel", "opentelemetry", "websockets"]

@@ -4,35 +4,35 @@ on:
   workflow_dispatch:
 
 jobs:
-  # skip:
-  #   name: Skipped
-  #   if: ${{ !startsWith(github.ref_name, 'release-') }}
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - run: |
-  #         echo "This workflow only runs on the 'release-*' branches"
-  #         exit 1
+  skip:
+    name: Skipped
+    if: ${{ !startsWith(github.ref_name, 'release-') }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "This workflow only runs on the 'release-*' branches"
+          exit 1
 
-  # ci:
-  #   name: CI
-  #   if: ${{ startsWith(github.ref_name, 'release-') }}
-  #   uses: credibil/pipeline/.github/workflows/ci.yaml@main
-  #   secrets: inherit
+  ci:
+    name: CI
+    if: ${{ startsWith(github.ref_name, 'release-') }}
+    uses: credibil/pipeline/.github/workflows/ci.yaml@main
+    secrets: inherit
 
-  # publish:
-  #   name: Publish
-  #   needs: ci
-  #   uses: credibil/pipeline/.github/workflows/publish.yaml@main
+  publish:
+    name: Publish
+    needs: ci
+    uses: credibil/pipeline/.github/workflows/publish.yaml@main
 
-  # crates:
-  #   name: Publish crates
-  #   needs: publish
-  #   uses: credibil/pipeline/.github/workflows/crates.yaml@main
-  #   secrets: inherit
+  crates:
+    name: Publish crates
+    needs: publish
+    uses: credibil/pipeline/.github/workflows/crates.yaml@main
+    secrets: inherit
 
   package:
     name: Package
-    # needs: publish
+    needs: publish
     runs-on: ${{ matrix.platform == 'linux/amd64' && 'ubuntu-latest' || 'ubuntu-24.04-arm' }}
     strategy:
       matrix:
@@ -54,11 +54,9 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           tags: |
-            type=semver,pattern={{version}},value=v0.19.0
+            type=semver,pattern={{version}},value=v${{ needs.publish.outputs.version }}
           images: |
             ghcr.io/${{ github.repository_owner }}/${{ matrix.features }}
-
-# type=semver,pattern={{version}},value=v${{ needs.publish.outputs.version }}
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -95,7 +93,7 @@ jobs:
   # last image is shown as 'unknown/unknown'.
   manifest:
     name: Manifest
-    needs: package
+    needs: [publish, package]
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -120,11 +118,9 @@ jobs:
         id: metadata
         with:
           tags: |
-            type=semver,pattern={{version}},value=v0.19.0
+            type=semver,pattern={{version}},value=v${{ needs.publish.outputs.version }}
           images: |
             ghcr.io/${{ github.repository_owner }}/${{ matrix.features }}
-
-# type=semver,pattern={{version}},value=v${{ needs.publish.outputs.version }}
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
