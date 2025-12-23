@@ -1,4 +1,5 @@
 #![cfg(not(target_arch = "wasm32"))]
+#![allow(unused_imports)]
 
 //! Realtime runtime builds.
 //!
@@ -28,7 +29,10 @@ use wasi_otel::WasiOtel;
 use wasi_websockets::{WasiWebSockets, WebSocketsDefault};
 
 // Realtime "kitchen sink" runtime
-#[cfg(feature = "realtime")]
+#[cfg(all(
+    feature = "realtime",
+    not(any(feature = "realtime-http", feature = "realtime-websockets"))
+))]
 buildgen::runtime!(main, {
     WasiHttp: HttpDefault,
     WasiOtel: OpenTelemetry,
@@ -38,7 +42,10 @@ buildgen::runtime!(main, {
 });
 
 // Realtime HTTP runtime
-#[cfg(feature = "realtime-http")]
+#[cfg(all(
+    feature = "realtime-http",
+    not(any(feature = "realtime", feature = "realtime-websockets"))
+))]
 buildgen::runtime!(main, {
     WasiHttp: HttpDefault,
     WasiKeyValue: Redis,
@@ -46,7 +53,10 @@ buildgen::runtime!(main, {
 });
 
 // Realtime websocketsruntime
-#[cfg(feature = "realtime-websockets")]
+#[cfg(all(
+    feature = "realtime-websockets",
+    not(any(feature = "realtime", feature = "realtime-http"))
+))]
 buildgen::runtime!(main, {
     WasiHttp: HttpDefault,
     WasiMessaging: Kafka,
@@ -55,7 +65,10 @@ buildgen::runtime!(main, {
 });
 
 // Default runtime
-#[cfg(not(any(feature = "realtime", feature = "realtime-http", feature = "realtime-websockets")))]
+#[cfg(all(
+    feature = "http",
+    not(any(feature = "realtime", feature = "realtime-http", feature = "realtime-websockets"))
+))]
 buildgen::runtime!(main, {
     WasiHttp: HttpDefault,
 });

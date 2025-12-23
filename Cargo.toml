@@ -17,6 +17,7 @@ default-run = "realtime"
 [[bin]]
 name = "realtime"
 path = "src/realtime.rs"
+test = false
 
 [features]
 default = ["jit", "http"]
