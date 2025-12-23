@@ -67,17 +67,13 @@ buildgen::runtime!(main, {
 // HACK: keep clippy
 #[cfg(all(feature = "realtime", feature = "realtime-http", feature = "realtime-websockets"))]
 fn main() {
-    eprintln!(
-        "Error: Please enable one of: realtime, realtime-http, or realtime-websockets"
-    );
+    eprintln!("Error: Please enable one of: realtime, realtime-http, or realtime-websockets");
     std::process::exit(1);
 }
 
 // HACK: keep rust-analyzer happy
 #[cfg(not(any(feature = "realtime", feature = "realtime-http", feature = "realtime-websockets")))]
 fn main() {
-    eprintln!(
-        "Error: Please enable one of: realtime, realtime-http, or realtime-websockets"
-    );
+    eprintln!("Error: Please enable one of: realtime, realtime-http, or realtime-websockets");
     std::process::exit(1);
 }
