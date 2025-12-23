@@ -3,17 +3,18 @@
 use std::marker::PhantomData;
 
 use anyhow::Result;
-use sea_query::{Alias, PostgresQueryBuilder, Query, SimpleExpr};
+use sea_query::{Alias, Query, SimpleExpr};
 
-use crate::orm::query::{BuiltQuery, SqlModel, values_to_wasi_datatypes};
+use crate::orm::entity::{Entity, values_to_wasi_datatypes};
+use crate::orm::query::{BuiltQuery, OrmQueryBuilder};
 
-pub struct DeleteBuilder<M: SqlModel> {
+pub struct DeleteBuilder<M: Entity> {
     filters: Vec<SimpleExpr>,
     returning: Vec<&'static str>,
     _marker: PhantomData<M>,
 }
 
-impl<M: SqlModel> Default for DeleteBuilder<M> {
+impl<M: Entity> Default for DeleteBuilder<M> {
     fn default() -> Self {
         Self {
             filters: Vec::new(),
@@ -23,7 +24,7 @@ impl<M: SqlModel> Default for DeleteBuilder<M> {
     }
 }
 
-impl<M: SqlModel> DeleteBuilder<M> {
+impl<M: Entity> DeleteBuilder<M> {
     pub fn new() -> Self {
         Self::default()
     }
@@ -50,7 +51,7 @@ impl<M: SqlModel> DeleteBuilder<M> {
             statement.returning_col(Alias::new(column));
         }
 
-        let (sql, values) = statement.build(PostgresQueryBuilder);
+        let (sql, values) = statement.build(OrmQueryBuilder::default());
         let params = values_to_wasi_datatypes(values)?;
         Ok(BuiltQuery { sql, params })
     }

@@ -108,7 +108,7 @@ wasi-websockets.workspace = true
 
 # example guest dependencies
 [target.'cfg(target_arch = "wasm32")'.dev-dependencies]
-axum = { workspace = true, features = ["macros"] }
+axum = { workspace = true, features = ["macros", "query"] }
 base64ct.workspace = true
 bytes.workspace = true
 chrono.workspace = true

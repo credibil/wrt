@@ -3,18 +3,19 @@
 use std::marker::PhantomData;
 
 use anyhow::Result;
-use sea_query::{Alias, PostgresQueryBuilder, Query, SimpleExpr, Value};
+use sea_query::{Alias, Query, SimpleExpr, Value};
 
-use crate::orm::query::{BuiltQuery, SqlModel, values_to_wasi_datatypes};
+use crate::orm::entity::{Entity, values_to_wasi_datatypes};
+use crate::orm::query::{BuiltQuery, OrmQueryBuilder};
 
-pub struct UpdateBuilder<M: SqlModel> {
+pub struct UpdateBuilder<M: Entity> {
     set_clauses: Vec<(&'static str, Value)>,
     filters: Vec<SimpleExpr>,
     returning: Vec<&'static str>,
     _marker: PhantomData<M>,
 }
 
-impl<M: SqlModel> Default for UpdateBuilder<M> {
+impl<M: Entity> Default for UpdateBuilder<M> {
     fn default() -> Self {
         Self {
             set_clauses: Vec::new(),
@@ -25,7 +26,7 @@ impl<M: SqlModel> Default for UpdateBuilder<M> {
     }
 }
 
-impl<M: SqlModel> UpdateBuilder<M> {
+impl<M: Entity> UpdateBuilder<M> {
     pub fn new() -> Self {
         Self::default()
     }
@@ -64,7 +65,7 @@ impl<M: SqlModel> UpdateBuilder<M> {
             statement.returning_col(Alias::new(column));
         }
 
-        let (sql, values) = statement.build(PostgresQueryBuilder);
+        let (sql, values) = statement.build(OrmQueryBuilder::default());
         let params = values_to_wasi_datatypes(values)?;
         Ok(BuiltQuery { sql, params })
     }

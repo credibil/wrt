@@ -32,6 +32,7 @@ mod orm;
 mod provider;
 
 use anyhow::anyhow;
+use axum::extract::{Path, Query};
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use bytes::Bytes;
@@ -44,7 +45,9 @@ use wasip3::exports::http::handler::Guest;
 use wasip3::http::types::{ErrorCode, Request, Response};
 
 use crate::error::ApiError;
-use crate::handlers::{EventStoreRequest, EventStoreResponse};
+use crate::handlers::{
+    GetEventsParams, GetEventsRequest, GetEventsResponse, SaveEventRequest, SaveEventResponse,
+};
 use crate::provider::*;
 
 struct Http;
@@ -58,8 +61,10 @@ impl Guest for Http {
     #[wasi_otel::instrument(name = "http_guest_handle", level = Level::DEBUG)]
     async fn handle(request: Request) -> Result<Response, ErrorCode> {
         tracing::debug!("received request: {:?}", request);
-        let router =
-            Router::new().route("/event_store", get(event_store_query)).route("/", post(insert));
+        let router = Router::new()
+            .route("/event_store/{limit}", get(get_events))
+            .route("/event_store", post(save_event))
+            .route("/", post(insert));
         wasi_http::serve(router, request).await
     }
 }
@@ -72,10 +77,33 @@ impl Guest for Http {
 /// - Executing a query and converting results to JSON
 #[axum::debug_handler]
 #[wasi_otel::instrument]
-async fn event_store_query() -> Result<Json<EventStoreResponse>, ApiError> {
+async fn get_events(
+    Path(limit): Path<i32>, Query(params): Query<GetEventsParams>,
+) -> Result<Json<GetEventsResponse>, ApiError> {
     tracing::info!("query event_store database");
     let api_client = credibil_api::Client::new(Provider::new());
-    let result = api_client.request(EventStoreRequest {}).owner("owner").await;
+    let request = GetEventsRequest {
+        limit,
+        from: params.from,
+    };
+    let result = api_client.request(request).owner("owner").await;
+
+    let response = match result {
+        Ok(ok) => ok,
+        Err(err) => return Err(err),
+    };
+
+    Ok(response.body.into())
+}
+
+#[axum::debug_handler]
+#[wasi_otel::instrument]
+async fn save_event(
+    Json(request): Json<SaveEventRequest>,
+) -> Result<Json<SaveEventResponse>, ApiError> {
+    tracing::info!("add to event_store database");
+    let api_client = credibil_api::Client::new(Provider::new());
+    let result = api_client.request(request).owner("owner").await;
 
     let response = match result {
         Ok(ok) => ok,

@@ -3,27 +3,26 @@
 use std::marker::PhantomData;
 
 use anyhow::Result;
-use sea_query::{Alias, PostgresQueryBuilder, Query, SimpleExpr, Value};
+use sea_query::{Alias, Query, SimpleExpr, Value};
 
-use crate::orm::query::{BuiltQuery, SqlModel, values_to_wasi_datatypes};
+use crate::orm::entity::{Entity, values_to_wasi_datatypes};
+use crate::orm::query::{BuiltQuery, OrmQueryBuilder};
 
-pub struct InsertBuilder<M: SqlModel> {
+pub struct InsertBuilder<M: Entity> {
     values: Vec<(&'static str, Value)>,
-    returning: Vec<&'static str>,
     _marker: PhantomData<M>,
 }
 
-impl<M: SqlModel> Default for InsertBuilder<M> {
+impl<M: Entity> Default for InsertBuilder<M> {
     fn default() -> Self {
         Self {
             values: Vec::new(),
-            returning: Vec::new(),
             _marker: PhantomData,
         }
     }
 }
 
-impl<M: SqlModel> InsertBuilder<M> {
+impl<M: Entity> InsertBuilder<M> {
     pub fn new() -> Self {
         Self::default()
     }
@@ -33,11 +32,6 @@ impl<M: SqlModel> InsertBuilder<M> {
         V: Into<Value>,
     {
         self.values.push((column, value.into()));
-        self
-    }
-
-    pub fn returning(mut self, column: &'static str) -> Self {
-        self.returning.push(column);
         self
     }
 
@@ -52,11 +46,7 @@ impl<M: SqlModel> InsertBuilder<M> {
         statement.columns(columns);
         statement.values_panic(row);
 
-        for column in self.returning {
-            statement.returning_col(Alias::new(column));
-        }
-
-        let (sql, values) = statement.build(PostgresQueryBuilder);
+        let (sql, values) = statement.build(OrmQueryBuilder::default());
         let params = values_to_wasi_datatypes(values)?;
         Ok(BuiltQuery { sql, params })
     }

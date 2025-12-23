@@ -108,10 +108,22 @@ impl SqlDb for Provider {
         .boxed()
     }
 
-    fn exec(
-        &self, _pool_name: String, _query: String, _params: Vec<DataType>,
-    ) -> FutureResult<u32> {
-        todo!()
+    fn exec(&self, pool_name: String, query: String, params: Vec<DataType>) -> FutureResult<u32> {
+        async {
+            let cnn = Connection::open(pool_name)
+                .await
+                .map_err(|e| anyhow!("failed to open connection: {e:?}"))?;
+
+            let stmt = Statement::prepare(query, params)
+                .await
+                .map_err(|e| anyhow!("failed to prepare statement: {e:?}"))?;
+
+            let res =
+                readwrite::exec(&cnn, &stmt).await.map_err(|e| anyhow!("exec failed: {e:?}"))?;
+
+            Ok(res)
+        }
+        .boxed()
     }
 }
 

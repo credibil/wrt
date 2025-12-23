@@ -2,12 +2,13 @@
 use std::marker::PhantomData;
 
 use anyhow::Result;
-use sea_query::{Alias, ColumnRef, IntoIden, Order, PostgresQueryBuilder, Query, SimpleExpr};
+use sea_query::{Alias, ColumnRef, IntoIden, Order, Query, SimpleExpr};
 
-use crate::orm::query::{BuiltQuery, JoinSpec, SqlModel, values_to_wasi_datatypes};
+use crate::orm::entity::{Entity, JoinSpec, values_to_wasi_datatypes};
+use crate::orm::query::{BuiltQuery, OrmQueryBuilder};
 use crate::provider::SqlDb;
 
-pub struct SelectBuilder<M: SqlModel> {
+pub struct SelectBuilder<M: Entity> {
     filters: Vec<SimpleExpr>,
     limit: Option<u64>,
     offset: Option<u64>,
@@ -16,7 +17,7 @@ pub struct SelectBuilder<M: SqlModel> {
     _marker: PhantomData<M>,
 }
 
-impl<M: SqlModel> Default for SelectBuilder<M> {
+impl<M: Entity> Default for SelectBuilder<M> {
     fn default() -> Self {
         let ordering = M::ordering()
             .into_iter()
@@ -34,7 +35,7 @@ impl<M: SqlModel> Default for SelectBuilder<M> {
     }
 }
 
-impl<M: SqlModel> SelectBuilder<M> {
+impl<M: Entity> SelectBuilder<M> {
     pub fn new() -> Self {
         Self::default()
     }
@@ -69,6 +70,25 @@ impl<M: SqlModel> SelectBuilder<M> {
     pub fn join(mut self, spec: JoinSpec) -> Self {
         self.joins.push(spec);
         self
+    }
+
+    /// Consumes the builder, executes the query against the provider, and maps rows to the Model.
+    pub async fn fetch(self, provider: &impl SqlDb, pool_name: &str) -> Result<Vec<M>> {
+        let BuiltQuery { sql, params } =
+            self.build().map_err(|e| anyhow::anyhow!("failed building query: {e:?}"))?;
+
+        let rows = provider
+            .query(pool_name.to_string(), sql, params)
+            .await
+            .map_err(|e| anyhow::anyhow!("query failed: {e:?}"))?;
+
+        let models = rows
+            .iter()
+            .map(M::from_row)
+            .collect::<Result<Vec<_>>>()
+            .map_err(|e| anyhow::anyhow!("row conversion failed: {e:?}"))?;
+
+        Ok(models)
     }
 
     pub fn build(self) -> Result<BuiltQuery> {
@@ -109,34 +129,9 @@ impl<M: SqlModel> SelectBuilder<M> {
             statement.order_by(column, order);
         }
 
-        let (sql, values) = statement.build(PostgresQueryBuilder);
+        let (sql, values) = statement.build(OrmQueryBuilder::default());
         let params = values_to_wasi_datatypes(values)?;
         Ok(BuiltQuery { sql, params })
-    }
-
-    /// Consumes the builder, executes the query against the provider, and maps rows to the Model.
-    pub async fn fetch_all(self, provider: &impl SqlDb, pool_name: &str) -> Result<Vec<M>> {
-        let BuiltQuery { sql, params } =
-            self.build().map_err(|e| anyhow::anyhow!("failed building query: {e:?}"))?;
-
-        let rows = provider
-            .query(pool_name.to_string(), sql, params)
-            .await
-            .map_err(|e| anyhow::anyhow!("query failed: {e:?}"))?;
-
-        let models = rows
-            .iter()
-            .map(M::from_row)
-            .collect::<Result<Vec<_>>>()
-            .map_err(|e| anyhow::anyhow!("row conversion failed: {e:?}"))?;
-
-        Ok(models)
-    }
-
-    /// Helper for fetching a single optional result
-    pub async fn fetch_one(self, provider: &impl SqlDb, pool_name: &str) -> Result<Option<M>> {
-        let mut result = self.limit(1).fetch_all(provider, pool_name).await?;
-        Ok(result.pop())
     }
 }
 
