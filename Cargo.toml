@@ -112,12 +112,12 @@ axum = { workspace = true, features = ["macros", "query"] }
 base64ct.workspace = true
 bytes.workspace = true
 chrono.workspace = true
-credibil-api = { version = "0.5.0", registry = "credibil" }
+credibil-api = { version = "0.6.0", registry = "credibil" }
 credibil-error.workspace = true
 fromenv.workspace = true
 futures.workspace = true
 http.workspace = true
-http-body = "1.0.1"
+http-body.workspace = true
 http-body-util.workspace = true
 opentelemetry.workspace = true
 serde.workspace = true
