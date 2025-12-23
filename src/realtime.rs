@@ -52,7 +52,7 @@ buildgen::runtime!(main, {
     WasiOtel: OpenTelemetry,
 });
 
-// Realtime websocketsruntime
+// Realtime websockets runtime
 #[cfg(all(
     feature = "realtime-websockets",
     not(any(feature = "realtime", feature = "realtime-http"))
@@ -64,11 +64,20 @@ buildgen::runtime!(main, {
     WasiWebSockets: WebSocketsDefault,
 });
 
-// Default runtime
-#[cfg(all(
-    feature = "http",
-    not(any(feature = "realtime", feature = "realtime-http", feature = "realtime-websockets"))
-))]
-buildgen::runtime!(main, {
-    WasiHttp: HttpDefault,
-});
+// HACK: keep clippy
+#[cfg(all(feature = "realtime", feature = "realtime-http", feature = "realtime-websockets"))]
+fn main() {
+    eprintln!(
+        "Error: Please enable one of: realtime, realtime-http, or realtime-websockets"
+    );
+    std::process::exit(1);
+}
+
+// HACK: keep rust-analyzer happy
+#[cfg(not(any(feature = "realtime", feature = "realtime-http", feature = "realtime-websockets")))]
+fn main() {
+    eprintln!(
+        "Error: Please enable one of: realtime, realtime-http, or realtime-websockets"
+    );
+    std::process::exit(1);
+}
