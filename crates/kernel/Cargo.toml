@@ -24,11 +24,8 @@ jit = ["wasmtime/cranelift"]
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 anyhow.workspace = true
 clap = { version = "4.5.53", features = ["derive"] }
-credibil-error.workspace = true
 credibil-otel.workspace = true
 serde.workspace = true
-serde_json.workspace = true
-fromenv.workspace = true
 futures.workspace = true
 tracing.workspace = true
 tokio = { workspace = true, features = ["macros"] }

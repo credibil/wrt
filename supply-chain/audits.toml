@@ -221,13 +221,13 @@ end = "2026-11-27"
 
 [[trusted.derive_more]]
 criteria = "safe-to-deploy"
-user-id = 3797 # Jelte Fennema-Nio (JelteF)
+user-id = 3797
 start = "2019-05-25"
 end = "2026-09-11"
 
 [[trusted.derive_more-impl]]
 criteria = "safe-to-deploy"
-user-id = 3797 # Jelte Fennema-Nio (JelteF)
+user-id = 3797
 start = "2023-07-23"
 end = "2026-12-06"
 
@@ -263,7 +263,7 @@ end = "2026-09-11"
 
 [[trusted.flate2]]
 criteria = "safe-to-deploy"
-user-id = 980 # Sebastian Thiel (Byron)
+user-id = 980
 start = "2023-08-15"
 end = "2026-09-11"
 
