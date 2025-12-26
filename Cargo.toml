@@ -76,7 +76,7 @@ quote = "1.0.40"
 rand = "0.9.2"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.147"
-syn = { version = "2.0.106", features = ["parsing"] }
+syn = { version = "2.0.106", features = ["full"] }
 time = "0.3.44"
 tokio = { version = "1.47.1", default-features = false }
 tracing = "0.1.41"
