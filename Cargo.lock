@@ -915,6 +915,7 @@ dependencies = [
  "wasi-keyvalue",
  "wasi-messaging",
  "wasi-otel",
+ "wasi-otel-attr",
  "wasi-sql",
  "wasi-vault",
  "wasi-websockets",

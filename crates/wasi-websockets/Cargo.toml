@@ -20,7 +20,7 @@ workspace = true
 # host dependencies
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 anyhow.workspace = true
-credibil-error.workspace = true
+credibil-error = { version = "0.6.0", registry = "credibil" }
 futures.workspace = true
 futures-channel.workspace = true
 futures-util.workspace = true

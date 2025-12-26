@@ -16,6 +16,7 @@ wasi-identity.workspace = true
 wasi-keyvalue.workspace = true
 wasi-messaging.workspace = true
 wasi-otel.workspace = true
+wasi-otel-attr.workspace = true
 wasi-sql.workspace = true
 wasi-vault.workspace = true
 wasi-websockets.workspace = true
@@ -31,7 +32,7 @@ http.workspace = true
 http-body-util.workspace = true
 opentelemetry.workspace = true
 serde_json.workspace = true
-tower-http.workspace = true
+tower-http = { version = "0.6.6", features = ["cors", "trace"] }
 tracing.workspace = true
 wasip3.workspace = true
 wit-bindgen.workspace = true
