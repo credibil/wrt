@@ -1,6 +1,6 @@
 [package]
-name = "wasm-cli"
-description = "Wasm runtime CLI"
+name = "warp-cli"
+description = "Warp (WebAssembly Runtime Plane) CLI"
 publish = false
 readme = "README.md"
 authors.workspace = true

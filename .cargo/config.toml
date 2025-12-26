@@ -1,5 +1,6 @@
 [registries]
 credibil = { index = "sparse+https://pkgs.dev.azure.com/credibil/_packaging/credibil/Cargo/index/" }
+ironry = { index = "sparse+https://pkgs.dev.azure.com/ironry/_packaging/ironry/Cargo/index/" }
 
 [registry]
 global-credential-providers = [

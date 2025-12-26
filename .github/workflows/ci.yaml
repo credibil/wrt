@@ -5,7 +5,7 @@ on:
 
 jobs:
   ci:
-    uses: credibil/pipeline/.github/workflows/ci.yaml@main
+    uses: augentic/pipeline/.github/workflows/ci.yaml@main
     secrets: inherit
     # with:
     #   outdated: prost

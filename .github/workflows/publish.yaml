@@ -16,18 +16,18 @@ jobs:
   ci:
     name: CI
     if: ${{ startsWith(github.ref_name, 'release-') }}
-    uses: credibil/pipeline/.github/workflows/ci.yaml@main
+    uses: augentic/pipeline/.github/workflows/ci.yaml@main
     secrets: inherit
 
   publish:
     name: Publish
     needs: ci
-    uses: credibil/pipeline/.github/workflows/publish.yaml@main
+    uses: augentic/pipeline/.github/workflows/publish.yaml@main
 
   crates:
     name: Publish crates
     needs: publish
-    uses: credibil/pipeline/.github/workflows/crates.yaml@main
+    uses: augentic/pipeline/.github/workflows/crates.yaml@main
     secrets: inherit
 
   package:
@@ -45,7 +45,7 @@ jobs:
       packages: write
 
     steps:
-      - uses: credibil/pipeline/.github/actions/cargo-cache@main
+      - uses: augentic/pipeline/.github/actions/cargo-cache@main
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
 
