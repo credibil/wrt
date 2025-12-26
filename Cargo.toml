@@ -1,122 +1,118 @@
-[package]
-name = "warp-cli"
-description = "Warp (WebAssembly Runtime Plane) CLI"
-publish = false
-readme = "README.md"
-authors.workspace = true
-categories.workspace = true
-edition.workspace = true
-homepage.workspace = true
-keywords.workspace = true
-license.workspace = true
-repository.workspace = true
-rust-version.workspace = true
-version.workspace = true
-default-run = "realtime"
+# [package]
+# name = "warp-cli"
+# description = "Warp (WebAssembly Runtime Plane) CLI"
+# publish = false
+# readme = "README.md"
+# authors.workspace = true
+# categories.workspace = true
+# edition.workspace = true
+# homepage.workspace = true
+# keywords.workspace = true
+# license.workspace = true
+# repository.workspace = true
+# rust-version.workspace = true
+# version.workspace = true
 
-[[bin]]
-name = "realtime"
-path = "src/realtime.rs"
-test = false
+# [features]
+# default = ["jit"]
 
-[features]
-default = ["jit", "http"]
+# # Realtime build features
+# realtime = ["http", "identity", "azure", "keyvalue", "redis", "messaging", "kafka", "otel", "opentelemetry"]
+# realtime-http = ["http", "keyvalue", "redis", "otel", "opentelemetry"]
+# realtime-websockets = ["http", "messaging", "kafka", "otel", "opentelemetry", "websockets"]
 
-# Realtime build features
-realtime = ["http", "identity", "azure", "keyvalue", "redis", "messaging", "kafka", "otel", "opentelemetry"]
-realtime-http = ["http", "keyvalue", "redis", "otel", "opentelemetry"]
-realtime-websockets = ["http", "messaging", "kafka", "otel", "opentelemetry", "websockets"]
+# # WASI components (not intended to be used directly)
+# blobstore = ["dep:wasi-blobstore"]
+# http = ["dep:wasi-http"]
+# identity = ["dep:wasi-identity"]
+# keyvalue = ["dep:wasi-keyvalue"]
+# messaging = ["dep:wasi-messaging"]
+# otel = ["dep:wasi-otel"]
+# sql = ["dep:wasi-sql"]
+# vault = ["dep:wasi-vault"]
+# websockets = ["dep:wasi-websockets"]
 
-# WASI components (not intended to be used directly)
-blobstore = ["dep:wasi-blobstore"]
-http = ["dep:wasi-http"]
-identity = ["dep:wasi-identity"]
-keyvalue = ["dep:wasi-keyvalue"]
-messaging = ["dep:wasi-messaging"]
-otel = ["dep:wasi-otel"]
-sql = ["dep:wasi-sql"]
-vault = ["dep:wasi-vault"]
-websockets = ["dep:wasi-websockets"]
+# # Component resources (not intended to be used directly)
+# azure = ["dep:be-azure"]
+# kafka = ["dep:be-kafka"]
+# mongodb = ["dep:be-mongodb"]
+# nats = ["dep:be-nats"]
+# opentelemetry = ["dep:be-opentelemetry"]
+# postgres = ["dep:be-postgres"]
+# redis = ["dep:be-redis"]
 
-# Component resources (not intended to be used directly)
-azure = ["dep:be-azure"]
-kafka = ["dep:be-kafka"]
-mongodb = ["dep:be-mongodb"]
-nats = ["dep:be-nats"]
-opentelemetry = ["dep:be-opentelemetry"]
-postgres = ["dep:be-postgres"]
-redis = ["dep:be-redis"]
+# # Enables just-in-time wasm to machine code compilation.
+# jit = ["kernel/jit"]
 
-# Enables just-in-time wasm to machine code compilation.
-jit = ["kernel/jit"]
+# [dependencies]
+# anyhow.workspace = true
 
-[dependencies]
-anyhow.workspace = true
-
-[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-buildgen.workspace = true
-be-azure = { workspace = true, optional = true }
-be-mongodb = { workspace = true, optional = true }
-be-kafka = { workspace = true, optional = true }
-be-nats = { workspace = true, optional = true }
-be-opentelemetry = { workspace = true, optional = true }
-be-postgres = { workspace = true, optional = true }
-be-redis = { workspace = true, optional = true }
-kernel.workspace = true
-wasi-blobstore = { workspace = true, optional = true }
-wasi-http = { workspace = true, optional = true }
-wasi-identity = { workspace = true, optional = true }
-wasi-keyvalue = { workspace = true, optional = true }
-wasi-messaging = { workspace = true, optional = true }
-wasi-otel = { workspace = true, optional = true }
-wasi-sql = { workspace = true, optional = true }
-wasi-vault = { workspace = true, optional = true }
-wasi-websockets = { workspace = true, optional = true }
+# [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+# buildgen.workspace = true
+# be-azure = { workspace = true, optional = true }
+# be-mongodb = { workspace = true, optional = true }
+# be-kafka = { workspace = true, optional = true }
+# be-nats = { workspace = true, optional = true }
+# be-opentelemetry = { workspace = true, optional = true }
+# be-postgres = { workspace = true, optional = true }
+# be-redis = { workspace = true, optional = true }
+# kernel.workspace = true
+# wasi-blobstore = { workspace = true, optional = true }
+# wasi-http = { workspace = true, optional = true }
+# wasi-identity = { workspace = true, optional = true }
+# wasi-keyvalue = { workspace = true, optional = true }
+# wasi-messaging = { workspace = true, optional = true }
+# wasi-otel = { workspace = true, optional = true }
+# wasi-sql = { workspace = true, optional = true }
+# wasi-vault = { workspace = true, optional = true }
+# wasi-websockets = { workspace = true, optional = true }
 
 # required for azure_identity, etc.
-openssl = { version = "0.10.75", features = ["vendored"] }
+# openssl = { version = "0.10.75", features = ["vendored"] }
 
-# example guest & host dependencies
-[dev-dependencies]
-cfg-if.workspace = true
-wasi-blobstore.workspace = true
-wasi-config.workspace = true
-wasi-http.workspace = true
-wasi-identity.workspace = true
-wasi-keyvalue.workspace = true
-wasi-messaging.workspace = true
-wasi-otel.workspace = true
-wasi-sql.workspace = true
-wasi-vault.workspace = true
-wasi-websockets.workspace = true
+# # example guest & host dependencies
+# [dev-dependencies]
+# cfg-if.workspace = true
+# kernel.workspace = true
+# wasi-blobstore.workspace = true
+# wasi-config.workspace = true
+# wasi-http.workspace = true
+# wasi-identity.workspace = true
+# wasi-keyvalue.workspace = true
+# wasi-messaging.workspace = true
+# wasi-otel.workspace = true
+# wasi-sql.workspace = true
+# wasi-vault.workspace = true
+# wasi-websockets.workspace = true
 
-# example guest dependencies
-[target.'cfg(target_arch = "wasm32")'.dev-dependencies]
-axum = { workspace = true, features = ["macros"] }
-base64ct.workspace = true
-bytes.workspace = true
-http.workspace = true
-http-body-util.workspace = true
-opentelemetry.workspace = true
-serde_json.workspace = true
-tower-http.workspace = true
-tracing.workspace = true
-wasip3.workspace = true
-wit-bindgen.workspace = true
+# # example guest dependencies
+# [target.'cfg(target_arch = "wasm32")'.dev-dependencies]
+# axum = { workspace = true, features = ["macros"] }
+# base64ct.workspace = true
+# bytes.workspace = true
+# http.workspace = true
+# http-body-util.workspace = true
+# opentelemetry.workspace = true
+# serde_json.workspace = true
+# tower-http.workspace = true
+# tracing.workspace = true
+# wasip3.workspace = true
+# wit-bindgen.workspace = true
 
 [profile.release]
 lto = true
 opt-level = "s"
 strip = true
 
-[package.metadata.cargo-udeps.ignore]
-normal = ["openssl"]
+# [package.metadata.cargo-udeps.ignore]
+# normal = ["openssl"]
 
-[package.metadata.cargo-machete]
-ignored = ["openssl"]
+# [package.metadata.cargo-machete]
+# ignored = ["openssl"]
 
 [workspace]
-members = ["crates/*"]
+members = ["crates/*", "examples"]
+exclude = ["crates/be-*"]
 resolver = "3"
 
 [workspace.package]
@@ -195,9 +191,9 @@ parking_lot = "0.12"
 proc-macro2 = "1.0.101"
 quote = "1.0.40"
 rand = "0.9.2"
-reqwest = "0.12.24"
+reqwest = "0.12.28"
 serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.145"
+serde_json = "1.0.147"
 syn = { version = "2.0.106", features = ["parsing"] }
 thiserror = "2.0"
 time = "0.3.44"
@@ -216,7 +212,7 @@ wasmtime-wasi = { version = "40.0.0", features = ["p3"] }
 wasmtime-wasi-config = "40.0.0"
 wasmtime-wasi-http = { version = "40.0.0", features = ["p3"] }
 wasmtime-wasi-io = "40.0.0"
-wit-bindgen = { version = "0.49.0", features = ["async-spawn"] }
+wit-bindgen = { version = "0.50.0", features = ["async-spawn"] }
 
 # credibil registry
 credibil-encoding = { version = "0.6.0", registry = "credibil" }
@@ -224,13 +220,13 @@ credibil-error = { version = "0.6.0", registry = "credibil" }
 credibil-otel = { version = "0.6.0", registry = "credibil" }
 
 # interally referenced crates
-be-azure = { path = "crates/be-azure", version = "0.20.0", registry = "credibil" }
-be-kafka = { path = "crates/be-kafka", version = "0.20.0", registry = "credibil" }
-be-mongodb = { path = "crates/be-mongodb", version = "0.20.0", registry = "credibil" }
-be-nats = { path = "crates/be-nats", version = "0.20.0", registry = "credibil" }
-be-opentelemetry = { path = "crates/be-opentelemetry", version = "0.20.0", registry = "credibil" }
-be-postgres = { path = "crates/be-postgres", version = "0.20.0", registry = "credibil" }
-be-redis = { path = "crates/be-redis", version = "0.20.0", registry = "credibil" }
+# be-azure = { path = "crates/be-azure", version = "0.20.0", registry = "credibil" }
+# be-kafka = { path = "crates/be-kafka", version = "0.20.0", registry = "credibil" }
+# be-mongodb = { path = "crates/be-mongodb", version = "0.20.0", registry = "credibil" }
+# be-nats = { path = "crates/be-nats", version = "0.20.0", registry = "credibil" }
+# be-opentelemetry = { path = "crates/be-opentelemetry", version = "0.20.0", registry = "credibil" }
+# be-postgres = { path = "crates/be-postgres", version = "0.20.0", registry = "credibil" }
+# be-redis = { path = "crates/be-redis", version = "0.20.0", registry = "credibil" }
 buildgen = { path = "crates/buildgen", version = "0.20.0" }
 kernel = { path = "crates/kernel", version = "0.20.0", registry = "credibil" }
 wasi-blobstore = { path = "crates/wasi-blobstore", version = "0.20.0", registry = "credibil" }
@@ -248,101 +244,101 @@ wasi-websockets = { path = "crates/wasi-websockets", version = "0.20.0", registr
 [patch.crates-io]
 # wasmtime = { git = "https://github.com/bytecodealliance/wasmtime", branch = "release-40.0.0" }
 
-[[example]]
-name = "blobstore-wasm"
-path = "examples/blobstore/guest.rs"
-crate-type = ["cdylib"]
+# [[example]]
+# name = "blobstore-wasm"
+# path = "examples/blobstore/guest.rs"
+# crate-type = ["cdylib"]
 
-[[example]]
-name = "blobstore"
-path = "examples/blobstore/runtime.rs"
+# [[example]]
+# name = "blobstore"
+# path = "examples/blobstore/runtime.rs"
 
-[[example]]
-name = "config-wasm"
-path = "examples/config/guest.rs"
-crate-type = ["cdylib"]
+# [[example]]
+# name = "config-wasm"
+# path = "examples/config/guest.rs"
+# crate-type = ["cdylib"]
 
-[[example]]
-name = "config"
-path = "examples/config/runtime.rs"
+# [[example]]
+# name = "config"
+# path = "examples/config/runtime.rs"
 
-[[example]]
-name = "http-wasm"
-path = "examples/http/guest.rs"
-crate-type = ["cdylib"]
+# [[example]]
+# name = "http-wasm"
+# path = "examples/http/guest.rs"
+# crate-type = ["cdylib"]
 
-[[example]]
-name = "http"
-path = "examples/http/runtime.rs"
+# [[example]]
+# name = "http"
+# path = "examples/http/runtime.rs"
 
-[[example]]
-name = "http-proxy-wasm"
-path = "examples/http-proxy/guest.rs"
-crate-type = ["cdylib"]
+# [[example]]
+# name = "http-proxy-wasm"
+# path = "examples/http-proxy/guest.rs"
+# crate-type = ["cdylib"]
 
-[[example]]
-name = "http-proxy"
-path = "examples/http-proxy/runtime.rs"
+# [[example]]
+# name = "http-proxy"
+# path = "examples/http-proxy/runtime.rs"
 
-[[example]]
-name = "identity-wasm"
-path = "examples/identity/guest.rs"
-crate-type = ["cdylib"]
+# [[example]]
+# name = "identity-wasm"
+# path = "examples/identity/guest.rs"
+# crate-type = ["cdylib"]
 
-[[example]]
-name = "identity"
-path = "examples/identity/runtime.rs"
+# [[example]]
+# name = "identity"
+# path = "examples/identity/runtime.rs"
 
-[[example]]
-name = "keyvalue-wasm"
-path = "examples/keyvalue/guest.rs"
-crate-type = ["cdylib"]
+# [[example]]
+# name = "keyvalue-wasm"
+# path = "examples/keyvalue/guest.rs"
+# crate-type = ["cdylib"]
 
-[[example]]
-name = "keyvalue"
-path = "examples/keyvalue/runtime.rs"
+# [[example]]
+# name = "keyvalue"
+# path = "examples/keyvalue/runtime.rs"
 
-[[example]]
-name = "messaging-wasm"
-path = "examples/messaging/guest.rs"
-crate-type = ["cdylib"]
+# [[example]]
+# name = "messaging-wasm"
+# path = "examples/messaging/guest.rs"
+# crate-type = ["cdylib"]
 
-[[example]]
-name = "messaging"
-path = "examples/messaging/runtime.rs"
+# [[example]]
+# name = "messaging"
+# path = "examples/messaging/runtime.rs"
 
-[[example]]
-name = "otel-wasm"
-path = "examples/otel/guest.rs"
-crate-type = ["cdylib"]
+# [[example]]
+# name = "otel-wasm"
+# path = "examples/otel/guest.rs"
+# crate-type = ["cdylib"]
 
-[[example]]
-name = "otel"
-path = "examples/otel/runtime.rs"
+# [[example]]
+# name = "otel"
+# path = "examples/otel/runtime.rs"
 
-[[example]]
-name = "sql-wasm"
-path = "examples/sql/guest.rs"
-crate-type = ["cdylib"]
+# [[example]]
+# name = "sql-wasm"
+# path = "examples/sql/guest.rs"
+# crate-type = ["cdylib"]
 
-[[example]]
-name = "sql"
-path = "examples/sql/runtime.rs"
+# [[example]]
+# name = "sql"
+# path = "examples/sql/runtime.rs"
 
-[[example]]
-name = "vault-wasm"
-path = "examples/vault/guest.rs"
-crate-type = ["cdylib"]
+# [[example]]
+# name = "vault-wasm"
+# path = "examples/vault/guest.rs"
+# crate-type = ["cdylib"]
 
-[[example]]
-name = "vault"
-path = "examples/vault/runtime.rs"
+# [[example]]
+# name = "vault"
+# path = "examples/vault/runtime.rs"
 
-[[example]]
-name = "websockets-wasm"
-path = "examples/websockets/guest.rs"
-crate-type = ["cdylib"]
+# [[example]]
+# name = "websockets-wasm"
+# path = "examples/websockets/guest.rs"
+# crate-type = ["cdylib"]
 
-[[example]]
-name = "websockets"
-path = "examples/websockets/runtime.rs"
+# [[example]]
+# name = "websockets"
+# path = "examples/websockets/runtime.rs"
