@@ -17,7 +17,7 @@ docker compose -f docker/otelcol.yaml up -d
 cargo build --example otel-wasm --target wasm32-wasip2
 
 # run the host
-set -a && source .env && set +a
+export RUST_LOG="info,wasi_otel=debug,wasi_http=debug,otel=debug"
 cargo run --example otel -- run ./target/wasm32-wasip2/debug/examples/otel_wasm.wasm
 ```
 

@@ -1,0 +1,137 @@
+[package]
+name = "examples"
+publish = false
+edition.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+wasi-blobstore.workspace = true
+wasi-config.workspace = true
+wasi-http.workspace = true
+wasi-identity.workspace = true
+wasi-keyvalue.workspace = true
+wasi-messaging.workspace = true
+wasi-otel.workspace = true
+wasi-sql.workspace = true
+wasi-vault.workspace = true
+wasi-websockets.workspace = true
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+buildgen.workspace = true
+cfg-if.workspace = true
+kernel.workspace = true
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+axum = { workspace = true, features = ["macros"] }
+base64ct.workspace = true
+bytes.workspace = true
+http.workspace = true
+http-body-util.workspace = true
+opentelemetry.workspace = true
+serde_json.workspace = true
+tower-http = { version = "0.6.6", features = ["cors", "trace"] }
+tracing.workspace = true
+wasi-otel-attr.workspace = true
+wasip3.workspace = true
+wit-bindgen.workspace = true
+
+[[example]]
+name = "blobstore-wasm"
+path = "blobstore/guest.rs"
+crate-type = ["cdylib"]
+
+[[example]]
+name = "blobstore"
+path = "blobstore/runtime.rs"
+
+[[example]]
+name = "config-wasm"
+path = "config/guest.rs"
+crate-type = ["cdylib"]
+
+[[example]]
+name = "config"
+path = "config/runtime.rs"
+
+[[example]]
+name = "http-wasm"
+path = "http/guest.rs"
+crate-type = ["cdylib"]
+
+[[example]]
+name = "http"
+path = "http/runtime.rs"
+
+[[example]]
+name = "http-proxy-wasm"
+path = "http-proxy/guest.rs"
+crate-type = ["cdylib"]
+
+[[example]]
+name = "http-proxy"
+path = "http-proxy/runtime.rs"
+
+[[example]]
+name = "identity-wasm"
+path = "identity/guest.rs"
+crate-type = ["cdylib"]
+
+[[example]]
+name = "identity"
+path = "identity/runtime.rs"
+
+[[example]]
+name = "keyvalue-wasm"
+path = "keyvalue/guest.rs"
+crate-type = ["cdylib"]
+
+[[example]]
+name = "keyvalue"
+path = "keyvalue/runtime.rs"
+
+[[example]]
+name = "messaging-wasm"
+path = "messaging/guest.rs"
+crate-type = ["cdylib"]
+
+[[example]]
+name = "messaging"
+path = "messaging/runtime.rs"
+
+[[example]]
+name = "otel-wasm"
+path = "otel/guest.rs"
+crate-type = ["cdylib"]
+
+[[example]]
+name = "otel"
+path = "otel/runtime.rs"
+
+[[example]]
+name = "sql-wasm"
+path = "sql/guest.rs"
+crate-type = ["cdylib"]
+
+[[example]]
+name = "sql"
+path = "sql/runtime.rs"
+
+[[example]]
+name = "vault-wasm"
+path = "vault/guest.rs"
+crate-type = ["cdylib"]
+
+[[example]]
+name = "vault"
+path = "vault/runtime.rs"
+
+[[example]]
+name = "websockets-wasm"
+path = "websockets/guest.rs"
+crate-type = ["cdylib"]
+
+[[example]]
+name = "websockets"
+path = "websockets/runtime.rs"

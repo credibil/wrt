@@ -1,4 +1,4 @@
-//! Trains service errors
+//! Errors
 
 use axum::response::{IntoResponse, Response};
 use http::StatusCode;

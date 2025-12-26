@@ -9,7 +9,7 @@ Demonstrates `wasi-keyvalue` using the default (in-memory) implementation.
 cargo build --example keyvalue-wasm --target wasm32-wasip2
 
 # run the host
-set -a && source .env && set +a
+export RUST_LOG="info,wasi_keyvalue=debug,wasi_http=debug,keyvalue=debug"
 cargo run --example keyvalue -- run ./target/wasm32-wasip2/debug/examples/keyvalue_wasm.wasm
 ```
 
