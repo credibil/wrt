@@ -41,7 +41,6 @@ wasmtime-wasi-http.workspace = true
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 axum.workspace = true
 rkyv = "0.8.12"
-bytes.workspace = true
 credibil-encoding = { version = "0.6.0", registry = "credibil" }
 http-body.workspace = true
 http-body-util.workspace = true
