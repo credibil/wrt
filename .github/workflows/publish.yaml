@@ -13,15 +13,15 @@ jobs:
           echo "This workflow only runs on the 'release-*' branches"
           exit 1
 
-  # ci:
-  #   name: CI
-  #   if: ${{ startsWith(github.ref_name, 'release-') }}
-  #   uses: augentic/pipeline/.github/workflows/ci.yaml@main
-  #   secrets: inherit
+  ci:
+    name: CI
+    if: ${{ startsWith(github.ref_name, 'release-') }}
+    uses: augentic/pipeline/.github/workflows/ci.yaml@main
+    secrets: inherit
 
   publish:
     name: Publish
-    # needs: ci
+    needs: ci
     uses: augentic/pipeline/.github/workflows/publish.yaml@main
 
   crates:
