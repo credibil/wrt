@@ -7,6 +7,7 @@ version.workspace = true
 
 [dependencies]
 anyhow.workspace = true
+cfg-if.workspace = true
 wasi-blobstore.workspace = true
 wasi-config.workspace = true
 wasi-http.workspace = true
@@ -20,7 +21,6 @@ wasi-websockets.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 buildgen.workspace = true
-cfg-if.workspace = true
 kernel.workspace = true
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
