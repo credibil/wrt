@@ -197,7 +197,7 @@ checksum = "0e050f626429857a27ddccb31e0aca21356bfa709c04041aefddac081a8f068a"
 
 [[package]]
 name = "be-postgres"
-version = "0.20.0"
+version = "0.20.1"
 dependencies = [
  "anyhow",
  "chrono",
@@ -230,7 +230,7 @@ dependencies = [
 
 [[package]]
 name = "buildgen"
-version = "0.20.0"
+version = "0.20.1"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -893,7 +893,7 @@ dependencies = [
 
 [[package]]
 name = "examples"
-version = "0.20.0"
+version = "0.20.1"
 dependencies = [
  "anyhow",
  "axum",
@@ -925,7 +925,7 @@ dependencies = [
 
 [[package]]
 name = "fabric"
-version = "0.20.0"
+version = "0.20.1"
 dependencies = [
  "anyhow",
  "axum",
@@ -1626,7 +1626,7 @@ dependencies = [
 
 [[package]]
 name = "kernel"
-version = "0.20.0"
+version = "0.20.1"
 dependencies = [
  "anyhow",
  "clap",
@@ -3638,7 +3638,7 @@ checksum = "ccf3ec651a847eb01de73ccad15eb7d99f80485de043efb2f370cd654f4ea44b"
 
 [[package]]
 name = "wasi-blobstore"
-version = "0.20.0"
+version = "0.20.1"
 dependencies = [
  "anyhow",
  "bytes",
@@ -3654,7 +3654,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-config"
-version = "0.20.0"
+version = "0.20.1"
 dependencies = [
  "anyhow",
  "kernel",
@@ -3666,7 +3666,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-http"
-version = "0.20.0"
+version = "0.20.1"
 dependencies = [
  "anyhow",
  "axum",
@@ -3697,7 +3697,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-identity"
-version = "0.20.0"
+version = "0.20.1"
 dependencies = [
  "anyhow",
  "fromenv",
@@ -3714,7 +3714,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-keyvalue"
-version = "0.20.0"
+version = "0.20.1"
 dependencies = [
  "anyhow",
  "chrono",
@@ -3732,7 +3732,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-messaging"
-version = "0.20.0"
+version = "0.20.1"
 dependencies = [
  "anyhow",
  "futures",
@@ -3750,7 +3750,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-otel"
-version = "0.20.0"
+version = "0.20.1"
 dependencies = [
  "anyhow",
  "cfg-if",
@@ -3773,7 +3773,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-otel-attr"
-version = "0.20.0"
+version = "0.20.1"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3782,7 +3782,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-sql"
-version = "0.20.0"
+version = "0.20.1"
 dependencies = [
  "anyhow",
  "base64ct",
@@ -3801,7 +3801,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-vault"
-version = "0.20.0"
+version = "0.20.1"
 dependencies = [
  "anyhow",
  "futures",
@@ -3816,7 +3816,7 @@ dependencies = [
 
 [[package]]
 name = "wasi-websockets"
-version = "0.20.0"
+version = "0.20.1"
 dependencies = [
  "anyhow",
  "credibil-error",
@@ -5019,6 +5019,6 @@ dependencies = [
 
 [[package]]
 name = "zmij"
-version = "0.1.9"
+version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d0095ecd462946aa3927d9297b63ef82fb9a5316d7a37d134eeb36e58228615a"
+checksum = "4af59da1029247450b54ba43e0b62c8e376582464bbe5504dd525fe521e7e8fd"
