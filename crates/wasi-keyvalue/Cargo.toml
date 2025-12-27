@@ -33,6 +33,8 @@ wasmtime-wasi.workspace = true
 
 # guest dependencies
 [target.'cfg(target_arch = "wasm32")'.dependencies]
+chrono = { workspace = true, features = ["serde"] }
+serde_json.workspace = true
 wit-bindgen.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
