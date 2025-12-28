@@ -96,6 +96,7 @@ credibil-otel = { version = "0.6.0", registry = "credibil" }
 
 # interally referenced crates
 buildgen = { path = "crates/buildgen", version = "0.21.0" }
+fabric = { path = "crates/fabric", version = "0.21.0", registry = "credibil" }
 kernel = { path = "crates/kernel", version = "0.21.0", registry = "credibil" }
 wasi-blobstore = { path = "crates/wasi-blobstore", version = "0.21.0", registry = "credibil" }
 wasi-config = { path = "crates/wasi-config", version = "0.21.0", registry = "credibil" }

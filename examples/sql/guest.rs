@@ -32,7 +32,7 @@ use axum::{Json, Router};
 use bytes::Bytes;
 use serde_json::{Value, json};
 use tracing::Level;
-use wasi_http::Result;
+use wasi_http::HttpResult;
 use wasi_sql::types::{Connection, DataType, FormattedValue, Statement};
 use wasi_sql::{into_json, readwrite};
 use wasip3::exports::http::handler::Guest;
@@ -54,7 +54,7 @@ impl Guest for Http {
 /// Queries all rows from the sample table.
 #[axum::debug_handler]
 #[wasi_otel::instrument]
-async fn query() -> Result<Json<Value>> {
+async fn query() -> HttpResult<Json<Value>> {
     tracing::info!("query database");
 
     let pool = Connection::open("postgres".to_string())
@@ -73,7 +73,7 @@ async fn query() -> Result<Json<Value>> {
 /// Inserts a new row into the sample table.
 #[axum::debug_handler]
 #[wasi_otel::instrument]
-async fn insert(_body: Bytes) -> Result<Json<Value>> {
+async fn insert(_body: Bytes) -> HttpResult<Json<Value>> {
     tracing::info!("insert data");
 
     let insert = "insert into mytable (feed_id, agency_id, agency_name, agency_url, agency_timezone, created_at) values ($1, $2, $3, $4, $5, $6);";

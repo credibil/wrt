@@ -23,7 +23,7 @@ use serde_json::Value;
 use tracing::Level;
 use wasi_blobstore::blobstore;
 use wasi_blobstore::types::{IncomingValue, OutgoingValue};
-use wasi_http::Result;
+use wasi_http::HttpResult;
 use wasip3::exports::http::handler::Guest;
 use wasip3::http::types::{ErrorCode, Request, Response};
 
@@ -41,7 +41,7 @@ impl Guest for Http {
 
 /// Stores and retrieves data from the blobstore.
 #[wasi_otel::instrument]
-async fn handler(body: Bytes) -> Result<Json<Value>> {
+async fn handler(body: Bytes) -> HttpResult<Json<Value>> {
     // create an outgoing value to hold the data we want to store
     let outgoing = OutgoingValue::new_outgoing_value();
     let stream = outgoing

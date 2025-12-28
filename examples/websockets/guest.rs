@@ -26,7 +26,7 @@ use anyhow::anyhow;
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use serde_json::{Value, json};
-use wasi_http::Result;
+use wasi_http::HttpResult;
 use wasi_websockets::store;
 use wasip3::exports::http::handler::Guest;
 use wasip3::http::types::{ErrorCode, Request, Response};
@@ -45,7 +45,7 @@ impl Guest for HttpGuest {
 
 /// Health check endpoint for the WebSocket server.
 #[axum::debug_handler]
-async fn get_handler() -> Result<Json<Value>> {
+async fn get_handler() -> HttpResult<Json<Value>> {
     let server = store::get_server().await.map_err(|e| anyhow!("getting websocket server: {e}"))?;
 
     let message = server.health_check().await.map_err(|e| anyhow!("health check failed: {e}"))?;
@@ -57,7 +57,7 @@ async fn get_handler() -> Result<Json<Value>> {
 
 /// Sends a message to all connected WebSocket peers.
 #[axum::debug_handler]
-async fn post_handler(body: String) -> Result<Json<Value>> {
+async fn post_handler(body: String) -> HttpResult<Json<Value>> {
     let server = store::get_server().await.map_err(|e| anyhow!("getting websocket server: {e}"))?;
 
     let client_peers =

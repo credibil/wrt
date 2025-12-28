@@ -7,6 +7,7 @@ use std::sync::Arc;
 
 use anyhow::{Context, Result, anyhow};
 use bytes::Bytes;
+use http::StatusCode;
 use http::uri::{PathAndQuery, Uri};
 use http_body_util::combinators::UnsyncBoxBody;
 use http_body_util::{BodyExt, Full};
@@ -26,22 +27,22 @@ use wasmtime_wasi_http::p3::bindings::http::types::{self as wasi, ErrorCode};
 
 type OutgoingBody = UnsyncBoxBody<Bytes, anyhow::Error>;
 
-const DEF_HTTP_URL: &str = "0.0.0.0:8080";
+const HTTP_ADDR: &str = "0.0.0.0:8080";
 
 pub async fn serve<S>(state: &S) -> Result<()>
 where
     S: State,
     S::StoreCtx: WasiHttpView,
 {
-    let addr = env::var("HTTP_ADDR").unwrap_or_else(|_| DEF_HTTP_URL.into());
-    let listener = TcpListener::bind(&addr).await?;
-    tracing::info!("http server listening on: {}", listener.local_addr()?);
+    let component = env::var("COMPONENT").unwrap_or_else(|_| "unknown".into());
+    let addr = env::var("HTTP_ADDR").unwrap_or_else(|_| HTTP_ADDR.into());
 
-    let service = std::env::var("COMPONENT").unwrap_or_else(|_| "unknown".into());
+    let listener = TcpListener::bind(&addr).await?;
+    tracing::info!("{component} http server listening on: {addr}");
 
     let handler = Handler {
         state: Arc::new(state.clone()),
-        service,
+        component,
     };
 
     // listen for requests until terminated
@@ -63,27 +64,14 @@ where
                         async move {
                             let response =
                                 handler.handle(request).await.unwrap_or_else(|_e| internal_error());
-                            match response.status().as_u16() {
-                                500..=599 => {
-                                    tracing::error!(
-                                        monotonic_counter.application_errors = 1,
-                                        service = %handler.service,
-                                        "server error response: {:?}", response
-                                    );
-                                }
-                                400..=499 => {
-                                    tracing::warn!(
-                                        monotonic_counter.client_errors = 1,
-                                        service = %handler.service,
-                                        "client error response: {:?}", response);
-                                }
-                                _ => {
-                                    tracing::info!(
-                                        monotonic_counter.successful_requests = 1,
-                                        service = %handler.service,
-                                        "response: {:?}", response
-                                    );
-                                }
+
+                            // track server error responses
+                            if response.status() >= StatusCode::INTERNAL_SERVER_ERROR {
+                                tracing::error!(
+                                    monotonic_counter.processing_errors = 1,
+                                    service = %handler.component,
+                                    error = format!("{response:?}"),
+                                );
                             }
                             Ok::<_, Infallible>(response)
                         }
@@ -104,7 +92,7 @@ where
     S::StoreCtx: WasiHttpView,
 {
     state: Arc<S>,
-    service: String,
+    component: String,
 }
 
 impl<S> Handler<S>

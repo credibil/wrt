@@ -29,7 +29,7 @@ use opentelemetry::{KeyValue, global};
 use serde_json::{Value, json};
 use tower_http::cors::{Any, CorsLayer};
 use tracing::Level;
-use wasi_http::Result;
+use wasi_http::HttpResult;
 use wasip3::exports::http::handler::Guest;
 use wasip3::http::types::{ErrorCode, Request, Response};
 
@@ -88,7 +88,7 @@ impl Guest for Http {
 /// Simple JSON echo handler.
 #[axum::debug_handler]
 #[wasi_otel::instrument]
-async fn handler(Json(body): Json<Value>) -> Result<Json<Value>> {
+async fn handler(Json(body): Json<Value>) -> HttpResult<Json<Value>> {
     tracing::info!("handling request: {:?}", body);
     Ok(Json(json!({
         "message": "Hello, World!",
@@ -97,6 +97,6 @@ async fn handler(Json(body): Json<Value>) -> Result<Json<Value>> {
 }
 
 /// Handles CORS preflight OPTIONS requests.
-async fn handle_options() -> Result<()> {
+async fn handle_options() -> HttpResult<()> {
     Ok(())
 }

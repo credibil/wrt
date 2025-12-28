@@ -29,7 +29,7 @@ use axum::routing::post;
 use axum::{Json, Router};
 use bytes::Bytes;
 use serde_json::{Value, json};
-use wasi_http::Result;
+use wasi_http::HttpResult;
 use wasi_messaging::types::{Client, Error, Message};
 use wasi_messaging::{producer, request_reply};
 use wasip3::exports::http::handler::Guest;
@@ -53,7 +53,7 @@ impl Guest for Http {
 }
 
 /// Publishes a message using the pub-sub pattern.
-async fn pub_sub(Json(body): Json<Value>) -> Result<Json<Value>> {
+async fn pub_sub(Json(body): Json<Value>) -> HttpResult<Json<Value>> {
     tracing::debug!("sending message to topic 'a'");
 
     let client = Client::connect("default".to_string()).await.expect("should connect");

@@ -19,6 +19,7 @@ axum.workspace = true
 bytes.workspace = true
 http.workspace = true
 http-body.workspace = true
+http-body-util.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 thiserror = "2.0"

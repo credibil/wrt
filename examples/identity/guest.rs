@@ -18,7 +18,7 @@ use axum::routing::get;
 use axum::{Json, Router};
 use serde_json::{Value, json};
 use tracing::Level;
-use wasi_http::Result;
+use wasi_http::HttpResult;
 use wasi_identity::credentials::get_identity;
 use wasip3::exports::http::handler::Guest;
 use wasip3::http::types::{ErrorCode, Request, Response};
@@ -40,7 +40,7 @@ impl Guest for Http {
 
 /// Obtains an access token from the identity provider.
 #[wasi_otel::instrument]
-async fn handler() -> Result<Json<Value>> {
+async fn handler() -> HttpResult<Json<Value>> {
     let identity = block_on(get_identity("identity".to_string())).context("getting identity")?;
 
     let scopes = vec![SCOPE.to_string()];

@@ -12,7 +12,7 @@ use axum::routing::{get, post};
 use axum::{Json, Router};
 use serde_json::{Value, json};
 use tracing::Level;
-use wasi_http::Result;
+use wasi_http::HttpResult;
 use wasip3::exports::http::handler::Guest;
 use wasip3::http::types::{ErrorCode, Request, Response};
 
@@ -30,7 +30,7 @@ impl Guest for HttpGuest {
 
 /// GET request handler.
 #[wasi_otel::instrument]
-async fn echo_get(Json(body): Json<Value>) -> Result<Json<Value>> {
+async fn echo_get(Json(body): Json<Value>) -> HttpResult<Json<Value>> {
     Ok(Json(json!({
         "message": "Hello from echo_get!",
         "request": body
@@ -39,7 +39,7 @@ async fn echo_get(Json(body): Json<Value>) -> Result<Json<Value>> {
 
 /// POST request handler.
 #[wasi_otel::instrument]
-async fn echo_post(Json(body): Json<Value>) -> Result<Json<Value>> {
+async fn echo_post(Json(body): Json<Value>) -> HttpResult<Json<Value>> {
     Ok(Json(json!({
         "message": "Hello from echo_post!",
         "request": body
