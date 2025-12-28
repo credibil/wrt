@@ -21,14 +21,13 @@
 
 mod request;
 mod response;
+mod router;
 
 use std::fmt::Debug;
-use std::future::{Future, IntoFuture};
-use std::marker::PhantomData;
-use std::pin::Pin;
 
 pub use self::request::*;
 pub use self::response::*;
+use self::router::{NoOwner, Router};
 
 pub trait Provider: Send + Sync {}
 
@@ -63,142 +62,25 @@ impl<P: Provider> Client<P> {
     }
 }
 
-/// Request router.
-///
-/// The router is used to route a request to the appropriate handler with the
-/// owner and headers set.
-///
-/// # Example Usage
-///
-/// ```rust,ignore
-/// let router = Router::new(client, body);
-/// let response = router.owner("alice").headers(headers).handle().await;
-/// ```
-#[derive(Debug)]
-pub struct Router<'a, P, O, H, B, U, E>
-where
-    P: Provider,
-    H: Headers,
-    B: Body,
-{
-    client: &'a Client<P>,
-    owner: O,
-    request: Request<B, H>,
-    _phantom: PhantomData<fn() -> (U, E)>,
-}
+/// The `Headers` trait is used to restrict the types able to implement
+/// request headers.
+pub trait Headers: Clone + Debug + Send + Sync {}
 
-/// The router has no owner set.
-#[doc(hidden)]
-pub struct NoOwner;
-/// The router has an owner set.
-#[doc(hidden)]
-pub struct OwnerSet<'a>(&'a str);
+/// Implement empty headers for use by handlers that do not require headers.
+#[derive(Clone, Debug)]
+pub struct NoHeaders;
+impl Headers for NoHeaders {}
 
-impl<'a, P, B, U, E> Router<'a, P, NoOwner, NoHeaders, B, U, E>
-where
-    P: Provider,
-    B: Body,
-    U: Body,
-{
-    /// Create a new `Router` instance.
-    #[must_use]
-    const fn new(client: &'a Client<P>, body: B) -> Self {
+/// The `Body` trait is used to restrict the types able to implement
+/// request body. It is implemented by all `xxxRequest` types.
+pub trait Body: Clone + Debug + Send + Sync {}
+impl<T> Body for T where T: Clone + Debug + Send + Sync {}
+
+impl<B: Body> From<B> for Request<B> {
+    fn from(body: B) -> Self {
         Self {
-            client,
-            owner: NoOwner,
-            request: Request {
-                body,
-                headers: NoHeaders,
-            },
-            _phantom: PhantomData,
+            body,
+            headers: NoHeaders,
         }
-    }
-}
-
-// No owner set.
-impl<'a, P, H, B, U, E> Router<'a, P, NoOwner, H, B, U, E>
-where
-    P: Provider,
-    H: Headers,
-    B: Body,
-    U: Body,
-{
-    /// Set the owner (tenant).
-    #[must_use]
-    pub fn owner<'o>(self, owner: &'o str) -> Router<'a, P, OwnerSet<'o>, H, B, U, E> {
-        Router {
-            client: self.client,
-            owner: OwnerSet(owner),
-            request: self.request,
-            _phantom: PhantomData,
-        }
-    }
-}
-
-/// [`NoHeaders`] headers set.
-impl<'a, P, O, B, U, E> Router<'a, P, O, NoHeaders, B, U, E>
-where
-    P: Provider,
-    B: Body,
-    U: Body,
-{
-    /// Set request headers.
-    #[must_use]
-    pub fn headers<H: Headers>(self, headers: H) -> Router<'a, P, O, H, B, U, E> {
-        Router {
-            client: self.client,
-            owner: self.owner,
-            request: Request {
-                body: self.request.body,
-                headers,
-            },
-            _phantom: PhantomData,
-        }
-    }
-}
-
-// Owner set, maybe headers set: request can be routed to it's handler.
-impl<'a, P, H, B, U, E> Router<'a, P, OwnerSet<'a>, H, B, U, E>
-where
-    P: Provider,
-    H: Headers + 'a,
-    B: Body + 'a,
-    U: Body + 'a,
-    E: Send,
-    Request<B, H>: Handler<U, P, Error = E>,
-{
-    /// Handle the request by routing it to the appropriate handler.
-    ///
-    /// # Constraints
-    ///
-    /// This method requires that `Request<B, H>` implements `Handler<U, P, Error = E>`.
-    /// If you see an error about missing trait implementations, ensure your request
-    /// type has the appropriate handler implementation.
-    ///
-    /// # Errors
-    ///
-    /// Returns the error from the underlying handler on failure.
-    #[inline]
-    pub async fn handle(self) -> Result<Response<U>, E> {
-        self.request.handle(self.owner.0, &self.client.provider).await
-    }
-}
-
-// Implement [`IntoFuture`] so that the request can be awaited directly (without
-// needing to call the `handle` method).
-impl<'a, P, H, B, U, E> IntoFuture for Router<'a, P, OwnerSet<'a>, H, B, U, E>
-where
-    P: Provider,
-    H: Headers + 'a,
-    B: Body + 'a,
-    U: Body + 'a,
-    E: Send + 'a,
-    Request<B, H>: Handler<U, P, Error = E>,
-{
-    type IntoFuture = Pin<Box<dyn Future<Output = Self::Output> + Send + 'a>>;
-    type Output = Result<Response<U>, E>;
-
-    fn into_future(self) -> Self::IntoFuture {
-        Box::pin(self.handle())
     }
 }

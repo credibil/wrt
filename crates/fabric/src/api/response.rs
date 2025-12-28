@@ -1,10 +1,9 @@
 use std::ops::Deref;
 
 use bytes::Bytes;
-use http::{StatusCode, header};
-use serde::Serialize;
+use http::StatusCode;
 
-use crate::api::request::{Body, Headers, NoHeaders};
+use crate::api::{Body, Headers, NoHeaders};
 
 /// Top-level response data structure common to all handlers.
 #[derive(Clone, Debug)]
@@ -58,39 +57,39 @@ impl<B: Body> Deref for Response<B> {
 }
 
 /// Trait for converting a `Result` into an HTTP response.
-pub trait IntoHttp {
-    /// The body type of the HTTP response.
-    type Body: http_body::Body<Data = Bytes> + Send + 'static;
-
-    /// Convert into an HTTP response.
-    fn into_http(self) -> http::Response<Self::Body>;
-}
-
-impl<B, E> IntoHttp for Result<Response<B>, E>
+pub trait IntoHttp<B>
 where
-    B: Body + Serialize,
-    E: Serialize,
+    B: http_body::Body<Data = Bytes> + Send + 'static,
 {
-    type Body = http_body_util::Full<Bytes>;
-
-    /// Create a new reply with the given status code and body.
-    fn into_http(self) -> http::Response<Self::Body> {
-        let result = match self {
-            Ok(r) => {
-                let body = serde_json::to_vec(&r.body).unwrap_or_default();
-                http::Response::builder()
-                    .status(r.status)
-                    .header(header::CONTENT_TYPE, "application/json")
-                    .body(Self::Body::from(body))
-            }
-            Err(e) => {
-                let body = serde_json::to_vec(&e).unwrap_or_default();
-                http::Response::builder()
-                    .status(StatusCode::BAD_REQUEST)
-                    .header(header::CONTENT_TYPE, "application/json")
-                    .body(Self::Body::from(body))
-            }
-        };
-        result.unwrap_or_default()
-    }
+    /// Convert into an HTTP response.
+    fn into_http(self) -> http::Response<B>;
 }
+
+// impl<B, E> IntoHttp for Result<Response<B>, E>
+// where
+//     B: Body + Serialize,
+//     E: Serialize,
+// {
+//     type Body = http_body_util::Full<Bytes>;
+
+//     /// Create a new reply with the given status code and body.
+//     fn into_http(self) -> http::Response<Self::Body> {
+//         let result = match self {
+//             Ok(r) => {
+//                 let body = serde_json::to_vec(&r.body).unwrap_or_default();
+//                 http::Response::builder()
+//                     .status(r.status)
+//                     .header(header::CONTENT_TYPE, "application/json")
+//                     .body(Self::Body::from(body))
+//             }
+//             Err(e) => {
+//                 let body = serde_json::to_vec(&e).unwrap_or_default();
+//                 http::Response::builder()
+//                     .status(StatusCode::BAD_REQUEST)
+//                     .header(header::CONTENT_TYPE, "application/json")
+//                     .body(Self::Body::from(body))
+//             }
+//         };
+//         result.unwrap_or_default()
+//     }
+// }

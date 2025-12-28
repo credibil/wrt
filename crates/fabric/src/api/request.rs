@@ -22,7 +22,7 @@
 use std::fmt::Debug;
 use std::future::Future;
 
-use crate::api::{Provider, Response};
+use crate::api::{Body, Headers, NoHeaders, Provider, Response};
 
 /// A request to process.
 #[derive(Clone, Debug)]
@@ -38,28 +38,7 @@ where
     pub body: B,
 }
 
-/// The `Headers` trait is used to restrict the types able to implement
-/// request headers.
-pub trait Headers: Clone + Debug + Send + Sync {}
 
-/// Implement empty headers for use by handlers that do not require headers.
-#[derive(Clone, Debug)]
-pub struct NoHeaders;
-impl Headers for NoHeaders {}
-
-/// The `Body` trait is used to restrict the types able to implement
-/// request body. It is implemented by all `xxxRequest` types.
-pub trait Body: Clone + Debug + Send + Sync {}
-impl<T> Body for T where T: Clone + Debug + Send + Sync {}
-
-impl<B: Body> From<B> for Request<B> {
-    fn from(body: B) -> Self {
-        Self {
-            body,
-            headers: NoHeaders,
-        }
-    }
-}
 
 /// Request handler.
 ///
