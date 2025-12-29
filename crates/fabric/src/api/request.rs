@@ -44,8 +44,8 @@ where
 /// requests so they can be handled by [`handle`] method.
 pub trait Handler<B, P>
 where
-    P: Provider,
     B: Body,
+    P: Provider,
 {
     /// The error type returned by the handler.
     type Error;
