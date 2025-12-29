@@ -38,8 +38,6 @@ where
     pub body: B,
 }
 
-
-
 /// Request handler.
 ///
 /// The primary role of this trait is to provide a common interface for

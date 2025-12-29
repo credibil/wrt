@@ -24,10 +24,9 @@ use std::future::{Future, IntoFuture};
 use std::marker::PhantomData;
 use std::pin::Pin;
 
-use crate::api::Client;
 use crate::api::request::{Handler, Request};
 use crate::api::response::Response;
-use crate::api::{Body, Headers, NoHeaders, Provider};
+use crate::api::{Body, Client, Headers, NoHeaders, Provider};
 
 /// Request router.
 ///
