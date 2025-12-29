@@ -58,7 +58,7 @@ where
 pub struct NoOwner;
 /// The router has an owner set.
 #[doc(hidden)]
-pub struct OwnerSet<'a>(&'a str);
+pub struct OwnerSet(String);
 
 impl<'a, P, B, U, E> Router<'a, P, NoOwner, NoHeaders, B, U, E>
 where
@@ -91,10 +91,10 @@ where
 {
     /// Set the owner (tenant).
     #[must_use]
-    pub fn owner<'o>(self, owner: &'o str) -> Router<'a, P, OwnerSet<'o>, H, B, U, E> {
+    pub fn owner(self, owner: impl Into<String>) -> Router<'a, P, OwnerSet, H, B, U, E> {
         Router {
             client: self.client,
-            owner: OwnerSet(owner),
+            owner: OwnerSet(owner.into()),
             request: self.request,
             _phantom: PhantomData,
         }
@@ -124,7 +124,7 @@ where
 }
 
 // Owner set, maybe headers set: request can be routed to it's handler.
-impl<'a, P, H, B, U, E> Router<'a, P, OwnerSet<'a>, H, B, U, E>
+impl<'a, P, H, B, U, E> Router<'a, P, OwnerSet, H, B, U, E>
 where
     P: Provider,
     H: Headers + 'a,
@@ -146,13 +146,13 @@ where
     /// Returns the error from the underlying handler on failure.
     #[inline]
     pub async fn handle(self) -> Result<Response<U>, E> {
-        self.request.handle(self.owner.0, &self.client.provider).await
+        self.request.handle(&self.owner.0, &self.client.provider).await
     }
 }
 
 // Implement [`IntoFuture`] so that the request can be awaited directly (without
 // needing to call the `handle` method).
-impl<'a, P, H, B, U, E> IntoFuture for Router<'a, P, OwnerSet<'a>, H, B, U, E>
+impl<'a, P, H, B, U, E> IntoFuture for Router<'a, P, OwnerSet, H, B, U, E>
 where
     P: Provider,
     H: Headers + 'a,
