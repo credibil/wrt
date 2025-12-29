@@ -41,13 +41,13 @@ use crate::api::{Body, Headers, NoHeaders, Provider};
 /// let response = router.owner("alice").headers(headers).handle().await;
 /// ```
 #[derive(Debug)]
-pub struct Router<'a, P, O, H, B, U, E>
+pub struct Router<P, O, H, B, U, E>
 where
     P: Provider,
     H: Headers,
     B: Body,
 {
-    client: &'a Client<P>,
+    client: Client<P>,
     owner: O,
     request: Request<B, H>,
     _phantom: PhantomData<fn() -> (U, E)>,
@@ -60,7 +60,7 @@ pub struct NoOwner;
 #[doc(hidden)]
 pub struct OwnerSet(String);
 
-impl<'a, P, B, U, E> Router<'a, P, NoOwner, NoHeaders, B, U, E>
+impl<P, B, U, E> Router<P, NoOwner, NoHeaders, B, U, E>
 where
     P: Provider,
     B: Body,
@@ -68,7 +68,7 @@ where
 {
     /// Create a new `Router` instance.
     #[must_use]
-    pub const fn new(client: &'a Client<P>, body: B) -> Self {
+    pub fn new(client: Client<P>, body: B) -> Self {
         Self {
             client,
             owner: NoOwner,
@@ -82,7 +82,7 @@ where
 }
 
 // No owner set.
-impl<'a, P, H, B, U, E> Router<'a, P, NoOwner, H, B, U, E>
+impl<P, H, B, U, E> Router<P, NoOwner, H, B, U, E>
 where
     P: Provider,
     H: Headers,
@@ -91,7 +91,7 @@ where
 {
     /// Set the owner (tenant).
     #[must_use]
-    pub fn owner(self, owner: impl Into<String>) -> Router<'a, P, OwnerSet, H, B, U, E> {
+    pub fn owner(self, owner: impl Into<String>) -> Router<P, OwnerSet, H, B, U, E> {
         Router {
             client: self.client,
             owner: OwnerSet(owner.into()),
@@ -102,7 +102,7 @@ where
 }
 
 /// [`NoHeaders`] headers set.
-impl<'a, P, O, B, U, E> Router<'a, P, O, NoHeaders, B, U, E>
+impl<P, O, B, U, E> Router<P, O, NoHeaders, B, U, E>
 where
     P: Provider,
     B: Body,
@@ -110,7 +110,7 @@ where
 {
     /// Set request headers.
     #[must_use]
-    pub fn headers<H: Headers>(self, headers: H) -> Router<'a, P, O, H, B, U, E> {
+    pub fn headers<H: Headers>(self, headers: H) -> Router<P, O, H, B, U, E> {
         Router {
             client: self.client,
             owner: self.owner,
@@ -124,12 +124,12 @@ where
 }
 
 // Owner set, maybe headers set: request can be routed to it's handler.
-impl<'a, P, H, B, U, E> Router<'a, P, OwnerSet, H, B, U, E>
+impl<P, H, B, U, E> Router<P, OwnerSet, H, B, U, E>
 where
     P: Provider,
-    H: Headers + 'a,
-    B: Body + 'a,
-    U: Body + 'a,
+    H: Headers,
+    B: Body,
+    U: Body,
     E: Send,
     Request<B, H>: Handler<U, P, Error = E>,
 {
@@ -152,16 +152,16 @@ where
 
 // Implement [`IntoFuture`] so that the request can be awaited directly (without
 // needing to call the `handle` method).
-impl<'a, P, H, B, U, E> IntoFuture for Router<'a, P, OwnerSet, H, B, U, E>
+impl<P, H, B, U, E> IntoFuture for Router<P, OwnerSet, H, B, U, E>
 where
-    P: Provider,
-    H: Headers + 'a,
-    B: Body + 'a,
-    U: Body + 'a,
-    E: Send + 'a,
+    P: Provider + 'static,
+    H: Headers + 'static,
+    B: Body + 'static,
+    U: Body + 'static,
+    E: Send + 'static,
     Request<B, H>: Handler<U, P, Error = E>,
 {
-    type IntoFuture = Pin<Box<dyn Future<Output = Self::Output> + Send + 'a>>;
+    type IntoFuture = Pin<Box<dyn Future<Output = Self::Output> + Send + 'static>>;
     type Output = Result<Response<U>, E>;
 
     fn into_future(self) -> Self::IntoFuture {

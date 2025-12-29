@@ -24,6 +24,7 @@ mod response;
 mod router;
 
 use std::fmt::Debug;
+use std::sync::Arc;
 
 pub use self::request::*;
 pub use self::response::*;
@@ -38,27 +39,35 @@ impl<T> Provider for T where T: Send + Sync {}
 /// The client is the main entry point for making API requests. It holds
 /// the provider configuration and provides methods to create the request
 /// router.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct Client<P: Provider> {
     /// The provider to use while handling of the request.
-    provider: P,
+    provider: Arc<P>,
+}
+
+impl<P: Provider> Clone for Client<P> {
+    fn clone(&self) -> Self {
+        Self {
+            provider: Arc::clone(&self.provider),
+        }
+    }
 }
 
 impl<P: Provider> Client<P> {
     /// Create a new `Client`.
     #[must_use]
-    pub const fn new(provider: P) -> Self {
-        Self { provider }
+    pub fn new(provider: P) -> Self {
+        Self {
+            provider: Arc::new(provider),
+        }
     }
 }
 
 impl<P: Provider> Client<P> {
     /// Create a new [`Router`] with no headers.
     #[must_use]
-    pub const fn request<B: Body, U: Body, E>(
-        &'_ self, body: B,
-    ) -> Router<'_, P, NoOwner, NoHeaders, B, U, E> {
-        Router::new(self, body)
+    pub fn request<B: Body, U: Body, E>(&self, body: B) -> Router<P, NoOwner, NoHeaders, B, U, E> {
+        Router::new(self.clone(), body)
     }
 }
 
