@@ -74,7 +74,18 @@ impl Headers for NoHeaders {}
 /// The `Body` trait is used to restrict the types able to implement
 /// request body. It is implemented by all `xxxRequest` types.
 pub trait Body: Clone + Debug + Send + Sync {}
-impl<T> Body for T where T: Clone + Debug + Send + Sync {}
+impl<T> Body for T
+where
+    T: Clone + Debug + Send + Sync,
+{
+    // fn from_bytes(bytes: &[u8]) -> Result<Self> {
+    //     serde_json::from_slice(bytes)
+    // }
+
+    // fn to_bytes(self) -> Vec<u8> {
+    //     serde_json::to_vec(&self).unwrap()
+    // }
+}
 
 impl<B: Body> From<B> for Request<B> {
     fn from(body: B) -> Self {
