@@ -21,14 +21,12 @@
 
 mod request;
 mod response;
-mod router;
 
 use std::fmt::Debug;
 use std::sync::Arc;
 
 pub use self::request::*;
 pub use self::response::*;
-use self::router::{NoOwner, Router};
 
 pub trait Provider: Send + Sync {}
 
@@ -64,10 +62,12 @@ impl<P: Provider> Client<P> {
 }
 
 impl<P: Provider> Client<P> {
-    /// Create a new [`Router`] with no headers.
+    /// Create a new [`RequestHandler`] with no headers.
     #[must_use]
-    pub fn request<B: Body, U: Body, E>(&self, body: B) -> Router<P, NoOwner, NoHeaders, B, U, E> {
-        Router::new(self.clone(), body)
+    pub fn request<B: Body, U: Body, E>(
+        &self, body: B,
+    ) -> RequestHandler<P, NoOwner, NoHeaders, B, U, E> {
+        RequestHandler::new(self.clone(), body)
     }
 }
 
