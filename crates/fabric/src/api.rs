@@ -38,35 +38,50 @@ impl<T> Provider for T where T: Send + Sync {}
 /// the provider configuration and provides methods to create the request
 /// router.
 #[derive(Debug)]
-pub struct Client<P: Provider> {
+pub struct Client<O, P: Provider> {
+    owner: O,
+
     /// The provider to use while handling of the request.
     provider: Arc<P>,
 }
 
-impl<P: Provider> Clone for Client<P> {
+/// The router has no owner set.
+#[derive(Clone, Debug)]
+#[doc(hidden)]
+pub struct NoOwner;
+
+/// The router has an owner set.
+#[derive(Clone, Debug)]
+#[doc(hidden)]
+pub struct OwnerSet(String);
+
+
+impl<O: Clone, P: Provider> Clone for Client<O, P> {
     fn clone(&self) -> Self {
         Self {
+            owner: self.owner.clone(),
             provider: Arc::clone(&self.provider),
         }
     }
 }
 
-impl<P: Provider> Client<P> {
+impl<P: Provider> Client<NoOwner, P> {
     /// Create a new `Client`.
     #[must_use]
-    pub fn new(provider: P) -> Self {
-        Self {
+    pub fn new(owner: impl Into<String>, provider: P) -> Client<OwnerSet, P> {
+        Client {
+            owner: OwnerSet(owner.into()),
             provider: Arc::new(provider),
         }
     }
 }
 
-impl<P: Provider> Client<P> {
+impl<P: Provider> Client<OwnerSet, P> {
     /// Create a new [`RequestHandler`] with no headers.
     #[must_use]
     pub fn request<B: Body + Handler<P, Output = U, Error = E>, U: Body, E>(
         &self, body: B,
-    ) -> RequestHandler<P, NoOwner, NoHeaders, B> {
+    ) -> RequestHandler<P, NoHeaders, B> {
         RequestHandler::new(self.clone(), body)
     }
 }

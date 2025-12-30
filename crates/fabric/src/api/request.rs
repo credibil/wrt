@@ -23,6 +23,7 @@ use std::fmt::Debug;
 use std::future::{Future, IntoFuture};
 use std::pin::Pin;
 
+use crate::OwnerSet;
 use crate::api::response::Response;
 use crate::api::{Body, Client, Headers, NoHeaders, Provider};
 
@@ -55,81 +56,52 @@ pub trait Handler<P: Provider> {
 /// let response = router.owner("alice").headers(headers).handle().await;
 /// ```
 #[derive(Debug)]
-pub struct RequestHandler<P, O, H, R>
+pub struct RequestHandler<P, H, R>
 where
     P: Provider,
     H: Headers,
     R: Handler<P>,
 {
-    client: Client<P>,
-    owner: O,
+    client: Client<OwnerSet, P>,
     request: R,
     headers: H,
 }
 
-/// The router has no owner set.
-#[doc(hidden)]
-pub struct NoOwner;
-/// The router has an owner set.
-#[doc(hidden)]
-pub struct OwnerSet(String);
-
-impl<P, R> RequestHandler<P, NoOwner, NoHeaders, R>
+impl<P, R> RequestHandler<P, NoHeaders, R>
 where
     P: Provider,
     R: Handler<P>,
 {
     /// Create a new `RequestHandler` instance.
     #[must_use]
-    pub const fn new(client: Client<P>, request: R) -> Self {
+    pub const fn new(client: Client<OwnerSet, P>, request: R) -> Self {
         Self {
             client,
-            owner: NoOwner,
             request,
             headers: NoHeaders,
         }
     }
 }
 
-// No owner set.
-impl<P, H, R> RequestHandler<P, NoOwner, H, R>
-where
-    P: Provider,
-    H: Headers,
-    R: Handler<P>,
-{
-    /// Set the owner (tenant).
-    #[must_use]
-    pub fn owner(self, owner: impl Into<String>) -> RequestHandler<P, OwnerSet, H, R> {
-        RequestHandler {
-            client: self.client,
-            owner: OwnerSet(owner.into()),
-            request: self.request,
-            headers: self.headers,
-        }
-    }
-}
-
 /// [`NoHeaders`] headers set.
-impl<P, O, R> RequestHandler<P, O, NoHeaders, R>
+impl<P, R> RequestHandler<P, NoHeaders, R>
 where
     P: Provider,
     R: Handler<P>,
 {
     /// Set request headers.
     #[must_use]
-    pub fn headers<H: Headers>(self, headers: H) -> RequestHandler<P, O, H, R> {
+    pub fn headers<H: Headers>(self, headers: H) -> RequestHandler<P, H, R> {
         RequestHandler {
             client: self.client,
-            owner: self.owner,
             request: self.request,
             headers,
         }
     }
 }
 
-// Owner set, maybe headers set: request can be routed to it's handler.
-impl<P, H, R> RequestHandler<P, OwnerSet, H, R>
+// Route request to it's handler.
+impl<P, H, R> RequestHandler<P, H, R>
 where
     P: Provider,
     H: Headers,
@@ -152,13 +124,13 @@ where
         R::Output: Body,
         R::Error: Send,
     {
-        self.request.handle(&self.owner.0, &self.client.provider).await
+        self.request.handle(&self.client.owner.0, &self.client.provider).await
     }
 }
 
 // Implement [`IntoFuture`] so that the request can be awaited directly (without
 // needing to call the `handle` method).
-impl<P, H, R> IntoFuture for RequestHandler<P, OwnerSet, H, R>
+impl<P, H, R> IntoFuture for RequestHandler<P, H, R>
 where
     P: Provider + 'static,
     H: Headers + 'static,
