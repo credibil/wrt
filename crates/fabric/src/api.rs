@@ -38,25 +38,14 @@ impl<T> Provider for T where T: Send + Sync {}
 /// the provider configuration and provides methods to create the request
 /// router.
 #[derive(Debug)]
-pub struct Client<O, P: Provider> {
-    owner: O,
+pub struct Client<P: Provider> {
+    owner: String,
 
     /// The provider to use while handling of the request.
     provider: Arc<P>,
 }
 
-/// The router has no owner set.
-#[derive(Clone, Debug)]
-#[doc(hidden)]
-pub struct NoOwner;
-
-/// The router has an owner set.
-#[derive(Clone, Debug)]
-#[doc(hidden)]
-pub struct OwnerSet(String);
-
-
-impl<O: Clone, P: Provider> Clone for Client<O, P> {
+impl<P: Provider> Clone for Client<P> {
     fn clone(&self) -> Self {
         Self {
             owner: self.owner.clone(),
@@ -65,18 +54,18 @@ impl<O: Clone, P: Provider> Clone for Client<O, P> {
     }
 }
 
-impl<P: Provider> Client<NoOwner, P> {
+impl<P: Provider> Client<P> {
     /// Create a new `Client`.
     #[must_use]
-    pub fn new(owner: impl Into<String>, provider: P) -> Client<OwnerSet, P> {
-        Client {
-            owner: OwnerSet(owner.into()),
+    pub fn new(owner: impl Into<String>, provider: P) -> Self {
+        Self {
+            owner: owner.into(),
             provider: Arc::new(provider),
         }
     }
 }
 
-impl<P: Provider> Client<OwnerSet, P> {
+impl<P: Provider> Client<P> {
     /// Create a new [`RequestHandler`] with no headers.
     #[must_use]
     pub fn request<B: Body + Handler<P, Output = U, Error = E>, U: Body, E>(

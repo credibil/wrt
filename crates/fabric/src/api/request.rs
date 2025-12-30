@@ -23,7 +23,6 @@ use std::fmt::Debug;
 use std::future::{Future, IntoFuture};
 use std::pin::Pin;
 
-use crate::OwnerSet;
 use crate::api::response::Response;
 use crate::api::{Body, Client, Headers, NoHeaders, Provider};
 
@@ -62,7 +61,7 @@ where
     H: Headers,
     R: Handler<P>,
 {
-    client: Client<OwnerSet, P>,
+    client: Client<P>,
     request: R,
     headers: H,
 }
@@ -74,7 +73,7 @@ where
 {
     /// Create a new `RequestHandler` instance.
     #[must_use]
-    pub const fn new(client: Client<OwnerSet, P>, request: R) -> Self {
+    pub const fn new(client: Client<P>, request: R) -> Self {
         Self {
             client,
             request,
@@ -124,7 +123,7 @@ where
         R::Output: Body,
         R::Error: Send,
     {
-        self.request.handle(&self.client.owner.0, &self.client.provider).await
+        self.request.handle(&self.client.owner, &self.client.provider).await
     }
 }
 
