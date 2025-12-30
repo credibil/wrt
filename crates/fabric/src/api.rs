@@ -72,16 +72,16 @@ impl Client<NoProvider> {
     }
 }
 
-impl<P: Provider> Client<Arc<P>> {
-    /// Create a new `Client` by setting the owner and provider.
-    #[must_use]
-    pub fn new(owner: impl Into<String>, provider: P) -> Self {
-        Self {
-            owner: owner.into(),
-            provider: Arc::new(provider),
-        }
-    }
-}
+// impl<P: Provider> Client<Arc<P>> {
+//     /// Create a new `Client` by setting the owner and provider.
+//     #[must_use]
+//     pub fn new(owner: impl Into<String>, provider: P) -> Self {
+//         Self {
+//             owner: owner.into(),
+//             provider: Arc::new(provider),
+//         }
+//     }
+// }
 
 impl<P: Provider> Client<Arc<P>> {
     /// Create a new [`RequestHandler`] with no headers.

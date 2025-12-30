@@ -28,6 +28,22 @@ use std::sync::Arc;
 use crate::api::response::Response;
 use crate::api::{Body, Client, Headers, NoHeaders, Provider};
 
+/// Request-scoped context passed to [`Handler::handle`].
+///
+/// Bundles common request inputs (owner, provider, headers) into a single
+/// parameter, making handler signatures more ergonomic and easier to extend.
+#[derive(Clone, Copy, Debug)]
+pub struct Context<'a, P: Provider, H: Headers> {
+    /// The owning tenant / namespace for the request.
+    pub owner: &'a str,
+
+    /// The provider implementation used to fulfill the request.
+    pub provider: &'a P,
+
+    /// Request headers (typed).
+    pub headers: &'a H,
+}
+
 /// Request handler.
 ///
 /// The primary role of this trait is to provide a common interface for
@@ -40,8 +56,8 @@ pub trait Handler<P: Provider> {
     type Error: Error + Send;
 
     /// Routes the message to the concrete handler used to process the message.
-    fn handle(
-        self, owner: &str, provider: &P,
+    fn handle<H: Headers>(
+        self, ctx: Context<P, H>,
     ) -> impl Future<Output = Result<Response<Self::Output>, Self::Error>> + Send;
 
     // fn handle_with_headers<H: Headers>(
@@ -116,9 +132,9 @@ where
     ///
     /// # Constraints
     ///
-    /// This method requires that `Request<R, H>` implements `Handler<U, P, Error = E>`.
-    /// If you see an error about missing trait implementations, ensure your request
-    /// type has the appropriate handler implementation.
+    /// This method requires that `R` implements [`Handler<P>`].
+    /// If you see an error about missing trait implementations, ensure your request type
+    /// has the appropriate handler implementation.
     ///
     /// # Errors
     ///
@@ -129,7 +145,12 @@ where
         R::Output: Body,
         R::Error: Send,
     {
-        self.request.handle(&self.client.owner, &self.client.provider).await
+        let ctx = Context {
+            owner: &self.client.owner,
+            provider: &*self.client.provider,
+            headers: &self.headers,
+        };
+        self.request.handle(ctx).await
     }
 }
 
