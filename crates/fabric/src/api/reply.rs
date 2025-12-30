@@ -3,6 +3,8 @@ use http::{StatusCode, header};
 use std::fmt::Debug;
 use std::ops::Deref;
 
+use anyhow::Result;
+use http::HeaderValue;
 use http_body_util::Full;
 
 use crate::api::{Body, Headers, NoHeaders};
@@ -110,27 +112,51 @@ pub trait IntoHttp {
 /// Trait for converting a `Reply` into a body + content type.
 pub trait IntoBody: Body {
     /// Convert into a body + content type.
-    fn into_body(self) -> (Bytes, String);
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the body cannot be encoded (for example, if JSON
+    /// serialization fails).
+    fn into_body(self) -> Result<(Bytes, HeaderValue)>;
 }
 
-impl<T: IntoBody> IntoHttp for Reply<T> {
+impl<T, H> IntoHttp for Reply<T, H>
+where
+    T: IntoBody,
+    H: Headers,
+{
     type Body = Full<Bytes>;
 
     fn into_http(self) -> HttpResponse<Self::Body> {
-        let (body, content_type) = self.body.into_body();
-        let response = http::Response::builder()
-            .status(self.status)
-            .header(header::CONTENT_TYPE, content_type)
-            .body(Self::Body::from(body));
-        response.unwrap_or_default()
+        let (bytes, content_type) = match self.body.into_body() {
+            Ok(v) => v,
+            Err(e) => return server_error(e.to_string()),
+        };
+
+        let mut builder = http::Response::builder().status(self.status);
+
+        if let Some(hm) = builder.headers_mut() {
+            if let Some(h) = self.headers.as_ref() {
+                h.apply(hm);
+            }
+            if !hm.contains_key(header::CONTENT_TYPE) {
+                hm.insert(header::CONTENT_TYPE, content_type);
+            }
+        }
+
+        match builder.body(Self::Body::from(bytes)) {
+            Ok(resp) => resp,
+            Err(e) => server_error(e.to_string()),
+        }
     }
 }
 
-use serde::Serialize;
-
-impl<T: Body + Serialize> IntoBody for T {
-    fn into_body(self) -> (Bytes, String) {
-        let body = serde_json::to_vec(&self).unwrap_or_default();
-        (Bytes::from(body), "application/json".to_string())
-    }
+fn server_error(message: impl Into<String>) -> HttpResponse<Full<Bytes>> {
+    let mut resp = http::Response::new(Full::from(Bytes::from(message.into())));
+    *resp.status_mut() = StatusCode::INTERNAL_SERVER_ERROR;
+    resp.headers_mut()
+        .insert(header::CONTENT_TYPE, HeaderValue::from_static("text/plain; charset=utf-8"));
+    resp
 }
+
+
