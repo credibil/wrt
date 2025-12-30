@@ -25,8 +25,8 @@ mod request;
 use std::fmt::Debug;
 use std::sync::Arc;
 
-pub use self::reply::{IntoHttp, Reply};
-pub use self::request::{Context, Handler, RequestHandler};
+pub use self::reply::*;
+pub use self::request::*;
 
 pub trait Provider: Send + Sync {}
 

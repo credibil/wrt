@@ -1,7 +1,9 @@
+use bytes::Bytes;
+use http::{StatusCode, header};
+use std::fmt::Debug;
 use std::ops::Deref;
 
-use bytes::Bytes;
-use http::StatusCode;
+use http_body_util::Full;
 
 use crate::api::{Body, Headers, NoHeaders};
 
@@ -94,40 +96,41 @@ impl<B: Body> Deref for Reply<B> {
     }
 }
 
+pub type HttpResponse<B = Full<Bytes>> = http::Response<B>;
+
 /// Trait for converting a `Result` into an HTTP response.
-pub trait IntoHttp<B>
-where
-    B: http_body::Body<Data = Bytes> + Send + 'static,
-{
+pub trait IntoHttp {
+    /// The body type of the response.
+    type Body: http_body::Body<Data = Bytes> + Send;
+
     /// Convert into an HTTP response.
-    fn into_http(self) -> http::Response<B>;
+    fn into_http(self) -> HttpResponse<Self::Body>;
 }
 
-// impl<B, E> IntoHttp for Result<Reply<B>, E>
-// where
-//     B: Body + Serialize,
-//     E: Serialize,
-// {
-//     type Body = http_body_util::Full<Bytes>;
+/// Trait for converting a `Reply` into a body + content type.
+pub trait IntoBody: Body {
+    /// Convert into a body + content type.
+    fn into_body(self) -> (Bytes, String);
+}
 
-//     /// Create a new reply with the given status code and body.
-//     fn into_http(self) -> http::Reply<Self::Body> {
-//         let result = match self {
-//             Ok(r) => {
-//                 let body = serde_json::to_vec(&r.body).unwrap_or_default();
-//                 http::Reply::builder()
-//                     .status(r.status)
-//                     .header(header::CONTENT_TYPE, "application/json")
-//                     .body(Self::Body::from(body))
-//             }
-//             Err(e) => {
-//                 let body = serde_json::to_vec(&e).unwrap_or_default();
-//                 http::Reply::builder()
-//                     .status(StatusCode::BAD_REQUEST)
-//                     .header(header::CONTENT_TYPE, "application/json")
-//                     .body(Self::Body::from(body))
-//             }
-//         };
-//         result.unwrap_or_default()
-//     }
-// }
+impl<T: IntoBody> IntoHttp for Reply<T> {
+    type Body = Full<Bytes>;
+
+    fn into_http(self) -> HttpResponse<Self::Body> {
+        let (body, content_type) = self.body.into_body();
+        let response = http::Response::builder()
+            .status(self.status)
+            .header(header::CONTENT_TYPE, content_type)
+            .body(Self::Body::from(body));
+        response.unwrap_or_default()
+    }
+}
+
+use serde::Serialize;
+
+impl<T: Body + Serialize> IntoBody for T {
+    fn into_body(self) -> (Bytes, String) {
+        let body = serde_json::to_vec(&self).unwrap_or_default();
+        (Bytes::from(body), "application/json".to_string())
+    }
+}
