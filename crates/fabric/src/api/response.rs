@@ -6,7 +6,7 @@ use http::StatusCode;
 use crate::api::{Body, Headers, NoHeaders};
 
 /// Top-level response data structure common to all handlers.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct Response<B, H = NoHeaders>
 where
     H: Headers,
@@ -50,15 +50,6 @@ impl<B: Body> Response<B> {
             status: StatusCode::ACCEPTED,
             headers: None,
             body,
-        }
-    }
-
-    /// Map the body to a different type
-    pub fn map<U: Body>(self, f: impl FnOnce(B) -> U) -> Response<U> {
-        Response {
-            status: self.status,
-            headers: None,
-            body: f(self.body),
         }
     }
 

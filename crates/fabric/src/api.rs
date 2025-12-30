@@ -73,6 +73,17 @@ impl Client<NoProvider> {
 }
 
 impl<P: Provider> Client<Arc<P>> {
+    /// Create a new `Client` by setting the owner and provider.
+    #[must_use]
+    pub fn new(owner: impl Into<String>, provider: P) -> Self {
+        Self {
+            owner: owner.into(),
+            provider: Arc::new(provider),
+        }
+    }
+}
+
+impl<P: Provider> Client<Arc<P>> {
     /// Create a new [`RequestHandler`] with no headers.
     #[must_use]
     pub fn request<R>(&self, request: R) -> RequestHandler<P, NoHeaders, R>
@@ -85,7 +96,7 @@ impl<P: Provider> Client<Arc<P>> {
 
 /// The `Headers` trait is used to restrict the types able to implement
 /// request headers.
-pub trait Headers: Clone + Debug + Send + Sync {}
+pub trait Headers: Debug + Send + Sync {}
 
 /// Implement empty headers for use by handlers that do not require headers.
 #[derive(Clone, Debug)]
@@ -94,5 +105,5 @@ impl Headers for NoHeaders {}
 
 /// The `Body` trait is used to restrict the types able to implement
 /// request body. It is implemented by all `xxxRequest` types.
-pub trait Body: Clone + Debug + Send + Sync {}
-impl<T> Body for T where T: Clone + Debug + Send + Sync {}
+pub trait Body: Debug + Send + Sync {}
+impl<T> Body for T where T: Debug + Send + Sync {}

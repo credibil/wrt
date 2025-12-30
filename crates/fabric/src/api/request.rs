@@ -43,6 +43,10 @@ pub trait Handler<P: Provider> {
     fn handle(
         self, owner: &str, provider: &P,
     ) -> impl Future<Output = Result<Response<Self::Output>, Self::Error>> + Send;
+
+    // fn handle_with_headers<H: Headers>(
+    //     self, owner: &str, provider: &P, headers: H,
+    // ) -> impl Future<Output = Result<Response<Self::Output>, Self::Error>> + Send;
 }
 
 /// Request router.
@@ -65,7 +69,6 @@ where
 {
     client: Client<Arc<P>>,
     request: R,
-    #[allow(dead_code)]
     headers: H,
 }
 
