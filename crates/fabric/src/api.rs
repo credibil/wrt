@@ -64,9 +64,9 @@ impl<P: Provider> Client<P> {
 impl<P: Provider> Client<P> {
     /// Create a new [`RequestHandler`] with no headers.
     #[must_use]
-    pub fn request<B: Body + Handler<P, Output = U>, U: Body, E>(
+    pub fn request<B: Body + Handler<P, Output = U, Error = E>, U: Body, E>(
         &self, body: B,
-    ) -> RequestHandler<P, NoOwner, NoHeaders, B, U, E> {
+    ) -> RequestHandler<P, NoOwner, NoHeaders, B> {
         RequestHandler::new(self.clone(), body)
     }
 }
