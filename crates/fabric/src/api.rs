@@ -9,14 +9,14 @@
 //! ```rust,ignore
 //! use common::api::{Client, Body, Headers};
 //!
-//! // Create a client
-//! let client = Client::new(provider);
+//! // Create a client (typestate builder)
+//! let client = Client::new("alice").provider(provider);
 //!
 //! // Simple request without headers
-//! let response = client.request(my_request).owner("alice").await?;
+//! let response = client.request(my_request).await?;
 //!
 //! // Request with headers
-//! let response = client.request(my_request).owner("alice").headers(my_headers).await?;
+//! let response = client.request(my_request).headers(my_headers).await?;
 //! ```
 
 mod request;
@@ -32,40 +32,47 @@ pub trait Provider: Send + Sync {}
 
 impl<T> Provider for T where T: Send + Sync {}
 
+/// Typestate marker indicating a [`Client`] has not yet been configured with a provider.
+///
+/// Calling `.provider(...)` transitions `Client<NoProvider>` into `Client<Arc<P>>`, and
+/// request methods are only available on the configured state.
+#[derive(Clone, Copy, Debug, Default)]
+pub struct NoProvider;
+
 /// Build an API client to execute the request.
 ///
 /// The client is the main entry point for making API requests. It holds
 /// the provider configuration and provides methods to create the request
 /// router.
-#[derive(Debug)]
-pub struct Client<P: Provider> {
+#[derive(Clone, Debug)]
+pub struct Client<P> {
     owner: String,
 
     /// The provider to use while handling of the request.
-    provider: Arc<P>,
+    provider: P,
 }
 
-impl<P: Provider> Clone for Client<P> {
-    fn clone(&self) -> Self {
-        Self {
-            owner: self.owner.clone(),
-            provider: Arc::clone(&self.provider),
-        }
-    }
-}
-
-impl<P: Provider> Client<P> {
-    /// Create a new `Client`.
+impl Client<NoProvider> {
+    /// Start building a new `Client` by setting the owner.
     #[must_use]
-    pub fn new(owner: impl Into<String>, provider: P) -> Self {
+    pub fn new(owner: impl Into<String>) -> Self {
         Self {
             owner: owner.into(),
+            provider: NoProvider,
+        }
+    }
+
+    /// Finish building the client by providing the provider implementation.
+    #[must_use]
+    pub fn provider<P: Provider>(self, provider: P) -> Client<Arc<P>> {
+        Client {
+            owner: self.owner,
             provider: Arc::new(provider),
         }
     }
 }
 
-impl<P: Provider> Client<P> {
+impl<P: Provider> Client<Arc<P>> {
     /// Create a new [`RequestHandler`] with no headers.
     #[must_use]
     pub fn request<B: Body + Handler<P, Output = U, Error = E>, U: Body, E>(
@@ -87,24 +94,4 @@ impl Headers for NoHeaders {}
 /// The `Body` trait is used to restrict the types able to implement
 /// request body. It is implemented by all `xxxRequest` types.
 pub trait Body: Clone + Debug + Send + Sync {}
-impl<T> Body for T
-where
-    T: Clone + Debug + Send + Sync,
-{
-    // fn from_bytes(bytes: &[u8]) -> Result<Self> {
-    //     serde_json::from_slice(bytes)
-    // }
-
-    // fn to_bytes(self) -> Vec<u8> {
-    //     serde_json::to_vec(&self).unwrap()
-    // }
-}
-
-// impl<B: Body> From<B> for Request<B> {
-//     fn from(body: B) -> Self {
-//         Self {
-//             body,
-//             headers: NoHeaders,
-//         }
-//     }
-// }
+impl<T> Body for T where T: Clone + Debug + Send + Sync {}

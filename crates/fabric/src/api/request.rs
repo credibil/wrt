@@ -9,20 +9,21 @@
 //! ```rust,ignore
 //! use common::api::{Client, Body, Headers};
 //!
-//! // Create a client
-//! let client = Client::new(provider);
+//! // Create a client (typestate builder)
+//! let client = Client::new("alice").provider(provider);
 //!
 //! // Simple request without headers
-//! let response = client.request(my_request).owner("alice").await?;
+//! let response = client.request(my_request).await?;
 //!
 //! // Request with headers
-//! let response = client.request(my_request).owner("alice").headers(my_headers).await?;
+//! let response = client.request(my_request).headers(my_headers).await?;
 //! ```
 
 use std::error::Error;
 use std::fmt::Debug;
 use std::future::{Future, IntoFuture};
 use std::pin::Pin;
+use std::sync::Arc;
 
 use crate::api::response::Response;
 use crate::api::{Body, Client, Headers, NoHeaders, Provider};
@@ -53,7 +54,7 @@ pub trait Handler<P: Provider> {
 ///
 /// ```rust,ignore
 /// let router = RequestHandler::new(client, body);
-/// let response = router.owner("alice").headers(headers).handle().await;
+/// let response = router.headers(headers).handle().await;
 /// ```
 #[derive(Debug)]
 pub struct RequestHandler<P, H, R>
@@ -62,8 +63,9 @@ where
     H: Headers,
     R: Handler<P>,
 {
-    client: Client<P>,
+    client: Client<Arc<P>>,
     request: R,
+    #[allow(dead_code)]
     headers: H,
 }
 
@@ -74,7 +76,7 @@ where
 {
     /// Create a new `RequestHandler` instance.
     #[must_use]
-    pub const fn new(client: Client<P>, request: R) -> Self {
+    pub const fn new(client: Client<Arc<P>>, request: R) -> Self {
         Self {
             client,
             request,
