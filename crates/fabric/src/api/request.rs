@@ -7,7 +7,7 @@
 //! ## Example Usage
 //!
 //! ```rust,ignore
-//! use common::api::{Client, Body, Headers};
+//! use fabric::{Body, Client, Headers};
 //!
 //! // Create a client (typestate builder)
 //! let client = Client::new("alice").provider(provider);

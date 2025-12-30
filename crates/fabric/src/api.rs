@@ -7,7 +7,7 @@
 //! ## Example Usage
 //!
 //! ```rust,ignore
-//! use common::api::{Client, Body, Headers};
+//! use fabric::{Body, Client, Headers};
 //!
 //! // Create a client (typestate builder)
 //! let client = Client::new("alice").provider(provider);
@@ -19,14 +19,14 @@
 //! let response = client.request(my_request).headers(my_headers).await?;
 //! ```
 
-mod request;
 mod reply;
+mod request;
 
 use std::fmt::Debug;
 use std::sync::Arc;
 
-pub use self::request::*;
-pub use self::reply::*;
+pub use self::reply::{IntoHttp, Reply};
+pub use self::request::{Context, Handler, RequestHandler};
 
 pub trait Provider: Send + Sync {}
 
@@ -46,7 +46,8 @@ pub struct NoProvider;
 /// router.
 #[derive(Clone, Debug)]
 pub struct Client<P> {
-    owner: String,
+    /// The owning tenant/namespace.
+    owner: Arc<str>,
 
     /// The provider to use while handling of the request.
     provider: P,
@@ -57,7 +58,7 @@ impl Client<NoProvider> {
     #[must_use]
     pub fn new(owner: impl Into<String>) -> Self {
         Self {
-            owner: owner.into(),
+            owner: Arc::<str>::from(owner.into()),
             provider: NoProvider,
         }
     }
@@ -71,17 +72,6 @@ impl Client<NoProvider> {
         }
     }
 }
-
-// impl<P: Provider> Client<Arc<P>> {
-//     /// Create a new `Client` by setting the owner and provider.
-//     #[must_use]
-//     pub fn new(owner: impl Into<String>, provider: P) -> Self {
-//         Self {
-//             owner: owner.into(),
-//             provider: Arc::new(provider),
-//         }
-//     }
-// }
 
 impl<P: Provider> Client<Arc<P>> {
     /// Create a new [`RequestHandler`] with no headers.
@@ -99,7 +89,7 @@ impl<P: Provider> Client<Arc<P>> {
 pub trait Headers: Debug + Send + Sync {}
 
 /// Implement empty headers for use by handlers that do not require headers.
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct NoHeaders;
 impl Headers for NoHeaders {}
 
