@@ -35,7 +35,7 @@ pub trait Handler<P: Provider> {
     type Output: Body;
 
     /// The error type returned by the handler.
-    type Error;
+    type Error: Send;
 
     /// Routes the message to the concrete handler used to process the message.
     fn handle(
@@ -129,13 +129,11 @@ where
 }
 
 // Owner set, maybe headers set: request can be routed to it's handler.
-impl<P, H, R, U, E> RequestHandler<P, OwnerSet, H, R>
+impl<P, H, R> RequestHandler<P, OwnerSet, H, R>
 where
     P: Provider,
     H: Headers,
-    R: Handler<P, Output = U, Error = E>,
-    U: Body,
-    E: Send,
+    R: Handler<P>,
 {
     /// Handle the request by routing it to the appropriate handler.
     ///
@@ -149,25 +147,31 @@ where
     ///
     /// Returns the error from the underlying handler on failure.
     #[inline]
-    pub async fn handle(self) -> Result<Response<U>, E> {
+    pub async fn handle(self) -> Result<Response<R::Output>, R::Error>
+    where
+        R::Output: Body,
+        R::Error: Send,
+    {
         self.request.handle(&self.owner.0, &self.client.provider).await
     }
 }
 
 // Implement [`IntoFuture`] so that the request can be awaited directly (without
 // needing to call the `handle` method).
-impl<P, H, R, U, E> IntoFuture for RequestHandler<P, OwnerSet, H, R>
+impl<P, H, R> IntoFuture for RequestHandler<P, OwnerSet, H, R>
 where
     P: Provider + 'static,
     H: Headers + 'static,
-    R: Handler<P, Output = U, Error = E> + Send + 'static,
-    U: Body + 'static,
-    E: Send + 'static,
+    R: Handler<P> + Send + 'static,
 {
     type IntoFuture = Pin<Box<dyn Future<Output = Self::Output> + Send + 'static>>;
-    type Output = Result<Response<U>, E>;
+    type Output = Result<Response<R::Output>, R::Error>;
 
-    fn into_future(self) -> Self::IntoFuture {
+    fn into_future(self) -> Self::IntoFuture
+    where
+        R::Output: Body,
+        R::Error: Send,
+    {
         Box::pin(self.handle())
     }
 }
