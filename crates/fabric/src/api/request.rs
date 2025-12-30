@@ -19,6 +19,7 @@
 //! let response = client.request(my_request).owner("alice").headers(my_headers).await?;
 //! ```
 
+use std::error::Error;
 use std::fmt::Debug;
 use std::future::{Future, IntoFuture};
 use std::pin::Pin;
@@ -35,7 +36,7 @@ pub trait Handler<P: Provider> {
     type Output: Body;
 
     /// The error type returned by the handler.
-    type Error: Send;
+    type Error: Error + Send;
 
     /// Routes the message to the concrete handler used to process the message.
     fn handle(

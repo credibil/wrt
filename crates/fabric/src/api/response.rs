@@ -22,6 +22,69 @@ where
     pub body: B,
 }
 
+impl<B: Body> Response<B> {
+    /// Create a success response
+    #[must_use]
+    pub const fn ok(body: B) -> Self {
+        Self {
+            status: StatusCode::OK,
+            headers: None,
+            body,
+        }
+    }
+
+    /// Create a created response (201)
+    #[must_use]
+    pub const fn created(body: B) -> Self {
+        Self {
+            status: StatusCode::CREATED,
+            headers: None,
+            body,
+        }
+    }
+
+    /// Create an accepted response (202)
+    #[must_use]
+    pub const fn accepted(body: B) -> Self {
+        Self {
+            status: StatusCode::ACCEPTED,
+            headers: None,
+            body,
+        }
+    }
+
+    /// Map the body to a different type
+    pub fn map<U: Body>(self, f: impl FnOnce(B) -> U) -> Response<U> {
+        Response {
+            status: self.status,
+            headers: None,
+            body: f(self.body),
+        }
+    }
+
+    /// Check if response is successful (2xx)
+    #[must_use]
+    pub fn is_success(&self) -> bool {
+        self.status.is_success()
+    }
+}
+
+impl<B: Body, H: Headers> Response<B, H> {
+    /// Create a success response with a specific status code.
+    #[must_use]
+    pub const fn status(mut self, status: StatusCode) -> Self {
+        self.status = status;
+        self
+    }
+
+    /// Add headers to the response.
+    #[must_use]
+    pub fn headers(mut self, headers: H) -> Self {
+        self.headers = Some(headers);
+        self
+    }
+}
+
 impl<B: Body> From<B> for Response<B> {
     fn from(body: B) -> Self {
         Self {
@@ -29,22 +92,6 @@ impl<B: Body> From<B> for Response<B> {
             headers: None,
             body,
         }
-    }
-}
-
-impl<B: Body, H: Headers> Response<B, H> {
-    /// Create a success response with a specific status code.
-    #[must_use]
-    pub const fn with_status(mut self, status: StatusCode) -> Self {
-        self.status = status;
-        self
-    }
-
-    /// Add headers to the response.
-    #[must_use]
-    pub fn with_headers(mut self, headers: H) -> Self {
-        self.headers = Some(headers);
-        self
     }
 }
 
