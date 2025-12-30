@@ -24,40 +24,24 @@ use std::future::{Future, IntoFuture};
 use std::marker::PhantomData;
 use std::pin::Pin;
 
-
 use crate::api::response::Response;
 use crate::api::{Body, Client, Headers, NoHeaders, Provider};
-
-/// A request to process.
-#[derive(Clone, Debug)]
-pub struct Request<B, H = NoHeaders>
-where
-    H: Headers,
-    B: Body,
-{
-    /// Headers associated with this request.
-    pub headers: H,
-
-    /// The request to process.
-    pub body: B,
-}
 
 /// Request handler.
 ///
 /// The primary role of this trait is to provide a common interface for
 /// requests so they can be handled by [`handle`] method.
-pub trait Handler<B, P>
-where
-    B: Body,
-    P: Provider,
-{
+pub trait Handler<P: Provider> {
+    /// The output type of the handler.
+    type Output: Body;
+
     /// The error type returned by the handler.
     type Error;
 
     /// Routes the message to the concrete handler used to process the message.
     fn handle(
         self, owner: &str, provider: &P,
-    ) -> impl Future<Output = Result<Response<B>, Self::Error>> + Send;
+    ) -> impl Future<Output = Result<Response<Self::Output>, Self::Error>> + Send;
 }
 
 /// Request router.
@@ -72,15 +56,17 @@ where
 /// let response = router.owner("alice").headers(headers).handle().await;
 /// ```
 #[derive(Debug)]
-pub struct RequestHandler<P, O, H, B, U, E>
+pub struct RequestHandler<P, O, H, R, U, E>
 where
     P: Provider,
     H: Headers,
-    B: Body,
+    R: Handler<P>,
+    U: Body,
 {
     client: Client<P>,
     owner: O,
-    request: Request<B, H>,
+    request: R,
+    headers: H,
     _phantom: PhantomData<fn() -> (U, E)>,
 }
 
@@ -91,84 +77,80 @@ pub struct NoOwner;
 #[doc(hidden)]
 pub struct OwnerSet(String);
 
-impl<P, B, U, E> RequestHandler<P, NoOwner, NoHeaders, B, U, E>
+impl<P, R, U, E> RequestHandler<P, NoOwner, NoHeaders, R, U, E>
 where
     P: Provider,
-    B: Body,
+    R: Handler<P>,
     U: Body,
 {
     /// Create a new `RequestHandler` instance.
     #[must_use]
-    pub fn new(client: Client<P>, body: B) -> Self {
+    pub fn new(client: Client<P>, request: R) -> Self {
         Self {
             client,
             owner: NoOwner,
-            request: Request {
-                body,
-                headers: NoHeaders,
-            },
+            request,
+            headers: NoHeaders,
             _phantom: PhantomData,
         }
     }
 }
 
 // No owner set.
-impl<P, H, B, U, E> RequestHandler<P, NoOwner, H, B, U, E>
+impl<P, H, R, U, E> RequestHandler<P, NoOwner, H, R, U, E>
 where
     P: Provider,
     H: Headers,
-    B: Body,
+    R: Handler<P>,
     U: Body,
 {
     /// Set the owner (tenant).
     #[must_use]
-    pub fn owner(self, owner: impl Into<String>) -> RequestHandler<P, OwnerSet, H, B, U, E> {
+    pub fn owner(self, owner: impl Into<String>) -> RequestHandler<P, OwnerSet, H, R, U, E> {
         RequestHandler {
             client: self.client,
             owner: OwnerSet(owner.into()),
             request: self.request,
+            headers: self.headers,
             _phantom: PhantomData,
         }
     }
 }
 
 /// [`NoHeaders`] headers set.
-impl<P, O, B, U, E> RequestHandler<P, O, NoHeaders, B, U, E>
+impl<P, O, R, U, E> RequestHandler<P, O, NoHeaders, R, U, E>
 where
     P: Provider,
-    B: Body,
+    R: Handler<P>,
     U: Body,
 {
     /// Set request headers.
     #[must_use]
-    pub fn headers<H: Headers>(self, headers: H) -> RequestHandler<P, O, H, B, U, E> {
+    pub fn headers<H: Headers>(self, headers: H) -> RequestHandler<P, O, H, R, U, E> {
         RequestHandler {
             client: self.client,
             owner: self.owner,
-            request: Request {
-                body: self.request.body,
-                headers,
-            },
+            request: self.request,
+            headers,
             _phantom: PhantomData,
         }
     }
 }
 
 // Owner set, maybe headers set: request can be routed to it's handler.
-impl<P, H, B, U, E> RequestHandler<P, OwnerSet, H, B, U, E>
+impl<P, H, R, U, E> RequestHandler<P, OwnerSet, H, R, U, E>
 where
     P: Provider,
     H: Headers,
-    B: Body,
+    R: Handler<P, Output = U, Error = E>,
     U: Body,
     E: Send,
-    Request<B, H>: Handler<U, P, Error = E>,
 {
     /// Handle the request by routing it to the appropriate handler.
     ///
     /// # Constraints
     ///
-    /// This method requires that `Request<B, H>` implements `Handler<U, P, Error = E>`.
+    /// This method requires that `Request<R, H>` implements `Handler<U, P, Error = E>`.
     /// If you see an error about missing trait implementations, ensure your request
     /// type has the appropriate handler implementation.
     ///
@@ -183,14 +165,13 @@ where
 
 // Implement [`IntoFuture`] so that the request can be awaited directly (without
 // needing to call the `handle` method).
-impl<P, H, B, U, E> IntoFuture for RequestHandler<P, OwnerSet, H, B, U, E>
+impl<P, H, R, U, E> IntoFuture for RequestHandler<P, OwnerSet, H, R, U, E>
 where
     P: Provider + 'static,
     H: Headers + 'static,
-    B: Body + 'static,
+    R: Handler<P, Output = U, Error = E> + Send + 'static,
     U: Body + 'static,
     E: Send + 'static,
-    Request<B, H>: Handler<U, P, Error = E>,
 {
     type IntoFuture = Pin<Box<dyn Future<Output = Self::Output> + Send + 'static>>;
     type Output = Result<Response<U>, E>;
