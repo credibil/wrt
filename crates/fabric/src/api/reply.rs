@@ -7,22 +7,22 @@ use crate::api::{Body, Headers, NoHeaders};
 
 /// Top-level response data structure common to all handlers.
 #[derive(Debug)]
-pub struct Response<B, H = NoHeaders>
+pub struct Reply<B, H = NoHeaders>
 where
     H: Headers,
     B: Body,
 {
-    /// Response HTTP status code.
+    /// Reply HTTP status code.
     pub status: StatusCode,
 
-    /// Response HTTP headers, if any.
+    /// Reply HTTP headers, if any.
     pub headers: Option<H>,
 
     /// The endpoint-specific response.
     pub body: B,
 }
 
-impl<B: Body> Response<B> {
+impl<B: Body> Reply<B> {
     /// Create a success response
     #[must_use]
     pub const fn ok(body: B) -> Self {
@@ -60,7 +60,7 @@ impl<B: Body> Response<B> {
     }
 }
 
-impl<B: Body, H: Headers> Response<B, H> {
+impl<B: Body, H: Headers> Reply<B, H> {
     /// Create a success response with a specific status code.
     #[must_use]
     pub const fn status(mut self, status: StatusCode) -> Self {
@@ -76,7 +76,7 @@ impl<B: Body, H: Headers> Response<B, H> {
     }
 }
 
-impl<B: Body> From<B> for Response<B> {
+impl<B: Body> From<B> for Reply<B> {
     fn from(body: B) -> Self {
         Self {
             status: StatusCode::OK,
@@ -86,7 +86,7 @@ impl<B: Body> From<B> for Response<B> {
     }
 }
 
-impl<B: Body> Deref for Response<B> {
+impl<B: Body> Deref for Reply<B> {
     type Target = B;
 
     fn deref(&self) -> &Self::Target {
@@ -103,7 +103,7 @@ where
     fn into_http(self) -> http::Response<B>;
 }
 
-// impl<B, E> IntoHttp for Result<Response<B>, E>
+// impl<B, E> IntoHttp for Result<Reply<B>, E>
 // where
 //     B: Body + Serialize,
 //     E: Serialize,
@@ -111,18 +111,18 @@ where
 //     type Body = http_body_util::Full<Bytes>;
 
 //     /// Create a new reply with the given status code and body.
-//     fn into_http(self) -> http::Response<Self::Body> {
+//     fn into_http(self) -> http::Reply<Self::Body> {
 //         let result = match self {
 //             Ok(r) => {
 //                 let body = serde_json::to_vec(&r.body).unwrap_or_default();
-//                 http::Response::builder()
+//                 http::Reply::builder()
 //                     .status(r.status)
 //                     .header(header::CONTENT_TYPE, "application/json")
 //                     .body(Self::Body::from(body))
 //             }
 //             Err(e) => {
 //                 let body = serde_json::to_vec(&e).unwrap_or_default();
-//                 http::Response::builder()
+//                 http::Reply::builder()
 //                     .status(StatusCode::BAD_REQUEST)
 //                     .header(header::CONTENT_TYPE, "application/json")
 //                     .body(Self::Body::from(body))

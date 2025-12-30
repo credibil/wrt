@@ -20,13 +20,13 @@
 //! ```
 
 mod request;
-mod response;
+mod reply;
 
 use std::fmt::Debug;
 use std::sync::Arc;
 
 pub use self::request::*;
-pub use self::response::*;
+pub use self::reply::*;
 
 pub trait Provider: Send + Sync {}
 

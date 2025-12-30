@@ -25,7 +25,7 @@ use std::future::{Future, IntoFuture};
 use std::pin::Pin;
 use std::sync::Arc;
 
-use crate::api::response::Response;
+use crate::api::reply::Reply;
 use crate::api::{Body, Client, Headers, NoHeaders, Provider};
 
 /// Request-scoped context passed to [`Handler::handle`].
@@ -58,11 +58,7 @@ pub trait Handler<P: Provider> {
     /// Routes the message to the concrete handler used to process the message.
     fn handle<H: Headers>(
         self, ctx: Context<P, H>,
-    ) -> impl Future<Output = Result<Response<Self::Output>, Self::Error>> + Send;
-
-    // fn handle_with_headers<H: Headers>(
-    //     self, owner: &str, provider: &P, headers: H,
-    // ) -> impl Future<Output = Result<Response<Self::Output>, Self::Error>> + Send;
+    ) -> impl Future<Output = Result<Reply<Self::Output>, Self::Error>> + Send;
 }
 
 /// Request router.
@@ -140,7 +136,7 @@ where
     ///
     /// Returns the error from the underlying handler on failure.
     #[inline]
-    pub async fn handle(self) -> Result<Response<R::Output>, R::Error>
+    pub async fn handle(self) -> Result<Reply<R::Output>, R::Error>
     where
         R::Output: Body,
         R::Error: Send,
@@ -163,7 +159,7 @@ where
     R: Handler<P> + Send + 'static,
 {
     type IntoFuture = Pin<Box<dyn Future<Output = Self::Output> + Send + 'static>>;
-    type Output = Result<Response<R::Output>, R::Error>;
+    type Output = Result<Reply<R::Output>, R::Error>;
 
     fn into_future(self) -> Self::IntoFuture
     where
