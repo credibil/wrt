@@ -5,10 +5,13 @@ use http::{HeaderValue, StatusCode};
 use crate::api::Body;
 use crate::api::reply::Reply;
 
+#[allow(type_alias_bounds)]
+pub type HttpResult<T: IntoResponse, E: IntoResponse = HttpError> = Result<T, E>;
+
 /// Implemented by the `Reply::body` to convert itself into a format compatible
 /// with `[IntoResponse]`.
 pub trait IntoBody: Body {
-    /// Convert into a body.
+    /// Convert implementing type into an http-compatible body.
     ///
     /// # Errors
     ///
