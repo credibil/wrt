@@ -13,15 +13,17 @@ use std::future::{Future, IntoFuture};
 use std::pin::Pin;
 use std::sync::Arc;
 
+use http::HeaderMap;
+
 use crate::api::reply::Reply;
-use crate::api::{Body, Client, Headers, NoHeaders, Provider};
+use crate::api::{Body, Client, Provider};
 
 /// Request-scoped context passed to [`Handler::handle`].
 ///
 /// Bundles common request inputs (owner, provider, headers) into a single
 /// parameter, making handler signatures more ergonomic and easier to extend.
 #[derive(Clone, Copy, Debug)]
-pub struct Context<'a, P: Provider, H: Headers> {
+pub struct Context<'a, P: Provider> {
     /// The owning tenant / namespace for the request.
     pub owner: &'a str,
 
@@ -29,7 +31,7 @@ pub struct Context<'a, P: Provider, H: Headers> {
     pub provider: &'a P,
 
     /// Request headers (typed).
-    pub headers: &'a H,
+    pub headers: &'a HeaderMap<String>,
 }
 
 /// Request handler.
@@ -44,8 +46,8 @@ pub trait Handler<P: Provider> {
     type Error: Error + Send + Sync + 'static;
 
     /// Routes the message to the concrete handler used to process the message.
-    fn handle<H: Headers>(
-        self, ctx: Context<P, H>,
+    fn handle(
+        self, ctx: Context<P>,
     ) -> impl Future<Output = Result<Reply<Self::Output>, Self::Error>> + Send;
 }
 
@@ -62,55 +64,39 @@ pub trait Handler<P: Provider> {
 /// ```
 #[must_use = "requests do nothing unless you `.await` them (or call `.handle().await`)"]
 #[derive(Debug)]
-pub struct RequestHandler<P, H, R>
+pub struct RequestHandler<P, R>
 where
     P: Provider,
-    H: Headers,
     R: Handler<P>,
 {
     client: Client<Arc<P>>,
     request: R,
-    headers: H,
+    headers: HeaderMap<String>,
 }
 
-impl<P, R> RequestHandler<P, NoHeaders, R>
+impl<P, R> RequestHandler<P, R>
 where
     P: Provider,
     R: Handler<P>,
 {
     /// Create a new `RequestHandler` instance.
-    pub const fn new(client: Client<Arc<P>>, request: R) -> Self {
+    pub fn new(client: Client<Arc<P>>, request: R) -> Self {
         Self {
             client,
             request,
-            headers: NoHeaders,
+            headers: HeaderMap::default(),
         }
     }
-}
 
-/// [`NoHeaders`] headers set.
-impl<P, R> RequestHandler<P, NoHeaders, R>
-where
-    P: Provider,
-    R: Handler<P>,
-{
     /// Set request headers.
-    pub fn headers<H: Headers>(self, headers: H) -> RequestHandler<P, H, R> {
-        RequestHandler {
+    pub fn headers(self, headers: HeaderMap<String>) -> Self {
+        Self {
             client: self.client,
             request: self.request,
             headers,
         }
     }
-}
 
-// Route request to it's handler.
-impl<P, H, R> RequestHandler<P, H, R>
-where
-    P: Provider,
-    H: Headers,
-    R: Handler<P>,
-{
     /// Handle the request by routing it to the appropriate handler.
     ///
     /// # Constraints
@@ -135,10 +121,9 @@ where
 
 // Implement [`IntoFuture`] so that the request can be awaited directly (without
 // needing to call the `handle` method).
-impl<P, H, R> IntoFuture for RequestHandler<P, H, R>
+impl<P, R> IntoFuture for RequestHandler<P, R>
 where
     P: Provider + 'static,
-    H: Headers + 'static,
     R: Handler<P> + Send + 'static,
 {
     type IntoFuture = Pin<Box<dyn Future<Output = Self::Output> + Send + 'static>>;

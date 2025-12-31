@@ -31,7 +31,6 @@ pub use self::reply::*;
 pub use self::request::*;
 
 pub trait Provider: Send + Sync {}
-
 impl<T> Provider for T where T: Send + Sync {}
 
 /// Typestate marker indicating a [`Client`] has not yet been configured with a provider.
@@ -77,31 +76,10 @@ impl Client<NoProvider> {
 
 impl<P: Provider> Client<Arc<P>> {
     /// Create a new [`RequestHandler`] with no headers.
-    pub fn request<R>(&self, request: R) -> RequestHandler<P, NoHeaders, R>
-    where
-        R: Handler<P>,
-    {
+    pub fn request<R: Handler<P>>(&self, request: R) -> RequestHandler<P, R> {
         RequestHandler::new(self.clone(), request)
     }
 }
-
-/// The `Headers` trait is used to restrict the types able to implement
-/// request headers.
-///
-/// It is also optionally used by [`crate::api::Reply`] to emit typed response headers
-/// into a concrete `http::HeaderMap`.
-pub trait Headers: Debug + Send + Sync {
-    /// Apply typed headers into a concrete HTTP header map.
-    ///
-    /// Default implementation is a no-op so header types that are only used as typed
-    /// request metadata don't need to implement it.
-    fn apply(&self, _headers: &mut http::HeaderMap) {}
-}
-
-/// Implement empty headers for use by handlers that do not require headers.
-#[derive(Clone, Copy, Debug, Default)]
-pub struct NoHeaders;
-impl Headers for NoHeaders {}
 
 /// The `Body` trait is used to restrict the types able to implement
 /// request body. It is implemented by all `xxxRequest` types.
