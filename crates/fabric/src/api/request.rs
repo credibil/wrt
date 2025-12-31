@@ -1,23 +1,11 @@
-//! # API
+//! Request routing and handler traits.
 //!
-//! The api module provides the entry point to the public API. Requests are routed
-//! to the appropriate handler for processing, returning a response that can
-//! be serialized to a JSON object or directly to HTTP.
+//! This module contains:
+//! - [`Handler`]: implemented by request types to produce a [`Reply`]
+//! - [`RequestHandler`]: a small request builder / router (supports `.headers(...)`)
 //!
-//! ## Example Usage
-//!
-//! ```rust,ignore
-//! use fabric::{Body, Client, Headers};
-//!
-//! // Create a client (typestate builder)
-//! let client = Client::new("alice").provider(provider);
-//!
-//! // Simple request without headers
-//! let response = client.request(my_request).await?;
-//!
-//! // Request with headers
-//! let response = client.request(my_request).headers(my_headers).await?;
-//! ```
+//! The main entry point is usually [`crate::Client`], re-exported from the
+//! top-level `api` module.
 
 use std::error::Error;
 use std::fmt::Debug;
@@ -53,7 +41,7 @@ pub trait Handler<P: Provider> {
     type Output: Body;
 
     /// The error type returned by the handler.
-    type Error: Error + Send;
+    type Error: Error + Send + Sync + 'static;
 
     /// Routes the message to the concrete handler used to process the message.
     fn handle<H: Headers>(
@@ -72,6 +60,7 @@ pub trait Handler<P: Provider> {
 /// let router = RequestHandler::new(client, body);
 /// let response = router.headers(headers).handle().await;
 /// ```
+#[must_use = "requests do nothing unless you `.await` them (or call `.handle().await`)"]
 #[derive(Debug)]
 pub struct RequestHandler<P, H, R>
 where
@@ -90,7 +79,6 @@ where
     R: Handler<P>,
 {
     /// Create a new `RequestHandler` instance.
-    #[must_use]
     pub const fn new(client: Client<Arc<P>>, request: R) -> Self {
         Self {
             client,
@@ -107,7 +95,6 @@ where
     R: Handler<P>,
 {
     /// Set request headers.
-    #[must_use]
     pub fn headers<H: Headers>(self, headers: H) -> RequestHandler<P, H, R> {
         RequestHandler {
             client: self.client,
@@ -136,11 +123,7 @@ where
     ///
     /// Returns the error from the underlying handler on failure.
     #[inline]
-    pub async fn handle(self) -> Result<Reply<R::Output>, R::Error>
-    where
-        R::Output: Body,
-        R::Error: Send,
-    {
+    pub async fn handle(self) -> Result<Reply<R::Output>, R::Error> {
         let ctx = Context {
             owner: &self.client.owner,
             provider: &*self.client.provider,

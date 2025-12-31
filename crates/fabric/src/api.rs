@@ -77,7 +77,6 @@ impl Client<NoProvider> {
 
 impl<P: Provider> Client<Arc<P>> {
     /// Create a new [`RequestHandler`] with no headers.
-    #[must_use]
     pub fn request<R>(&self, request: R) -> RequestHandler<P, NoHeaders, R>
     where
         R: Handler<P>,

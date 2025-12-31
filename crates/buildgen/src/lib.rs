@@ -1,4 +1,3 @@
-mod guest;
 mod runtime;
 
 use proc_macro::TokenStream;
@@ -48,10 +47,5 @@ pub fn runtime(input: TokenStream) -> TokenStream {
 /// ```
 #[proc_macro]
 pub fn guest(input: TokenStream) -> TokenStream {
-    let parsed = parse_macro_input!(input as guest::GuestInput);
-    let generated = match crate::guest::generate::Generated::try_from(parsed) {
-        Ok(generated) => generated,
-        Err(e) => return e.into_compile_error().into(),
-    };
-    crate::guest::expand::expand(generated).into()
+    todo!("not implemented")
 }

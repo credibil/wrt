@@ -1,9 +1,7 @@
-
+pub use fabric::api::HttpError;
 use tower::ServiceExt;
 use wasip3::http::types as p3;
 use wasip3::http_compat::{http_from_wasi_request, http_into_wasi_response};
-
-pub use fabric::api::HttpError;
 
 /// Type alias for axum-compatible Result.
 pub type HttpResult<T> = anyhow::Result<T, HttpError>;

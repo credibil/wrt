@@ -57,9 +57,7 @@ impl<B: Body> Reply<B> {
     pub fn is_success(&self) -> bool {
         self.status.is_success()
     }
-}
 
-impl<B: Body> Reply<B> {
     /// Create a success response with a specific status code.
     #[must_use]
     pub const fn status(mut self, status: StatusCode) -> Self {

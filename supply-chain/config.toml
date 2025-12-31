@@ -31,7 +31,7 @@ version = "0.8.8"
 criteria = "safe-to-deploy"
 
 [[exemptions.axum-core]]
-version = "0.5.5"
+version = "0.5.6"
 criteria = "safe-to-deploy"
 
 [[exemptions.axum-macros]]
@@ -60,10 +60,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.const-hex]]
 version = "1.17.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.const-oid]]
-version = "0.9.6"
 criteria = "safe-to-deploy"
 
 [[exemptions.cpufeatures]]
@@ -106,26 +102,6 @@ criteria = "safe-to-deploy"
 version = "2.9.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.deadpool]]
-version = "0.12.3"
-criteria = "safe-to-deploy"
-
-[[exemptions.deadpool-postgres]]
-version = "0.14.1"
-criteria = "safe-to-deploy"
-
-[[exemptions.deadpool-runtime]]
-version = "0.1.4"
-criteria = "safe-to-deploy"
-
-[[exemptions.der]]
-version = "0.7.10"
-criteria = "safe-to-deploy"
-
-[[exemptions.der_derive]]
-version = "0.7.3"
-criteria = "safe-to-deploy"
-
 [[exemptions.deranged]]
 version = "0.5.5"
 criteria = "safe-to-deploy"
@@ -144,10 +120,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.find-msvc-tools]]
 version = "0.1.6"
-criteria = "safe-to-deploy"
-
-[[exemptions.flagset]]
-version = "0.4.7"
 criteria = "safe-to-deploy"
 
 [[exemptions.fromenv]]
@@ -180,10 +152,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.hashlink]]
 version = "0.7.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.hermit-abi]]
-version = "0.3.3"
 criteria = "safe-to-deploy"
 
 [[exemptions.hyper-rustls]]
@@ -219,7 +187,7 @@ version = "2.11.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.iri-string]]
-version = "0.7.9"
+version = "0.7.10"
 criteria = "safe-to-deploy"
 
 [[exemptions.itertools]]
@@ -227,15 +195,11 @@ version = "0.14.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.itoa]]
-version = "1.0.16"
+version = "1.0.17"
 criteria = "safe-to-deploy"
 
 [[exemptions.js-sys]]
 version = "0.3.83"
-criteria = "safe-to-deploy"
-
-[[exemptions.libredox]]
-version = "0.1.11"
 criteria = "safe-to-deploy"
 
 [[exemptions.libsqlite3-sys]]
@@ -258,20 +222,12 @@ criteria = "safe-to-deploy"
 version = "0.3.4"
 criteria = "safe-to-deploy"
 
-[[exemptions.md-5]]
-version = "0.10.6"
-criteria = "safe-to-deploy"
-
 [[exemptions.munge]]
 version = "0.4.7"
 criteria = "safe-to-deploy"
 
 [[exemptions.munge_macro]]
 version = "0.4.7"
-criteria = "safe-to-deploy"
-
-[[exemptions.num_cpus]]
-version = "1.13.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.oauth2]]
@@ -314,14 +270,6 @@ criteria = "safe-to-deploy"
 version = "0.31.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.phf]]
-version = "0.8.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.phf_shared]]
-version = "0.8.0"
-criteria = "safe-to-deploy"
-
 [[exemptions.pin-project]]
 version = "1.1.10"
 criteria = "safe-to-deploy"
@@ -332,14 +280,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.pkg-config]]
 version = "0.3.32"
-criteria = "safe-to-deploy"
-
-[[exemptions.postgres-protocol]]
-version = "0.6.9"
-criteria = "safe-to-deploy"
-
-[[exemptions.postgres-types]]
-version = "0.2.11"
 criteria = "safe-to-deploy"
 
 [[exemptions.ppv-lite86]]
@@ -388,10 +328,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.redox_syscall]]
 version = "0.5.18"
-criteria = "safe-to-deploy"
-
-[[exemptions.redox_syscall]]
-version = "0.6.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.rend]]
@@ -454,24 +390,12 @@ criteria = "safe-to-deploy"
 version = "0.1.5"
 criteria = "safe-to-deploy"
 
-[[exemptions.siphasher]]
-version = "0.3.10"
-criteria = "safe-to-deploy"
-
-[[exemptions.spki]]
-version = "0.7.3"
-criteria = "safe-to-deploy"
-
 [[exemptions.sqlite-wasm-rs]]
 version = "0.5.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.stable_deref_trait]]
 version = "1.2.1"
-criteria = "safe-to-deploy"
-
-[[exemptions.stringprep]]
-version = "0.1.5"
 criteria = "safe-to-deploy"
 
 [[exemptions.sync_wrapper]]
@@ -504,22 +428,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.tinyvec]]
 version = "1.10.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.tls_codec]]
-version = "0.4.2"
-criteria = "safe-to-deploy"
-
-[[exemptions.tls_codec_derive]]
-version = "0.4.2"
-criteria = "safe-to-deploy"
-
-[[exemptions.tokio-postgres]]
-version = "0.7.15"
-criteria = "safe-to-deploy"
-
-[[exemptions.tokio-postgres-rustls]]
-version = "0.13.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.tokio-rustls]]
@@ -598,10 +506,6 @@ criteria = "safe-to-deploy"
 version = "0.9.5"
 criteria = "safe-to-deploy"
 
-[[exemptions.wasite]]
-version = "0.1.0"
-criteria = "safe-to-deploy"
-
 [[exemptions.wasm-bindgen]]
 version = "0.2.106"
 criteria = "safe-to-deploy"
@@ -638,10 +542,6 @@ criteria = "safe-to-deploy"
 version = "1.0.4"
 criteria = "safe-to-deploy"
 
-[[exemptions.whoami]]
-version = "1.6.0"
-criteria = "safe-to-deploy"
-
 [[exemptions.wit-bindgen]]
 version = "0.48.1"
 criteria = "safe-to-deploy"
@@ -660,10 +560,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.writeable]]
 version = "0.6.2"
-criteria = "safe-to-deploy"
-
-[[exemptions.x509-cert]]
-version = "0.2.5"
 criteria = "safe-to-deploy"
 
 [[exemptions.yoke]]
@@ -687,5 +583,5 @@ version = "0.11.5"
 criteria = "safe-to-deploy"
 
 [[exemptions.zmij]]
-version = "0.1.9"
+version = "1.0.5"
 criteria = "safe-to-deploy"
