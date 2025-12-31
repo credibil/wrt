@@ -25,7 +25,7 @@ tracing.workspace = true
 
 # host dependencies
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-reqwest = { version = "0.12.28", features = ["rustls-tls"] }
+reqwest = "0.13.1"
 base64ct.workspace = true
 fromenv.workspace = true
 futures.workspace = true
