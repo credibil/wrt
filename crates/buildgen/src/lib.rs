@@ -46,6 +46,6 @@ pub fn runtime(input: TokenStream) -> TokenStream {
 /// });
 /// ```
 #[proc_macro]
-pub fn guest(input: TokenStream) -> TokenStream {
+pub fn guest(_input: TokenStream) -> TokenStream {
     todo!("not implemented")
 }

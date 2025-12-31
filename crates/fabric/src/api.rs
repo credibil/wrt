@@ -47,7 +47,7 @@ pub struct NoProvider;
 /// the provider configuration and provides methods to create the request
 /// router.
 #[derive(Clone, Debug)]
-pub struct Client<P> {
+pub struct Client<P = NoProvider> {
     /// The owning tenant/namespace.
     owner: Arc<str>,
 

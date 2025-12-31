@@ -1,13 +1,14 @@
 use axum::response::{IntoResponse, Response};
-use http::{HeaderValue, StatusCode, header};
+use http::header::CONTENT_TYPE;
+use http::{HeaderValue, StatusCode};
 
 use crate::api::Body;
 use crate::api::reply::Reply;
 
-/// Implemented by the `Reply::body` to convert itself into a body compatible with
-/// `[IntoResponse]`.
+/// Implemented by the `Reply::body` to convert itself into a format compatible
+/// with `[IntoResponse]`.
 pub trait IntoBody: Body {
-    /// Convert into a body + content type.
+    /// Convert into a body.
     ///
     /// # Errors
     ///
@@ -30,8 +31,8 @@ where
         };
 
         let mut hm = self.headers;
-        if !hm.contains_key(header::CONTENT_TYPE) {
-            hm.insert(header::CONTENT_TYPE, HeaderValue::from_static("text/plain; charset=utf-8"));
+        if !hm.contains_key(CONTENT_TYPE) {
+            hm.insert(CONTENT_TYPE, HeaderValue::from_static("text/plain; charset=utf-8"));
         }
 
         let status = self.status;
