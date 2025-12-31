@@ -20,7 +20,7 @@ use axum::{Json, Router};
 use bytes::Bytes;
 use serde_json::{Value, json};
 use tracing::Level;
-use wasi_http::Result;
+use wasi_http::HttpResult;
 use wasi_keyvalue::store;
 use wasip3::exports::http::handler::Guest;
 use wasip3::http::types::{ErrorCode, Request, Response};
@@ -39,7 +39,7 @@ impl Guest for Http {
 
 /// Stores and retrieves data from the key-value store.
 #[wasi_otel::instrument]
-async fn handler(body: Bytes) -> Result<Json<Value>> {
+async fn handler(body: Bytes) -> HttpResult<Json<Value>> {
     let bucket = store::open("credibil_bucket".to_string()).await.context("opening bucket")?;
 
     bucket.set("my_key".to_string(), body.to_vec()).await.context("storing data")?;

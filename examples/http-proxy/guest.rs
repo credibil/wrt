@@ -35,7 +35,7 @@ use http::header::{CACHE_CONTROL, IF_NONE_MATCH};
 use http_body_util::{Empty, Full};
 use serde_json::{Value, json};
 use tracing::Level;
-use wasi_http::{CacheOptions, Result};
+use wasi_http::{CacheOptions, HttpResult};
 use wasip3::exports::http::handler::Guest;
 use wasip3::http::types::{ErrorCode, Request, Response};
 
@@ -57,7 +57,7 @@ impl Guest for HttpGuest {
 
 /// Simple echo handler that returns the request body with a greeting.
 #[wasi_otel::instrument]
-async fn echo(Json(body): Json<Value>) -> Result<Json<Value>> {
+async fn echo(Json(body): Json<Value>) -> HttpResult<Json<Value>> {
     Ok(Json(json!({
         "message": "Hello, World!",
         "request": body
@@ -87,7 +87,7 @@ async fn cache() -> Result<impl IntoResponse, Infallible> {
 
 /// Fetches from origin and caches the response.
 #[wasi_otel::instrument]
-async fn origin(body: Bytes) -> Result<Json<Value>> {
+async fn origin(body: Bytes) -> HttpResult<Json<Value>> {
     let request = http::Request::builder()
         .method(Method::POST)
         .uri("https://jsonplaceholder.cypress.io/posts")
@@ -104,7 +104,7 @@ async fn origin(body: Bytes) -> Result<Json<Value>> {
 
 /// Demonstrates mTLS client certificate authentication.
 #[wasi_otel::instrument]
-async fn client_cert() -> Result<Json<Value>> {
+async fn client_cert() -> HttpResult<Json<Value>> {
     let auth_cert = "
         -----BEGIN CERTIFICATE-----
         ...Your Certificate Here...

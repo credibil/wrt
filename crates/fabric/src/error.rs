@@ -1,6 +1,6 @@
 //! Errors
 
-use axum::response::{IntoResponse, Response};
+// use axum::response::{IntoResponse, Response};
 use http::StatusCode;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -11,10 +11,16 @@ pub type Result<T> = anyhow::Result<T, Error>;
 /// Domain level error type returned by the adapter.
 #[derive(Error, Debug, Clone, Serialize, Deserialize)]
 pub enum Error {
+    // --- Client errors ---
     /// Request payload is invalid or missing required fields.
     #[error("code: {code}, description: {description}")]
     BadRequest { code: String, description: String },
 
+    /// Resource or data not found.
+    #[error("code: {code}, description: {description}")]
+    NotFound { code: String, description: String },
+
+    // --- Server errors ---
     /// A non recoverable internal error occurred.
     #[error("code: {code}, description: {description}")]
     ServerError { code: String, description: String },
@@ -30,6 +36,7 @@ impl Error {
     pub const fn status(&self) -> StatusCode {
         match self {
             Self::BadRequest { .. } => StatusCode::BAD_REQUEST,
+            Self::NotFound { .. } => StatusCode::NOT_FOUND,
             Self::ServerError { .. } => StatusCode::INTERNAL_SERVER_ERROR,
             Self::BadGateway { .. } => StatusCode::BAD_GATEWAY,
         }
@@ -40,6 +47,7 @@ impl Error {
     pub fn code(&self) -> String {
         match self {
             Self::BadRequest { code, .. }
+            | Self::NotFound { code, .. }
             | Self::ServerError { code, .. }
             | Self::BadGateway { code, .. } => code.clone(),
         }
@@ -50,6 +58,7 @@ impl Error {
     pub fn description(&self) -> String {
         match self {
             Self::BadRequest { description, .. }
+            | Self::NotFound { description, .. }
             | Self::ServerError { description, .. }
             | Self::BadGateway { description, .. } => description.clone(),
         }
@@ -66,6 +75,10 @@ impl From<anyhow::Error> for Error {
 
             return match inner {
                 Self::BadRequest { code, .. } => Self::BadRequest {
+                    code: code.clone(),
+                    description: chain,
+                },
+                Self::NotFound { code, .. } => Self::NotFound {
                     code: code.clone(),
                     description: chain,
                 },
@@ -94,25 +107,6 @@ impl From<serde_json::Error> for Error {
             code: "serde_json".to_string(),
             description: err.to_string(),
         }
-    }
-}
-
-pub struct HttpError {
-    status: StatusCode,
-    error: String,
-}
-
-impl From<anyhow::Error> for HttpError {
-    fn from(e: anyhow::Error) -> Self {
-        let error = format!("{e}, caused by: {}", e.root_cause());
-        let status = e.downcast_ref().map_or(StatusCode::INTERNAL_SERVER_ERROR, Error::status);
-        Self { status, error }
-    }
-}
-
-impl IntoResponse for HttpError {
-    fn into_response(self) -> Response {
-        (self.status, self.error).into_response()
     }
 }
 

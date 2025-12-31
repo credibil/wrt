@@ -9,7 +9,7 @@ use axum::routing::get;
 use axum::{Json, Router};
 use serde_json::{Value, json};
 use wasi_config::store as config;
-use wasi_http::Result;
+use wasi_http::HttpResult;
 use wasip3::exports::http::handler::Guest;
 use wasip3::http::types::{ErrorCode, Request, Response};
 
@@ -25,7 +25,7 @@ impl Guest for HttpGuest {
 
 /// Config request handler.
 #[wasi_otel::instrument]
-async fn config_get() -> Result<Json<Value>> {
+async fn config_get() -> HttpResult<Json<Value>> {
     let config = config::get_all().expect("should get all");
 
     Ok(Json(json!({

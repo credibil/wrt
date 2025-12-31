@@ -1,3 +1,6 @@
+pub mod expand;
+pub mod generate;
+
 use syn::parse::{Parse, ParseStream};
 use syn::{Token, Type};
 
