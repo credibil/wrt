@@ -1,8 +1,7 @@
 use std::fmt::Debug;
 use std::ops::Deref;
 
-use axum::response::{IntoResponse, Response};
-use http::{HeaderMap, HeaderValue, StatusCode, header};
+use http::{HeaderMap, StatusCode};
 
 use crate::api::Body;
 
@@ -94,85 +93,37 @@ impl<B: Body> Deref for Reply<B> {
     }
 }
 
-/// Trait for converting a `Reply::body` into a body compatible with
-/// `[IntoResponse]`.
-pub trait IntoBody: Body {
-    /// Convert into a body + content type.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the body cannot be encoded (for example, if JSON
-    /// serialization fails).
-    fn into_body(self) -> anyhow::Result<Vec<u8>>;
-}
-
-impl<T> IntoResponse for Reply<T>
-where
-    T: IntoBody + Debug + Send + Sync,
-{
-    fn into_response(self) -> Response {
-        let body = match self.body.into_body() {
-            Ok(v) => v,
-            Err(e) => {
-                return (StatusCode::INTERNAL_SERVER_ERROR, format!("body encoding error: {e}"))
-                    .into_response();
-            }
-        };
-
-        let mut hm = self.headers;
-        if !hm.contains_key(header::CONTENT_TYPE) {
-            hm.insert(header::CONTENT_TYPE, HeaderValue::from_static("text/plain; charset=utf-8"));
-        }
-
-        let status = self.status;
-        (status, hm, body).into_response()
-    }
-}
-
-// pub type HttpResponse<B = Full<Bytes>> = http::Response<B>;
-
-// /// Trait for converting a `Result` into an HTTP response.
-// pub trait IntoHttp {
-//     /// The body type of the response.
-//     type Body: http_body::Body<Data = Bytes> + Send;
-
-//     /// Convert into an HTTP response.
-//     fn into_http(self) -> HttpResponse<Self::Body>;
+// /// Implemented by the `Reply::body` to convert itself into a body compatible with
+// /// `[IntoResponse]`.
+// pub trait IntoBody: Body {
+//     /// Convert into a body + content type.
+//     ///
+//     /// # Errors
+//     ///
+//     /// Returns an error if the body cannot be encoded (for example, if JSON
+//     /// serialization fails).
+//     fn into_body(self) -> anyhow::Result<Vec<u8>>;
 // }
 
-// impl<T> IntoHttp for Reply<T>
+// impl<T> IntoResponse for Reply<T>
 // where
 //     T: IntoBody,
 // {
-//     type Body = Full<Bytes>;
-
-//     fn into_http(self) -> HttpResponse<Self::Body> {
-//         let (bytes, content_type) = match self.body.into_body() {
+//     fn into_response(self) -> Response {
+//         let body = match self.body.into_body() {
 //             Ok(v) => v,
-//             Err(e) => return server_error(e.to_string()),
+//             Err(e) => {
+//                 return (StatusCode::INTERNAL_SERVER_ERROR, format!("body encoding error: {e}"))
+//                     .into_response();
+//             }
 //         };
 
 //         let mut hm = self.headers;
 //         if !hm.contains_key(header::CONTENT_TYPE) {
-//             hm.insert(header::CONTENT_TYPE, content_type);
+//             hm.insert(header::CONTENT_TYPE, HeaderValue::from_static("text/plain; charset=utf-8"));
 //         }
 
-//         let mut builder = http::Response::builder().status(self.status);
-//         for (k, v) in &hm {
-//             builder = builder.header(k.clone(), v.clone());
-//         }
-
-//         match builder.body(Self::Body::from(bytes)) {
-//             Ok(resp) => resp,
-//             Err(e) => server_error(e.to_string()),
-//         }
+//         let status = self.status;
+//         (status, hm, body).into_response()
 //     }
-// }
-
-// fn server_error(message: impl Into<String>) -> HttpResponse<Full<Bytes>> {
-//     let mut resp = http::Response::new(Full::from(Bytes::from(message.into())));
-//     *resp.status_mut() = StatusCode::INTERNAL_SERVER_ERROR;
-//     resp.headers_mut()
-//         .insert(header::CONTENT_TYPE, HeaderValue::from_static("text/plain; charset=utf-8"));
-//     resp
 // }

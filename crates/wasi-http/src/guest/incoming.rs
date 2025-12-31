@@ -1,8 +1,9 @@
-use axum::http::StatusCode;
-use axum::response::IntoResponse;
+
 use tower::ServiceExt;
 use wasip3::http::types as p3;
 use wasip3::http_compat::{http_from_wasi_request, http_into_wasi_response};
+
+pub use fabric::api::HttpError;
 
 /// Type alias for axum-compatible Result.
 pub type HttpResult<T> = anyhow::Result<T, HttpError>;
@@ -24,26 +25,6 @@ pub async fn serve(
 
     tracing::debug!("guest response: {http_resp:?}");
     http_into_wasi_response(http_resp)
-}
-
-pub struct HttpError {
-    status: StatusCode,
-    error: String,
-}
-
-impl From<anyhow::Error> for HttpError {
-    fn from(e: anyhow::Error) -> Self {
-        let error = format!("{e}, caused by: {}", e.root_cause());
-        let status =
-            e.downcast_ref().map_or(StatusCode::INTERNAL_SERVER_ERROR, fabric::Error::status);
-        Self { status, error }
-    }
-}
-
-impl IntoResponse for HttpError {
-    fn into_response(self) -> axum::response::Response {
-        (self.status, self.error).into_response()
-    }
 }
 
 macro_rules! error {

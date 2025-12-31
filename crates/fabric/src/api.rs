@@ -19,12 +19,14 @@
 //! let response = client.request(my_request).headers(my_headers).await?;
 //! ```
 
+mod into_http;
 mod reply;
 mod request;
 
 use std::fmt::Debug;
 use std::sync::Arc;
 
+pub use self::into_http::*;
 pub use self::reply::*;
 pub use self::request::*;
 
