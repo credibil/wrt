@@ -1,4 +1,6 @@
-//! # WASI SQL Guest
+//! # WASI SQL WIT implementation
+
+#![allow(clippy::same_length_and_capacity)]
 
 // Bindings for the `wasi:sql` world.
 // See (<https://github.com/credibil/wasi-sql/>)

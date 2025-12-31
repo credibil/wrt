@@ -1,7 +1,6 @@
-#![allow(clippy::future_not_send)]
-#![allow(clippy::collection_is_never_read)]
+//! # WASI Messaging WIT implementation
 
-//! # WASI Messaging Guest
+#![allow(clippy::same_length_and_capacity)]
 
 // Bindings for the `wasi:messaging` world.
 // See (<https://github.com/WebAssembly/wasi-messaging/>)

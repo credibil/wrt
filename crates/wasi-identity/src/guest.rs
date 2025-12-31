@@ -1,6 +1,6 @@
-//! # WASI Vault Guest
+//! # WASI Identity WIT implementation
 
-#![allow(clippy::future_not_send)]
+#![allow(clippy::same_length_and_capacity)]
 
 // Bindings for the `wasi:vault` world.
 // See (<https://github.com/credibil/wasi-vault/>)

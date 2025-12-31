@@ -1,6 +1,6 @@
-#![allow(clippy::future_not_send)]
+//! # WASI WebSockets WIT implementation
 
-//! # WASI WebSockets Guest
+#![allow(clippy::same_length_and_capacity)]
 
 // Bindings for the `wasi:websockets` world.
 // See (<https://github.com/credibil/wasi-websockets/>)

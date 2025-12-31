@@ -1,5 +1,7 @@
 //! # WASI Key-Value Guest
 
+#![allow(clippy::same_length_and_capacity)]
+
 // Bindings for the `wasi:keyvalue` world.
 // See (<https://github.com/WebAssembly/wasi-keyvalue/>)
 wit_bindgen::generate!({
