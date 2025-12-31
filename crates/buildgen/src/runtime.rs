@@ -18,13 +18,13 @@ mod kw {
 ///     ...
 /// }
 /// ```
-pub struct RuntimeInput {
+pub struct Input {
     pub gen_main: bool,
     pub hosts: Vec<Host>,
     pub backends: Vec<Type>,
 }
 
-impl Parse for RuntimeInput {
+impl Parse for Input {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let gen_main = if input.peek(kw::main) {
             input.parse::<kw::main>()?;

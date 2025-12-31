@@ -1,3 +1,4 @@
+mod guest;
 mod runtime;
 
 use proc_macro::TokenStream;
@@ -16,7 +17,7 @@ use syn::parse_macro_input;
 /// ```
 #[proc_macro]
 pub fn runtime(input: TokenStream) -> TokenStream {
-    let parsed = parse_macro_input!(input as runtime::RuntimeInput);
+    let parsed = parse_macro_input!(input as runtime::Input);
     let generated = match crate::runtime::generate::Generated::try_from(parsed) {
         Ok(generated) => generated,
         Err(e) => return e.into_compile_error().into(),
@@ -41,11 +42,24 @@ pub fn runtime(input: TokenStream) -> TokenStream {
 ///     messaging: [
 ///         "realtime-r9k.v1": {
 ///             message: R9kMessage,
+///             // optional:
+///             // handler: on_realtime_r9k_v1,
 ///         }
 ///     ]
 /// });
 /// ```
+///
+/// ## Notes
+/// - **HTTP**: `handler` should be an Axum-compatible async handler function (the macro wires it into a `Router`).
+/// - **Messaging**: if `handler` is omitted, the macro expects a sibling async function named `on_<topic>`,
+///   with non-alphanumeric characters replaced by `_` (e.g. `"realtime-r9k.v1"` → `on_realtime_r9k_v1`).
+///   The generated code parses payload bytes via `TryFrom<&[u8]>` into `message` and then awaits the handler.
 #[proc_macro]
 pub fn guest(_input: TokenStream) -> TokenStream {
-    todo!("not implemented")
+    let parsed = parse_macro_input!(_input as guest::Input);
+    let generated = match crate::guest::generate::Generated::try_from(parsed) {
+        Ok(generated) => generated,
+        Err(e) => return TokenStream::from(e.into_compile_error()),
+    };
+    TokenStream::from(crate::guest::expand::expand(generated))
 }

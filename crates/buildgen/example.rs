@@ -3,7 +3,7 @@ buildgen::guest!({
         "/jobs/detector": {
             method: get,
             request: String
-            handler: DetectionRequest 
+            handler: DetectionRequest
             response: DetectionResponse
         }
     ],

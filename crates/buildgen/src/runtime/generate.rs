@@ -4,7 +4,7 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use syn::{Ident, Type};
 
-use crate::runtime::RuntimeInput;
+use crate::runtime::Input;
 
 pub struct Generated {
     pub context_fields: Vec<TokenStream>,
@@ -16,10 +16,10 @@ pub struct Generated {
     pub main_fn: TokenStream,
 }
 
-impl TryFrom<RuntimeInput> for Generated {
+impl TryFrom<Input> for Generated {
     type Error = syn::Error;
 
-    fn try_from(input: RuntimeInput) -> Result<Self, Self::Error> {
+    fn try_from(input: Input) -> Result<Self, Self::Error> {
         // `Context` struct
         let mut context_fields = Vec::new();
         let mut seen_backends = HashSet::new();
