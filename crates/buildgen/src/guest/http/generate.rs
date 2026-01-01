@@ -1,13 +1,7 @@
-use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
-use syn::{Ident, LitStr, Path, Type};
+use syn::{Ident, LitStr, Type};
 
-use crate::guest::{self as parsed, Input, topic_ident};
-
-pub struct Generated {
-    pub http: Option<HttpGuest>,
-    pub messaging: Option<MessagingGuest>,
-}
+use crate::guest as parsed;
 
 pub struct HttpGuest {
     pub routes: Vec<Route>,
@@ -15,91 +9,34 @@ pub struct HttpGuest {
 
 pub struct Route {
     pub path: LitStr,
+    #[allow(dead_code)]
+    pub params: Option<Vec<Ident>>,
     pub method: Ident,
-    pub handler: TokenStream,
-    pub request: Option<Type>,
-    pub response: Option<Type>,
+    pub handler_name: Ident,
+    pub request: Type,
+    pub reply: Type,
 }
 
-pub struct MessagingGuest {
-    pub topics: Vec<Topic>,
-}
-
-pub struct Topic {
-    pub pattern: LitStr,
-    pub message_type: Type,
-    pub handler: TokenStream,
-}
-
-impl TryFrom<Input> for Generated {
-    type Error = syn::Error;
-
-    fn try_from(input: Input) -> Result<Self, Self::Error> {
-        let http = if input.http.is_empty() {
-            None
-        } else {
-            Some(HttpGuest {
-                routes: input
-                    .http
-                    .into_iter()
-                    .map(generate_route)
-                    .collect::<Result<Vec<_>, _>>()?,
-            })
-        };
-
-        let messaging = if input.messaging.is_empty() {
-            None
-        } else {
-            Some(MessagingGuest {
-                topics: input.messaging.into_iter().map(generate_topic).collect(),
-            })
-        };
-
-        Ok(Self { http, messaging })
+pub fn generate(http: parsed::Http) -> HttpGuest {
+    HttpGuest {
+        routes: http.routes.into_iter().map(generate_route).collect(),
     }
 }
 
-fn generate_route(route: parsed::Route) -> syn::Result<Route> {
-    let method = match route.method.to_string().as_str() {
-        "get" | "post" | "put" | "delete" | "patch" | "head" | "options" | "trace" | "connect" => {
-            format_ident!("{}", route.method)
-        }
-        _ => return Err(syn::Error::new(route.method.span(), "unknown http method")),
-    };
+fn generate_route(route: parsed::Route) -> Route {
+    let request = route.request;
+    let request_str = quote! {#request}.to_string();
+    let handler_name = request_str
+        .strip_suffix("Request")
+        .unwrap_or(&request_str)
+        .to_lowercase();
 
-    Ok(Route {
+    Route {
         path: route.path,
-        method,
-        handler: qualify_path(&route.handler),
-        request: route.request,
-        response: route.response,
-    })
-}
-
-fn generate_topic(topic: parsed::Topic) -> Topic {
-    let handler = topic.handler.as_ref().map_or_else(
-        || {
-            let ident = topic_ident(&topic.pattern);
-            quote!(super::#ident)
-        },
-        qualify_path,
-    );
-
-    Topic {
-        pattern: topic.pattern,
-        message_type: topic.message,
-        handler,
-    }
-}
-
-// If the user wrote just `foo`, they almost certainly mean "a sibling item
-// where the macro is invoked". Since we generate inside a nested module, use
-// `super::foo`.
-fn qualify_path(path: &Path) -> TokenStream {
-    if path.leading_colon.is_none() && path.segments.len() == 1 {
-        let ident = &path.segments[0].ident;
-        quote!(super::#ident)
-    } else {
-        quote!(#path)
+        params: Some(route.params),
+        method: route.method,
+        handler_name: format_ident!("{handler_name}"),
+        request,
+        reply: route.reply,
     }
 }

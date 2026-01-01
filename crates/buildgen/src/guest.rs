@@ -1,29 +1,21 @@
 pub mod expand;
 pub mod generate;
+pub mod http;
+pub mod messaging;
 
 use proc_macro2::Span;
-use quote::format_ident;
 use syn::parse::{Parse, ParseStream};
-use syn::{Ident, LitStr, Result, Token, Type, parse_str};
+use syn::{Ident, LitStr, Result, Token, Type};
+
+use self::messaging::parse::Messaging;
+use crate::guest::http::parse::{Http, Route};
+use crate::guest::messaging::parse::Topic;
 
 pub struct Input {
     pub owner: LitStr,
     pub provider: Type,
-    pub http: Option<Vec<Route>>,
-    pub messaging: Option<Vec<Topic>>,
-}
-
-pub struct Route {
-    pub path: LitStr,
-    pub params: Vec<Ident>,
-    pub method: Ident,
-    pub request: Type,
-    pub reply: Type,
-}
-
-pub struct Topic {
-    pub pattern: LitStr,
-    pub message: Type,
+    pub http: Option<Http>,
+    pub messaging: Option<Messaging>,
 }
 
 impl Parse for Input {
@@ -34,8 +26,8 @@ impl Parse for Input {
         // let mut out = Self::default();
         let mut owner: Option<LitStr> = None;
         let mut provider: Option<Type> = None;
-        let mut http: Option<Vec<Route>> = None;
-        let mut messaging: Option<Vec<Topic>> = None;
+        let mut http: Option<Http> = None;
+        let mut messaging: Option<Messaging> = None;
 
         while !content.is_empty() {
             let ident: Ident = content.parse()?;
@@ -51,12 +43,12 @@ impl Parse for Input {
                 "http" => {
                     let list;
                     syn::bracketed!(list in content);
-                    http = Some(parse_routes(&list)?);
+                    http = Some(list.parse()?);
                 }
                 "messaging" => {
                     let list;
                     syn::bracketed!(list in content);
-                    messaging = Some(parse_topics(&list)?);
+                    messaging = Some(list.parse()?);
                 }
                 _ => {
                     return Err(syn::Error::new(
@@ -85,193 +77,6 @@ impl Parse for Input {
             messaging,
         })
     }
-}
-
-fn parse_routes(input: ParseStream) -> Result<Vec<Route>> {
-    let mut routes = Vec::new();
-    while !input.is_empty() {
-        let path: LitStr = input.parse()?;
-        input.parse::<Token![:]>()?;
-
-        let settings;
-        syn::braced!(settings in input);
-
-        let mut method: Option<Ident> = None;
-        let mut request: Option<Type> = None;
-        let mut reply: Option<Type> = None;
-
-        while !settings.is_empty() {
-            let key: Ident = settings.parse()?;
-            settings.parse::<Token![:]>()?;
-
-            if key == "method" {
-                method = Some(settings.parse()?);
-            } else if key == "request" {
-                request = Some(settings.parse()?);
-            } else if key == "reply" {
-                reply = Some(settings.parse()?);
-            } else {
-                return Err(syn::Error::new(
-                    key.span(),
-                    "unknown http field; expected `method`, `request`, or `reply`",
-                ));
-            }
-
-            if settings.peek(Token![,]) {
-                settings.parse::<Token![,]>()?;
-            }
-        }
-
-        // validate required fields
-        let method = if let Some(method) = method {
-            let method_str = method.to_string().to_lowercase();
-            match method_str.as_str() {
-                "get" | "post" => format_ident!("{method_str}"),
-                _ => {
-                    return Err(syn::Error::new(
-                        method.span(),
-                        "unsupported http method; expected `get` or `post`",
-                    ));
-                }
-            }
-        } else {
-            format_ident!("get")
-        };
-
-        let Some(request) = request else {
-            return Err(syn::Error::new(path.span(), "http route is missing `request`"));
-        };
-        let Some(reply) = reply else {
-            return Err(syn::Error::new(path.span(), "http route is missing `reply`"));
-        };
-        let params = parse_path_params(&path)?;
-
-        routes.push(Route {
-            path,
-            params,
-            method,
-            request,
-            reply,
-        });
-
-        if input.peek(Token![,]) {
-            input.parse::<Token![,]>()?;
-        }
-    }
-    Ok(routes)
-}
-
-fn parse_path_params(path: &LitStr) -> Result<Vec<Ident>> {
-    let s = path.value();
-    let mut params = Vec::<Ident>::new();
-
-    let bytes = s.as_bytes();
-    let mut i = 0usize;
-    while i < bytes.len() {
-        match bytes[i] {
-            b'{' => {
-                // Find the closing `}`.
-                let start = i + 1;
-                i += 1;
-                while i < bytes.len() && bytes[i] != b'}' {
-                    if bytes[i] == b'{' {
-                        return Err(syn::Error::new(
-                            path.span(),
-                            "invalid http path: nested `{` in path params",
-                        ));
-                    }
-                    i += 1;
-                }
-                if i >= bytes.len() {
-                    return Err(syn::Error::new(
-                        path.span(),
-                        "invalid http path: unclosed `{` in path params",
-                    ));
-                }
-
-                let end = i;
-                let name = s[start..end].trim();
-                if name.is_empty() {
-                    return Err(syn::Error::new(
-                        path.span(),
-                        "invalid http path: empty `{}` path parameter",
-                    ));
-                }
-
-                let ident: Ident = parse_str(name).map_err(|e| {
-                    syn::Error::new(
-                        path.span(),
-                        format!(
-                            "invalid http path parameter name `{name}`; must be a valid Rust identifier: {e}"
-                        ),
-                    )
-                })?;
-
-                if params.iter().any(|p| p == &ident) {
-                    return Err(syn::Error::new(
-                        path.span(),
-                        format!("duplicate http path parameter `{ident}`"),
-                    ));
-                }
-
-                params.push(ident);
-                i += 1; // consume `}`
-            }
-            b'}' => {
-                return Err(syn::Error::new(
-                    path.span(),
-                    "invalid http path: stray `}` in path params",
-                ));
-            }
-            _ => i += 1,
-        }
-    }
-
-    Ok(params)
-}
-
-fn parse_topics(input: ParseStream) -> Result<Vec<Topic>> {
-    let mut topics = Vec::new();
-
-    while !input.is_empty() {
-        let pattern: LitStr = input.parse()?;
-        input.parse::<Token![:]>()?;
-
-        let settings;
-        syn::braced!(settings in input);
-
-        let mut message: Option<Type> = None;
-
-        while !settings.is_empty() {
-            let key: Ident = settings.parse()?;
-            settings.parse::<Token![:]>()?;
-
-            if key == "message" {
-                message = Some(settings.parse()?);
-            } else {
-                return Err(syn::Error::new(
-                    key.span(),
-                    "unknown field; expected `message` (and optional `handler`)",
-                ));
-            }
-
-            // allow optional commas between fields (including trailing)
-            if settings.peek(Token![,]) {
-                settings.parse::<Token![,]>()?;
-            }
-        }
-
-        let Some(message) = message else {
-            return Err(syn::Error::new(pattern.span(), "topic missing `message`"));
-        };
-
-        topics.push(Topic { pattern, message });
-
-        if input.peek(Token![,]) {
-            input.parse::<Token![,]>()?;
-        }
-    }
-    Ok(topics)
 }
 
 // pub fn topic_ident(topic: &LitStr) -> Ident {
@@ -321,13 +126,13 @@ mod tests {
         let parsed: Input = syn::parse2(input).expect("should parse");
 
         let http = parsed.http.expect("should have http");
-        assert_eq!(http.len(), 1);
-        assert_eq!(http[0].path.value(), "/jobs/detector");
-        assert!(http[0].params.is_empty());
+        assert_eq!(http.routes.len(), 1);
+        assert_eq!(http.routes[0].path.value(), "/jobs/detector");
+        assert!(http.routes[0].params.is_empty());
 
         let messaging = parsed.messaging.expect("should have messaging");
-        assert_eq!(messaging.len(), 1);
-        assert_eq!(messaging[0].pattern.value(), "realtime-r9k.v1");
+        assert_eq!(messaging.topics.len(), 1);
+        assert_eq!(messaging.topics[0].pattern.value(), "realtime-r9k.v1");
     }
 
     #[test]
@@ -346,9 +151,9 @@ mod tests {
 
         let parsed: Input = syn::parse2(input).expect("should parse");
         let http = parsed.http.expect("should have http");
-        assert_eq!(http.len(), 1);
-        assert_eq!(http[0].params.len(), 2);
-        assert_eq!(http[0].params[0].to_string(), "vehicle_id");
-        assert_eq!(http[0].params[1].to_string(), "trip_id");
+        assert_eq!(http.routes.len(), 1);
+        assert_eq!(http.routes[0].params.len(), 2);
+        assert_eq!(http.routes[0].params[0].to_string(), "vehicle_id");
+        assert_eq!(http.routes[0].params[1].to_string(), "trip_id");
     }
 }
