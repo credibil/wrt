@@ -1,6 +1,6 @@
 [package]
-name = "fabric"
-description = "Wasm fabric modules"
+name = "warp-sdk"
+description = "Warp guest SDK"
 readme = "README.md"
 version.workspace = true
 edition.workspace = true
@@ -17,13 +17,17 @@ workspace = true
 anyhow.workspace = true
 axum.workspace = true
 bytes.workspace = true
+guest-macro.workspace = true
 http.workspace = true
 http-body.workspace = true
-http-body-util.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 thiserror = "2.0"
 tracing.workspace = true
+wasi-http.workspace = true
+wasi-messaging.workspace = true
+wasi-otel.workspace = true
+wasip3.workspace = true
 
 [dev-dependencies]
 tracing-subscriber.workspace = true

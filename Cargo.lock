@@ -233,15 +233,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "buildgen"
-version = "0.22.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "bumpalo"
 version = "3.19.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -874,16 +865,16 @@ dependencies = [
  "anyhow",
  "axum",
  "base64ct",
- "buildgen",
  "bytes",
  "cfg-if",
  "http",
  "http-body-util",
- "kernel",
  "opentelemetry",
  "serde_json",
  "tower-http",
  "tracing",
+ "warp",
+ "warp-sdk",
  "wasi-blobstore",
  "wasi-config",
  "wasi-http",
@@ -897,23 +888,6 @@ dependencies = [
  "wasi-websockets",
  "wasip3",
  "wit-bindgen 0.50.0",
-]
-
-[[package]]
-name = "fabric"
-version = "0.22.0"
-dependencies = [
- "anyhow",
- "axum",
- "bytes",
- "http",
- "http-body",
- "http-body-util",
- "serde",
- "serde_json",
- "thiserror 2.0.17",
- "tracing",
- "tracing-subscriber",
 ]
 
 [[package]]
@@ -1145,6 +1119,15 @@ dependencies = [
  "fallible-iterator",
  "indexmap",
  "stable_deref_trait",
+]
+
+[[package]]
+name = "guest-macro"
+version = "0.22.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -1573,21 +1556,6 @@ checksum = "464a3709c7f55f1f721e5389aa6ea4e3bc6aba669353300af094b29ffbdde1d8"
 dependencies = [
  "once_cell",
  "wasm-bindgen",
-]
-
-[[package]]
-name = "kernel"
-version = "0.22.0"
-dependencies = [
- "anyhow",
- "clap",
- "credibil-otel",
- "futures",
- "serde",
- "tokio",
- "tracing",
- "wasmtime",
- "wasmtime-wasi",
 ]
 
 [[package]]
@@ -2442,6 +2410,15 @@ name = "rkyv_derive"
 version = "0.8.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bd83f5f173ff41e00337d97f6572e416d022ef8a19f371817259ae960324c482"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "runtime-macro"
+version = "0.22.0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3398,6 +3375,43 @@ dependencies = [
 ]
 
 [[package]]
+name = "warp"
+version = "0.22.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "credibil-otel",
+ "futures",
+ "runtime-macro",
+ "serde",
+ "tokio",
+ "tracing",
+ "wasmtime",
+ "wasmtime-wasi",
+]
+
+[[package]]
+name = "warp-sdk"
+version = "0.22.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "bytes",
+ "guest-macro",
+ "http",
+ "http-body",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.17",
+ "tracing",
+ "tracing-subscriber",
+ "wasi-http",
+ "wasi-messaging",
+ "wasi-otel",
+ "wasip3",
+]
+
+[[package]]
 name = "wasi"
 version = "0.11.1+wasi-snapshot-preview1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3410,10 +3424,10 @@ dependencies = [
  "anyhow",
  "bytes",
  "futures",
- "kernel",
  "parking_lot",
  "tokio",
  "tracing",
+ "warp",
  "wasmtime",
  "wasmtime-wasi",
  "wit-bindgen 0.50.0",
@@ -3424,8 +3438,8 @@ name = "wasi-config"
 version = "0.22.0"
 dependencies = [
  "anyhow",
- "kernel",
  "tracing",
+ "warp",
  "wasmtime",
  "wasmtime-wasi-config",
  "wit-bindgen 0.50.0",
@@ -3440,14 +3454,12 @@ dependencies = [
  "base64ct",
  "bytes",
  "credibil-encoding",
- "fabric",
  "fromenv",
  "futures",
  "http",
  "http-body",
  "http-body-util",
  "hyper",
- "kernel",
  "percent-encoding",
  "reqwest 0.13.1",
  "rkyv",
@@ -3456,6 +3468,7 @@ dependencies = [
  "tokio",
  "tower",
  "tracing",
+ "warp",
  "wasi-keyvalue",
  "wasip3",
  "wasmtime",
@@ -3470,11 +3483,11 @@ dependencies = [
  "anyhow",
  "fromenv",
  "futures",
- "kernel",
  "oauth2",
  "serde",
  "tokio",
  "tracing",
+ "warp",
  "wasmtime",
  "wasmtime-wasi",
  "wit-bindgen 0.50.0",
@@ -3487,12 +3500,12 @@ dependencies = [
  "anyhow",
  "chrono",
  "futures",
- "kernel",
  "parking_lot",
  "serde",
  "serde_json",
  "tokio",
  "tracing",
+ "warp",
  "wasmtime",
  "wasmtime-wasi",
  "wit-bindgen 0.50.0",
@@ -3505,12 +3518,12 @@ dependencies = [
  "anyhow",
  "futures",
  "http",
- "kernel",
  "serde",
  "time",
  "tokio",
  "tokio-stream",
  "tracing",
+ "warp",
  "wasmtime",
  "wasmtime-wasi",
  "wit-bindgen 0.50.0",
@@ -3525,7 +3538,6 @@ dependencies = [
  "credibil-otel",
  "futures",
  "hex",
- "kernel",
  "num-traits",
  "opentelemetry",
  "opentelemetry-proto",
@@ -3534,6 +3546,7 @@ dependencies = [
  "tracing",
  "tracing-opentelemetry",
  "tracing-subscriber",
+ "warp",
  "wasi-otel-attr",
  "wasmtime",
  "wit-bindgen 0.50.0",
@@ -3556,12 +3569,12 @@ dependencies = [
  "base64ct",
  "fromenv",
  "futures",
- "kernel",
  "parking_lot",
  "rusqlite",
  "serde_json",
  "tokio",
  "tracing",
+ "warp",
  "wasmtime",
  "wasmtime-wasi",
  "wit-bindgen 0.50.0",
@@ -3573,10 +3586,10 @@ version = "0.22.0"
 dependencies = [
  "anyhow",
  "futures",
- "kernel",
  "parking_lot",
  "tokio",
  "tracing",
+ "warp",
  "wasmtime",
  "wasmtime-wasi",
  "wit-bindgen 0.50.0",
@@ -3594,13 +3607,13 @@ dependencies = [
  "http-body-util",
  "hyper",
  "hyper-util",
- "kernel",
  "serde",
  "serde_json",
  "tokio",
  "tokio-tungstenite",
  "tracing",
  "tungstenite",
+ "warp",
  "wasmtime",
  "wasmtime-wasi",
  "wit-bindgen 0.50.0",

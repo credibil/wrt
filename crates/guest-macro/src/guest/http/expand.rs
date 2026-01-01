@@ -10,7 +10,7 @@ pub fn expand(http: &Http, client: &TokenStream) -> TokenStream {
 
     quote! {
         mod http {
-            use fabric::api::{HttpResult, Reply};
+            use warp_sdk::api::{HttpResult, Reply};
 
             use super::*;
 

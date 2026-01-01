@@ -5,7 +5,6 @@ use anyhow::{Context, Result};
 use fromenv::FromEnv;
 use futures::FutureExt;
 use futures::lock::Mutex;
-use kernel::Backend;
 use oauth2::basic::{BasicClient, BasicTokenType};
 use oauth2::reqwest::{self, redirect};
 use oauth2::{
@@ -13,6 +12,7 @@ use oauth2::{
     TokenResponse as _, TokenUrl,
 };
 use tracing::instrument;
+use warp::Backend;
 
 use crate::host::WasiIdentityCtx;
 pub use crate::host::generated::wasi::identity::credentials::AccessToken;
@@ -30,7 +30,7 @@ pub struct ConnectOptions {
     pub token_url: String,
 }
 
-impl kernel::FromEnv for ConnectOptions {
+impl warp::FromEnv for ConnectOptions {
     fn from_env() -> Result<Self> {
         Self::from_env().finalize().context("issue loading connection options")
     }

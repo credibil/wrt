@@ -8,7 +8,7 @@ use std::fmt::Debug;
 
 use anyhow::Result;
 pub use default_impl::ConfigDefault;
-use kernel::{Host, Server, State};
+use warp::{Host, Server, State};
 use wasmtime::component::Linker;
 pub use wasmtime_wasi_config;
 use wasmtime_wasi_config::WasiConfigVariables;

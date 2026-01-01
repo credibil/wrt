@@ -1,6 +1,6 @@
 [package]
-name = "kernel"
-description = "Credibil runtime system"
+name = "warp"
+description = "Warp runtime"
 readme = "README.md"
 authors.workspace = true
 categories.workspace = true
@@ -25,9 +25,11 @@ jit = ["wasmtime/cranelift"]
 anyhow.workspace = true
 clap = { version = "4.5.53", features = ["derive"] }
 credibil-otel.workspace = true
-serde.workspace = true
 futures.workspace = true
+runtime-macro.workspace = true
+serde.workspace = true
 tracing.workspace = true
 tokio = { workspace = true, features = ["macros"] }
 wasmtime = { workspace = true, features = ["runtime"] }
 wasmtime-wasi.workspace = true
+

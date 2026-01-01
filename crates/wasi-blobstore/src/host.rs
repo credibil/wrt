@@ -35,9 +35,9 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use bytes::Bytes;
-pub use kernel::FutureResult;
-use kernel::{Host, Server, State};
 pub use resource::*;
+pub use warp::FutureResult;
+use warp::{Host, Server, State};
 use wasmtime::component::{HasData, Linker, ResourceTable};
 use wasmtime_wasi::p2::pipe::MemoryOutputPipe;
 

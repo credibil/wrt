@@ -11,7 +11,7 @@ Tempo is a modular WASI component runtime built on [wasmtime](https://github.com
     - `sdk-http`, `sdk-otel`, etc.: SDKs and service integrations for guests.
   - WASI interface definitions and bindings are in `wit/` and `crates/wit-bindings/`.
 - **Service Pattern:**
-  - Each host service implements a `Service` struct and the `kernel::Service` trait, providing an `add_to_linker` method for wasmtime integration.
+  - Each host service implements a `Service` struct and the `warp::Service` trait, providing an `add_to_linker` method for wasmtime integration.
   - Services use resource tables for managing handles to NATS, object stores, etc.
 - **Component Communication:**
   - Host/guest communication is via WASI interfaces (see `wit/`).

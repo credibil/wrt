@@ -8,10 +8,10 @@ use std::sync::Arc;
 use anyhow::{Result, anyhow};
 use futures::FutureExt;
 use futures::stream::StreamExt;
-use kernel::Backend;
 use tokio::sync::broadcast::{self, Receiver, Sender};
 use tokio_stream::wrappers::BroadcastStream;
 use tracing::instrument;
+use warp::Backend;
 
 use crate::host::WasiMessagingCtx;
 use crate::host::resource::{
@@ -21,7 +21,7 @@ use crate::host::resource::{
 #[derive(Debug, Clone, Default)]
 pub struct ConnectOptions;
 
-impl kernel::FromEnv for ConnectOptions {
+impl warp::FromEnv for ConnectOptions {
     fn from_env() -> Result<Self> {
         Ok(Self)
     }

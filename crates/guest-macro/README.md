@@ -140,7 +140,7 @@ You can create different runtime configurations for different use cases:
 mod http_runtime {
     use wasi_http::WasiHttpCtx;
 
-    buildgen::runtime!({
+    warp::runtime!({
         "http": WasiHttpCtx
     });
 }
@@ -151,7 +151,7 @@ mod full_runtime {
     use wasi_otel::DefaultOtel;
     use be_nats::Client as Nats;
 
-    buildgen::runtime!({
+    warp::runtime!({
         "http": WasiHttpCtx,
         "otel": DefaultOtel,
         "keyvalue": Nats,
@@ -175,7 +175,7 @@ Now you can declaratively specify your configuration:
 ```rust
 #[cfg(feature = "credibil")]
 mod credibil_runtime {
-    buildgen::runtime!({
+    warp::runtime!({
         "http": WasiHttpCtx,
         "otel": DefaultOtel,
         "blobstore": MongoDb,

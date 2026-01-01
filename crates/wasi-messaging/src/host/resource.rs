@@ -6,8 +6,8 @@ use std::pin::Pin;
 use std::sync::Arc;
 
 use futures::Stream;
-pub use kernel::FutureResult;
 use serde::{Deserialize, Serialize};
+pub use warp::FutureResult;
 
 use crate::host::generated::wasi::messaging::types;
 pub type Subscriptions = Pin<Box<dyn Stream<Item = MessageProxy> + Send>>;

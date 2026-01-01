@@ -23,7 +23,7 @@ WRT provides a thin wrapper around wasmtime for ergonomic integration of host-ba
 │        └───────────────┴───────┬───────┴───────────────┘            │
 │                                │                                    │
 │                         ┌──────┴──────┐                             │
-│                         │   kernel    │                             │
+│                         │   warp    │                             │
 │                         │ (wasmtime)  │                             │
 │                         └──────┬──────┘                             │
 │                                │                                    │
@@ -67,7 +67,7 @@ WRT is organized into three distinct layers:
 
 ## Crate Organization
 
-### Kernel (`crates/kernel`)
+### Kernel (`crates/warp`)
 
 The foundation of the runtime. Provides:
 
@@ -99,17 +99,17 @@ pub trait Backend: Sized + Sync + Send {
 
 Each WASI interface crate provides both guest and host implementations:
 
-| Crate | WASI Interface | Purpose |
-|-------|----------------|---------|
-| `wasi-http` | `wasi:http` | HTTP client/server |
-| `wasi-keyvalue` | `wasi:keyvalue` | Key-value storage |
-| `wasi-messaging` | `wasi:messaging` | Pub/sub messaging |
-| `wasi-blobstore` | `wasi:blobstore` | Object/blob storage |
-| `wasi-sql` | `wasi:sql` | SQL database access |
-| `wasi-vault` | Custom | Secrets management |
-| `wasi-identity` | Custom | Identity/authentication |
-| `wasi-otel` | Custom | OpenTelemetry observability |
-| `wasi-websockets` | Custom | WebSocket connections |
+| Crate             | WASI Interface   | Purpose                     |
+| ----------------- | ---------------- | --------------------------- |
+| `wasi-http`       | `wasi:http`      | HTTP client/server          |
+| `wasi-keyvalue`   | `wasi:keyvalue`  | Key-value storage           |
+| `wasi-messaging`  | `wasi:messaging` | Pub/sub messaging           |
+| `wasi-blobstore`  | `wasi:blobstore` | Object/blob storage         |
+| `wasi-sql`        | `wasi:sql`       | SQL database access         |
+| `wasi-vault`      | Custom           | Secrets management          |
+| `wasi-identity`   | Custom           | Identity/authentication     |
+| `wasi-otel`       | Custom           | OpenTelemetry observability |
+| `wasi-websockets` | Custom           | WebSocket connections       |
 
 Each crate contains:
 
@@ -146,15 +146,15 @@ pub use host::*;
 
 Backend crates provide concrete implementations connecting to external services:
 
-| Crate | Service | Supports |
-|-------|---------|----------|
-| `be-redis` | Redis | keyvalue |
-| `be-nats` | NATS | keyvalue, messaging, blobstore |
-| `be-kafka` | Apache Kafka | messaging |
-| `be-mongodb` | MongoDB | blobstore |
-| `be-postgres` | PostgreSQL | sql |
-| `be-azure` | Azure | vault, identity |
-| `be-opentelemetry` | OTEL Collector | otel |
+| Crate              | Service        | Supports                       |
+| ------------------ | -------------- | ------------------------------ |
+| `be-redis`         | Redis          | keyvalue                       |
+| `be-nats`          | NATS           | keyvalue, messaging, blobstore |
+| `be-kafka`         | Apache Kafka   | messaging                      |
+| `be-mongodb`       | MongoDB        | blobstore                      |
+| `be-postgres`      | PostgreSQL     | sql                            |
+| `be-azure`         | Azure          | vault, identity                |
+| `be-opentelemetry` | OTEL Collector | otel                           |
 
 Each backend:
 
@@ -225,7 +225,7 @@ Dependencies on standard WASI definitions are managed in `wit/deps/` and version
 
 ## Runtime Execution Flow
 
-1. **CLI Parsing**: The kernel parses command-line arguments (`run` or `compile`)
+1. **CLI Parsing**: The warp parses command-line arguments (`run` or `compile`)
 
 2. **Backend Connection**: The `runtime!` macro-generated code connects to all configured backends using environment variables
 
@@ -267,7 +267,7 @@ See individual backend READMEs for specific environment variables.
 wrt/
 ├── src/                    # CLI entry points (realtime binaries)
 ├── crates/
-│   ├── kernel/             # Core runtime infrastructure
+│   ├── warp/             # Core runtime infrastructure
 │   ├── buildgen/           # Runtime code generation macro
 │   ├── wasi-*/             # WASI interface implementations
 │   │   ├── src/

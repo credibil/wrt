@@ -11,8 +11,10 @@ use std::path::PathBuf;
 
 pub use clap::Parser;
 use clap::Subcommand;
+pub use runtime_macro::runtime;
 pub use {anyhow, futures, tokio, wasmtime, wasmtime_wasi};
 
+// re-export internal modules
 #[cfg(feature = "jit")]
 pub use self::compile::*;
 pub use self::create::*;

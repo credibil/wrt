@@ -2,7 +2,7 @@ use std::fmt::Debug;
 use std::ops::Deref;
 use std::sync::Arc;
 
-pub use kernel::FutureResult;
+pub use warp::FutureResult;
 
 /// Providers implement the [`Locker`] trait to allow the host to
 /// interact with different backend lockers (stores).

@@ -32,10 +32,10 @@ use std::fmt::Debug;
 use std::sync::Arc;
 
 use anyhow::Result;
-use kernel::{Host, Server, State};
 use resource::WebSocketServer;
 use server::run_server;
 use store_impl::FutureResult;
+use warp::{Host, Server, State};
 use wasmtime::component::{HasData, Linker};
 use wasmtime_wasi::ResourceTable;
 

@@ -8,9 +8,9 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use anyhow::{Result, anyhow};
 use futures::FutureExt;
-use kernel::Backend;
 use parking_lot::RwLock;
 use tracing::instrument;
+use warp::Backend;
 
 use crate::host::WasiBlobstoreCtx;
 use crate::host::generated::wasi::blobstore::container::{ContainerMetadata, ObjectMetadata};
@@ -19,7 +19,7 @@ use crate::host::resource::{Container, FutureResult};
 #[derive(Debug, Clone, Default)]
 pub struct ConnectOptions;
 
-impl kernel::FromEnv for ConnectOptions {
+impl warp::FromEnv for ConnectOptions {
     fn from_env() -> Result<Self> {
         Ok(Self)
     }

@@ -20,8 +20,7 @@ wasi-vault.workspace = true
 wasi-websockets.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-buildgen.workspace = true
-kernel.workspace = true
+warp.workspace = true
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 axum = { workspace = true, features = ["macros"] }
@@ -33,6 +32,7 @@ opentelemetry.workspace = true
 serde_json.workspace = true
 tower-http = { version = "0.6.6", features = ["cors", "trace"] }
 tracing.workspace = true
+warp-sdk.workspace = true
 wasi-otel-attr.workspace = true
 wasip3.workspace = true
 wit-bindgen.workspace = true

@@ -10,8 +10,8 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use futures::FutureExt;
-use kernel::{Backend, FutureResult};
 use tracing::instrument;
+use warp::{Backend, FutureResult};
 
 use crate::host::WebSocketsCtx;
 use crate::host::resource::{DefaultWebSocketServer, WebSocketServer};
@@ -19,7 +19,7 @@ use crate::host::resource::{DefaultWebSocketServer, WebSocketServer};
 #[derive(Debug, Clone, Default)]
 pub struct ConnectOptions;
 
-impl kernel::FromEnv for ConnectOptions {
+impl warp::FromEnv for ConnectOptions {
     fn from_env() -> Result<Self> {
         Ok(Self)
     }

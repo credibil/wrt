@@ -36,7 +36,7 @@ futures.workspace = true
 hex = "0.4.3"
 opentelemetry-proto = "0.31.0"
 prost = "0.14.1"
-kernel.workspace = true
+warp.workspace = true
 wasmtime.workspace = true
 
 # guest dependencies

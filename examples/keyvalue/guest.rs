@@ -20,7 +20,7 @@ use axum::{Json, Router};
 use bytes::Bytes;
 use serde_json::{Value, json};
 use tracing::Level;
-use wasi_http::HttpResult;
+use warp_sdk::HttpResult;
 use wasi_keyvalue::store;
 use wasip3::exports::http::handler::Guest;
 use wasip3::http::types::{ErrorCode, Request, Response};

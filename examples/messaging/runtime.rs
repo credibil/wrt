@@ -4,7 +4,7 @@ cfg_if::cfg_if! {
         use wasi_messaging::{WasiMessaging, MessagingDefault};
         use wasi_otel::{WasiOtel, OtelDefault};
 
-        buildgen::runtime!(main, {
+        warp::runtime!(main, {
             WasiHttp: HttpDefault,
             WasiMessaging: MessagingDefault,
             WasiOtel: OtelDefault,

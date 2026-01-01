@@ -4,7 +4,7 @@ cfg_if::cfg_if! {
         use wasi_keyvalue::{WasiKeyValue, KeyValueDefault};
         use wasi_otel::{WasiOtel, OtelDefault};
 
-        buildgen::runtime!(main, {
+        warp::runtime!(main, {
             WasiHttp: HttpDefault,
             WasiKeyValue: KeyValueDefault,
             WasiOtel: OtelDefault,

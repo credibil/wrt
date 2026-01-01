@@ -22,7 +22,7 @@ pub fn expand(generated: Generated) -> TokenStream {
         #[cfg(target_arch = "wasm32")]
         mod __buildgen_guest {
             use anyhow::{Context, Result};
-            use fabric::api::Client;
+            use warp_sdk::api::Client;
 
             use super::*;
 

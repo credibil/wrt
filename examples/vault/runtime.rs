@@ -4,7 +4,7 @@ cfg_if::cfg_if! {
         use wasi_otel::{WasiOtel, OtelDefault};
         use wasi_vault::{WasiVault, VaultDefault};
 
-        buildgen::runtime!(main, {
+        warp::runtime!(main, {
             WasiHttp: HttpDefault,
             WasiOtel: OtelDefault,
             WasiVault: VaultDefault,

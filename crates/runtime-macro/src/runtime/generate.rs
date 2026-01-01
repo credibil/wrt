@@ -67,13 +67,13 @@ impl TryFrom<Input> for Generated {
         // main function
         let main_fn = if input.gen_main {
             quote! {
-                use kernel::tokio;
+                use warp::tokio;
 
                 #[tokio::main]
                 async fn main() -> anyhow::Result<()> {
-                    use kernel::Parser;
-                    match kernel::Cli::parse().command {
-                        kernel::Command::Run { wasm } => runtime::run(wasm).await,
+                    use warp::Parser;
+                    match warp::Cli::parse().command {
+                        warp::Command::Run { wasm } => runtime::run(wasm).await,
                         _ => unreachable!(),
                     }
                 }

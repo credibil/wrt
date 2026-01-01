@@ -22,7 +22,7 @@ workspace = true
 anyhow.workspace = true
 futures.workspace = true
 http.workspace = true
-kernel.workspace = true
+warp.workspace = true
 serde.workspace = true
 time.workspace = true
 tokio = { workspace = true, features = ["sync"] }

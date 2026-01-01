@@ -11,8 +11,8 @@ use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
 
 use anyhow::Result;
-use kernel::Backend;
 use tracing::instrument;
+use warp::Backend;
 use wasmtime_wasi_config::WasiConfigVariables;
 
 use crate::WasiConfigCtx;
@@ -20,7 +20,7 @@ use crate::WasiConfigCtx;
 #[derive(Debug, Clone, Default)]
 pub struct ConnectOptions;
 
-impl kernel::FromEnv for ConnectOptions {
+impl warp::FromEnv for ConnectOptions {
     fn from_env() -> Result<Self> {
         Ok(Self)
     }

@@ -12,10 +12,10 @@ use std::sync::Arc;
 use anyhow::{Context, Result};
 use fromenv::FromEnv;
 use futures::FutureExt;
-use kernel::Backend;
 use rusqlite::types::ValueRef;
 use rusqlite::{Connection as SqliteConnection, params_from_iter};
 use tracing::instrument;
+use warp::Backend;
 
 use crate::host::resource::{Connection, FutureResult};
 use crate::host::{DataType, Field, Row, WasiSqlCtx};
@@ -26,7 +26,7 @@ pub struct ConnectOptions {
     pub database: String,
 }
 
-impl kernel::FromEnv for ConnectOptions {
+impl warp::FromEnv for ConnectOptions {
     fn from_env() -> Result<Self> {
         Self::from_env().finalize().context("issue loading connection options")
     }

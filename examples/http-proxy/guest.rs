@@ -35,7 +35,8 @@ use http::header::{CACHE_CONTROL, IF_NONE_MATCH};
 use http_body_util::{Empty, Full};
 use serde_json::{Value, json};
 use tracing::Level;
-use wasi_http::{CacheOptions, HttpResult};
+use warp_sdk::HttpResult;
+use wasi_http::CacheOptions;
 use wasip3::exports::http::handler::Guest;
 use wasip3::http::types::{ErrorCode, Request, Response};
 
