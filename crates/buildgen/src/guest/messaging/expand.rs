@@ -1,9 +1,9 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use crate::guest::messaging::generate::{MessagingGuest, Topic};
+use crate::guest::messaging::generate::{Messaging, Topic};
 
-pub fn expand(messaging: &MessagingGuest, client: &TokenStream) -> TokenStream {
+pub fn expand(messaging: &Messaging, client: &TokenStream) -> TokenStream {
     let topic_arms = messaging.topics.iter().map(expand_topic);
     let processors = messaging.topics.iter().map(|t| expand_processor(t, client));
 

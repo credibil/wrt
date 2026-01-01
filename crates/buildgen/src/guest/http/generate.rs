@@ -1,14 +1,14 @@
 use quote::{format_ident, quote};
 use syn::{Ident, LitStr, Type};
 
-use crate::guest as parsed;
+use crate::guest::http::parse;
 
-pub struct HttpGuest {
+pub struct Http {
     pub routes: Vec<Route>,
 }
 
-impl From<parsed::Http> for HttpGuest {
-    fn from(http: parsed::Http) -> Self {
+impl From<parse::Http> for Http {
+    fn from(http: parse::Http) -> Self {
         Self {
             routes: http.routes.into_iter().map(Route::from).collect(),
         }
@@ -25,8 +25,8 @@ pub struct Route {
     pub reply: Type,
 }
 
-impl From<parsed::Route> for Route {
-    fn from(route: parsed::Route) -> Self {
+impl From<parse::Route> for Route {
+    fn from(route: parse::Route) -> Self {
         let request = route.request;
         let request_str = quote! {#request}.to_string();
         let handler_name =

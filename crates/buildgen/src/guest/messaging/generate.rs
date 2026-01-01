@@ -1,14 +1,14 @@
 use quote::{format_ident, quote};
 use syn::{Ident, LitStr, Type};
 
-use crate::guest as parsed;
+use crate::guest::messaging::parse;
 
-pub struct MessagingGuest {
+pub struct Messaging {
     pub topics: Vec<Topic>,
 }
 
-impl From<parsed::Messaging> for MessagingGuest {
-    fn from(messaging: parsed::Messaging) -> Self {
+impl From<parse::Messaging> for Messaging {
+    fn from(messaging: parse::Messaging) -> Self {
         Self {
             topics: messaging.topics.into_iter().map(Topic::from).collect(),
         }
@@ -21,8 +21,8 @@ pub struct Topic {
     pub handler_name: Ident,
 }
 
-impl From<parsed::Topic> for Topic {
-    fn from(topic: parsed::Topic) -> Self {
+impl From<parse::Topic> for Topic {
+    fn from(topic: parse::Topic) -> Self {
         let message = topic.message;
         let message_str = quote! {#message}.to_string();
         let handler_name =

@@ -5,63 +5,55 @@ pub mod messaging;
 
 use proc_macro2::Span;
 use syn::parse::{Parse, ParseStream};
-use syn::{Ident, LitStr, Result, Token, Type};
+use syn::punctuated::Punctuated;
+use syn::{Error, Ident, LitStr, Result, Token};
 
 use self::messaging::parse::Messaging;
-use crate::guest::http::parse::{Http, Route};
-use crate::guest::messaging::parse::Topic;
+use crate::guest::http::parse::Http;
 
 pub struct Input {
     pub owner: LitStr,
-    pub provider: Type,
+    pub provider: Ident,
     pub http: Option<Http>,
     pub messaging: Option<Messaging>,
 }
 
 impl Parse for Input {
     fn parse(input: ParseStream) -> Result<Self> {
-        let content;
-        syn::braced!(content in input);
-
-        // let mut out = Self::default();
         let mut owner: Option<LitStr> = None;
-        let mut provider: Option<Type> = None;
+        let mut provider: Option<Ident> = None;
         let mut http: Option<Http> = None;
         let mut messaging: Option<Messaging> = None;
 
-        while !content.is_empty() {
-            let ident: Ident = content.parse()?;
-            content.parse::<Token![:]>()?;
+        // top-level parse loop
+        // if input.peek(token::Brace) {
+        let content;
+        syn::braced!(content in input);
+        let fields = Punctuated::<Opt, Token![,]>::parse_terminated(&content)?;
 
-            match ident.to_string().as_str() {
-                "owner" => {
-                    owner = Some(content.parse()?);
+        for field in fields.into_pairs() {
+            match field.into_value() {
+                Opt::Owner(o) => {
+                    if owner.is_some() {
+                        return Err(Error::new(o.span(), "cannot specify second owner"));
+                    }
+                    owner = Some(o);
                 }
-                "provider" => {
-                    provider = Some(content.parse()?);
+                Opt::Provider(p) => {
+                    if provider.is_some() {
+                        return Err(Error::new(p.span(), "cannot specify second provider"));
+                    }
+                    provider = Some(p);
                 }
-                "http" => {
-                    let list;
-                    syn::bracketed!(list in content);
-                    http = Some(list.parse()?);
+                Opt::Http(h) => {
+                    http = Some(h);
                 }
-                "messaging" => {
-                    let list;
-                    syn::bracketed!(list in content);
-                    messaging = Some(list.parse()?);
+                Opt::Messaging(m) => {
+                    messaging = Some(m);
                 }
-                _ => {
-                    return Err(syn::Error::new(
-                        ident.span(),
-                        "unknown field; expected `owner`, `provider`, `http`, or `messaging`",
-                    ));
-                }
-            }
-
-            if content.peek(Token![,]) {
-                content.parse::<Token![,]>()?;
             }
         }
+        // }
 
         let Some(owner) = owner else {
             return Err(syn::Error::new(Span::call_site(), "missing `owner`"));
@@ -77,6 +69,51 @@ impl Parse for Input {
             messaging,
         })
     }
+}
+
+#[allow(clippy::large_enum_variant)]
+enum Opt {
+    Owner(syn::LitStr),
+    Provider(Ident),
+    Http(Http),
+    Messaging(Messaging),
+}
+
+impl Parse for Opt {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let l = input.lookahead1();
+        if l.peek(kw::owner) {
+            input.parse::<kw::owner>()?;
+            input.parse::<Token![:]>()?;
+            Ok(Self::Owner(input.parse::<LitStr>()?))
+        } else if l.peek(kw::provider) {
+            // let span = input.parse::<kw::provider>()?.span;
+            input.parse::<kw::provider>()?;
+            input.parse::<Token![:]>()?;
+            Ok(Self::Provider(input.parse::<Ident>()?))
+        } else if l.peek(kw::http) {
+            input.parse::<kw::http>()?;
+            input.parse::<Token![:]>()?;
+            let list;
+            syn::bracketed!(list in input);
+            Ok(Self::Http(list.parse()?))
+        } else if l.peek(kw::messaging) {
+            input.parse::<kw::messaging>()?;
+            input.parse::<Token![:]>()?;
+            let list;
+            syn::bracketed!(list in input);
+            Ok(Self::Messaging(list.parse()?))
+        } else {
+            Err(l.error())
+        }
+    }
+}
+
+mod kw {
+    syn::custom_keyword!(owner);
+    syn::custom_keyword!(provider);
+    syn::custom_keyword!(http);
+    syn::custom_keyword!(messaging);
 }
 
 #[cfg(test)]

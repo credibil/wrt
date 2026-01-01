@@ -2,9 +2,9 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use syn::Ident;
 
-use crate::guest::http::generate::{HttpGuest, Route};
+use crate::guest::http::generate::{Http, Route};
 
-pub fn expand(http: &HttpGuest, client: &TokenStream) -> TokenStream {
+pub fn expand(http: &Http, client: &TokenStream) -> TokenStream {
     let routes = http.routes.iter().map(expand_route);
     let handlers = http.routes.iter().map(|r| expand_handler(r, client));
 
