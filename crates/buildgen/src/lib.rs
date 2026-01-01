@@ -31,12 +31,13 @@ pub fn runtime(input: TokenStream) -> TokenStream {
 ///
 /// ```ignore
 /// buildgen::guest!({
+///     owner: "at",
+///     provider: MyProvider,
 ///     http: [
-///         "/jobs/detector": {
+///         "/some/path": {
 ///             method: get,
-///             request: String,
-///             handler: detection_request,
-///             response: DetectionResponse,
+///             request: SomeRequest,
+///             reply: SomeResponse,
 ///         }
 ///     ],
 ///     messaging: [
@@ -55,11 +56,11 @@ pub fn runtime(input: TokenStream) -> TokenStream {
 ///   with non-alphanumeric characters replaced by `_` (e.g. `"realtime-r9k.v1"` → `on_realtime_r9k_v1`).
 ///   The generated code parses payload bytes via `TryFrom<&[u8]>` into `message` and then awaits the handler.
 #[proc_macro]
-pub fn guest(_input: TokenStream) -> TokenStream {
-    let parsed = parse_macro_input!(_input as guest::Input);
+pub fn guest(input: TokenStream) -> TokenStream {
+    let parsed = parse_macro_input!(input as guest::Input);
     let generated = match crate::guest::generate::Generated::try_from(parsed) {
         Ok(generated) => generated,
-        Err(e) => return TokenStream::from(e.into_compile_error()),
+        Err(e) => return e.into_compile_error().into(),
     };
-    TokenStream::from(crate::guest::expand::expand(generated))
+    crate::guest::expand::expand(generated).into()
 }

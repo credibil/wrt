@@ -20,8 +20,6 @@ pub fn expand(generated: Generated) -> TokenStream {
 
     quote! {
         mod runtime {
-            use super::*;
-
             use std::path::PathBuf;
 
             use anyhow::Result;
@@ -31,6 +29,8 @@ pub fn expand(generated: Generated) -> TokenStream {
             use kernel::wasmtime::component::InstancePre;
             use kernel::wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
             use kernel::{Backend, Compiled, Server, State};
+
+            use super::*;
 
             /// Run the specified wasm guest using the configured runtime.
             pub async fn run(wasm: PathBuf) -> Result<()> {

@@ -5,8 +5,6 @@ use syn::{Ident, LitStr, Path, Type};
 use crate::guest::{self as parsed, Input, topic_ident};
 
 pub struct Generated {
-    pub owner: LitStr,
-    pub provider: Type,
     pub http: Option<HttpGuest>,
     pub messaging: Option<MessagingGuest>,
 }
@@ -17,12 +15,10 @@ pub struct HttpGuest {
 
 pub struct Route {
     pub path: LitStr,
-    #[allow(dead_code)]
-    pub params: Option<Vec<Ident>>,
     pub method: Ident,
-    pub handler_name: Ident,
-    pub request: Type,
-    pub reply: Type,
+    pub handler: TokenStream,
+    pub request: Option<Type>,
+    pub response: Option<Type>,
 }
 
 pub struct MessagingGuest {
@@ -39,35 +35,45 @@ impl TryFrom<Input> for Generated {
     type Error = syn::Error;
 
     fn try_from(input: Input) -> Result<Self, Self::Error> {
-        let http = input.http.map(|http| HttpGuest {
-            routes: http.into_iter().map(generate_route).collect(),
-        });
-        let messaging = input.messaging.map(|messaging| MessagingGuest {
-            topics: messaging.into_iter().map(generate_topic).collect(),
-        });
+        let http = if input.http.is_empty() {
+            None
+        } else {
+            Some(HttpGuest {
+                routes: input
+                    .http
+                    .into_iter()
+                    .map(generate_route)
+                    .collect::<Result<Vec<_>, _>>()?,
+            })
+        };
 
-        Ok(Self {
-            owner: input.owner,
-            provider: input.provider,
-            http,
-            messaging,
-        })
+        let messaging = if input.messaging.is_empty() {
+            None
+        } else {
+            Some(MessagingGuest {
+                topics: input.messaging.into_iter().map(generate_topic).collect(),
+            })
+        };
+
+        Ok(Self { http, messaging })
     }
 }
 
-fn generate_route(route: parsed::Route) -> Route {
-    let request = route.request;
-    let request_str = quote! {#request}.to_string();
-    let handler_name = request_str.strip_suffix("Request").unwrap_or(&request_str).to_lowercase();
+fn generate_route(route: parsed::Route) -> syn::Result<Route> {
+    let method = match route.method.to_string().as_str() {
+        "get" | "post" | "put" | "delete" | "patch" | "head" | "options" | "trace" | "connect" => {
+            format_ident!("{}", route.method)
+        }
+        _ => return Err(syn::Error::new(route.method.span(), "unknown http method")),
+    };
 
-    Route {
+    Ok(Route {
         path: route.path,
-        params: Some(route.params),
-        method: route.method,
-        handler_name: format_ident!("{handler_name}"),
-        request,
-        reply: route.reply,
-    }
+        method,
+        handler: qualify_path(&route.handler),
+        request: route.request,
+        response: route.response,
+    })
 }
 
 fn generate_topic(topic: parsed::Topic) -> Topic {
