@@ -35,10 +35,6 @@ use syn::parse_macro_input;
 ///   The generated code parses payload bytes via `TryFrom<&[u8]>` into `message` and then awaits the handler.
 #[proc_macro]
 pub fn guest(input: TokenStream) -> TokenStream {
-    let parsed = parse_macro_input!(input as guest::Input);
-    let generated = match crate::guest::generate::Generated::try_from(parsed) {
-        Ok(generated) => generated,
-        Err(e) => return e.into_compile_error().into(),
-    };
-    crate::guest::expand::expand(generated).into()
+    let config = parse_macro_input!(input as guest::Config);
+    guest::expand(config).into()
 }

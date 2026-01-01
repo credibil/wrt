@@ -1,24 +1,23 @@
-pub mod expand;
-pub mod generate;
-pub mod http;
-pub mod messaging;
+mod http;
+mod messaging;
 
-use proc_macro2::Span;
+use proc_macro2::{Span, TokenStream};
+use quote::quote;
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::{Error, Ident, LitStr, Result, Token};
 
-use self::messaging::parse::Messaging;
-use crate::guest::http::parse::Http;
+use self::http::{GeneratedHttp, Http};
+use self::messaging::{GeneratedMessaging, Messaging};
 
-pub struct Input {
+pub struct Config {
     pub owner: LitStr,
     pub provider: Ident,
     pub http: Option<Http>,
     pub messaging: Option<Messaging>,
 }
 
-impl Parse for Input {
+impl Parse for Config {
     fn parse(input: ParseStream) -> Result<Self> {
         let mut owner: Option<LitStr> = None;
         let mut provider: Option<Ident> = None;
@@ -116,6 +115,50 @@ mod kw {
     syn::custom_keyword!(messaging);
 }
 
+struct Generated {
+    pub owner: LitStr,
+    pub provider: Ident,
+    pub http: Option<GeneratedHttp>,
+    pub messaging: Option<GeneratedMessaging>,
+}
+
+impl From<Config> for Generated {
+    fn from(input: Config) -> Self {
+        Self {
+            owner: input.owner,
+            provider: input.provider,
+            http: input.http.map(GeneratedHttp::from),
+            messaging: input.messaging.map(GeneratedMessaging::from),
+        }
+    }
+}
+
+pub fn expand(config: Config) -> TokenStream {
+    let generated = Generated::from(config);
+
+    let owner = generated.owner;
+    let provider = generated.provider;
+    let client = quote! {
+        Client::new(#owner).provider(#provider::new())
+    };
+
+    let http_mod = generated.http.as_ref().map(|h| http::expand(h, &client));
+    let messaging_mod = generated.messaging.as_ref().map(|m| messaging::expand(m, &client));
+
+    quote! {
+        #[cfg(target_arch = "wasm32")]
+        mod __buildgen_guest {
+            use anyhow::{Context, Result};
+            use warp_sdk::api::Client;
+
+            use super::*;
+
+            #http_mod
+            #messaging_mod
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use quote::quote;
@@ -141,7 +184,7 @@ mod tests {
             ]
         });
 
-        let parsed: Input = syn::parse2(input).expect("should parse");
+        let parsed: Config = syn::parse2(input).expect("should parse");
 
         let http = parsed.http.expect("should have http");
         assert_eq!(http.routes.len(), 1);
@@ -167,7 +210,7 @@ mod tests {
             ]
         });
 
-        let parsed: Input = syn::parse2(input).expect("should parse");
+        let parsed: Config = syn::parse2(input).expect("should parse");
         let http = parsed.http.expect("should have http");
         assert_eq!(http.routes.len(), 1);
         assert_eq!(http.routes[0].params.len(), 2);
