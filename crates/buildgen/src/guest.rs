@@ -35,7 +35,7 @@ impl Parse for Input {
 
             match ident.to_string().as_str() {
                 "owner" => {
-                    owner = content.parse()?;
+                    owner = Some(content.parse()?);
                 }
                 "provider" => {
                     provider = Some(content.parse()?);
@@ -79,25 +79,6 @@ impl Parse for Input {
     }
 }
 
-// pub fn topic_ident(topic: &LitStr) -> Ident {
-//     let s = topic.value();
-//     let mut out = String::with_capacity(s.len() + 3);
-//     out.push_str("on_");
-//     for ch in s.chars() {
-//         if ch.is_ascii_alphanumeric() {
-//             out.push(ch.to_ascii_lowercase());
-//         } else {
-//             out.push('_');
-//         }
-//     }
-//     if out.as_bytes().get(3).is_some_and(u8::is_ascii_digit) {
-//         // `on_123` isn't a valid identifier start after the prefix for some cases;
-//         // make it unambiguous.
-//         out.insert_str(3, "t_");
-//     }
-//     Ident::new(&out, Span::call_site())
-// }
-
 #[cfg(test)]
 mod tests {
     use quote::quote;
@@ -105,7 +86,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn parses_example_like_input_without_commas() {
+    fn parse_without_commas() {
         let input = quote!({
             owner: "at",
             provider: MyProvider,
@@ -136,7 +117,7 @@ mod tests {
     }
 
     #[test]
-    fn parses_http_path_params() {
+    fn parse_http_path_params() {
         let input = quote!({
             owner: "at",
             provider: MyProvider,

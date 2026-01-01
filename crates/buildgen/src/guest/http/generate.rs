@@ -7,6 +7,14 @@ pub struct HttpGuest {
     pub routes: Vec<Route>,
 }
 
+impl From<parsed::Http> for HttpGuest {
+    fn from(http: parsed::Http) -> Self {
+        Self {
+            routes: http.routes.into_iter().map(Route::from).collect(),
+        }
+    }
+}
+
 pub struct Route {
     pub path: LitStr,
     #[allow(dead_code)]
@@ -17,26 +25,20 @@ pub struct Route {
     pub reply: Type,
 }
 
-pub fn generate(http: parsed::Http) -> HttpGuest {
-    HttpGuest {
-        routes: http.routes.into_iter().map(generate_route).collect(),
-    }
-}
+impl From<parsed::Route> for Route {
+    fn from(route: parsed::Route) -> Self {
+        let request = route.request;
+        let request_str = quote! {#request}.to_string();
+        let handler_name =
+            request_str.strip_suffix("Request").unwrap_or(&request_str).to_lowercase();
 
-fn generate_route(route: parsed::Route) -> Route {
-    let request = route.request;
-    let request_str = quote! {#request}.to_string();
-    let handler_name = request_str
-        .strip_suffix("Request")
-        .unwrap_or(&request_str)
-        .to_lowercase();
-
-    Route {
-        path: route.path,
-        params: Some(route.params),
-        method: route.method,
-        handler_name: format_ident!("{handler_name}"),
-        request,
-        reply: route.reply,
+        Self {
+            path: route.path,
+            params: Some(route.params),
+            method: route.method,
+            handler_name: format_ident!("{handler_name}"),
+            request,
+            reply: route.reply,
+        }
     }
 }

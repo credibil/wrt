@@ -75,6 +75,7 @@ fn expand_handler(route: &Route, client: &TokenStream) -> TokenStream {
     let request = if route.method == "get" {
         if params.is_empty() {
             quote! { #request }
+            //  quote! { #request::try_from(()).context("parsing request")? }
         } else if params.len() == 1 {
             quote! { #request::try_from(#(#params),*).context("parsing request")? }
         } else {
