@@ -4,7 +4,7 @@ pub mod generate;
 use proc_macro2::Span;
 use quote::format_ident;
 use syn::parse::{Parse, ParseStream};
-use syn::{Ident, LitStr, Path, Result, Token, Type, parse_str};
+use syn::{Ident, LitStr, Result, Token, Type, parse_str};
 
 pub struct Input {
     pub owner: LitStr,
@@ -24,7 +24,6 @@ pub struct Route {
 pub struct Topic {
     pub pattern: LitStr,
     pub message: Type,
-    pub handler: Option<Path>,
 }
 
 impl Parse for Input {
@@ -233,6 +232,7 @@ fn parse_path_params(path: &LitStr) -> Result<Vec<Ident>> {
 
 fn parse_topics(input: ParseStream) -> Result<Vec<Topic>> {
     let mut topics = Vec::new();
+
     while !input.is_empty() {
         let pattern: LitStr = input.parse()?;
         input.parse::<Token![:]>()?;
@@ -241,7 +241,6 @@ fn parse_topics(input: ParseStream) -> Result<Vec<Topic>> {
         syn::braced!(settings in input);
 
         let mut message: Option<Type> = None;
-        let mut handler: Option<Path> = None;
 
         while !settings.is_empty() {
             let key: Ident = settings.parse()?;
@@ -249,8 +248,6 @@ fn parse_topics(input: ParseStream) -> Result<Vec<Topic>> {
 
             if key == "message" {
                 message = Some(settings.parse()?);
-            } else if key == "handler" {
-                handler = Some(settings.parse()?);
             } else {
                 return Err(syn::Error::new(
                     key.span(),
@@ -268,11 +265,7 @@ fn parse_topics(input: ParseStream) -> Result<Vec<Topic>> {
             return Err(syn::Error::new(pattern.span(), "topic missing `message`"));
         };
 
-        topics.push(Topic {
-            pattern,
-            message,
-            handler,
-        });
+        topics.push(Topic { pattern, message });
 
         if input.peek(Token![,]) {
             input.parse::<Token![,]>()?;
@@ -281,24 +274,24 @@ fn parse_topics(input: ParseStream) -> Result<Vec<Topic>> {
     Ok(topics)
 }
 
-pub fn topic_ident(topic: &LitStr) -> Ident {
-    let s = topic.value();
-    let mut out = String::with_capacity(s.len() + 3);
-    out.push_str("on_");
-    for ch in s.chars() {
-        if ch.is_ascii_alphanumeric() {
-            out.push(ch.to_ascii_lowercase());
-        } else {
-            out.push('_');
-        }
-    }
-    if out.as_bytes().get(3).is_some_and(u8::is_ascii_digit) {
-        // `on_123` isn't a valid identifier start after the prefix for some cases;
-        // make it unambiguous.
-        out.insert_str(3, "t_");
-    }
-    Ident::new(&out, Span::call_site())
-}
+// pub fn topic_ident(topic: &LitStr) -> Ident {
+//     let s = topic.value();
+//     let mut out = String::with_capacity(s.len() + 3);
+//     out.push_str("on_");
+//     for ch in s.chars() {
+//         if ch.is_ascii_alphanumeric() {
+//             out.push(ch.to_ascii_lowercase());
+//         } else {
+//             out.push('_');
+//         }
+//     }
+//     if out.as_bytes().get(3).is_some_and(u8::is_ascii_digit) {
+//         // `on_123` isn't a valid identifier start after the prefix for some cases;
+//         // make it unambiguous.
+//         out.insert_str(3, "t_");
+//     }
+//     Ident::new(&out, Span::call_site())
+// }
 
 #[cfg(test)]
 mod tests {

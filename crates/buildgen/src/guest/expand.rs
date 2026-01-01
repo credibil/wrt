@@ -15,16 +15,19 @@ pub fn expand(generated: Generated) -> TokenStream {
         Client::new(#owner).provider(#provider::new())
     };
 
-    let http_guest = generated.http.as_ref().map(|http| expand_http(http, &client));
-    let messaging_guest = generated.messaging.map(|messaging| expand_messaging(messaging, &client));
+    let http_mod = generated.http.as_ref().map(|h| expand_http(h, &client));
+    let messaging_mod = generated.messaging.map(|m| expand_messaging(&m, &client));
 
     quote! {
         #[cfg(target_arch = "wasm32")]
         mod __buildgen_guest {
+            use anyhow::{Context, Result};
+            use fabric::api::Client;
+
             use super::*;
 
-            #http_guest
-            #messaging_guest
+            #http_mod
+            #messaging_mod
         }
     }
 }
@@ -35,8 +38,7 @@ fn expand_http(http: &HttpGuest, client: &TokenStream) -> TokenStream {
 
     quote! {
         mod http {
-            use anyhow::{Context, Result};
-            use fabric::api::{Client, HttpResult, Reply};
+            use fabric::api::{HttpResult, Reply};
 
             use super::*;
 
@@ -119,11 +121,14 @@ fn expand_handler(route: &Route, client: &TokenStream) -> TokenStream {
     }
 }
 
-fn expand_messaging(messaging: MessagingGuest, _client: &TokenStream) -> TokenStream {
-    let arms = messaging.topics.into_iter().map(expand_topic);
+fn expand_messaging(messaging: &MessagingGuest, client: &TokenStream) -> TokenStream {
+    let topic_arms = messaging.topics.iter().map(expand_topic);
+    let processors = messaging.topics.iter().map(|t| expand_processor(t, client));
 
     quote! {
         mod messaging {
+            use wasi_messaging::types::Message;
+
             use super::*;
 
             pub struct Messaging;
@@ -134,32 +139,48 @@ fn expand_messaging(messaging: MessagingGuest, _client: &TokenStream) -> TokenSt
                     message: wasi_messaging::types::Message,
                 ) -> core::result::Result<(), wasi_messaging::types::Error> {
                     let topic = message.topic().unwrap_or_default();
-                    match topic.as_str() {
-                        #(#arms)*
-                        _ => Ok(()),
+
+                    // check we're processing topics for the correct environment
+                    // let env = &Provider::new().config.environment;
+                    let env = std::env::var("ENV").unwrap_or_default();
+                    let Some(topic) = topic.strip_prefix(&format!("{env}-")) else {
+                        return Err(wasi_messaging::types::Error::Other("Incorrect environment".to_string()));
+                    };
+
+                    if let Err(e) = match &topic {
+                        #(#topic_arms)*
+                        _ => return Err(wasi_messaging::types::Error::Other("Unhandled topic".to_string())),
+                    } {
+                        return Err(wasi_messaging::types::Error::Other(e.to_string()));
                     }
+
+                    Ok(())
                 }
             }
+
+            #(#processors)*
         }
     }
 }
 
-fn expand_topic(topic: Topic) -> TokenStream {
-    let Topic {
-        pattern,
-        message_type,
-        handler,
-    } = topic;
+fn expand_topic(topic: &Topic) -> TokenStream {
+    let pattern = &topic.pattern;
+    let handler_name = &topic.handler_name;
 
     quote! {
-        #pattern => {
-            let payload = message.data();
-            let parsed: #message_type =
-                <#message_type as ::core::convert::TryFrom<&[u8]>>::try_from(payload.as_slice())
-                    .map_err(|e| wasi_messaging::types::Error::Other(format!("{e}")))?;
-            #handler(parsed)
-                .await
-                .map_err(|e| wasi_messaging::types::Error::Other(e.to_string()))?;
+        t if t.contains(#pattern) => #handler_name(&message.data()).await,
+    }
+}
+
+fn expand_processor(topic: &Topic, client: &TokenStream) -> TokenStream {
+    let handler_fn = &topic.handler_name;
+    let message = &topic.message_type;
+
+    quote! {
+        async fn #handler_fn(message: &[u8]) -> Result<()> {
+            let client = #client;
+            let request = #message::try_from(message).context("parsing message")?;
+            client.request(request).await?;
             Ok(())
         }
     }
