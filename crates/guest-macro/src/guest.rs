@@ -25,7 +25,7 @@ impl Parse for Config {
         let mut messaging: Option<Messaging> = None;
 
         // top-level parse loop
-        // if input.peek(token::Brace) {
+    
         let content;
         syn::braced!(content in input);
         let fields = Punctuated::<Opt, Token![,]>::parse_terminated(&content)?;
@@ -52,7 +52,7 @@ impl Parse for Config {
                 }
             }
         }
-        // }
+  
 
         let Some(owner) = owner else {
             return Err(syn::Error::new(Span::call_site(), "missing `owner`"));
@@ -86,7 +86,6 @@ impl Parse for Opt {
             input.parse::<Token![:]>()?;
             Ok(Self::Owner(input.parse::<LitStr>()?))
         } else if l.peek(kw::provider) {
-            // let span = input.parse::<kw::provider>()?.span;
             input.parse::<kw::provider>()?;
             input.parse::<Token![:]>()?;
             Ok(Self::Provider(input.parse::<Ident>()?))

@@ -1,7 +1,9 @@
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use syn::parse::{Parse, ParseStream};
-use syn::{Ident, LitStr, Result, Token, Type, parse_str};
+use syn::punctuated::Punctuated;
+use syn::spanned::Spanned;
+use syn::{Ident, LitStr, Path, Result, Token, parse_str};
 
 pub struct Http {
     pub routes: Vec<Route>,
@@ -21,12 +23,13 @@ impl Parse for Http {
         Ok(Self { routes })
     }
 }
+
 pub struct Route {
     pub path: LitStr,
     pub params: Vec<Ident>,
     pub method: Ident,
-    pub request: Type,
-    pub reply: Type,
+    pub request: Path,
+    pub reply: Path,
 }
 
 impl Parse for Route {
@@ -34,32 +37,34 @@ impl Parse for Route {
         let path: LitStr = input.parse()?;
         input.parse::<Token![:]>()?;
 
+        let mut method: Option<Ident> = None;
+        let mut request: Option<Path> = None;
+        let mut reply: Option<Path> = None;
+
         let settings;
         syn::braced!(settings in input);
+        let fields = Punctuated::<Opt, Token![,]>::parse_terminated(&settings)?;
 
-        let mut method: Option<Ident> = None;
-        let mut request: Option<syn::Type> = None;
-        let mut reply: Option<syn::Type> = None;
-
-        while !settings.is_empty() {
-            let key: Ident = settings.parse()?;
-            settings.parse::<Token![:]>()?;
-
-            if key == "method" {
-                method = Some(settings.parse()?);
-            } else if key == "request" {
-                request = Some(settings.parse()?);
-            } else if key == "reply" {
-                reply = Some(settings.parse()?);
-            } else {
-                return Err(syn::Error::new(
-                    key.span(),
-                    "unknown http field; expected `method`, `request`, or `reply`",
-                ));
-            }
-
-            if settings.peek(Token![,]) {
-                settings.parse::<Token![,]>()?;
+        for field in fields.into_pairs() {
+            match field.into_value() {
+                Opt::Method(m) => {
+                    if method.is_some() {
+                        return Err(syn::Error::new(m.span(), "cannot specify second method"));
+                    }
+                    method = Some(m);
+                }
+                Opt::Request(r) => {
+                    if request.is_some() {
+                        return Err(syn::Error::new(r.span(), "cannot specify second request"));
+                    }
+                    request = Some(r);
+                }
+                Opt::Reply(r) => {
+                    if reply.is_some() {
+                        return Err(syn::Error::new(r.span(), "cannot specify second reply"));
+                    }
+                    reply = Some(r);
+                }
             }
         }
 
@@ -95,6 +100,41 @@ impl Parse for Route {
             reply,
         })
     }
+}
+
+enum Opt {
+    Method(Ident),
+    Request(Path),
+    Reply(Path),
+}
+
+impl Parse for Opt {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let l = input.lookahead1();
+        if l.peek(kw::method) {
+            input.parse::<kw::method>()?;
+            input.parse::<Token![:]>()?;
+            Ok(Self::Method(input.parse::<Ident>()?))
+        } else if l.peek(kw::request) {
+            input.parse::<kw::request>()?;
+            input.parse::<Token![:]>()?;
+            // let type_name = input.parse::<Path>()?.to_token_stream().to_string();
+            Ok(Self::Request(input.parse::<Path>()?))
+        } else if l.peek(kw::reply) {
+            input.parse::<kw::reply>()?;
+            input.parse::<Token![:]>()?;
+            // let type_name = input.parse::<Path>()?.to_token_stream().to_string();
+            Ok(Self::Reply(input.parse::<Path>()?))
+        } else {
+            Err(l.error())
+        }
+    }
+}
+
+mod kw {
+    syn::custom_keyword!(method);
+    syn::custom_keyword!(request);
+    syn::custom_keyword!(reply);
 }
 
 fn parse_params(path: &LitStr) -> Result<Vec<Ident>> {
@@ -184,8 +224,8 @@ pub struct GeneratedRoute {
     pub params: Option<Vec<Ident>>,
     pub method: Ident,
     pub handler_name: Ident,
-    pub request: Type,
-    pub reply: Type,
+    pub request: Path,
+    pub reply: Path,
 }
 
 impl From<Route> for GeneratedRoute {
