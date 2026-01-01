@@ -15,9 +15,8 @@ pub fn expand(generated: Generated) -> TokenStream {
         Client::new(#owner).provider(#provider::new())
     };
 
-    let http_mod = generated.http.as_ref().map(|h| http::expand::expand_http(h, &client));
-    let messaging_mod =
-        generated.messaging.as_ref().map(|m| messaging::expand::expand_messaging(m, &client));
+    let http_mod = generated.http.as_ref().map(|h| http::expand::expand(h, &client));
+    let messaging_mod = generated.messaging.as_ref().map(|m| messaging::expand::expand(m, &client));
 
     quote! {
         #[cfg(target_arch = "wasm32")]

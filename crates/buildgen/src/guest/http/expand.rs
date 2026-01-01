@@ -4,7 +4,7 @@ use syn::Ident;
 
 use crate::guest::http::generate::{HttpGuest, Route};
 
-pub fn expand_http(http: &HttpGuest, client: &TokenStream) -> TokenStream {
+pub fn expand(http: &HttpGuest, client: &TokenStream) -> TokenStream {
     let routes = http.routes.iter().map(expand_route);
     let handlers = http.routes.iter().map(|r| expand_handler(r, client));
 

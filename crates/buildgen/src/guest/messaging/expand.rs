@@ -3,7 +3,7 @@ use quote::quote;
 
 use crate::guest::messaging::generate::{MessagingGuest, Topic};
 
-pub fn expand_messaging(messaging: &MessagingGuest, client: &TokenStream) -> TokenStream {
+pub fn expand(messaging: &MessagingGuest, client: &TokenStream) -> TokenStream {
     let topic_arms = messaging.topics.iter().map(expand_topic);
     let processors = messaging.topics.iter().map(|t| expand_processor(t, client));
 
