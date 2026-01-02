@@ -7,8 +7,8 @@ use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::{Error, Ident, LitStr, Path, Result, Token};
 
-use self::http::{GeneratedHttp, Http};
-use self::messaging::{GeneratedMessaging, Messaging};
+use self::http::Http;
+use self::messaging::Messaging;
 
 pub struct Config {
     pub owner: LitStr,
@@ -111,35 +111,15 @@ mod kw {
     syn::custom_keyword!(messaging);
 }
 
-struct Generated {
-    pub owner: LitStr,
-    pub provider: Ident,
-    pub http: Option<GeneratedHttp>,
-    pub messaging: Option<GeneratedMessaging>,
-}
-
-impl From<Config> for Generated {
-    fn from(input: Config) -> Self {
-        Self {
-            owner: input.owner,
-            provider: input.provider,
-            http: input.http.map(GeneratedHttp::from),
-            messaging: input.messaging.map(GeneratedMessaging::from),
-        }
-    }
-}
-
 pub fn expand(config: Config) -> TokenStream {
-    let generated = Generated::from(config);
-
-    let owner = generated.owner;
-    let provider = generated.provider;
+    let owner = config.owner;
+    let provider = config.provider;
     let client = quote! {
         Client::new(#owner).provider(#provider::new())
     };
 
-    let http_mod = generated.http.as_ref().map(|h| http::expand(h, &client));
-    let messaging_mod = generated.messaging.as_ref().map(|m| messaging::expand(m, &client));
+    let http_mod = config.http.as_ref().map(|h| http::expand(h, &client));
+    let messaging_mod = config.messaging.as_ref().map(|m| messaging::expand(m, &client));
 
     quote! {
         #[cfg(target_arch = "wasm32")]

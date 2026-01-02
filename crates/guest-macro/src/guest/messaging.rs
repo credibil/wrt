@@ -23,6 +23,7 @@ impl Parse for Messaging {
 pub struct Topic {
     pub pattern: LitStr,
     pub message: Path,
+    pub handler_name: Ident,
 }
 
 impl Parse for Topic {
@@ -51,7 +52,14 @@ impl Parse for Topic {
             return Err(syn::Error::new(pattern.span(), "topic missing `message`"));
         };
 
-        Ok(Self { pattern, message })
+        //
+        let handler_name = method_name(&message);
+
+        Ok(Self {
+            pattern,
+            message,
+            handler_name,
+        })
     }
 }
 
@@ -76,39 +84,9 @@ impl Parse for Opt {
     }
 }
 
-pub struct GeneratedMessaging {
-    pub topics: Vec<GeneratedTopic>,
-}
-
-impl From<Messaging> for GeneratedMessaging {
-    fn from(messaging: Messaging) -> Self {
-        Self {
-            topics: messaging.topics.into_iter().map(GeneratedTopic::from).collect(),
-        }
-    }
-}
-
-pub struct GeneratedTopic {
-    pub pattern: LitStr,
-    pub message: Path,
-    pub handler_name: Ident,
-}
-
-impl From<Topic> for GeneratedTopic {
-    fn from(topic: Topic) -> Self {
-        let handler_name = method_name(&topic.message);
-
-        Self {
-            pattern: topic.pattern,
-            message: topic.message,
-            handler_name,
-        }
-    }
-}
-
-pub fn expand(messaging: &GeneratedMessaging, client: &TokenStream) -> TokenStream {
+pub fn expand(messaging: &Messaging, client: &TokenStream) -> TokenStream {
     let topic_arms = messaging.topics.iter().map(expand_topic);
-    let processors = messaging.topics.iter().map(|t| expand_processor(t, client));
+    let processors = messaging.topics.iter().map(|t| expand_handler(t, client));
 
     quote! {
         mod messaging {
@@ -149,7 +127,7 @@ pub fn expand(messaging: &GeneratedMessaging, client: &TokenStream) -> TokenStre
     }
 }
 
-fn expand_topic(topic: &GeneratedTopic) -> TokenStream {
+fn expand_topic(topic: &Topic) -> TokenStream {
     let pattern = &topic.pattern;
     let handler_name = &topic.handler_name;
 
@@ -158,7 +136,7 @@ fn expand_topic(topic: &GeneratedTopic) -> TokenStream {
     }
 }
 
-fn expand_processor(topic: &GeneratedTopic, client: &TokenStream) -> TokenStream {
+fn expand_handler(topic: &Topic, client: &TokenStream) -> TokenStream {
     let handler_fn = &topic.handler_name;
     let message = &topic.message;
 

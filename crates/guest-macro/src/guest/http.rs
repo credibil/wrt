@@ -32,6 +32,7 @@ pub struct Route {
     pub method: Ident,
     pub request: Path,
     pub reply: Path,
+    pub handler_name: Ident,
 }
 
 impl Parse for Route {
@@ -92,7 +93,10 @@ impl Parse for Route {
         let Some(reply) = reply else {
             return Err(syn::Error::new(path.span(), "route is missing `reply`"));
         };
+
+        // derived values
         let params = extract_params(&path);
+        let handler_name = method_name(&request);
 
         Ok(Self {
             path,
@@ -100,6 +104,7 @@ impl Parse for Route {
             method,
             request,
             reply,
+            handler_name,
         })
     }
 }
@@ -145,44 +150,7 @@ fn extract_params(path: &LitStr) -> Vec<Ident> {
         .collect()
 }
 
-pub struct GeneratedHttp {
-    pub routes: Vec<GeneratedRoute>,
-}
-
-impl From<Http> for GeneratedHttp {
-    fn from(http: Http) -> Self {
-        Self {
-            routes: http.routes.into_iter().map(GeneratedRoute::from).collect(),
-        }
-    }
-}
-
-pub struct GeneratedRoute {
-    pub path: LitStr,
-    #[allow(dead_code)]
-    pub params: Option<Vec<Ident>>,
-    pub method: Ident,
-    pub handler_name: Ident,
-    pub request: Path,
-    pub reply: Path,
-}
-
-impl From<Route> for GeneratedRoute {
-    fn from(route: Route) -> Self {
-        let handler_name = method_name(&route.request);
-
-        Self {
-            path: route.path,
-            params: Some(route.params),
-            method: route.method,
-            handler_name,
-            request: route.request,
-            reply: route.reply,
-        }
-    }
-}
-
-pub fn expand(http: &GeneratedHttp, client: &TokenStream) -> TokenStream {
+pub fn expand(http: &Http, client: &TokenStream) -> TokenStream {
     let routes = http.routes.iter().map(expand_route);
     let handlers = http.routes.iter().map(|r| expand_handler(r, client));
 
@@ -211,7 +179,7 @@ pub fn expand(http: &GeneratedHttp, client: &TokenStream) -> TokenStream {
     }
 }
 
-fn expand_route(route: &GeneratedRoute) -> TokenStream {
+fn expand_route(route: &Route) -> TokenStream {
     let path = &route.path;
     let method = &route.method;
     let handler_name = &route.handler_name;
@@ -221,13 +189,11 @@ fn expand_route(route: &GeneratedRoute) -> TokenStream {
     }
 }
 
-fn expand_handler(route: &GeneratedRoute, client: &TokenStream) -> TokenStream {
+fn expand_handler(route: &Route, client: &TokenStream) -> TokenStream {
     let handler_name = &route.handler_name;
     let request = &route.request;
     let reply = &route.reply;
-
-    let empty = &Vec::<Ident>::new();
-    let params = route.params.as_ref().unwrap_or(empty);
+    let params = &route.params;
 
     // generate handler function name and signature
     let handler_fn = if route.method == "get" {
