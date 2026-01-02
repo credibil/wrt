@@ -4,10 +4,13 @@ cfg_if::cfg_if! {
         use wasi_messaging::{WasiMessaging, MessagingDefault};
         use wasi_otel::{WasiOtel, OtelDefault};
 
-        warp::runtime!(main, {
-            WasiHttp: HttpDefault,
-            WasiMessaging: MessagingDefault,
-            WasiOtel: OtelDefault,
+        warp::runtime!({
+            main: true,
+            hosts: {
+                WasiHttp: HttpDefault,
+                WasiMessaging: MessagingDefault,
+                WasiOtel: OtelDefault,
+            }
         });
     } else {
         fn main() {}

@@ -5,7 +5,7 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use crate::runtime::generate::Generated;
+use crate::generate::Generated;
 
 pub fn expand(generated: Generated) -> TokenStream {
     let Generated {

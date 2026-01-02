@@ -1,12 +1,8 @@
-pub mod expand;
-pub mod generate;
+use std::collections::HashSet;
 
 use syn::parse::{Parse, ParseStream};
-use syn::{Token, Type};
-
-mod kw {
-    syn::custom_keyword!(main);
-}
+use syn::punctuated::Punctuated;
+use syn::{LitBool, Path, Result, Token};
 
 /// Configuration for the runtime macro.
 ///
@@ -18,59 +14,93 @@ mod kw {
 ///     ...
 /// }
 /// ```
-pub struct Input {
+pub struct Config {
     pub gen_main: bool,
     pub hosts: Vec<Host>,
-    pub backends: Vec<Type>,
+    pub backends: Vec<Path>,
 }
 
-impl Parse for Input {
+impl Parse for Config {
     fn parse(input: ParseStream) -> syn::Result<Self> {
-        let gen_main = if input.peek(kw::main) {
-            input.parse::<kw::main>()?;
-            input.parse::<Token![,]>()?;
-            true
-        } else {
-            false
-        };
+        let mut gen_main = false;
+        let mut hosts = Hosts(Vec::new());
 
-        let content;
-        syn::braced!(content in input);
+        let settings;
+        syn::braced!(settings in input);
+        let settings = Punctuated::<Opt, Token![,]>::parse_terminated(&settings)?;
 
-        let mut backends = Vec::new();
-        let mut hosts = Vec::<Host>::new();
-
-        // parse 'host:backend' pairs
-        while !content.is_empty() {
-            let host_type = content.parse::<Type>()?;
-            content.parse::<Token![:]>()?;
-            let backend: Type = content.parse()?;
-
-            let host_config = Host::new(host_type, backend.clone());
-            hosts.push(host_config);
-            backends.push(backend);
-
-            if content.peek(Token![,]) {
-                content.parse::<Token![,]>()?;
+        for setting in settings.into_pairs() {
+            match setting.into_value() {
+                Opt::Main(m) => gen_main = m,
+                Opt::Host(h) => hosts = h,
             }
         }
 
+        // deduplicate backends
+        let mut backend_set = HashSet::new();
+        for host in &hosts.0 {
+            backend_set.insert(&host.backend);
+        }
+        let backends = backend_set.into_iter().cloned().collect();
+
         Ok(Self {
             gen_main,
-            hosts,
+            hosts: hosts.0,
             backends,
         })
     }
 }
 
-/// Information about a WASI host and its configuration.
-pub struct Host {
-    pub type_: Type,
-    pub backend: Type,
+mod kw {
+    syn::custom_keyword!(main);
+    syn::custom_keyword!(hosts);
 }
 
-impl Host {
-    const fn new(type_: Type, backend: Type) -> Self {
-        Self { type_, backend }
+#[allow(clippy::large_enum_variant)]
+enum Opt {
+    Main(bool),
+    Host(Hosts),
+}
+
+impl Parse for Opt {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let l = input.lookahead1();
+        if l.peek(kw::main) {
+            input.parse::<kw::main>()?;
+            input.parse::<Token![:]>()?;
+            Ok(Self::Main(input.parse::<LitBool>()?.value))
+        } else if l.peek(kw::hosts) {
+            input.parse::<kw::hosts>()?;
+            input.parse::<Token![:]>()?;
+            let list;
+            syn::braced!(list in input);
+            Ok(Self::Host(list.parse()?))
+        } else {
+            Err(l.error())
+        }
+    }
+}
+
+pub struct Hosts(Vec<Host>);
+
+impl Parse for Hosts {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let hosts = Punctuated::<Host, Token![,]>::parse_terminated(input)?;
+        Ok(Self(hosts.into_iter().collect()))
+    }
+}
+
+/// Information about a WASI host and its configuration.
+pub struct Host {
+    pub type_: Path,
+    pub backend: Path,
+}
+
+impl Parse for Host {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let type_ = input.parse::<Path>()?;
+        input.parse::<Token![:]>()?;
+        let backend = input.parse::<Path>()?;
+        Ok(Self { type_, backend })
     }
 }

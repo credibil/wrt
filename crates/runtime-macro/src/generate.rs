@@ -2,24 +2,24 @@ use std::collections::HashSet;
 
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
-use syn::{Ident, Type};
+use syn::{Ident, Path};
 
-use crate::runtime::Input;
+use crate::runtime::Config;
 
 pub struct Generated {
     pub context_fields: Vec<TokenStream>,
     pub store_ctx_fields: Vec<TokenStream>,
     pub store_ctx_values: Vec<TokenStream>,
-    pub host_trait_impls: Vec<Type>,
+    pub host_trait_impls: Vec<Path>,
     pub server_trait_impls: Vec<TokenStream>,
     pub wasi_view_impls: Vec<TokenStream>,
     pub main_fn: TokenStream,
 }
 
-impl TryFrom<Input> for Generated {
+impl TryFrom<Config> for Generated {
     type Error = syn::Error;
 
-    fn try_from(input: Input) -> Result<Self, Self::Error> {
+    fn try_from(input: Config) -> Result<Self, Self::Error> {
         // `Context` struct
         let mut context_fields = Vec::new();
         let mut seen_backends = HashSet::new();
@@ -95,12 +95,15 @@ impl TryFrom<Input> for Generated {
 }
 
 /// Generates a field name for a backend type.
-fn field_ident(field_type: &Type) -> Ident {
-    let type_str = quote! {#field_type}.to_string();
+fn field_ident(path: &Path) -> Ident {
+    let Some(ident) = path.segments.last() else {
+        return format_ident!("field");
+    };
+    let ident_str = quote! {#ident}.to_string();
 
     // convert the type string to a snake_case
     let mut field_str = String::new();
-    for char in type_str.chars() {
+    for char in ident_str.chars() {
         if char.is_uppercase() {
             if !field_str.is_empty() {
                 field_str.push('_');
@@ -114,8 +117,12 @@ fn field_ident(field_type: &Type) -> Ident {
     format_ident!("{field_str}")
 }
 
-fn wasi_ident(wasi_type: &Type) -> Ident {
-    let name = quote! {#wasi_type}.to_string();
+fn wasi_ident(path: &Path) -> Ident {
+    let Some(ident) = path.segments.last() else {
+        return format_ident!("wasi");
+    };
+
+    let name = quote! {#ident}.to_string();
     let name = name.replace("Wasi", "wasi_").to_lowercase();
     format_ident!("{name}")
 }

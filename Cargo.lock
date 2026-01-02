@@ -157,6 +157,7 @@ dependencies = [
  "axum-core",
  "axum-macros",
  "bytes",
+ "form_urlencoded",
  "futures-util",
  "http",
  "http-body",
@@ -170,6 +171,7 @@ dependencies = [
  "serde_core",
  "serde_json",
  "serde_path_to_error",
+ "serde_urlencoded",
  "sync_wrapper",
  "tower",
  "tower-layer",
@@ -3410,6 +3412,7 @@ dependencies = [
  "anyhow",
  "axum",
  "bytes",
+ "fromenv",
  "guest-macro",
  "http",
  "http-body",
@@ -3419,9 +3422,12 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "wasi-http",
+ "wasi-identity",
+ "wasi-keyvalue",
  "wasi-messaging",
  "wasi-otel",
  "wasip3",
+ "wit-bindgen 0.50.0",
 ]
 
 [[package]]

@@ -4,10 +4,13 @@ cfg_if::cfg_if! {
         use wasi_http::{WasiHttp, HttpDefault};
         use wasi_otel::{WasiOtel, OtelDefault};
 
-        warp::runtime!(main, {
-            WasiHttp: HttpDefault,
-            WasiOtel: OtelDefault,
-            WasiBlobstore: BlobstoreDefault,
+        warp::runtime!({
+            main: true,
+            hosts: {
+                WasiHttp: HttpDefault,
+                WasiOtel: OtelDefault,
+                WasiBlobstore: BlobstoreDefault,
+            }
         });
     } else {
         fn main() {}

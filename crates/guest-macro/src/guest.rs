@@ -1,14 +1,11 @@
-mod http;
-mod messaging;
-
 use proc_macro2::{Span, TokenStream};
 use quote::{format_ident, quote};
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::{Error, Ident, LitStr, Path, Result, Token};
 
-use self::http::Http;
-use self::messaging::Messaging;
+use crate::http::{self, Http};
+use crate::messaging::{self, Messaging};
 
 pub struct Config {
     pub owner: LitStr,
@@ -26,10 +23,10 @@ impl Parse for Config {
 
         let settings;
         syn::braced!(settings in input);
-        let fields = Punctuated::<Opt, Token![,]>::parse_terminated(&settings)?;
+        let settings = Punctuated::<Opt, Token![,]>::parse_terminated(&settings)?;
 
-        for field in fields.into_pairs() {
-            match field.into_value() {
+        for setting in settings.into_pairs() {
+            match setting.into_value() {
                 Opt::Owner(o) => {
                     if owner.is_some() {
                         return Err(Error::new(o.span(), "cannot specify second owner"));
@@ -52,10 +49,10 @@ impl Parse for Config {
         }
 
         let Some(owner) = owner else {
-            return Err(syn::Error::new(Span::call_site(), "missing `owner`"));
+            return Err(Error::new(Span::call_site(), "missing `owner`"));
         };
         let Some(provider) = provider else {
-            return Err(syn::Error::new(Span::call_site(), "missing `provider`"));
+            return Err(Error::new(Span::call_site(), "missing `provider`"));
         };
 
         Ok(Self {
@@ -65,6 +62,13 @@ impl Parse for Config {
             messaging,
         })
     }
+}
+
+mod kw {
+    syn::custom_keyword!(owner);
+    syn::custom_keyword!(provider);
+    syn::custom_keyword!(http);
+    syn::custom_keyword!(messaging);
 }
 
 #[allow(clippy::large_enum_variant)]
@@ -104,13 +108,6 @@ impl Parse for Opt {
     }
 }
 
-mod kw {
-    syn::custom_keyword!(owner);
-    syn::custom_keyword!(provider);
-    syn::custom_keyword!(http);
-    syn::custom_keyword!(messaging);
-}
-
 pub fn expand(config: Config) -> TokenStream {
     let owner = config.owner;
     let provider = config.provider;
@@ -136,7 +133,7 @@ pub fn expand(config: Config) -> TokenStream {
 }
 
 /// Derive a handler method name from the request type name
-fn method_name(path: &Path) -> Ident {
+pub fn method_name(path: &Path) -> Ident {
     let Some(ident) = path.segments.last() else {
         return format_ident!("handle");
     };

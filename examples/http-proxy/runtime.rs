@@ -4,10 +4,13 @@ cfg_if::cfg_if! {
         use wasi_keyvalue::{WasiKeyValue, KeyValueDefault};
         use wasi_otel::{WasiOtel, OtelDefault};
 
-        warp::runtime!(main, {
-            WasiHttp: HttpDefault,
-            WasiKeyValue: KeyValueDefault,
-            WasiOtel: OtelDefault,
+        warp::runtime!({
+            main: true,
+            hosts: {
+                WasiHttp: HttpDefault,
+                WasiKeyValue: KeyValueDefault,
+                WasiOtel: OtelDefault,
+            }
         });
     } else {
         fn main() {}

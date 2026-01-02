@@ -4,10 +4,13 @@ cfg_if::cfg_if! {
         use wasi_otel::{WasiOtel, OtelDefault};
         use wasi_sql::{WasiSql, SqlDefault};
 
-        warp::runtime!(main, {
-            WasiHttp: HttpDefault,
-            WasiOtel: OtelDefault,
-            WasiSql: SqlDefault,
+        warp::runtime!({
+            main: true,
+            hosts: {
+                WasiHttp: HttpDefault,
+                WasiOtel: OtelDefault,
+                WasiSql: SqlDefault,
+            }
         });
     } else {
         fn main() {}

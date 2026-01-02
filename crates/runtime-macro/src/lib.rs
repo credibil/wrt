@@ -1,3 +1,5 @@
+mod expand;
+mod generate;
 mod runtime;
 
 use proc_macro::TokenStream;
@@ -16,10 +18,10 @@ use syn::parse_macro_input;
 /// ```
 #[proc_macro]
 pub fn runtime(input: TokenStream) -> TokenStream {
-    let parsed = parse_macro_input!(input as runtime::Input);
-    let generated = match crate::runtime::generate::Generated::try_from(parsed) {
+    let parsed = parse_macro_input!(input as runtime::Config);
+    let generated = match generate::Generated::try_from(parsed) {
         Ok(generated) => generated,
         Err(e) => return e.into_compile_error().into(),
     };
-    crate::runtime::expand::expand(generated).into()
+    expand::expand(generated).into()
 }

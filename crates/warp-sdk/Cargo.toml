@@ -15,8 +15,9 @@ workspace = true
 
 [dependencies]
 anyhow.workspace = true
-axum.workspace = true
+axum = { workspace = true, features = ["json", "macros", "query"] }
 bytes.workspace = true
+fromenv.workspace = true
 guest-macro.workspace = true
 http.workspace = true
 http-body.workspace = true
@@ -25,9 +26,12 @@ serde_json.workspace = true
 thiserror = "2.0"
 tracing.workspace = true
 wasi-http.workspace = true
+wasi-identity.workspace = true
+wasi-keyvalue.workspace = true
 wasi-messaging.workspace = true
 wasi-otel.workspace = true
 wasip3.workspace = true
+wit-bindgen.workspace = true
 
 [dev-dependencies]
 tracing-subscriber.workspace = true
