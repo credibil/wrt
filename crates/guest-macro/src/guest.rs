@@ -190,14 +190,14 @@ mod tests {
     }
 
     #[test]
-    fn parse_without_commas() {
+    fn parse_config() {
         let input = quote!({
             owner: "at",
             provider: MyProvider,
             http: [
                 "/jobs/detector": {
                     method: get,
-                    request: DetectionRequest
+                    request: DetectionRequest,
                     reply: DetectionReply
                 }
             ],

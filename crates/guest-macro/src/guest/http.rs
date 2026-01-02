@@ -1,11 +1,17 @@
+use std::sync::LazyLock;
+
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
+use regex::Regex;
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
-use syn::{Ident, LitStr, Path, Result, Token, parse_str};
+use syn::{Ident, LitStr, Path, Result, Token};
 
 use crate::guest::method_name;
+
+static PARAMS_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"\{([A-Za-z_][A-Za-z0-9_]*)\}").expect("should compile"));
 
 pub struct Http {
     pub routes: Vec<Route>,
@@ -86,7 +92,7 @@ impl Parse for Route {
         let Some(reply) = reply else {
             return Err(syn::Error::new(path.span(), "route is missing `reply`"));
         };
-        let params = parse_params(&path)?;
+        let params = extract_params(&path);
 
         Ok(Self {
             path,
@@ -131,73 +137,12 @@ impl Parse for Opt {
     }
 }
 
-fn parse_params(path: &LitStr) -> Result<Vec<Ident>> {
-    let s = path.value();
-    let mut params = Vec::<Ident>::new();
-
-    let bytes = s.as_bytes();
-    let mut i = 0usize;
-    while i < bytes.len() {
-        match bytes[i] {
-            b'{' => {
-                // Find the closing `}`.
-                let start = i + 1;
-                i += 1;
-                while i < bytes.len() && bytes[i] != b'}' {
-                    if bytes[i] == b'{' {
-                        return Err(syn::Error::new(
-                            path.span(),
-                            "invalid http path: nested `{` in path params",
-                        ));
-                    }
-                    i += 1;
-                }
-                if i >= bytes.len() {
-                    return Err(syn::Error::new(
-                        path.span(),
-                        "invalid http path: unclosed `{` in path params",
-                    ));
-                }
-
-                let end = i;
-                let name = s[start..end].trim();
-                if name.is_empty() {
-                    return Err(syn::Error::new(
-                        path.span(),
-                        "invalid http path: empty `{}` path parameter",
-                    ));
-                }
-
-                let ident: Ident = parse_str(name).map_err(|e| {
-                    syn::Error::new(
-                        path.span(),
-                        format!(
-                            "invalid http path parameter name `{name}`; must be a valid Rust identifier: {e}"
-                        ),
-                    )
-                })?;
-
-                if params.iter().any(|p| p == &ident) {
-                    return Err(syn::Error::new(
-                        path.span(),
-                        format!("duplicate http path parameter `{ident}`"),
-                    ));
-                }
-
-                params.push(ident);
-                i += 1; // consume `}`
-            }
-            b'}' => {
-                return Err(syn::Error::new(
-                    path.span(),
-                    "invalid http path: stray `}` in path params",
-                ));
-            }
-            _ => i += 1,
-        }
-    }
-
-    Ok(params)
+fn extract_params(path: &LitStr) -> Vec<Ident> {
+    PARAMS_REGEX
+        .captures_iter(&path.value())
+        .filter_map(|caps| caps.get(1).map(|m| m.as_str().to_owned()))
+        .map(|p| format_ident!("{p}"))
+        .collect()
 }
 
 pub struct GeneratedHttp {
@@ -326,5 +271,19 @@ fn expand_handler(route: &GeneratedRoute, client: &TokenStream) -> TokenStream {
             let reply = client.request(request).await.context("processing request")?;
             Ok(reply)
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use proc_macro2::Span;
+
+    use super::*;
+
+    #[test]
+    fn test_parse_params() {
+        let path = LitStr::new("{vehicle_id}/{trip_id}", Span::call_site());
+        let params = extract_params(&path);
+        assert_eq!(params, vec![format_ident!("vehicle_id"), format_ident!("trip_id")]);
     }
 }
