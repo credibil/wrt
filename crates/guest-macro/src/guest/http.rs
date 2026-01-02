@@ -32,7 +32,7 @@ pub struct Route {
     pub method: Ident,
     pub request: Path,
     pub reply: Path,
-    pub handler_name: Ident,
+    pub handler: Ident,
 }
 
 impl Parse for Route {
@@ -96,7 +96,7 @@ impl Parse for Route {
 
         // derived values
         let params = extract_params(&path);
-        let handler_name = method_name(&request);
+        let handler = method_name(&request);
 
         Ok(Self {
             path,
@@ -104,7 +104,7 @@ impl Parse for Route {
             method,
             request,
             reply,
-            handler_name,
+            handler,
         })
     }
 }
@@ -157,6 +157,7 @@ pub fn expand(http: &Http, client: &TokenStream) -> TokenStream {
     quote! {
         mod http {
             use warp_sdk::api::{HttpResult, Reply};
+            use warp_sdk::{axum, wasi_http, wasi_otel, wasip3};
 
             use super::*;
 
@@ -167,7 +168,7 @@ pub fn expand(http: &Http, client: &TokenStream) -> TokenStream {
                 #[wasi_otel::instrument]
                 async fn handle(
                     request: wasip3::http::types::Request,
-                ) -> core::result::Result<wasip3::http::types::Response, wasip3::http::types::ErrorCode> {
+                ) -> Result<wasip3::http::types::Response, wasip3::http::types::ErrorCode> {
                     let router = axum::Router::new()
                         #(#routes)*;
                     wasi_http::serve(router, request).await
@@ -182,15 +183,15 @@ pub fn expand(http: &Http, client: &TokenStream) -> TokenStream {
 fn expand_route(route: &Route) -> TokenStream {
     let path = &route.path;
     let method = &route.method;
-    let handler_name = &route.handler_name;
+    let handler = &route.handler;
 
     quote! {
-        .route(#path, axum::routing::#method(#handler_name))
+        .route(#path, axum::routing::#method(#handler))
     }
 }
 
 fn expand_handler(route: &Route, client: &TokenStream) -> TokenStream {
-    let handler_name = &route.handler_name;
+    let handler = &route.handler;
     let request = &route.request;
     let reply = &route.reply;
     let params = &route.params;
@@ -210,9 +211,9 @@ fn expand_handler(route: &Route, client: &TokenStream) -> TokenStream {
             quote! { axum::extract::Path((#(#params),*)): axum::extract::Path<(#(#param_types),*)> }
         };
 
-        quote! { #handler_name(#param_args) }
+        quote! { #handler(#param_args) }
     } else {
-        quote! { #handler_name(body: bytes::Bytes) }
+        quote! { #handler(body: bytes::Bytes) }
     };
 
     // generate request parameter and type

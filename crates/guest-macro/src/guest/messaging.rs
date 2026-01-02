@@ -23,7 +23,7 @@ impl Parse for Messaging {
 pub struct Topic {
     pub pattern: LitStr,
     pub message: Path,
-    pub handler_name: Ident,
+    pub handler: Ident,
 }
 
 impl Parse for Topic {
@@ -53,12 +53,12 @@ impl Parse for Topic {
         };
 
         //
-        let handler_name = method_name(&message);
+        let handler = method_name(&message);
 
         Ok(Self {
             pattern,
             message,
-            handler_name,
+            handler,
         })
     }
 }
@@ -90,7 +90,8 @@ pub fn expand(messaging: &Messaging, client: &TokenStream) -> TokenStream {
 
     quote! {
         mod messaging {
-            use wasi_messaging::types::Message;
+            use warp_sdk::wasi_messaging::types::{Error, Message};
+            use warp_sdk::{wasi_messaging, wasi_otel};
 
             use super::*;
 
@@ -99,9 +100,7 @@ pub fn expand(messaging: &Messaging, client: &TokenStream) -> TokenStream {
 
             impl wasi_messaging::incoming_handler::Guest for Messaging {
                 #[wasi_otel::instrument]
-                async fn handle(
-                    message: wasi_messaging::types::Message,
-                ) -> core::result::Result<(), wasi_messaging::types::Error> {
+                async fn handle(message: Message) -> Result<(), Error> {
                     let topic = message.topic().unwrap_or_default();
 
                     // check we're processing topics for the correct environment
@@ -113,9 +112,9 @@ pub fn expand(messaging: &Messaging, client: &TokenStream) -> TokenStream {
 
                     if let Err(e) = match &topic {
                         #(#topic_arms)*
-                        _ => return Err(wasi_messaging::types::Error::Other("Unhandled topic".to_string())),
+                        _ => return Err(Error::Other("Unhandled topic".to_string())),
                     } {
-                        return Err(wasi_messaging::types::Error::Other(e.to_string()));
+                        return Err(Error::Other(e.to_string()));
                     }
 
                     Ok(())
@@ -129,15 +128,15 @@ pub fn expand(messaging: &Messaging, client: &TokenStream) -> TokenStream {
 
 fn expand_topic(topic: &Topic) -> TokenStream {
     let pattern = &topic.pattern;
-    let handler_name = &topic.handler_name;
+    let handler = &topic.handler;
 
     quote! {
-        t if t.contains(#pattern) => #handler_name(&message.data()).await,
+        t if t.contains(#pattern) => #handler(&message.data()).await,
     }
 }
 
 fn expand_handler(topic: &Topic, client: &TokenStream) -> TokenStream {
-    let handler_fn = &topic.handler_name;
+    let handler_fn = &topic.handler;
     let message = &topic.message;
 
     quote! {
