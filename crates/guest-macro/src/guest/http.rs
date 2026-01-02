@@ -1,9 +1,11 @@
-use proc_macro2::{Span, TokenStream};
+use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
-use syn::{Ident, LitStr, Path, PathSegment, Result, Token, parse_str};
+use syn::{Ident, LitStr, Path, Result, Token, parse_str};
+
+use crate::guest::method_name;
 
 pub struct Http {
     pub routes: Vec<Route>,
@@ -11,9 +13,10 @@ pub struct Http {
 
 impl Parse for Http {
     fn parse(input: ParseStream) -> Result<Self> {
-        let entries = Punctuated::<Route, Token![,]>::parse_terminated(input)?;
-        let routes = entries.into_iter().collect();
-        Ok(Self { routes })
+        let routes = Punctuated::<Route, Token![,]>::parse_terminated(input)?;
+        Ok(Self {
+            routes: routes.into_iter().collect(),
+        })
     }
 }
 
@@ -221,19 +224,13 @@ pub struct GeneratedRoute {
 
 impl From<Route> for GeneratedRoute {
     fn from(route: Route) -> Self {
-        // TODO: fix this hack to derive a handler method name from the request type name
-        let ident = Ident::new("Request", Span::call_site());
-        let segment = &PathSegment::from(ident);
-        let request = route.request.segments.last().unwrap_or(segment);
-        let request_str = quote! {#request}.to_string();
-        let handler_name =
-            request_str.strip_suffix("Request").unwrap_or(&request_str).to_lowercase();
+        let handler_name = method_name(&route.request);
 
         Self {
             path: route.path,
             params: Some(route.params),
             method: route.method,
-            handler_name: format_ident!("{handler_name}"),
+            handler_name,
             request: route.request,
             reply: route.reply,
         }

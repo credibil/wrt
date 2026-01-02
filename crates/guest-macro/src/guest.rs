@@ -2,10 +2,10 @@ mod http;
 mod messaging;
 
 use proc_macro2::{Span, TokenStream};
-use quote::quote;
+use quote::{format_ident, quote};
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
-use syn::{Error, Ident, LitStr, Result, Token};
+use syn::{Error, Ident, LitStr, Path, Result, Token};
 
 use self::http::{GeneratedHttp, Http};
 use self::messaging::{GeneratedMessaging, Messaging};
@@ -155,11 +155,39 @@ pub fn expand(config: Config) -> TokenStream {
     }
 }
 
+/// Derive a handler method name from the request type name
+fn method_name(path: &Path) -> Ident {
+    let Some(ident) = path.segments.last() else {
+        return format_ident!("handle");
+    };
+
+    // get the first word of the last segment
+    let ident_str = quote! {#ident}.to_string();
+    let new_word =
+        ident_str[1..].chars().position(char::is_uppercase).unwrap_or(ident_str.len() - 1);
+    let method_name = &ident_str[0..=new_word];
+
+    format_ident!("{method_name}")
+}
+
 #[cfg(test)]
 mod tests {
     use quote::quote;
 
     use super::*;
+
+    #[test]
+    fn method_from_path() {
+        // one word
+        let path = Path::from(format_ident!("Hello"));
+        let name = method_name(&path);
+        assert_eq!(name, format_ident!("Hello"));
+
+        // two words
+        let path = Path::from(format_ident!("HelloWorld"));
+        let name = method_name(&path);
+        assert_eq!(name, format_ident!("Hello"));
+    }
 
     #[test]
     fn parse_without_commas() {

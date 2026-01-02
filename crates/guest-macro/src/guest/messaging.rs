@@ -1,9 +1,11 @@
-use proc_macro2::{Span, TokenStream};
-use quote::{format_ident, quote};
+use proc_macro2::TokenStream;
+use quote::quote;
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
-use syn::{Ident, LitStr, Path, PathSegment, Result, Token};
+use syn::{Ident, LitStr, Path, Result, Token};
+
+use crate::guest::method_name;
 
 pub struct Messaging {
     pub topics: Vec<Topic>,
@@ -11,9 +13,10 @@ pub struct Messaging {
 
 impl Parse for Messaging {
     fn parse(input: ParseStream) -> Result<Self> {
-        let entries = Punctuated::<Topic, Token![,]>::parse_terminated(input)?;
-        let topics = entries.into_iter().collect();
-        Ok(Self { topics })
+        let topics = Punctuated::<Topic, Token![,]>::parse_terminated(input)?;
+        Ok(Self {
+            topics: topics.into_iter().collect(),
+        })
     }
 }
 
@@ -93,23 +96,12 @@ pub struct GeneratedTopic {
 
 impl From<Topic> for GeneratedTopic {
     fn from(topic: Topic) -> Self {
-        // let message = topic.message;
-        // let message_str = quote! {#message}.to_string();
-        // let handler_name =
-        //     message_str.strip_suffix("Message").unwrap_or(&message_str).to_lowercase();
-
-        // TODO: fix this hack to derive a handler method name from the message type name
-        let ident = Ident::new("Message", Span::call_site());
-        let segment = &PathSegment::from(ident);
-        let message = topic.message.segments.last().unwrap_or(segment);
-        let message_str = quote! {#message}.to_string();
-        let handler_name =
-            message_str.strip_suffix("Message").unwrap_or(&message_str).to_lowercase();
+        let handler_name = method_name(&topic.message);
 
         Self {
             pattern: topic.pattern,
             message: topic.message,
-            handler_name: format_ident!("{handler_name}"),
+            handler_name,
         }
     }
 }
