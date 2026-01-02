@@ -1,7 +1,9 @@
-use proc_macro2::TokenStream;
+use proc_macro2::{Span, TokenStream};
 use quote::{format_ident, quote};
 use syn::parse::{Parse, ParseStream};
-use syn::{Ident, LitStr, Result, Token, Type};
+use syn::punctuated::Punctuated;
+use syn::spanned::Spanned;
+use syn::{Ident, LitStr, Path, PathSegment, Result, Token};
 
 pub struct Messaging {
     pub topics: Vec<Topic>,
@@ -9,24 +11,15 @@ pub struct Messaging {
 
 impl Parse for Messaging {
     fn parse(input: ParseStream) -> Result<Self> {
-        let mut topics = Vec::new();
-
-        while !input.is_empty() {
-            let topic: Topic = input.parse()?;
-            topics.push(topic);
-
-            if input.peek(Token![,]) {
-                input.parse::<Token![,]>()?;
-            }
-        }
-
+        let entries = Punctuated::<Topic, Token![,]>::parse_terminated(input)?;
+        let topics = entries.into_iter().collect();
         Ok(Self { topics })
     }
 }
 
 pub struct Topic {
     pub pattern: LitStr,
-    pub message: Type,
+    pub message: Path,
 }
 
 impl Parse for Topic {
@@ -34,24 +27,20 @@ impl Parse for Topic {
         let pattern: LitStr = input.parse()?;
         input.parse::<Token![:]>()?;
 
+        let mut message: Option<Path> = None;
+
         let settings;
         syn::braced!(settings in input);
+        let fields = Punctuated::<Opt, Token![,]>::parse_terminated(&settings)?;
 
-        let mut message: Option<Type> = None;
-
-        while !settings.is_empty() {
-            let key: Ident = settings.parse()?;
-            settings.parse::<Token![:]>()?;
-
-            if key == "message" {
-                message = Some(settings.parse()?);
-            } else {
-                return Err(syn::Error::new(key.span(), "unknown field; expected `message`"));
-            }
-
-            // allow optional commas between fields (including trailing)
-            if settings.peek(Token![,]) {
-                settings.parse::<Token![,]>()?;
+        for field in fields.into_pairs() {
+            match field.into_value() {
+                Opt::Message(m) => {
+                    if message.is_some() {
+                        return Err(syn::Error::new(m.span(), "cannot specify second message"));
+                    }
+                    message = Some(m);
+                }
             }
         }
 
@@ -60,6 +49,27 @@ impl Parse for Topic {
         };
 
         Ok(Self { pattern, message })
+    }
+}
+
+mod kw {
+    syn::custom_keyword!(message);
+}
+
+enum Opt {
+    Message(Path),
+}
+
+impl Parse for Opt {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let l = input.lookahead1();
+        if l.peek(kw::message) {
+            input.parse::<kw::message>()?;
+            input.parse::<Token![:]>()?;
+            Ok(Self::Message(input.parse::<Path>()?))
+        } else {
+            Err(l.error())
+        }
     }
 }
 
@@ -77,20 +87,28 @@ impl From<Messaging> for GeneratedMessaging {
 
 pub struct GeneratedTopic {
     pub pattern: LitStr,
-    pub message_type: Type,
+    pub message: Path,
     pub handler_name: Ident,
 }
 
 impl From<Topic> for GeneratedTopic {
     fn from(topic: Topic) -> Self {
-        let message = topic.message;
+        // let message = topic.message;
+        // let message_str = quote! {#message}.to_string();
+        // let handler_name =
+        //     message_str.strip_suffix("Message").unwrap_or(&message_str).to_lowercase();
+
+        // TODO: fix this hack to derive a handler method name from the message type name
+        let ident = Ident::new("Message", Span::call_site());
+        let segment = &PathSegment::from(ident);
+        let message = topic.message.segments.last().unwrap_or(segment);
         let message_str = quote! {#message}.to_string();
         let handler_name =
             message_str.strip_suffix("Message").unwrap_or(&message_str).to_lowercase();
 
         Self {
             pattern: topic.pattern,
-            message_type: message,
+            message: topic.message,
             handler_name: format_ident!("{handler_name}"),
         }
     }
@@ -150,7 +168,7 @@ fn expand_topic(topic: &GeneratedTopic) -> TokenStream {
 
 fn expand_processor(topic: &GeneratedTopic, client: &TokenStream) -> TokenStream {
     let handler_fn = &topic.handler_name;
-    let message = &topic.message_type;
+    let message = &topic.message;
 
     quote! {
         #[wasi_otel::instrument]

@@ -1,9 +1,9 @@
-use proc_macro2::TokenStream;
+use proc_macro2::{Span, TokenStream};
 use quote::{format_ident, quote};
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
-use syn::{Ident, LitStr, Path, Result, Token, parse_str};
+use syn::{Ident, LitStr, Path, PathSegment, Result, Token, parse_str};
 
 pub struct Http {
     pub routes: Vec<Route>,
@@ -11,15 +11,8 @@ pub struct Http {
 
 impl Parse for Http {
     fn parse(input: ParseStream) -> Result<Self> {
-        let mut routes = Vec::new();
-        while !input.is_empty() {
-            let route: Route = input.parse()?;
-            routes.push(route);
-
-            if input.peek(Token![,]) {
-                input.parse::<Token![,]>()?;
-            }
-        }
+        let entries = Punctuated::<Route, Token![,]>::parse_terminated(input)?;
+        let routes = entries.into_iter().collect();
         Ok(Self { routes })
     }
 }
@@ -85,10 +78,10 @@ impl Parse for Route {
         };
 
         let Some(request) = request else {
-            return Err(syn::Error::new(path.span(), "http route is missing `request`"));
+            return Err(syn::Error::new(path.span(), "route is missing `request`"));
         };
         let Some(reply) = reply else {
-            return Err(syn::Error::new(path.span(), "http route is missing `reply`"));
+            return Err(syn::Error::new(path.span(), "route is missing `reply`"));
         };
         let params = parse_params(&path)?;
 
@@ -100,6 +93,12 @@ impl Parse for Route {
             reply,
         })
     }
+}
+
+mod kw {
+    syn::custom_keyword!(method);
+    syn::custom_keyword!(request);
+    syn::custom_keyword!(reply);
 }
 
 enum Opt {
@@ -118,23 +117,15 @@ impl Parse for Opt {
         } else if l.peek(kw::request) {
             input.parse::<kw::request>()?;
             input.parse::<Token![:]>()?;
-            // let type_name = input.parse::<Path>()?.to_token_stream().to_string();
             Ok(Self::Request(input.parse::<Path>()?))
         } else if l.peek(kw::reply) {
             input.parse::<kw::reply>()?;
             input.parse::<Token![:]>()?;
-            // let type_name = input.parse::<Path>()?.to_token_stream().to_string();
             Ok(Self::Reply(input.parse::<Path>()?))
         } else {
             Err(l.error())
         }
     }
-}
-
-mod kw {
-    syn::custom_keyword!(method);
-    syn::custom_keyword!(request);
-    syn::custom_keyword!(reply);
 }
 
 fn parse_params(path: &LitStr) -> Result<Vec<Ident>> {
@@ -230,7 +221,10 @@ pub struct GeneratedRoute {
 
 impl From<Route> for GeneratedRoute {
     fn from(route: Route) -> Self {
-        let request = route.request;
+        // TODO: fix this hack to derive a handler method name from the request type name
+        let ident = Ident::new("Request", Span::call_site());
+        let segment = &PathSegment::from(ident);
+        let request = route.request.segments.last().unwrap_or(segment);
         let request_str = quote! {#request}.to_string();
         let handler_name =
             request_str.strip_suffix("Request").unwrap_or(&request_str).to_lowercase();
@@ -240,7 +234,7 @@ impl From<Route> for GeneratedRoute {
             params: Some(route.params),
             method: route.method,
             handler_name: format_ident!("{handler_name}"),
-            request,
+            request: route.request,
             reply: route.reply,
         }
     }

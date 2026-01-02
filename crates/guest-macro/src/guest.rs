@@ -24,11 +24,9 @@ impl Parse for Config {
         let mut http: Option<Http> = None;
         let mut messaging: Option<Messaging> = None;
 
-        // top-level parse loop
-    
-        let content;
-        syn::braced!(content in input);
-        let fields = Punctuated::<Opt, Token![,]>::parse_terminated(&content)?;
+        let settings;
+        syn::braced!(settings in input);
+        let fields = Punctuated::<Opt, Token![,]>::parse_terminated(&settings)?;
 
         for field in fields.into_pairs() {
             match field.into_value() {
@@ -52,7 +50,6 @@ impl Parse for Config {
                 }
             }
         }
-  
 
         let Some(owner) = owner else {
             return Err(syn::Error::new(Span::call_site(), "missing `owner`"));
