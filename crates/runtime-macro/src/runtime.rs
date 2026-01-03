@@ -22,7 +22,7 @@ pub struct Config {
 
 impl Parse for Config {
     fn parse(input: ParseStream) -> syn::Result<Self> {
-        let mut gen_main = false;
+        let mut main = false;
         let mut hosts = Hosts(Vec::new());
 
         let settings;
@@ -31,7 +31,7 @@ impl Parse for Config {
 
         for setting in settings.into_pairs() {
             match setting.into_value() {
-                Opt::Main(m) => gen_main = m,
+                Opt::Main(m) => main = m,
                 Opt::Host(h) => hosts = h,
             }
         }
@@ -44,7 +44,7 @@ impl Parse for Config {
         let backends = backend_set.into_iter().cloned().collect();
 
         Ok(Self {
-            gen_main,
+            gen_main: main,
             hosts: hosts.0,
             backends,
         })

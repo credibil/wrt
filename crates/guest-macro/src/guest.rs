@@ -139,7 +139,7 @@ pub fn method_name(path: &Path) -> Ident {
     };
 
     // get the first word of the last segment
-    let ident_str = quote! {#ident}.to_string();
+    let ident_str = ident.ident.to_string();
     let new_word =
         ident_str[1..].chars().position(char::is_uppercase).unwrap_or(ident_str.len() - 1);
     let method_name = &ident_str[0..=new_word];
@@ -155,6 +155,11 @@ mod tests {
 
     #[test]
     fn method_from_path() {
+        // one letter
+        let path = Path::from(format_ident!("H"));
+        let name = method_name(&path);
+        assert_eq!(name, format_ident!("H"));
+
         // one word
         let path = Path::from(format_ident!("Hello"));
         let name = method_name(&path);
