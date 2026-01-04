@@ -69,9 +69,14 @@ where
     P: Provider,
     R: Handler<P>,
 {
-    client: Client<Arc<P>>,
     request: R,
     headers: HeaderMap<String>,
+
+    /// The owning tenant/namespace.
+    owner: Arc<str>,
+
+    /// The provider to use while handling of the request.
+    provider: Arc<P>,
 }
 
 impl<P, R> RequestHandler<P, R>
@@ -80,20 +85,22 @@ where
     R: Handler<P>,
 {
     /// Create a new `RequestHandler` instance.
-    pub fn new(client: Client<Arc<P>>, request: R) -> Self {
+    pub fn from_client(client: &Client<P>, request: R) -> Self {
         Self {
-            client,
             request,
             headers: HeaderMap::default(),
+            owner: Arc::clone(&client.owner),
+            provider: Arc::clone(&client.provider),
         }
     }
 
     /// Set request headers.
     pub fn headers(self, headers: HeaderMap<String>) -> Self {
         Self {
-            client: self.client,
             request: self.request,
             headers,
+            owner: self.owner,
+            provider: self.provider,
         }
     }
 
@@ -111,8 +118,8 @@ where
     #[inline]
     pub async fn handle(self) -> Result<Reply<R::Output>, R::Error> {
         let ctx = Context {
-            owner: &self.client.owner,
-            provider: &*self.client.provider,
+            owner: &self.owner,
+            provider: &*self.provider,
             headers: &self.headers,
         };
         self.request.handle(ctx).await

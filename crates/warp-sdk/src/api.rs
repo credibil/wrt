@@ -51,7 +51,7 @@ pub struct Client<P = NoProvider> {
     owner: Arc<str>,
 
     /// The provider to use while handling of the request.
-    provider: P,
+    provider: Arc<P>,
 }
 
 impl Client<NoProvider> {
@@ -60,13 +60,13 @@ impl Client<NoProvider> {
     pub fn new(owner: impl Into<String>) -> Self {
         Self {
             owner: Arc::<str>::from(owner.into()),
-            provider: NoProvider,
+            provider: Arc::new(NoProvider),
         }
     }
 
     /// Finish building the client by providing the provider implementation.
     #[must_use]
-    pub fn provider<P: Provider>(self, provider: P) -> Client<Arc<P>> {
+    pub fn provider<P: Provider>(self, provider: P) -> Client<P> {
         Client {
             owner: self.owner,
             provider: Arc::new(provider),
@@ -74,10 +74,10 @@ impl Client<NoProvider> {
     }
 }
 
-impl<P: Provider> Client<Arc<P>> {
+impl<P: Provider> Client<P> {
     /// Create a new [`RequestHandler`] with no headers.
     pub fn request<R: Handler<P>>(&self, request: R) -> RequestHandler<P, R> {
-        RequestHandler::new(self.clone(), request)
+        RequestHandler::from_client(self, request)
     }
 }
 
